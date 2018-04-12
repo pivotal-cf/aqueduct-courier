@@ -43,7 +43,7 @@ var _ = Describe("Collector", func() {
 		}
 		session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 		Expect(err).ToNot(HaveOccurred())
-		Eventually(session, 10*time.Second).Should(gexec.Exit(0))
+		Eventually(session, 30*time.Second).Should(gexec.Exit(0))
 	})
 
 	DescribeTable(
