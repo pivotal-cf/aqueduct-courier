@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/onsi/gomega/gbytes"
-	. "github.com/pivotal-cf/aqueduct-collector"
+	. "github.com/pivotal-cf/aqueduct-courier"
 )
 
 var _ = Describe("Collector", func() {
@@ -32,7 +32,7 @@ var _ = Describe("Collector", func() {
 
 	BeforeSuite(func() {
 		var err error
-		collector, err = gexec.Build("github.com/pivotal-cf/aqueduct-collector")
+		collector, err = gexec.Build("github.com/pivotal-cf/aqueduct-courier")
 		Expect(err).NotTo(HaveOccurred())
 	})
 

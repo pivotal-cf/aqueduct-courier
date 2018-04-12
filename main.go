@@ -8,7 +8,7 @@ import (
 
 	"time"
 
-	"github.com/pivotal-cf/aqueduct-collector/opsmanager"
+	"github.com/pivotal-cf/aqueduct-courier/opsmanager"
 	"github.com/pivotal-cf/om/api"
 	"github.com/pivotal-cf/om/network"
 )

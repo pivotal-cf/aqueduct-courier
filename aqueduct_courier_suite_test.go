@@ -9,5 +9,5 @@ import (
 
 func TestAqueductCollector(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "AqueductCollector Suite")
+	RunSpecs(t, "AqueductCourier Suite")
 }

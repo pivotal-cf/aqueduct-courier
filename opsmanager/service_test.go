@@ -11,8 +11,8 @@ import (
 
 	"fmt"
 
-	. "github.com/pivotal-cf/aqueduct-collector/opsmanager"
-	"github.com/pivotal-cf/aqueduct-collector/opsmanager/opsmanagerfakes"
+	. "github.com/pivotal-cf/aqueduct-courier/opsmanager"
+	"github.com/pivotal-cf/aqueduct-courier/opsmanager/opsmanagerfakes"
 	"github.com/pivotal-cf/om/api"
 )
 
@@ -72,6 +72,7 @@ var _ = Describe("Service", func() {
 			)))
 		})
 	})
+
 	Describe("DirectorProperties", func() {
 		It("returns product resources content", func() {
 			body := strings.NewReader("director-properties")

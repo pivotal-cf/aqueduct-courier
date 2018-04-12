@@ -5,7 +5,7 @@ import (
 	"io"
 	"sync"
 
-	"github.com/pivotal-cf/aqueduct-collector/opsmanager"
+	"github.com/pivotal-cf/aqueduct-courier/opsmanager"
 )
 
 type FakeOmService struct {

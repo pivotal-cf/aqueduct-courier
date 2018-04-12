@@ -3,7 +3,7 @@ package opsmanager_test
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-cf/aqueduct-collector/opsmanager/opsmanagerfakes"
+	"github.com/pivotal-cf/aqueduct-courier/opsmanager/opsmanagerfakes"
 
 	"github.com/pkg/errors"
 
@@ -12,7 +12,7 @@ import (
 	"fmt"
 	"io"
 
-	. "github.com/pivotal-cf/aqueduct-collector/opsmanager"
+	. "github.com/pivotal-cf/aqueduct-courier/opsmanager"
 	"github.com/pivotal-cf/om/api"
 )
 

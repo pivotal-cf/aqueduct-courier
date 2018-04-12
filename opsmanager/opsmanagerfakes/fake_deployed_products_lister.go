@@ -4,7 +4,7 @@ package opsmanagerfakes
 import (
 	"sync"
 
-	"github.com/pivotal-cf/aqueduct-collector/opsmanager"
+	"github.com/pivotal-cf/aqueduct-courier/opsmanager"
 	"github.com/pivotal-cf/om/api"
 )
 
