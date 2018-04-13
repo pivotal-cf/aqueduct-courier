@@ -74,45 +74,45 @@ func NewDataCollector(builder DataCollectorBuilder) *DataCollector {
 	}
 }
 
-func (dc *DataCollector) Collect() ([]AqueductData, error) {
+func (dc *DataCollector) Collect() ([]Data, error) {
 	pc, err := dc.pendingChangesService.List()
 	if err != nil {
-		return []AqueductData{}, errors.Wrap(err, PendingChangesFailedMessage)
+		return []Data{}, errors.Wrap(err, PendingChangesFailedMessage)
 	}
 
 	if len(pc.ChangeList) > 0 {
-		return []AqueductData{}, errors.New(PendingChangesExistsMessage)
+		return []Data{}, errors.New(PendingChangesExistsMessage)
 	}
 
 	pl, err := dc.deployProductsService.List()
 	if err != nil {
-		return []AqueductData{}, errors.Wrap(err, DeployedProductsFailedMessage)
+		return []Data{}, errors.Wrap(err, DeployedProductsFailedMessage)
 	}
 
-	var data []AqueductData
+	var d []Data
 
 	for _, product := range pl {
 		if product.Type == DirectorProductType {
-			data, err = appendRetrievedData(data, dc.omService.DirectorProperties, product.Type, PropertiesDataType)
+			d, err = appendRetrievedData(d, dc.omService.DirectorProperties, product.Type, PropertiesDataType)
 		} else {
-			data, err = appendRetrievedData(data, dc.productResourcesCaller(product.GUID), product.Type, ResourcesDataType)
+			d, err = appendRetrievedData(d, dc.productResourcesCaller(product.GUID), product.Type, ResourcesDataType)
 		}
 		if err != nil {
-			return []AqueductData{}, err
+			return []Data{}, err
 		}
 	}
 
-	data, err = appendRetrievedData(data, dc.omService.VmTypes, OpsManagerName, VmTypesDataType)
+	d, err = appendRetrievedData(d, dc.omService.VmTypes, OpsManagerName, VmTypesDataType)
 	if err != nil {
-		return []AqueductData{}, err
+		return []Data{}, err
 	}
 
-	data, err = appendRetrievedData(data, dc.omService.DiagnosticReport, OpsManagerName, DiagnosticReportDataType)
+	d, err = appendRetrievedData(d, dc.omService.DiagnosticReport, OpsManagerName, DiagnosticReportDataType)
 	if err != nil {
-		return []AqueductData{}, err
+		return []Data{}, err
 	}
 
-	return data, nil
+	return d, nil
 }
 
 func (dc *DataCollector) productResourcesCaller(guid string) DataRetriever {
@@ -121,11 +121,11 @@ func (dc *DataCollector) productResourcesCaller(guid string) DataRetriever {
 	}
 }
 
-func appendRetrievedData(data []AqueductData, retriever DataRetriever, productType, dataType string) ([]AqueductData, error) {
+func appendRetrievedData(d []Data, retriever DataRetriever, productType, dataType string) ([]Data, error) {
 	output, err := retriever()
 	if err != nil {
-		return data, errors.Wrap(err, fmt.Sprintf(RequestorFailureErrorFormat, productType, dataType))
+		return d, errors.Wrap(err, fmt.Sprintf(RequestorFailureErrorFormat, productType, dataType))
 	}
 
-	return append(data, AqueductData{Data: output, Name: productType, Type: dataType}), nil
+	return append(d, Data{reader: output, name: productType, kind: dataType}), nil
 }

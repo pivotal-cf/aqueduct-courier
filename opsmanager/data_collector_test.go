@@ -126,31 +126,31 @@ var _ = Describe("DataCollector", func() {
 		data, err := dataCollector.Collect()
 		Expect(err).ToNot(HaveOccurred())
 		Expect(data).To(ConsistOf(
-			AqueductData{
-				Data: directorReader,
-				Name: directorProduct.Type,
-				Type: PropertiesDataType,
-			},
-			AqueductData{
-				Data: readers[0],
-				Name: deployedProducts[0].Type,
-				Type: ResourcesDataType,
-			},
-			AqueductData{
-				Data: readers[1],
-				Name: deployedProducts[1].Type,
-				Type: ResourcesDataType,
-			},
-			AqueductData{
-				Data: vmTypesReader,
-				Name: OpsManagerName,
-				Type: VmTypesDataType,
-			},
-			AqueductData{
-				Data: diagnosticReportReader,
-				Name: OpsManagerName,
-				Type: DiagnosticReportDataType,
-			},
+			NewData(
+				directorReader,
+				directorProduct.Type,
+				PropertiesDataType,
+			),
+			NewData(
+				readers[0],
+				deployedProducts[0].Type,
+				ResourcesDataType,
+			),
+			NewData(
+				readers[1],
+				deployedProducts[1].Type,
+				ResourcesDataType,
+			),
+			NewData(
+				vmTypesReader,
+				OpsManagerName,
+				VmTypesDataType,
+			),
+			NewData(
+				diagnosticReportReader,
+				OpsManagerName,
+				DiagnosticReportDataType,
+			),
 		))
 	})
 
@@ -158,14 +158,14 @@ var _ = Describe("DataCollector", func() {
 		data, err := dataCollector.Collect()
 		Expect(err).ToNot(HaveOccurred())
 		Expect(data).To(ConsistOf(
-			AqueductData{Name: OpsManagerName, Type: VmTypesDataType},
-			AqueductData{Name: OpsManagerName, Type: DiagnosticReportDataType},
+			NewData(nil, OpsManagerName, VmTypesDataType),
+			NewData(nil, OpsManagerName, DiagnosticReportDataType),
 		))
 	})
 })
 
-func assertOmServiceFailure(data []AqueductData, err error, productType, dataType, causeErrorMessage string) {
-	Expect(data).To(BeEmpty())
+func assertOmServiceFailure(d []Data, err error, productType, dataType, causeErrorMessage string) {
+	Expect(d).To(BeEmpty())
 	Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(RequestorFailureErrorFormat, productType, dataType))))
 	Expect(err).To(MatchError(ContainSubstring(causeErrorMessage)))
 }
