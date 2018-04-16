@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+GOPATH=${PWD}/go
+PATH=${GOPATH}/bin:${PATH}
+
+go get github.com/onsi/ginkgo/ginkgo
+
+ginkgo -failOnPending -race -randomizeAllSpecs -r go/src/github.com/pivotal-cf/aqueduct-courier

@@ -1,0 +1,20 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: golang
+    tag: latest
+
+inputs:
+- name: aqueduct-courier
+  path: go/src/github.com/pivotal-cf/aqueduct-courier
+
+run:
+  path: go/src/github.com/pivotal-cf/aqueduct-courier/ci/tasks/courier-tests
+
+params:
+  TEST_OPSMANAGER_URL:
+  TEST_OPSMANAGER_USERNAME:
+  TEST_OPSMANAGER_PASSWORD:

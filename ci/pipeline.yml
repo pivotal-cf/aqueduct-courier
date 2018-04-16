@@ -1,0 +1,19 @@
+resources:
+- name: aqueduct-courier
+  type: git
+  source:
+    branch: master
+    uri: git@github.com:pivotal-cf/aqueduct-courier
+    private_key: {{courier-git-deploy-private-key}}
+
+jobs:
+- name: courier-tests
+  plan:
+  - get: aqueduct-courier
+    trigger: true
+  - task: run-tests
+    file: aqueduct-courier/ci/tasks/courier-tests.yml
+    params:
+      TEST_OPSMANAGER_URL: {{courier-ops-manager-url}}
+      TEST_OPSMANAGER_USERNAME: {{courier-ops-manager-username}}
+      TEST_OPSMANAGER_PASSWORD: {{courier-ops-manager-password}}
