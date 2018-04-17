@@ -1,4 +1,4 @@
-package main_test
+package integration
 
 import (
 	"testing"
@@ -9,5 +9,5 @@ import (
 
 func TestAqueductCollector(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "AqueductCourier Suite")
+	RunSpecs(t, "Integration Suite")
 }

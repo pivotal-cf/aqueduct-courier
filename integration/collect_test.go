@@ -1,4 +1,4 @@
-package main_test
+package integration
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -22,7 +22,7 @@ const (
 	RFC3339DateTimeUTCPermissiveRegexp = `\d{4}-\d{2}-\d{2}[Tt]\d{2}:\d{2}:\d{2}[Zz]`
 )
 
-var _ = Describe("Collector", func() {
+var _ = Describe("Collect", func() {
 	var (
 		collector      string
 		outputDirPath  string
@@ -51,7 +51,7 @@ var _ = Describe("Collector", func() {
 	})
 
 	It("succeeds", func() {
-		command := exec.Command(collector)
+		command := exec.Command(collector, "collect")
 		for k, v := range merge(defaultEnvVars, additionalEnvVars) {
 			command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))
 		}
@@ -65,7 +65,7 @@ var _ = Describe("Collector", func() {
 
 	It("fails if data collection from Ops Manager fails", func() {
 		additionalEnvVars[cmd.OpsManagerUsernameKey] = "non-real-user"
-		command := exec.Command(collector)
+		command := exec.Command(collector, "collect")
 		for k, v := range merge(defaultEnvVars, additionalEnvVars) {
 			command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))
 		}
@@ -78,7 +78,7 @@ var _ = Describe("Collector", func() {
 	It("fails if creating the output directory fails", func() {
 		badDir := "not/a/real/path/on/disk"
 		additionalEnvVars[cmd.OutputPathKey] = badDir
-		command := exec.Command(collector)
+		command := exec.Command(collector, "collect")
 		for k, v := range merge(defaultEnvVars, additionalEnvVars) {
 			command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))
 		}
@@ -96,7 +96,7 @@ var _ = Describe("Collector", func() {
 	DescribeTable(
 		"fails when required environment variable is not set",
 		func(missingKey string) {
-			command := exec.Command(collector)
+			command := exec.Command(collector, "collect")
 			for k, v := range merge(defaultEnvVars, additionalEnvVars) {
 				if k != missingKey {
 					command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))
