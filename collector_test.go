@@ -15,7 +15,7 @@ import (
 	"path/filepath"
 	"time"
 
-	. "github.com/pivotal-cf/aqueduct-courier"
+	"github.com/pivotal-cf/aqueduct-courier/cmd"
 )
 
 const (
@@ -27,10 +27,10 @@ var _ = Describe("Collector", func() {
 		collector      string
 		outputDirPath  string
 		defaultEnvVars = map[string]string{
-			OpsManagerURLKey:      os.Getenv("TEST_OPSMANAGER_URL"),
-			OpsManagerUsernameKey: os.Getenv("TEST_OPSMANAGER_USERNAME"),
-			OpsManagerPasswordKey: os.Getenv("TEST_OPSMANAGER_PASSWORD"),
-			SkipTlsVerifyKey:      "true",
+			cmd.OpsManagerURLKey:      os.Getenv("TEST_OPSMANAGER_URL"),
+			cmd.OpsManagerUsernameKey: os.Getenv("TEST_OPSMANAGER_USERNAME"),
+			cmd.OpsManagerPasswordKey: os.Getenv("TEST_OPSMANAGER_PASSWORD"),
+			cmd.SkipTlsVerifyKey:      "true",
 		}
 		additionalEnvVars map[string]string
 	)
@@ -46,16 +46,16 @@ var _ = Describe("Collector", func() {
 		outputDirPath, err = ioutil.TempDir("", "")
 		Expect(err).NotTo(HaveOccurred())
 		additionalEnvVars = map[string]string{
-			OutputPathKey: outputDirPath,
+			cmd.OutputPathKey: outputDirPath,
 		}
 	})
 
 	It("succeeds", func() {
-		cmd := exec.Command(collector)
+		command := exec.Command(collector)
 		for k, v := range merge(defaultEnvVars, additionalEnvVars) {
-			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
+			command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))
 		}
-		session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(session, 30*time.Second).Should(gexec.Exit(0))
 
@@ -64,12 +64,12 @@ var _ = Describe("Collector", func() {
 	})
 
 	It("fails if data collection from Ops Manager fails", func() {
-		additionalEnvVars[OpsManagerUsernameKey] = "non-real-user"
-		cmd := exec.Command(collector)
+		additionalEnvVars[cmd.OpsManagerUsernameKey] = "non-real-user"
+		command := exec.Command(collector)
 		for k, v := range merge(defaultEnvVars, additionalEnvVars) {
-			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
+			command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))
 		}
-		session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(session, 30*time.Second).Should(gexec.Exit(1))
 		Expect(session.Err).To(gbytes.Say("Failed collecting from Ops Manager:"))
@@ -77,16 +77,16 @@ var _ = Describe("Collector", func() {
 
 	It("fails if creating the output directory fails", func() {
 		badDir := "not/a/real/path/on/disk"
-		additionalEnvVars[OutputPathKey] = badDir
-		cmd := exec.Command(collector)
+		additionalEnvVars[cmd.OutputPathKey] = badDir
+		command := exec.Command(collector)
 		for k, v := range merge(defaultEnvVars, additionalEnvVars) {
-			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
+			command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))
 		}
-		session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(session, 30*time.Second).Should(gexec.Exit(1))
 		Expect(session.Err).To(gbytes.Say(
-			fmt.Sprintf(`Failed creating directory %s/%s%s:`, badDir, OutputDirPrefix, RFC3339DateTimeUTCPermissiveRegexp),
+			fmt.Sprintf(`Failed creating directory %s/%s%s:`, badDir, cmd.OutputDirPrefix, RFC3339DateTimeUTCPermissiveRegexp),
 		))
 		Consistently(session.Err).ShouldNot(
 			gbytes.Say("Failed writing data to disk"),
@@ -96,21 +96,21 @@ var _ = Describe("Collector", func() {
 	DescribeTable(
 		"fails when required environment variable is not set",
 		func(missingKey string) {
-			cmd := exec.Command(collector)
+			command := exec.Command(collector)
 			for k, v := range merge(defaultEnvVars, additionalEnvVars) {
 				if k != missingKey {
-					cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
+					command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))
 				}
 			}
-			session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).ToNot(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(1))
 			Eventually(session.Err).Should(gbytes.Say(fmt.Sprintf("Requires %s to be set", missingKey)))
 		},
-		Entry(OpsManagerURLKey, OpsManagerURLKey),
-		Entry(OpsManagerUsernameKey, OpsManagerUsernameKey),
-		Entry(OpsManagerPasswordKey, OpsManagerPasswordKey),
-		Entry(OutputPathKey, OutputPathKey),
+		Entry(cmd.OpsManagerURLKey, cmd.OpsManagerURLKey),
+		Entry(cmd.OpsManagerUsernameKey, cmd.OpsManagerUsernameKey),
+		Entry(cmd.OpsManagerPasswordKey, cmd.OpsManagerPasswordKey),
+		Entry(cmd.OutputPathKey, cmd.OutputPathKey),
 	)
 })
 
@@ -119,7 +119,7 @@ func validatedContentDir(outputDirPath string) string {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(len(fileInfos)).To(Equal(1), fmt.Sprintf("Expected output dir %s to include a single directory", outputDirPath))
 	Expect(fileInfos[0].IsDir()).To(BeTrue(), fmt.Sprintf("Expected file %s found in %s to be a directory", fileInfos[0], outputDirPath))
-	Expect(fileInfos[0].Name()).To(MatchRegexp(fmt.Sprintf(`%s%s$`, OutputDirPrefix, RFC3339DateTimeUTCPermissiveRegexp)))
+	Expect(fileInfos[0].Name()).To(MatchRegexp(fmt.Sprintf(`%s%s$`, cmd.OutputDirPrefix, RFC3339DateTimeUTCPermissiveRegexp)))
 	return filepath.Join(outputDirPath, fileInfos[0].Name())
 }
 
