@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strconv"
 	"time"
 
@@ -21,7 +20,6 @@ const (
 	OpsManagerPasswordKey = "OPS_MANAGER_PASSWORD"
 	OutputPathKey         = "OUTPUT_PATH"
 	SkipTlsVerifyKey      = "INSECURE_SKIP_TLS_VERIFY"
-	OutputDirPrefix       = "FoundationDetails_"
 )
 
 var collectCmd = &cobra.Command{
@@ -68,14 +66,12 @@ func collect(_ *cobra.Command, _ []string) error {
 		return errors.Wrap(err, "Failed collecting from Ops Manager")
 	}
 
-	timeString := time.Now().UTC().Format(time.RFC3339)
-	outputFolderPath := filepath.Join(conf.outputPath, fmt.Sprintf("%s%s", OutputDirPrefix, timeString))
-	err = os.Mkdir(outputFolderPath, 0755)
+	writer := file.Writer{}
+	outputFolderPath, err := writer.Mkdir(conf.outputPath)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("Failed creating directory %s:", outputFolderPath))
+		return err
 	}
 
-	writer := file.Writer{}
 	for _, data := range omData {
 		err = writer.Write(data, outputFolderPath)
 		if err != nil {
