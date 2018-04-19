@@ -20,14 +20,14 @@ const (
 
 type Writer struct{}
 
-//go:generate counterfeiter . data
-type data interface {
+//go:generate counterfeiter . Data
+type Data interface {
 	Name() string
 	Content() io.Reader
 	ContentType() string
 }
 
-func (w Writer) Write(d data, dir string) error {
+func (w Writer) Write(d Data, dir string) error {
 	file, err := os.Create(filepath.Join(dir, fmt.Sprintf("%s.%s", d.Name(), d.ContentType())))
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf(CreateErrorFormat, d.Name()))
@@ -42,7 +42,6 @@ func (w Writer) Write(d data, dir string) error {
 }
 
 func (w Writer) Mkdir(dirPrefix string) (string, error) {
-
 	timeString := time.Now().UTC().Format(time.RFC3339)
 	outputFolderPath := filepath.Join(dirPrefix, fmt.Sprintf("%s%s", OutputDirPrefix, timeString))
 	err := os.Mkdir(outputFolderPath, 0755)

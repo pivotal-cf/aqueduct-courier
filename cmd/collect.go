@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/pivotal-cf/aqueduct-courier/file"
+	"github.com/pivotal-cf/aqueduct-courier/ops"
 	"github.com/pivotal-cf/aqueduct-courier/opsmanager"
 	"github.com/pivotal-cf/om/api"
 	"github.com/pivotal-cf/om/network"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -59,24 +59,13 @@ func collect(_ *cobra.Command, _ []string) error {
 		PendingChangesService: api.NewPendingChangesService(authedClient),
 		DeployProductsService: api.NewDeployedProductsService(authedClient),
 	}
-
 	collector := opsmanager.NewDataCollector(builder)
-	omData, err := collector.Collect()
-	if err != nil {
-		return errors.Wrap(err, "Failed collecting from Ops Manager")
-	}
-
 	writer := file.Writer{}
-	outputFolderPath, err := writer.Mkdir(conf.outputPath)
+	ce := ops.NewCollector(collector, writer)
+
+	err = ce.Collect(conf.outputPath)
 	if err != nil {
 		return err
-	}
-
-	for _, data := range omData {
-		err = writer.Write(data, outputFolderPath)
-		if err != nil {
-			errors.Wrap(err, "Failed writing data to disk")
-		}
 	}
 	return nil
 }

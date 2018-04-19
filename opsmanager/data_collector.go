@@ -65,8 +65,8 @@ type DataCollectorBuilder struct {
 	DeployProductsService DeployedProductsLister
 }
 
-func NewDataCollector(builder DataCollectorBuilder) *DataCollector {
-	return &DataCollector{
+func NewDataCollector(builder DataCollectorBuilder) DataCollector {
+	return DataCollector{
 		omService:             builder.OmService,
 		requestService:        builder.RequestService,
 		pendingChangesService: builder.PendingChangesService,
@@ -74,7 +74,7 @@ func NewDataCollector(builder DataCollectorBuilder) *DataCollector {
 	}
 }
 
-func (dc *DataCollector) Collect() ([]Data, error) {
+func (dc DataCollector) Collect() ([]Data, error) {
 	pc, err := dc.pendingChangesService.List()
 	if err != nil {
 		return []Data{}, errors.Wrap(err, PendingChangesFailedMessage)
@@ -115,7 +115,7 @@ func (dc *DataCollector) Collect() ([]Data, error) {
 	return d, nil
 }
 
-func (dc *DataCollector) productResourcesCaller(guid string) DataRetriever {
+func (dc DataCollector) productResourcesCaller(guid string) DataRetriever {
 	return func() (io.Reader, error) {
 		return dc.omService.ProductResources(guid)
 	}

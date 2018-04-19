@@ -1,12 +1,6 @@
 package integration
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/ginkgo/extensions/table"
-	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gbytes"
-	"github.com/onsi/gomega/gexec"
-
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -15,8 +9,14 @@ import (
 	"path/filepath"
 	"time"
 
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
+	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
+	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-cf/aqueduct-courier/cmd"
 	"github.com/pivotal-cf/aqueduct-courier/file"
+	"github.com/pivotal-cf/aqueduct-courier/ops"
 )
 
 const (
@@ -73,25 +73,7 @@ var _ = Describe("Collect", func() {
 		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(session, 30*time.Second).Should(gexec.Exit(1))
-		Expect(session.Err).To(gbytes.Say("Failed collecting from Ops Manager:"))
-	})
-
-	It("fails if creating the output directory fails", func() {
-		badDir := "not/a/real/path/on/disk"
-		additionalEnvVars[cmd.OutputPathKey] = badDir
-		command := exec.Command(collector, "collect")
-		for k, v := range merge(defaultEnvVars, additionalEnvVars) {
-			command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))
-		}
-		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-		Expect(err).NotTo(HaveOccurred())
-		Eventually(session, 30*time.Second).Should(gexec.Exit(1))
-		Expect(session.Err).To(gbytes.Say(
-			fmt.Sprintf(`Failed creating directory %s/%s%s:`, badDir, file.OutputDirPrefix, RFC3339DateTimeUTCPermissiveRegexp),
-		))
-		Consistently(session.Err).ShouldNot(
-			gbytes.Say("Failed writing data to disk"),
-		)
+		Expect(session.Err).To(gbytes.Say(ops.CollectFailureMessage))
 	})
 
 	DescribeTable(

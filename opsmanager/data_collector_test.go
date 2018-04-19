@@ -22,7 +22,7 @@ var _ = Describe("DataCollector", func() {
 		pendingChangesLister   *opsmanagerfakes.FakePendingChangesLister
 		deployedProductsLister *opsmanagerfakes.FakeDeployedProductsLister
 
-		dataCollector *DataCollector
+		dataCollector DataCollector
 	)
 
 	BeforeEach(func() {

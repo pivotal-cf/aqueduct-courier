@@ -4,6 +4,8 @@ package filefakes
 import (
 	"io"
 	"sync"
+
+	"github.com/pivotal-cf/aqueduct-courier/file"
 )
 
 type FakeData struct {
@@ -185,3 +187,5 @@ func (fake *FakeData) recordInvocation(key string, args []interface{}) {
 	}
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
+
+var _ file.Data = new(FakeData)
