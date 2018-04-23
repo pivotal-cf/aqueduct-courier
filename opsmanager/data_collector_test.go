@@ -30,11 +30,7 @@ var _ = Describe("DataCollector", func() {
 		pendingChangesLister = new(opsmanagerfakes.FakePendingChangesLister)
 		deployedProductsLister = new(opsmanagerfakes.FakeDeployedProductsLister)
 
-		dataCollector = NewDataCollector(DataCollectorBuilder{
-			OmService:             omService,
-			PendingChangesService: pendingChangesLister,
-			DeployProductsService: deployedProductsLister,
-		})
+		dataCollector = NewDataCollector(omService, pendingChangesLister, deployedProductsLister)
 	})
 
 	It("returns an error if there are pending changes", func() {

@@ -81,12 +81,11 @@ func collect(_ *cobra.Command, _ []string) error {
 		Requestor: api.NewRequestService(authedClient),
 	}
 
-	builder := opsmanager.DataCollectorBuilder{
-		OmService:             omService,
-		PendingChangesService: api.NewPendingChangesService(authedClient),
-		DeployProductsService: api.NewDeployedProductsService(authedClient),
-	}
-	collector := opsmanager.NewDataCollector(builder)
+	collector := opsmanager.NewDataCollector(
+		omService,
+		api.NewPendingChangesService(authedClient),
+		api.NewDeployedProductsService(authedClient),
+	)
 	writer := file.Writer{}
 	ce := ops.NewCollector(collector, writer)
 

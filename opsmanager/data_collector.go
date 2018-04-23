@@ -53,24 +53,15 @@ type AqueductData struct {
 
 type DataCollector struct {
 	omService             OmService
-	requestService        Requestor
 	pendingChangesService PendingChangesLister
 	deployProductsService DeployedProductsLister
 }
 
-type DataCollectorBuilder struct {
-	OmService             OmService
-	RequestService        Requestor
-	PendingChangesService PendingChangesLister
-	DeployProductsService DeployedProductsLister
-}
-
-func NewDataCollector(builder DataCollectorBuilder) DataCollector {
+func NewDataCollector(oms OmService, pcs PendingChangesLister, dps DeployedProductsLister) DataCollector {
 	return DataCollector{
-		omService:             builder.OmService,
-		requestService:        builder.RequestService,
-		pendingChangesService: builder.PendingChangesService,
-		deployProductsService: builder.DeployProductsService,
+		omService:             oms,
+		pendingChangesService: pcs,
+		deployProductsService: dps,
 	}
 }
 
