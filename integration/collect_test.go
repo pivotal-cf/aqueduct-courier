@@ -51,7 +51,7 @@ var _ = Describe("Collect", func() {
 		}
 	})
 
-	It("succeeds", func() {
+	It("succeeds with env variables", func() {
 		command := exec.Command(collector, "collect")
 		for k, v := range merge(defaultEnvVars, additionalEnvVars) {
 			command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))
@@ -60,6 +60,25 @@ var _ = Describe("Collect", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(session, 30*time.Second).Should(gexec.Exit(0))
 
+		contentDir := validatedContentDir(outputDirPath)
+		assertContainsJsonFile(contentDir, "ops_manager_vm_types.json")
+	})
+
+	It("succeeds with flag configuration", func() {
+		flagValues := map[string]string{
+			cmd.OpsManagerURLFlag:      os.Getenv("TEST_OPSMANAGER_URL"),
+			cmd.OpsManagerUsernameFlag: os.Getenv("TEST_OPSMANAGER_USERNAME"),
+			cmd.OpsManagerPasswordFlag: os.Getenv("TEST_OPSMANAGER_PASSWORD"),
+			cmd.SkipTlsVerifyFlag:      "true",
+			cmd.OutputPathFlag:         outputDirPath,
+		}
+		command := exec.Command(collector, "collect")
+		for k, v := range flagValues {
+			command.Args = append(command.Args, fmt.Sprintf("--%s=%s", k, v))
+		}
+		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+		Expect(err).NotTo(HaveOccurred())
+		Eventually(session, 30*time.Second).Should(gexec.Exit(0))
 		contentDir := validatedContentDir(outputDirPath)
 		assertContainsJsonFile(contentDir, "ops_manager_vm_types.json")
 	})
@@ -77,8 +96,8 @@ var _ = Describe("Collect", func() {
 	})
 
 	DescribeTable(
-		"fails when required environment variable is not set",
-		func(missingKey string) {
+		"fails when required variable is not set",
+		func(missingKey, missingFlag string) {
 			command := exec.Command(collector, "collect")
 			for k, v := range merge(defaultEnvVars, additionalEnvVars) {
 				if k != missingKey {
@@ -88,12 +107,12 @@ var _ = Describe("Collect", func() {
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).ToNot(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(1))
-			Eventually(session.Err).Should(gbytes.Say(fmt.Sprintf("Requires %s to be set", missingKey)))
+			Eventually(session.Err).Should(gbytes.Say(fmt.Sprintf(cmd.RequiredConfigErrorFormat, missingFlag)))
 		},
-		Entry(cmd.OpsManagerURLKey, cmd.OpsManagerURLKey),
-		Entry(cmd.OpsManagerUsernameKey, cmd.OpsManagerUsernameKey),
-		Entry(cmd.OpsManagerPasswordKey, cmd.OpsManagerPasswordKey),
-		Entry(cmd.OutputPathKey, cmd.OutputPathKey),
+		Entry(cmd.OpsManagerURLKey, cmd.OpsManagerURLKey, cmd.OpsManagerURLFlag),
+		Entry(cmd.OpsManagerUsernameKey, cmd.OpsManagerUsernameKey, cmd.OpsManagerUsernameFlag),
+		Entry(cmd.OpsManagerPasswordKey, cmd.OpsManagerPasswordKey, cmd.OpsManagerPasswordFlag),
+		Entry(cmd.OutputPathKey, cmd.OutputPathKey, cmd.OutputPathFlag),
 	)
 })
 

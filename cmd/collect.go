@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	"strconv"
 	"time"
 
 	"github.com/pivotal-cf/aqueduct-courier/file"
@@ -11,15 +9,24 @@ import (
 	"github.com/pivotal-cf/aqueduct-courier/opsmanager"
 	"github.com/pivotal-cf/om/api"
 	"github.com/pivotal-cf/om/network"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 const (
-	OpsManagerURLKey      = "OPS_MANAGER_URL"
-	OpsManagerUsernameKey = "OPS_MANAGER_USERNAME"
-	OpsManagerPasswordKey = "OPS_MANAGER_PASSWORD"
-	OutputPathKey         = "OUTPUT_PATH"
-	SkipTlsVerifyKey      = "INSECURE_SKIP_TLS_VERIFY"
+	OpsManagerURLKey       = "OPS_MANAGER_URL"
+	OpsManagerUsernameKey  = "OPS_MANAGER_USERNAME"
+	OpsManagerPasswordKey  = "OPS_MANAGER_PASSWORD"
+	OutputPathKey          = "OUTPUT_PATH"
+	SkipTlsVerifyKey       = "INSECURE_SKIP_TLS_VERIFY"
+	OpsManagerURLFlag      = "ops-manager-url"
+	OpsManagerUsernameFlag = "username"
+	OpsManagerPasswordFlag = "password"
+	OutputPathFlag         = "output"
+	SkipTlsVerifyFlag      = "insecure-skip-tls-verify"
+
+	RequiredConfigErrorFormat = "Requires --%s to be set"
 )
 
 var collectCmd = &cobra.Command{
@@ -30,22 +37,42 @@ var collectCmd = &cobra.Command{
 }
 
 func init() {
+	collectCmd.Flags().String(OpsManagerURLFlag, "", fmt.Sprintf("URL to Ops Manager to collect from [$%s]", OpsManagerURLKey))
+	viper.BindPFlag(OpsManagerURLFlag, collectCmd.Flag(OpsManagerURLFlag))
+	viper.BindEnv(OpsManagerURLFlag, OpsManagerURLKey)
+
+	collectCmd.Flags().String(OpsManagerUsernameFlag, "", fmt.Sprintf("Operations Manager username [$%s]", OpsManagerUsernameFlag))
+	viper.BindPFlag(OpsManagerUsernameFlag, collectCmd.Flag(OpsManagerUsernameFlag))
+	viper.BindEnv(OpsManagerUsernameFlag, OpsManagerUsernameKey)
+
+	collectCmd.Flags().String(OpsManagerPasswordFlag, "", fmt.Sprintf("Operations Manager password [$%s]", OpsManagerPasswordKey))
+	viper.BindPFlag(OpsManagerPasswordFlag, collectCmd.Flag(OpsManagerPasswordFlag))
+	viper.BindEnv(OpsManagerPasswordFlag, OpsManagerPasswordKey)
+
+	collectCmd.Flags().String(OutputPathFlag, "", fmt.Sprintf("Local file path to write data [$%s]", OutputPathKey))
+	viper.BindPFlag(OutputPathFlag, collectCmd.Flag(OutputPathFlag))
+	viper.BindEnv(OutputPathFlag, OutputPathKey)
+
+	collectCmd.Flags().Bool(SkipTlsVerifyFlag, false, fmt.Sprintf("Skip TLS validation on http requests to Operations Manager [$%s]", SkipTlsVerifyKey))
+	viper.BindPFlag(SkipTlsVerifyFlag, collectCmd.Flag(SkipTlsVerifyFlag))
+	viper.BindEnv(SkipTlsVerifyFlag, SkipTlsVerifyKey)
+
 	rootCmd.AddCommand(collectCmd)
 }
 
 func collect(_ *cobra.Command, _ []string) error {
-	conf, err := parseConfig()
+	err := validateConfig()
 	if err != nil {
 		return err
 	}
 
 	authedClient, _ := network.NewOAuthClient(
-		conf.target,
-		conf.username,
-		conf.password,
+		viper.GetString(OpsManagerURLFlag),
+		viper.GetString(OpsManagerUsernameFlag),
+		viper.GetString(OpsManagerPasswordFlag),
 		"",
 		"",
-		conf.skipVerify,
+		viper.GetBool(SkipTlsVerifyFlag),
 		false,
 		30*time.Second,
 	)
@@ -63,45 +90,24 @@ func collect(_ *cobra.Command, _ []string) error {
 	writer := file.Writer{}
 	ce := ops.NewCollector(collector, writer)
 
-	err = ce.Collect(conf.outputPath)
+	err = ce.Collect(viper.GetString(OutputPathFlag))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-type config struct {
-	target     string
-	username   string
-	password   string
-	outputPath string
-	skipVerify bool
-}
-
-func parseConfig() (config, error) {
-	conf := config{
-		target:     os.Getenv(OpsManagerURLKey),
-		username:   os.Getenv(OpsManagerUsernameKey),
-		password:   os.Getenv(OpsManagerPasswordKey),
-		outputPath: os.Getenv(OutputPathKey),
+func validateConfig() error {
+	keys := []string{
+		OpsManagerURLFlag,
+		OpsManagerUsernameFlag,
+		OpsManagerPasswordFlag,
+		OutputPathFlag,
 	}
-
-	if conf.target == "" {
-		return config{}, fmt.Errorf("Requires %s to be set", OpsManagerURLKey)
+	for _, k := range keys {
+		if viper.GetString(k) == "" {
+			return errors.New(fmt.Sprintf(RequiredConfigErrorFormat, k))
+		}
 	}
-
-	if conf.username == "" {
-		return config{}, fmt.Errorf("Requires %s to be set", OpsManagerUsernameKey)
-	}
-
-	if conf.password == "" {
-		return config{}, fmt.Errorf("Requires %s to be set", OpsManagerPasswordKey)
-	}
-
-	if conf.outputPath == "" {
-		return config{}, fmt.Errorf("Requires %s to be set", OutputPathKey)
-	}
-
-	conf.skipVerify, _ = strconv.ParseBool(os.Getenv(SkipTlsVerifyKey))
-	return conf, nil
+	return nil
 }
