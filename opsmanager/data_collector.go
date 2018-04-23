@@ -43,7 +43,7 @@ type OmService interface {
 	DiagnosticReport() (io.Reader, error)
 }
 
-type DataRetriever func() (io.Reader, error)
+type dataRetriever func() (io.Reader, error)
 
 type AqueductData struct {
 	Data io.Reader
@@ -115,13 +115,13 @@ func (dc DataCollector) Collect() ([]Data, error) {
 	return d, nil
 }
 
-func (dc DataCollector) productResourcesCaller(guid string) DataRetriever {
+func (dc DataCollector) productResourcesCaller(guid string) dataRetriever {
 	return func() (io.Reader, error) {
 		return dc.omService.ProductResources(guid)
 	}
 }
 
-func appendRetrievedData(d []Data, retriever DataRetriever, productType, dataType string) ([]Data, error) {
+func appendRetrievedData(d []Data, retriever dataRetriever, productType, dataType string) ([]Data, error) {
 	output, err := retriever()
 	if err != nil {
 		return d, errors.Wrap(err, fmt.Sprintf(RequestorFailureErrorFormat, productType, dataType))
