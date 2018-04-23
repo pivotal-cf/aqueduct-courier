@@ -31,9 +31,10 @@ instance_groups:
     release: concourse-windows-worker
     properties:
       concourse_windows:
-      tsa_host: ((windows_worker_tsa_host))
-      tsa_public_key: ((tsa_host_key.public_key))
-      tsa_worker_private_key: ((worker_key.private_key))
+        team: ((windows_worker_team))
+        tsa_host: ((windows_worker_tsa_host))
+        tsa_public_key: ((tsa_host_key.public_key))
+        tsa_worker_private_key: ((worker_key.private_key))
   - name: golang-windows
     release: windows-tools
   - name: git
