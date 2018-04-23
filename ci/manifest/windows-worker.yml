@@ -1,0 +1,42 @@
+name: windows-worker
+
+releases:
+- name: concourse-windows-worker
+  version: 3.11.0
+  url: https://bosh.io/d/github.com/pivotal-cf-experimental/concourse-windows-worker-release?v=3.11.0
+  sha1: c929d0c3217d66766b80c604b5d3d49e3c32ab0f
+- name: windows-tools
+  version: 8
+  url: https://bosh.io/d/github.com/cloudfoundry-incubator/windows-tools-release?v=8
+  sha1: 7d025c66c65a04ca79b7c21ac8e12f8a301db036
+- name: windows-utilities
+  version: 0.7.0
+  url: https://bosh.io/d/github.com/cloudfoundry-incubator/windows-utilities-release?v=0.7.0
+  sha1: d47290d4ec28775de28ef793aa9095b1983833be
+
+stemcells:
+- alias: windows2016
+  os: windows2016
+  version: latest
+
+instance_groups:
+- name: windows-worker
+  instances: 1
+  vm_type: worker
+  stemcell: windows2016
+  networks: [{name: default}]
+  azs: [z1]
+  jobs:
+  - name: concourse_windows
+    release: concourse-windows-worker
+    properties:
+      concourse_windows:
+      tsa_host: ((windows_worker_tsa_host))
+      tsa_public_key: ((tsa_host_key.public_key))
+      tsa_worker_private_key: ((worker_key.private_key))
+  - name: golang-windows
+    release: windows-tools
+  - name: git
+    release: windows-tools
+  - name: enable_ssh
+    release: windows-utilities

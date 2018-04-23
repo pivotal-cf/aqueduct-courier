@@ -1,0 +1,25 @@
+resource_types:
+- name: bbl-state-resource
+  type: docker-image
+  source:
+    repository: cfinfrastructure/bbl-state-resource
+    tag: latest
+
+resources:
+- name: bbl-state
+  type: bbl-state-resource
+  source:
+    bucket: platform-insights-bbl-state
+    iaas: gcp
+    gcp_region: us-east1
+    gcp_service_account_key: {{courier-gcp-service-account-key}}
+
+jobs:
+- name: bbl-up
+  plan:
+  - get: bbl-state
+  - put: bbl-state
+    params:
+      command: up
+      name_file: bbl-state/name
+      state_dir: bbl-state
