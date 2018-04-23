@@ -20,7 +20,7 @@ const (
 	OpsManagerPasswordKey  = "OPS_MANAGER_PASSWORD"
 	OutputPathKey          = "OUTPUT_PATH"
 	SkipTlsVerifyKey       = "INSECURE_SKIP_TLS_VERIFY"
-	OpsManagerURLFlag      = "ops-manager-url"
+	OpsManagerURLFlag      = "url"
 	OpsManagerUsernameFlag = "username"
 	OpsManagerPasswordFlag = "password"
 	OutputPathFlag         = "output"
