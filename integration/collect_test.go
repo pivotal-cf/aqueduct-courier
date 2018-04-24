@@ -84,7 +84,7 @@ var _ = Describe("Collect", func() {
 		assertContainsJsonFile(contentDir, "ops_manager_vm_types.json")
 	})
 
-	It("fails if data collection from Ops Manager fails", func() {
+	It("fails if data collection from Operations Manager fails", func() {
 		additionalEnvVars[cmd.OpsManagerUsernameKey] = "non-real-user"
 		command := exec.Command(collector, "collect")
 		for k, v := range merge(defaultEnvVars, additionalEnvVars) {

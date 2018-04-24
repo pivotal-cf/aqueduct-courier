@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	PendingChangesExistsMessage   = "There are pending changes on this Ops Manager, please apply them or revert them."
-	PendingChangesFailedMessage   = "Failed to retrieve pending change list from Ops Manager"
-	DeployedProductsFailedMessage = "Failed to retrieve deployed products list from Ops Manager"
+	PendingChangesExistsMessage   = "There are pending changes on this Operations Manager, please apply them or revert them."
+	PendingChangesFailedMessage   = "Failed to retrieve pending change list from Operations Manager"
+	DeployedProductsFailedMessage = "Failed to retrieve deployed products list from Operations Manager"
 	RequestorFailureErrorFormat   = "Failed retrieving %s %s"
 
 	OpsManagerName      = "ops_manager"

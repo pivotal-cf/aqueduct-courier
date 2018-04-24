@@ -31,13 +31,13 @@ const (
 
 var collectCmd = &cobra.Command{
 	Use:   "collect",
-	Short: "Collects information from Ops Manager",
-	Long:  `Collects information from Ops Manager and outputs the content to the configured directory`,
+	Short: "Collects information from Operations Manager",
+	Long:  `Collects information from Operations Manager and outputs the content to the configured directory`,
 	RunE:  collect,
 }
 
 func init() {
-	collectCmd.Flags().String(OpsManagerURLFlag, "", fmt.Sprintf("URL of Ops Manager to collect from [$%s]", OpsManagerURLKey))
+	collectCmd.Flags().String(OpsManagerURLFlag, "", fmt.Sprintf("URL of Operations Manager to collect from [$%s]", OpsManagerURLKey))
 	viper.BindPFlag(OpsManagerURLFlag, collectCmd.Flag(OpsManagerURLFlag))
 	viper.BindEnv(OpsManagerURLFlag, OpsManagerURLKey)
 

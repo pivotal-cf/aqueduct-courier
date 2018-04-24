@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	CollectFailureMessage   = "Failed collecting from Ops Manager"
+	CollectFailureMessage   = "Failed collecting from Operations Manager"
 	DirCreateFailureMessage = "Creating output directory failed"
 	DataWriteFailureMessage = "Failed writing data"
 )
