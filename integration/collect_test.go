@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	RFC3339DateTimeUTCPermissiveRegexp = `\d{4}-\d{2}-\d{2}[Tt]\d{2}:\d{2}:\d{2}[Zz]`
+	UnixTimestampRegexp = `\d{10}`
 )
 
 var _ = Describe("Collect", func() {
@@ -53,6 +53,7 @@ var _ = Describe("Collect", func() {
 
 	It("succeeds with env variables", func() {
 		command := exec.Command(collector, "collect")
+		command.Env = os.Environ()
 		for k, v := range merge(defaultEnvVars, additionalEnvVars) {
 			command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))
 		}
@@ -121,7 +122,7 @@ func validatedContentDir(outputDirPath string) string {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(len(fileInfos)).To(Equal(1), fmt.Sprintf("Expected output dir %s to include a single directory", outputDirPath))
 	Expect(fileInfos[0].IsDir()).To(BeTrue(), fmt.Sprintf("Expected file %s found in %s to be a directory", fileInfos[0], outputDirPath))
-	Expect(fileInfos[0].Name()).To(MatchRegexp(fmt.Sprintf(`%s%s$`, file.OutputDirPrefix, RFC3339DateTimeUTCPermissiveRegexp)))
+	Expect(fileInfos[0].Name()).To(MatchRegexp(fmt.Sprintf(`%s%s$`, file.OutputDirPrefix, UnixTimestampRegexp)))
 	return filepath.Join(outputDirPath, fileInfos[0].Name())
 }
 

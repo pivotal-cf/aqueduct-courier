@@ -42,8 +42,8 @@ func (w Writer) Write(d Data, dir string) error {
 }
 
 func (w Writer) Mkdir(dirPrefix string) (string, error) {
-	timeString := time.Now().UTC().Format(time.RFC3339)
-	outputFolderPath := filepath.Join(dirPrefix, fmt.Sprintf("%s%s", OutputDirPrefix, timeString))
+	timeString := time.Now().UTC().Unix()
+	outputFolderPath := filepath.Join(dirPrefix, fmt.Sprintf("%s%d", OutputDirPrefix, timeString))
 	err := os.Mkdir(outputFolderPath, 0755)
 	if err != nil {
 		return "", errors.Wrap(err, fmt.Sprintf("Failed creating directory %s:", outputFolderPath))

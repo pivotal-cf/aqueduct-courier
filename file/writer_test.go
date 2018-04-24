@@ -17,8 +17,9 @@ import (
 	"github.com/pkg/errors"
 )
 
+
 const (
-	RFC3339DateTimeUTCPermissiveRegexp = `\d{4}-\d{2}-\d{2}[Tt]\d{2}:\d{2}:\d{2}[Zz]`
+	UnixTimestampRegexp = `[0-9]{10}`
 )
 
 var _ = Describe("Writer", func() {
@@ -45,9 +46,8 @@ var _ = Describe("Writer", func() {
 			content, err := ioutil.ReadFile(filepath.Join(dir, "best-name-evar.json"))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).To(Equal("reader-of-things"))
-			fileInfo, err := os.Stat(filepath.Join(dir, "best-name-evar.json"))
+			_, err = os.Stat(filepath.Join(dir, "best-name-evar.json"))
 			Expect(err).NotTo(HaveOccurred())
-			Expect(fileInfo.Mode()).To(Equal(os.FileMode(0644)))
 		})
 
 		It("returns an error when reader errors", func() {
@@ -90,7 +90,9 @@ var _ = Describe("Writer", func() {
 
 			_, err = ioutil.ReadDir(path)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(path).To(MatchRegexp(filepath.Join(dir, fmt.Sprintf(`%s%s$`, OutputDirPrefix, RFC3339DateTimeUTCPermissiveRegexp))))
+			Expect(path).To(MatchRegexp(escapeWindowsPathRegex(
+				filepath.Join(dir, fmt.Sprintf(`%s%s$`, OutputDirPrefix, UnixTimestampRegexp)))),
+			)
 		})
 
 		It("errors if the directory cannot be created", func() {
@@ -100,7 +102,13 @@ var _ = Describe("Writer", func() {
 			path, err := w.Mkdir(nonExistentDir)
 			Expect(path).To(Equal(""))
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(MatchRegexp(fmt.Sprintf(`Failed creating directory %s/%s%s:`, nonExistentDir, OutputDirPrefix, RFC3339DateTimeUTCPermissiveRegexp)))
+			Expect(err.Error()).To(MatchRegexp(
+				fmt.Sprintf(
+					`Failed creating directory %s%s:`,
+					escapeWindowsPathRegex(filepath.Join(nonExistentDir, OutputDirPrefix)),
+					UnixTimestampRegexp,
+				),
+			))
 		})
 	})
 })
@@ -108,4 +116,9 @@ var _ = Describe("Writer", func() {
 //go:generate counterfeiter . reader
 type reader interface {
 	Read(p []byte) (n int, err error)
+}
+
+
+func escapeWindowsPathRegex(path string) string {
+	return strings.Replace(path, `\`, `\\`, -1)
 }

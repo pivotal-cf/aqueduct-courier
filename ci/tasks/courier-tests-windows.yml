@@ -1,0 +1,19 @@
+---
+platform: windows
+
+inputs:
+- name: aqueduct-courier
+  path: go/src/github.com/pivotal-cf/aqueduct-courier
+
+run:
+  path: powershell
+  args:
+  - "-ExecutionPolicy"
+  - "Bypass"
+  - "-File"
+  - go/src/github.com/pivotal-cf/aqueduct-courier/ci/tasks/courier-tests.ps1
+
+params:
+  TEST_OPSMANAGER_URL:
+  TEST_OPSMANAGER_USERNAME:
+  TEST_OPSMANAGER_PASSWORD:
