@@ -28,7 +28,7 @@ update:
 instance_groups:
 - name: windows-worker
   instances: 1
-  vm_type: worker
+  vm_type: default
   stemcell: windows2016
   networks: [{name: default}]
   azs: [z1]
