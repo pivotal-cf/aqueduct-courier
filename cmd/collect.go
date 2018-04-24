@@ -31,13 +31,13 @@ const (
 
 var collectCmd = &cobra.Command{
 	Use:   "collect",
-	Short: "Collects information from the configured Ops Manager",
-	Long:  `Collects information from the configured Ops Manager and outputs the content to the configured directory`,
+	Short: "Collects information from Ops Manager",
+	Long:  `Collects information from Ops Manager and outputs the content to the configured directory`,
 	RunE:  collect,
 }
 
 func init() {
-	collectCmd.Flags().String(OpsManagerURLFlag, "", fmt.Sprintf("URL to Ops Manager to collect from [$%s]", OpsManagerURLKey))
+	collectCmd.Flags().String(OpsManagerURLFlag, "", fmt.Sprintf("URL of Ops Manager to collect from [$%s]", OpsManagerURLKey))
 	viper.BindPFlag(OpsManagerURLFlag, collectCmd.Flag(OpsManagerURLFlag))
 	viper.BindEnv(OpsManagerURLFlag, OpsManagerURLKey)
 
@@ -53,7 +53,11 @@ func init() {
 	viper.BindPFlag(OutputPathFlag, collectCmd.Flag(OutputPathFlag))
 	viper.BindEnv(OutputPathFlag, OutputPathKey)
 
-	collectCmd.Flags().Bool(SkipTlsVerifyFlag, false, fmt.Sprintf("Skip TLS validation on http requests to Operations Manager [$%s]", SkipTlsVerifyKey))
+	collectCmd.Flags().Bool(
+		SkipTlsVerifyFlag,
+		false,
+		fmt.Sprintf("Skip TLS validation on http requests to Operations Manager. Defaults to false. [$%s]", SkipTlsVerifyKey),
+	)
 	viper.BindPFlag(SkipTlsVerifyFlag, collectCmd.Flag(SkipTlsVerifyFlag))
 	viper.BindEnv(SkipTlsVerifyFlag, SkipTlsVerifyKey)
 
