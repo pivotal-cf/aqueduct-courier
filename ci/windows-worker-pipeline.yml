@@ -4,6 +4,10 @@ resource_types:
   source:
     repository: cfinfrastructure/bbl-state-resource
     tag: latest
+- name: bosh-deployment
+  type: docker-image
+  source:
+    repository: cloudfoundry/bosh-deployment-resource
 
 resources:
 - name: bbl-state
@@ -13,6 +17,22 @@ resources:
     iaas: gcp
     gcp_region: us-east1
     gcp_service_account_key: {{courier-gcp-service-account-key}}
+- name: manifest
+  type: git
+  source:
+    branch: master
+    uri: git@github.com:pivotal-cf/aqueduct-courier
+    private_key: {{courier-git-deploy-private-key}}
+    paths:
+    - ci/manifest/windows-worker.yml
+- name: windows-worker
+  type: bosh-deployment
+  source:
+    deployment: windows-worker
+- name: windows-stemcell
+  type: bosh-io-stemcell
+  source:
+    name: bosh-google-kvm-windows2016-go_agent
 
 jobs:
 - name: bbl-up
@@ -23,3 +43,23 @@ jobs:
       command: up
       name_file: bbl-state/name
       state_dir: bbl-state
+- name: deploy-windows-worker
+  plan:
+  - aggregate:
+    - get: bbl-state
+      passed: [bbl-up]
+      trigger: true
+    - get: windows-stemcell
+    - get: manifest
+      trigger: true
+  - put: windows-worker
+    params:
+      manifest: manifest/ci/manifest/windows-worker.yml
+      source_file: bbl-state/bdr-source-file
+      vars:
+        team: platform-insights
+        tsa_host: {{tsa_host}}
+        tsa_host_public_key: {{tsa_host_public_key}}
+        worker_private_key: {{windows_worker_private_key}}
+      stemcells:
+      - windows-stemcell/*.tgz
