@@ -41,7 +41,7 @@ func init() {
 	viper.BindPFlag(OpsManagerURLFlag, collectCmd.Flag(OpsManagerURLFlag))
 	viper.BindEnv(OpsManagerURLFlag, OpsManagerURLKey)
 
-	collectCmd.Flags().String(OpsManagerUsernameFlag, "", fmt.Sprintf("Operations Manager username [$%s]", OpsManagerUsernameFlag))
+	collectCmd.Flags().String(OpsManagerUsernameFlag, "", fmt.Sprintf("Operations Manager username [$%s]", OpsManagerUsernameKey))
 	viper.BindPFlag(OpsManagerUsernameFlag, collectCmd.Flag(OpsManagerUsernameFlag))
 	viper.BindEnv(OpsManagerUsernameFlag, OpsManagerUsernameKey)
 
