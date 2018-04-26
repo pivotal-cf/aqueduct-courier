@@ -25,7 +25,6 @@ const (
 
 var _ = Describe("Collect", func() {
 	var (
-		collector      string
 		outputDirPath  string
 		defaultEnvVars = map[string]string{
 			cmd.OpsManagerURLKey:      os.Getenv("TEST_OPSMANAGER_URL"),
@@ -35,12 +34,6 @@ var _ = Describe("Collect", func() {
 		}
 		additionalEnvVars map[string]string
 	)
-
-	BeforeSuite(func() {
-		var err error
-		collector, err = gexec.Build("github.com/pivotal-cf/aqueduct-courier")
-		Expect(err).NotTo(HaveOccurred())
-	})
 
 	BeforeEach(func() {
 		var err error
@@ -52,7 +45,7 @@ var _ = Describe("Collect", func() {
 	})
 
 	It("succeeds with env variables", func() {
-		command := exec.Command(collector, "collect")
+		command := exec.Command(aqueductBinaryPath, "collect")
 		command.Env = os.Environ()
 		for k, v := range merge(defaultEnvVars, additionalEnvVars) {
 			command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))
@@ -73,7 +66,7 @@ var _ = Describe("Collect", func() {
 			cmd.SkipTlsVerifyFlag:      "true",
 			cmd.OutputPathFlag:         outputDirPath,
 		}
-		command := exec.Command(collector, "collect")
+		command := exec.Command(aqueductBinaryPath, "collect")
 		for k, v := range flagValues {
 			command.Args = append(command.Args, fmt.Sprintf("--%s=%s", k, v))
 		}
@@ -86,7 +79,7 @@ var _ = Describe("Collect", func() {
 
 	It("fails if data collection from Operations Manager fails", func() {
 		additionalEnvVars[cmd.OpsManagerUsernameKey] = "non-real-user"
-		command := exec.Command(collector, "collect")
+		command := exec.Command(aqueductBinaryPath, "collect")
 		for k, v := range merge(defaultEnvVars, additionalEnvVars) {
 			command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))
 		}
@@ -99,7 +92,7 @@ var _ = Describe("Collect", func() {
 	DescribeTable(
 		"fails when required variable is not set",
 		func(missingKey, missingFlag string) {
-			command := exec.Command(collector, "collect")
+			command := exec.Command(aqueductBinaryPath, "collect")
 			for k, v := range merge(defaultEnvVars, additionalEnvVars) {
 				if k != missingKey {
 					command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))

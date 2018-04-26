@@ -1,10 +1,16 @@
 package cmd
 
 import (
+	"errors"
 	"os"
 
+	"fmt"
+
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
+
+const RequiredConfigErrorFormat = "Requires --%s to be set"
 
 var rootCmd = &cobra.Command{
 	Use:   "aqueduct",
@@ -15,4 +21,13 @@ func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
+}
+
+func verifyRequiredConfig(keys ...string) error {
+	for _, k := range keys {
+		if viper.GetString(k) == "" {
+			return errors.New(fmt.Sprintf(RequiredConfigErrorFormat, k))
+		}
+	}
+	return nil
 }

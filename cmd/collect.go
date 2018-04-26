@@ -9,7 +9,6 @@ import (
 	"github.com/pivotal-cf/aqueduct-courier/opsmanager"
 	"github.com/pivotal-cf/om/api"
 	"github.com/pivotal-cf/om/network"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -25,8 +24,6 @@ const (
 	OpsManagerPasswordFlag = "password"
 	OutputPathFlag         = "output"
 	SkipTlsVerifyFlag      = "insecure-skip-tls-verify"
-
-	RequiredConfigErrorFormat = "Requires --%s to be set"
 )
 
 var collectCmd = &cobra.Command{
@@ -65,7 +62,7 @@ func init() {
 }
 
 func collect(_ *cobra.Command, _ []string) error {
-	err := validateConfig()
+	err := verifyRequiredConfig(OpsManagerURLFlag, OpsManagerUsernameFlag, OpsManagerPasswordFlag, OutputPathFlag)
 	if err != nil {
 		return err
 	}
@@ -96,21 +93,6 @@ func collect(_ *cobra.Command, _ []string) error {
 	err = ce.Collect(viper.GetString(OutputPathFlag))
 	if err != nil {
 		return err
-	}
-	return nil
-}
-
-func validateConfig() error {
-	keys := []string{
-		OpsManagerURLFlag,
-		OpsManagerUsernameFlag,
-		OpsManagerPasswordFlag,
-		OutputPathFlag,
-	}
-	for _, k := range keys {
-		if viper.GetString(k) == "" {
-			return errors.New(fmt.Sprintf(RequiredConfigErrorFormat, k))
-		}
 	}
 	return nil
 }
