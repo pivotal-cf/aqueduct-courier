@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"github.com/pivotal-cf/aqueduct-courier/ops"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -8,7 +10,11 @@ import (
 const (
 	DirectoryPathFlag = "path"
 	ApiKeyFlag        = "api-key"
+
+	SendFailureMessage = "Failed to send data"
 )
+
+var dataLoaderURL string
 
 var sendCmd = &cobra.Command{
 	Use:   "send",
@@ -31,6 +37,12 @@ func send(_ *cobra.Command, _ []string) error {
 	err := verifyRequiredConfig(DirectoryPathFlag, ApiKeyFlag)
 	if err != nil {
 		return err
+	}
+
+	sender := ops.SendExecutor{}
+	err = sender.Send(viper.GetString(DirectoryPathFlag), dataLoaderURL, viper.GetString(ApiKeyFlag))
+	if err != nil {
+		return errors.Wrap(err, SendFailureMessage)
 	}
 
 	return nil
