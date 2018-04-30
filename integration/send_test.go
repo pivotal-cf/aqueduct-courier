@@ -13,6 +13,8 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	"os"
+
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"github.com/onsi/gomega/ghttp"
@@ -42,24 +44,43 @@ var _ = Describe("Send", func() {
 		dataLoader.Close()
 	})
 
-	It("sends data to the configured endpoint", func() {
-		dir, err := ioutil.TempDir("", "")
-		Expect(err).NotTo(HaveOccurred())
+	Context("success", func() {
+		var (
+			dir    string
+			apiKey = "best-key"
+		)
 
-		Expect(ioutil.WriteFile(filepath.Join(dir, "data-file1"), []byte(""), 0644)).To(Succeed())
+		BeforeEach(func() {
+			var err error
+			dir, err = ioutil.TempDir("", "")
+			Expect(err).NotTo(HaveOccurred())
 
-		dataLoader.RouteToHandler(http.MethodPost, ops.PostPath, ghttp.CombineHandlers(
-			ghttp.VerifyHeader(http.Header{
-				"Authorization": []string{"Token best-key"},
-			}),
-			ghttp.RespondWith(http.StatusCreated, ""),
-		))
+			Expect(ioutil.WriteFile(filepath.Join(dir, "data-file1"), []byte(""), 0644)).To(Succeed())
 
-		command := exec.Command(binaryPath, "send", "--path="+dir, "--api-key=best-key")
-		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-		Expect(err).NotTo(HaveOccurred())
-		Eventually(session, 30*time.Second).Should(gexec.Exit(0))
-		Expect(len(dataLoader.ReceivedRequests())).To(Equal(1))
+			dataLoader.RouteToHandler(http.MethodPost, ops.PostPath, ghttp.CombineHandlers(
+				ghttp.VerifyHeader(http.Header{
+					"Authorization": []string{fmt.Sprintf("Token %s", apiKey)},
+				}),
+				ghttp.RespondWith(http.StatusCreated, ""),
+			))
+		})
+
+		It("sends data to the configured endpoint with flag configuration", func() {
+			command := exec.Command(binaryPath, "send", "--path="+dir, fmt.Sprintf("--api-key=%s", apiKey))
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session, 30*time.Second).Should(gexec.Exit(0))
+			Expect(len(dataLoader.ReceivedRequests())).To(Equal(1))
+		})
+
+		It("sends data to the configured endpoint with api key as an env variable", func() {
+			command := exec.Command(binaryPath, "send", "--path="+dir)
+			command.Env = append(os.Environ(), fmt.Sprintf("%s=%s", cmd.ApiKeyKey, apiKey))
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session, 30*time.Second).Should(gexec.Exit(0))
+			Expect(len(dataLoader.ReceivedRequests())).To(Equal(1))
+		})
 	})
 
 	It("exits non-zero when sending to pivotal fails", func() {

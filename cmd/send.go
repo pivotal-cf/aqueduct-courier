@@ -10,6 +10,7 @@ import (
 const (
 	DirectoryPathFlag = "path"
 	ApiKeyFlag        = "api-key"
+	ApiKeyKey         = "API_KEY"
 
 	SendFailureMessage = "Failed to send data"
 )
@@ -29,6 +30,7 @@ func init() {
 
 	sendCmd.Flags().String(ApiKeyFlag, "", "API Key used to authenticate with Pivotal")
 	viper.BindPFlag(ApiKeyFlag, sendCmd.Flag(ApiKeyFlag))
+	viper.BindEnv(ApiKeyFlag, ApiKeyKey)
 
 	rootCmd.AddCommand(sendCmd)
 }
