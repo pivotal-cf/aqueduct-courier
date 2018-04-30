@@ -45,12 +45,6 @@ type OmService interface {
 
 type dataRetriever func() (io.Reader, error)
 
-type AqueductData struct {
-	Data io.Reader
-	Name string
-	Type string
-}
-
 type DataCollector struct {
 	omService             OmService
 	pendingChangesService PendingChangesLister
