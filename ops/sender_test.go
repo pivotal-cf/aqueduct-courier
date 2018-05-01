@@ -157,7 +157,7 @@ var _ = Describe("Sender", func() {
 
 	It("errors when the metadata file does not exist", func() {
 		err := sender.Send("/does/not/exist", dataLoader.URL(), "some-key")
-		Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(ReadMetadataFileErrorFormat, "/does/not/exist/aqueduct_metadata"))))
+		Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(ReadMetadataFileErrorFormat, filepath.Clean("/does/not/exist/aqueduct_metadata")))))
 	})
 
 	It("errors when the data files are not sibling to the metadata file", func() {
