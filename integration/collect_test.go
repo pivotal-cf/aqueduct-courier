@@ -75,6 +75,7 @@ var _ = Describe("Collect", func() {
 		Eventually(session, 30*time.Second).Should(gexec.Exit(0))
 		contentDir := validatedContentDir(outputDirPath)
 		assertContainsJsonFile(contentDir, "ops_manager_vm_types.json")
+		assertContainsJsonFile(contentDir, file.MetadataFileName)
 	})
 
 	It("fails if data collection from Operations Manager fails", func() {

@@ -87,7 +87,7 @@ func collect(_ *cobra.Command, _ []string) error {
 		api.NewPendingChangesService(authedClient),
 		api.NewDeployedProductsService(authedClient),
 	)
-	writer := file.Writer{}
+	writer := &file.Writer{}
 	ce := ops.NewCollector(collector, writer)
 
 	err = ce.Collect(viper.GetString(OutputPathFlag))
