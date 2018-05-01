@@ -80,10 +80,10 @@ var _ = Describe("Writer", func() {
 			Expect(collectedAtTime.Location()).To(Equal(time.UTC))
 			Expect(collectedAtTime).To(BeTemporally("~", time.Now(), time.Minute))
 
-			Expect(metadata.Files).To(HaveLen(2))
-			Expect(metadata.Files).To(ConsistOf([]FileData{
-				{Name: d2.Name(), ContentType: d2.ContentType(), Checksum: fmt.Sprintf("%x", md5.Sum([]byte(d2Content)))},
-				{Name: d1.Name(), ContentType: d1.ContentType(), Checksum: fmt.Sprintf("%x", md5.Sum([]byte(d1Content)))},
+			Expect(metadata.FileDigests).To(HaveLen(2))
+			Expect(metadata.FileDigests).To(ConsistOf([]Digest{
+				{Name: d2.Name(), ContentType: d2.ContentType(), MD5Checksum: fmt.Sprintf("%x", md5.Sum([]byte(d2Content)))},
+				{Name: d1.Name(), ContentType: d1.ContentType(), MD5Checksum: fmt.Sprintf("%x", md5.Sum([]byte(d1Content)))},
 			}))
 		})
 

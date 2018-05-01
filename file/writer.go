@@ -31,13 +31,13 @@ type Writer struct {
 
 type Metadata struct {
 	CollectedAt string
-	Files       []FileData
+	FileDigests []Digest
 }
 
-type FileData struct {
+type Digest struct {
 	Name        string
 	ContentType string
-	Checksum    string
+	MD5Checksum string
 }
 
 //go:generate counterfeiter . Data
@@ -83,12 +83,12 @@ func (w *Writer) Mkdir(dirPrefix string) (string, error) {
 
 func (w *Writer) writeOrUpdateMetadata(d Data, content []byte, dir string) error {
 	w.metadata.CollectedAt = time.Now().UTC().Format(time.RFC3339)
-	fileMetadata := FileData{
+	fileMetadata := Digest{
 		Name:        d.Name(),
 		ContentType: d.ContentType(),
-		Checksum:    fmt.Sprintf("%x", md5.Sum(content)),
+		MD5Checksum: fmt.Sprintf("%x", md5.Sum(content)),
 	}
-	w.metadata.Files = append(w.metadata.Files, fileMetadata)
+	w.metadata.FileDigests = append(w.metadata.FileDigests, fileMetadata)
 
 	metadataBytes, err := json.Marshal(w.metadata)
 	if err != nil {
