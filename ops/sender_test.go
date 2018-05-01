@@ -1,19 +1,20 @@
 package ops_test
 
 import (
-	"net/http"
-
+	"crypto/md5"
+	"encoding/json"
 	"fmt"
-
 	"io/ioutil"
-
-	"path/filepath"
-
+	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/ghttp"
+	"github.com/pivotal-cf/aqueduct-courier/file"
+	"github.com/pivotal-cf/aqueduct-courier/file/filefakes"
 	. "github.com/pivotal-cf/aqueduct-courier/ops"
 )
 
@@ -22,6 +23,7 @@ var _ = Describe("Sender", func() {
 		dataLoader    *ghttp.Server
 		sender        SendExecutor
 		dataDirectory string
+		fillerData    *filefakes.FakeData
 	)
 
 	BeforeEach(func() {
@@ -31,45 +33,87 @@ var _ = Describe("Sender", func() {
 
 		dataDirectory, err = ioutil.TempDir("", "")
 		Expect(err).NotTo(HaveOccurred())
-		Expect(ioutil.WriteFile(filepath.Join(dataDirectory, "some-file"), []byte(""), 0644)).To(Succeed())
+		fillerData = new(filefakes.FakeData)
+		fillerData.NameReturns("filler-name")
+		fillerData.MimeTypeReturns("not-a-real-mime")
+		fillerData.ContentReturns(strings.NewReader(""))
+		writer := &file.Writer{}
+		writer.Write(fillerData, dataDirectory)
 	})
 
 	AfterEach(func() {
 		dataLoader.Close()
 	})
 
-	It("posts to the data loader with the correct API key in the header and the file as content", func() {
+	It("posts to the data loader with the file as content and the file metadata", func() {
+		//Setup
 		dir, err := ioutil.TempDir("", "")
 		Expect(err).NotTo(HaveOccurred())
+		writer := &file.Writer{}
 
-		Expect(ioutil.WriteFile(filepath.Join(dir, "data-file1"), []byte("data-file1-contents"), 0644)).To(Succeed())
-		Expect(ioutil.WriteFile(filepath.Join(dir, "data-file2"), []byte("data-file2-contents"), 0644)).To(Succeed())
+		d1 := new(filefakes.FakeData)
+		d1.NameReturns("data-file1")
+		d1.ContentReturns(strings.NewReader("data-file1-contents"))
+		d1.MimeTypeReturns("data-file1-mimetype")
+
+		d2 := new(filefakes.FakeData)
+		d2.NameReturns("data-file2")
+		d2.ContentReturns(strings.NewReader("data-file2-contents"))
+		d2.MimeTypeReturns("data-file2-mimetype")
+
+		err = writer.Write(d1, dir)
+		Expect(err).NotTo(HaveOccurred())
+		err = writer.Write(d2, dir)
+		Expect(err).NotTo(HaveOccurred())
+
+		mFile, err := ioutil.ReadFile(filepath.Join(dir, file.MetadataFileName))
+		Expect(err).NotTo(HaveOccurred())
+
+		var fileMetadata file.Metadata
+		err = json.Unmarshal(mFile, &fileMetadata)
+		Expect(err).NotTo(HaveOccurred())
 
 		dataLoader.RouteToHandler(http.MethodPost, PostPath, ghttp.CombineHandlers(
-			ghttp.VerifyHeader(http.Header{
-				"Authorization": []string{"Token some-key"},
-			}),
 			func(w http.ResponseWriter, req *http.Request) {
-				file, fileHeaders, err := req.FormFile("data")
+				f, fileHeaders, err := req.FormFile("data")
 				Expect(err).ToNot(HaveOccurred())
-				contents, err := ioutil.ReadAll(file)
+				contents, err := ioutil.ReadAll(f)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(string(contents)).To(Equal(fileHeaders.Filename + "-contents"))
+
+				metadataStr := req.FormValue("metadata")
+				var metadata map[string]string
+				checksum := fmt.Sprintf("%x", md5.Sum([]byte(fileHeaders.Filename+"-contents")))
+				Expect(json.Unmarshal([]byte(metadataStr), &metadata)).To(Succeed())
+				Expect(metadata["filename"]).To(Equal(fileHeaders.Filename))
+				Expect(metadata["fileContentType"]).To(Equal(fileHeaders.Filename + "-mimetype"))
+				Expect(metadata["fileMd5Checksum"]).To(Equal(checksum))
+				Expect(metadata["collectedAt"]).To(Equal(fileMetadata.CollectedAt))
 			},
 			ghttp.RespondWith(http.StatusCreated, ""),
 		))
 
+		//Test
 		Expect(sender.Send(dir, dataLoader.URL(), "some-key")).To(Succeed())
 		reqs := dataLoader.ReceivedRequests()
 		Expect(len(reqs)).To(Equal(2))
 
-		verifyFileSentInRequest("data-file1", reqs[0])
-		verifyFileSentInRequest("data-file2", reqs[1])
+		verifyFileSentInRequest(d1.Name(), reqs[0])
+		verifyFileSentInRequest(d2.Name(), reqs[1])
 	})
 
-	It("does not post data files in subdirectories of the data dir", func() {
-		Expect(os.Mkdir(filepath.Join(dataDirectory, "dir-not-to-read"), 0755)).To(Succeed())
-		Expect(ioutil.WriteFile(filepath.Join(dataDirectory, "dir-not-to-read", "file-not-to-send"), []byte(""), 0644)).To(Succeed())
+	It("posts to the data loader with the correct API key in the header", func() {
+		dataLoader.RouteToHandler(http.MethodPost, PostPath, ghttp.CombineHandlers(
+			ghttp.VerifyHeader(http.Header{
+				"Authorization": []string{"Token some-key"},
+			}),
+			ghttp.RespondWith(http.StatusCreated, ""),
+		))
+		Expect(sender.Send(dataDirectory, dataLoader.URL(), "some-key")).To(Succeed())
+	})
+
+	It("does not post files/data not in the metadata file", func() {
+		Expect(ioutil.WriteFile(filepath.Join(dataDirectory, "file-not-to-send"), []byte(""), 0644)).To(Succeed())
 
 		dataLoader.RouteToHandler(http.MethodPost, PostPath, ghttp.CombineHandlers(
 			ghttp.RespondWith(http.StatusCreated, ""),
@@ -81,6 +125,15 @@ var _ = Describe("Sender", func() {
 		))
 
 		Expect(sender.Send(dataDirectory, dataLoader.URL(), "some-key")).To(Succeed())
+		reqs := dataLoader.ReceivedRequests()
+		Expect(len(reqs)).To(Equal(1))
+	})
+
+	It("fails if the metadata file cannot be unmarshalled", func() {
+		Expect(ioutil.WriteFile(filepath.Join(dataDirectory, file.MetadataFileName), []byte("][,.dsf..invalid"), 0644)).To(Succeed())
+
+		err := sender.Send(dataDirectory, dataLoader.URL(), "some-key")
+		Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(InvalidMetadataFileErrorFormat, filepath.Join(dataDirectory, file.MetadataFileName)))))
 	})
 
 	It("fails if the request object cannot be created", func() {
@@ -102,17 +155,15 @@ var _ = Describe("Sender", func() {
 		Expect(err).To(MatchError(fmt.Sprintf(UnexpectedResponseCodeFormat, http.StatusUnauthorized)))
 	})
 
-	It("errors when the data directory does not exist", func() {
+	It("errors when the metadata file does not exist", func() {
 		err := sender.Send("/does/not/exist", dataLoader.URL(), "some-key")
-		Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(ReadDirectoryErrorFormat, "/does/not/exist"))))
+		Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(ReadMetadataFileErrorFormat, "/does/not/exist/aqueduct_metadata"))))
 	})
 
-	It("errors when the data directory does not not contain any data", func() {
-		dirWithNoData, err := ioutil.TempDir("", "")
-		Expect(err).NotTo(HaveOccurred())
-
-		err = sender.Send(dirWithNoData, dataLoader.URL(), "some-key")
-		Expect(err).To(MatchError(fmt.Sprintf(NoDataErrorFormat, dirWithNoData)))
+	It("errors when the data files are not sibling to the metadata file", func() {
+		Expect(os.Remove(filepath.Join(dataDirectory, fillerData.Name()))).To(Succeed())
+		err := sender.Send(dataDirectory, dataLoader.URL(), "some-key")
+		Expect(err).To(MatchError(ContainSubstring(RequestCreationFailureMessage)))
 	})
 })
 

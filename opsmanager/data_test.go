@@ -27,6 +27,6 @@ var _ = Describe("data", func() {
 
 	It("returns json as data type", func() {
 		d := NewData(nil, "", "")
-		Expect(d.ContentType()).To(Equal(JSONDataType))
+		Expect(d.MimeType()).To(Equal(JSONDataType))
 	})
 })

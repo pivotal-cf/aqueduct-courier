@@ -37,7 +37,7 @@ var _ = Describe("Writer", func() {
 			data = new(filefakes.FakeData)
 			data.NameReturns("best-name-evar")
 			data.ContentReturns(strings.NewReader("reader-of-things"))
-			data.ContentTypeReturns("json")
+			data.MimeTypeReturns("json")
 			var err error
 			dir, err = ioutil.TempDir("", "")
 			Expect(err).NotTo(HaveOccurred())
@@ -47,7 +47,7 @@ var _ = Describe("Writer", func() {
 			w := &Writer{}
 			err := w.Write(data, dir)
 			Expect(err).NotTo(HaveOccurred())
-			content, err := ioutil.ReadFile(filepath.Join(dir, "best-name-evar.json"))
+			content, err := ioutil.ReadFile(filepath.Join(dir, "best-name-evar"))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).To(Equal("reader-of-things"))
 		})
@@ -57,12 +57,12 @@ var _ = Describe("Writer", func() {
 			d1.NameReturns("d1")
 			d1Content := "d1-content"
 			d1.ContentReturns(strings.NewReader(d1Content))
-			d1.ContentTypeReturns("better-xml")
+			d1.MimeTypeReturns("better-xml")
 			d2 := new(filefakes.FakeData)
 			d2.NameReturns("d2")
 			d2Content := "d2-content"
 			d2.ContentReturns(strings.NewReader(d2Content))
-			d2.ContentTypeReturns("better-xml")
+			d2.MimeTypeReturns("better-xml")
 
 			w := &Writer{}
 			err := w.Write(d1, dir)
@@ -82,8 +82,8 @@ var _ = Describe("Writer", func() {
 
 			Expect(metadata.FileDigests).To(HaveLen(2))
 			Expect(metadata.FileDigests).To(ConsistOf([]Digest{
-				{Name: d2.Name(), ContentType: d2.ContentType(), MD5Checksum: fmt.Sprintf("%x", md5.Sum([]byte(d2Content)))},
-				{Name: d1.Name(), ContentType: d1.ContentType(), MD5Checksum: fmt.Sprintf("%x", md5.Sum([]byte(d1Content)))},
+				{Name: d2.Name(), MimeType: d2.MimeType(), MD5Checksum: fmt.Sprintf("%x", md5.Sum([]byte(d2Content)))},
+				{Name: d1.Name(), MimeType: d1.MimeType(), MD5Checksum: fmt.Sprintf("%x", md5.Sum([]byte(d1Content)))},
 			}))
 		})
 
@@ -102,17 +102,6 @@ var _ = Describe("Writer", func() {
 			w := &Writer{}
 			err := w.Write(data, nonExistentDir)
 			Expect(err).To(MatchError(ContainSubstring(ContentWritingErrorFormat, data.Name())))
-		})
-
-		It("writes to a correctly named file, when the extension is set", func() {
-			data.ContentTypeReturns("xml")
-
-			w := &Writer{}
-			err := w.Write(data, dir)
-			Expect(err).NotTo(HaveOccurred())
-			content, err := ioutil.ReadFile(filepath.Join(dir, "best-name-evar.xml"))
-			Expect(err).NotTo(HaveOccurred())
-			Expect(string(content)).To(Equal("reader-of-things"))
 		})
 	})
 

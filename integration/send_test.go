@@ -11,14 +11,17 @@ import (
 	"net/http"
 
 	"io/ioutil"
-	"path/filepath"
 
 	"os"
+
+	"strings"
 
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"github.com/onsi/gomega/ghttp"
 	"github.com/pivotal-cf/aqueduct-courier/cmd"
+	"github.com/pivotal-cf/aqueduct-courier/file"
+	"github.com/pivotal-cf/aqueduct-courier/file/filefakes"
 	"github.com/pivotal-cf/aqueduct-courier/ops"
 )
 
@@ -55,7 +58,13 @@ var _ = Describe("Send", func() {
 			dir, err = ioutil.TempDir("", "")
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(ioutil.WriteFile(filepath.Join(dir, "data-file1"), []byte(""), 0644)).To(Succeed())
+			d1 := new(filefakes.FakeData)
+			d1.NameReturns("data-file1")
+			d1.ContentReturns(strings.NewReader("data-file1-contents"))
+			d1.MimeTypeReturns("data-file1-mimetype")
+			writer := &file.Writer{}
+			err = writer.Write(d1, dir)
+			Expect(err).NotTo(HaveOccurred())
 
 			dataLoader.RouteToHandler(http.MethodPost, ops.PostPath, ghttp.CombineHandlers(
 				ghttp.VerifyHeader(http.Header{

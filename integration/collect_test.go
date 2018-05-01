@@ -55,7 +55,7 @@ var _ = Describe("Collect", func() {
 		Eventually(session, 30*time.Second).Should(gexec.Exit(0))
 
 		contentDir := validatedContentDir(outputDirPath)
-		assertContainsJsonFile(contentDir, "ops_manager_vm_types.json")
+		assertContainsJsonFile(contentDir, "ops_manager_vm_types")
 	})
 
 	It("succeeds with flag configuration", func() {
@@ -74,7 +74,7 @@ var _ = Describe("Collect", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(session, 30*time.Second).Should(gexec.Exit(0))
 		contentDir := validatedContentDir(outputDirPath)
-		assertContainsJsonFile(contentDir, "ops_manager_vm_types.json")
+		assertContainsJsonFile(contentDir, "ops_manager_vm_types")
 		assertContainsJsonFile(contentDir, file.MetadataFileName)
 	})
 

@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	JSONDataType    = "json"
+	JSONDataType    = "application/json"
 	DefaultDataType = JSONDataType
 )
 
@@ -28,6 +28,6 @@ func (d Data) Content() io.Reader {
 	return d.reader
 }
 
-func (d Data) ContentType() string {
+func (d Data) MimeType() string {
 	return DefaultDataType
 }

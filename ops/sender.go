@@ -1,17 +1,16 @@
 package ops
 
 import (
-	"net/http"
-
+	"bytes"
+	"encoding/json"
+	"io"
 	"io/ioutil"
-
+	"mime/multipart"
+	"net/http"
 	"os"
 	"path/filepath"
 
-	"bytes"
-	"io"
-	"mime/multipart"
-
+	"github.com/pivotal-cf/aqueduct-courier/file"
 	"github.com/pkg/errors"
 )
 
@@ -19,28 +18,36 @@ const (
 	AuthorizationHeaderKey = "Authorization"
 	PostPath               = "/placeholder"
 
-	RequestCreationFailureMessage = "Failed make request object"
-	PostFailedMessage             = "Failed to do request"
-	UnexpectedResponseCodeFormat  = "Unexpected response code %d, request failed"
-	ReadDirectoryErrorFormat      = "Error reading %s"
-	NoDataErrorFormat             = "Cannot find data in %s"
+	RequestCreationFailureMessage  = "Failed make request object"
+	PostFailedMessage              = "Failed to do request"
+	UnexpectedResponseCodeFormat   = "Unexpected response code %d, request failed"
+	ReadMetadataFileErrorFormat    = "Error reading metadata from file %s"
+	InvalidMetadataFileErrorFormat = "Metadata file %s is invalid"
 )
 
 type SendExecutor struct{}
 
 func (s SendExecutor) Send(directoryPath, dataLoaderURL, apiToken string) error {
-	fileInfos, err := ioutil.ReadDir(directoryPath)
+	metadataPath := filepath.Join(directoryPath, file.MetadataFileName)
+	metadataContent, err := ioutil.ReadFile(metadataPath)
 	if err != nil {
-		return errors.Wrapf(err, ReadDirectoryErrorFormat, directoryPath)
+		return errors.Wrapf(err, ReadMetadataFileErrorFormat, metadataPath)
 	}
 
-	dataSent := false
-	for _, info := range fileInfos {
-		if info.IsDir() {
-			continue
-		}
+	var metadata file.Metadata
+	err = json.Unmarshal(metadataContent, &metadata)
+	if err != nil {
+		return errors.Wrapf(err, InvalidMetadataFileErrorFormat, metadataPath)
+	}
 
-		req, err := makeFileUploadRequest(filepath.Join(directoryPath, info.Name()), apiToken, dataLoaderURL+PostPath)
+	for _, digest := range metadata.FileDigests {
+		req, err := makeFileUploadRequest(
+			filepath.Join(directoryPath, digest.Name),
+			apiToken,
+			dataLoaderURL+PostPath,
+			metadata.CollectedAt,
+			digest,
+		)
 		if err != nil {
 			return errors.Wrap(err, RequestCreationFailureMessage)
 		}
@@ -52,17 +59,12 @@ func (s SendExecutor) Send(directoryPath, dataLoaderURL, apiToken string) error 
 		if resp.StatusCode != http.StatusCreated {
 			return errors.Errorf(UnexpectedResponseCodeFormat, resp.StatusCode)
 		}
-		dataSent = true
-	}
-
-	if !dataSent {
-		return errors.Errorf(NoDataErrorFormat, directoryPath)
 	}
 
 	return nil
 }
 
-func makeFileUploadRequest(filePath, apiToken, uploadURL string) (*http.Request, error) {
+func makeFileUploadRequest(filePath, apiToken, uploadURL, collectedAt string, fileDigest file.Digest) (*http.Request, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, err
@@ -72,12 +74,32 @@ func makeFileUploadRequest(filePath, apiToken, uploadURL string) (*http.Request,
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 
-	part, err := writer.CreateFormFile("data", filepath.Base(filePath))
+	metadataPart, err := writer.CreateFormField("metadata")
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = io.Copy(part, file)
+	metadata := map[string]string{
+		"filename":        fileDigest.Name,
+		"fileContentType": fileDigest.MimeType,
+		"fileMd5Checksum": fileDigest.MD5Checksum,
+		"collectedAt":     collectedAt,
+	}
+	metadataJson, err := json.Marshal(metadata)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = io.Copy(metadataPart, bytes.NewReader(metadataJson))
+	if err != nil {
+		return nil, err
+	}
+
+	dataPart, err := writer.CreateFormFile("data", filepath.Base(filePath))
+	if err != nil {
+		return nil, err
+	}
+	_, err = io.Copy(dataPart, file)
 	if err != nil {
 		return nil, err
 	}

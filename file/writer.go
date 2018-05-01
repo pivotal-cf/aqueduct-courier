@@ -22,7 +22,7 @@ const (
 	OutputDirPrefix           = "FoundationDetails_"
 	ContentWritingErrorFormat = "Failed to write file for %s"
 	ContentReadingErrorFormat = "Failed to read content for %s"
-	MetadataFileName          = "aqueduct_metadata.json"
+	MetadataFileName          = "aqueduct_metadata"
 )
 
 type Writer struct {
@@ -36,7 +36,7 @@ type Metadata struct {
 
 type Digest struct {
 	Name        string
-	ContentType string
+	MimeType    string
 	MD5Checksum string
 }
 
@@ -44,7 +44,7 @@ type Digest struct {
 type Data interface {
 	Name() string
 	Content() io.Reader
-	ContentType() string
+	MimeType() string
 }
 
 func (w *Writer) Write(d Data, dir string) error {
@@ -54,7 +54,7 @@ func (w *Writer) Write(d Data, dir string) error {
 	}
 
 	err = ioutil.WriteFile(
-		filepath.Join(dir, fmt.Sprintf("%s.%s", d.Name(), d.ContentType())),
+		filepath.Join(dir, d.Name()),
 		dataContents,
 		0644,
 	)
@@ -85,7 +85,7 @@ func (w *Writer) writeOrUpdateMetadata(d Data, content []byte, dir string) error
 	w.metadata.CollectedAt = time.Now().UTC().Format(time.RFC3339)
 	fileMetadata := Digest{
 		Name:        d.Name(),
-		ContentType: d.ContentType(),
+		MimeType:    d.MimeType(),
 		MD5Checksum: fmt.Sprintf("%x", md5.Sum(content)),
 	}
 	w.metadata.FileDigests = append(w.metadata.FileDigests, fileMetadata)

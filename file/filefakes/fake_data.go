@@ -27,13 +27,13 @@ type FakeData struct {
 	contentReturnsOnCall map[int]struct {
 		result1 io.Reader
 	}
-	ContentTypeStub        func() string
-	contentTypeMutex       sync.RWMutex
-	contentTypeArgsForCall []struct{}
-	contentTypeReturns     struct {
+	MimeTypeStub        func() string
+	mimeTypeMutex       sync.RWMutex
+	mimeTypeArgsForCall []struct{}
+	mimeTypeReturns     struct {
 		result1 string
 	}
-	contentTypeReturnsOnCall map[int]struct {
+	mimeTypeReturnsOnCall map[int]struct {
 		result1 string
 	}
 	invocations      map[string][][]interface{}
@@ -120,42 +120,42 @@ func (fake *FakeData) ContentReturnsOnCall(i int, result1 io.Reader) {
 	}{result1}
 }
 
-func (fake *FakeData) ContentType() string {
-	fake.contentTypeMutex.Lock()
-	ret, specificReturn := fake.contentTypeReturnsOnCall[len(fake.contentTypeArgsForCall)]
-	fake.contentTypeArgsForCall = append(fake.contentTypeArgsForCall, struct{}{})
-	fake.recordInvocation("ContentType", []interface{}{})
-	fake.contentTypeMutex.Unlock()
-	if fake.ContentTypeStub != nil {
-		return fake.ContentTypeStub()
+func (fake *FakeData) MimeType() string {
+	fake.mimeTypeMutex.Lock()
+	ret, specificReturn := fake.mimeTypeReturnsOnCall[len(fake.mimeTypeArgsForCall)]
+	fake.mimeTypeArgsForCall = append(fake.mimeTypeArgsForCall, struct{}{})
+	fake.recordInvocation("MimeType", []interface{}{})
+	fake.mimeTypeMutex.Unlock()
+	if fake.MimeTypeStub != nil {
+		return fake.MimeTypeStub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.contentTypeReturns.result1
+	return fake.mimeTypeReturns.result1
 }
 
-func (fake *FakeData) ContentTypeCallCount() int {
-	fake.contentTypeMutex.RLock()
-	defer fake.contentTypeMutex.RUnlock()
-	return len(fake.contentTypeArgsForCall)
+func (fake *FakeData) MimeTypeCallCount() int {
+	fake.mimeTypeMutex.RLock()
+	defer fake.mimeTypeMutex.RUnlock()
+	return len(fake.mimeTypeArgsForCall)
 }
 
-func (fake *FakeData) ContentTypeReturns(result1 string) {
-	fake.ContentTypeStub = nil
-	fake.contentTypeReturns = struct {
+func (fake *FakeData) MimeTypeReturns(result1 string) {
+	fake.MimeTypeStub = nil
+	fake.mimeTypeReturns = struct {
 		result1 string
 	}{result1}
 }
 
-func (fake *FakeData) ContentTypeReturnsOnCall(i int, result1 string) {
-	fake.ContentTypeStub = nil
-	if fake.contentTypeReturnsOnCall == nil {
-		fake.contentTypeReturnsOnCall = make(map[int]struct {
+func (fake *FakeData) MimeTypeReturnsOnCall(i int, result1 string) {
+	fake.MimeTypeStub = nil
+	if fake.mimeTypeReturnsOnCall == nil {
+		fake.mimeTypeReturnsOnCall = make(map[int]struct {
 			result1 string
 		})
 	}
-	fake.contentTypeReturnsOnCall[i] = struct {
+	fake.mimeTypeReturnsOnCall[i] = struct {
 		result1 string
 	}{result1}
 }
@@ -167,8 +167,8 @@ func (fake *FakeData) Invocations() map[string][][]interface{} {
 	defer fake.nameMutex.RUnlock()
 	fake.contentMutex.RLock()
 	defer fake.contentMutex.RUnlock()
-	fake.contentTypeMutex.RLock()
-	defer fake.contentTypeMutex.RUnlock()
+	fake.mimeTypeMutex.RLock()
+	defer fake.mimeTypeMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
