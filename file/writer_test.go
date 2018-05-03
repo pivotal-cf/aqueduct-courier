@@ -16,6 +16,8 @@ import (
 
 	"time"
 
+	"encoding/base64"
+
 	. "github.com/pivotal-cf/aqueduct-courier/file"
 	"github.com/pivotal-cf/aqueduct-courier/file/filefakes"
 	"github.com/pkg/errors"
@@ -80,10 +82,14 @@ var _ = Describe("Writer", func() {
 			Expect(collectedAtTime.Location()).To(Equal(time.UTC))
 			Expect(collectedAtTime).To(BeTemporally("~", time.Now(), time.Minute))
 
+			sum := md5.Sum([]byte(d1Content))
+			d1Checksum := base64.StdEncoding.EncodeToString(sum[:])
+			sum = md5.Sum([]byte(d2Content))
+			d2Checksum := base64.StdEncoding.EncodeToString(sum[:])
 			Expect(metadata.FileDigests).To(HaveLen(2))
 			Expect(metadata.FileDigests).To(ConsistOf([]Digest{
-				{Name: d2.Name(), MimeType: d2.MimeType(), MD5Checksum: fmt.Sprintf("%x", md5.Sum([]byte(d2Content)))},
-				{Name: d1.Name(), MimeType: d1.MimeType(), MD5Checksum: fmt.Sprintf("%x", md5.Sum([]byte(d1Content)))},
+				{Name: d2.Name(), MimeType: d2.MimeType(), MD5Checksum: d2Checksum},
+				{Name: d1.Name(), MimeType: d1.MimeType(), MD5Checksum: d1Checksum},
 			}))
 		})
 

@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"encoding/base64"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/ghttp"
@@ -83,7 +85,8 @@ var _ = Describe("Sender", func() {
 
 				metadataStr := req.FormValue("metadata")
 				var metadata map[string]string
-				checksum := fmt.Sprintf("%x", md5.Sum([]byte(fileHeaders.Filename+"-contents")))
+				sum := md5.Sum([]byte(fileHeaders.Filename + "-contents"))
+				checksum := base64.StdEncoding.EncodeToString(sum[:])
 				Expect(json.Unmarshal([]byte(metadataStr), &metadata)).To(Succeed())
 				Expect(metadata["filename"]).To(Equal(fileHeaders.Filename))
 				Expect(metadata["fileContentType"]).To(Equal(fileHeaders.Filename + "-mimetype"))

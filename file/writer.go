@@ -15,6 +15,8 @@ import (
 
 	"crypto/md5"
 
+	"encoding/base64"
+
 	"github.com/pkg/errors"
 )
 
@@ -83,10 +85,11 @@ func (w *Writer) Mkdir(dirPrefix string) (string, error) {
 
 func (w *Writer) writeOrUpdateMetadata(d Data, content []byte, dir string) error {
 	w.metadata.CollectedAt = time.Now().UTC().Format(time.RFC3339)
+	md5Sum := md5.Sum(content)
 	fileMetadata := Digest{
 		Name:        d.Name(),
 		MimeType:    d.MimeType(),
-		MD5Checksum: fmt.Sprintf("%x", md5.Sum(content)),
+		MD5Checksum: base64.StdEncoding.EncodeToString(md5Sum[:]),
 	}
 	w.metadata.FileDigests = append(w.metadata.FileDigests, fileMetadata)
 
