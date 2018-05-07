@@ -9,7 +9,7 @@ if ($LastExitCode -ne 0) {
   Exit $LastExitCode
 }
 
-ginkgo -failOnPending -race -randomizeAllSpecs -r go/src/github.com/pivotal-cf/aqueduct-courier
+ginkgo -failOnPending -race -randomizeAllSpecs -r -nodes=4 go/src/github.com/pivotal-cf/aqueduct-courier
 if ($LastExitCode -ne 0) {
   Exit $LastExitCode
 }

@@ -7,4 +7,4 @@ PATH=${GOPATH}/bin:${PATH}
 
 go get github.com/onsi/ginkgo/ginkgo
 
-ginkgo -failOnPending -race -randomizeAllSpecs -r go/src/github.com/pivotal-cf/aqueduct-courier
+ginkgo -failOnPending -race -randomizeAllSpecs -r -nodes=4 go/src/github.com/pivotal-cf/aqueduct-courier
