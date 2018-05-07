@@ -5,6 +5,8 @@ set -euo pipefail
 GOPATH=${PWD}/go
 PATH=${GOPATH}/bin:${PATH}
 
+go version
+
 go get github.com/onsi/ginkgo/ginkgo
 
 ginkgo -failOnPending -race -randomizeAllSpecs -randomizeSuites -r -nodes=4 go/src/github.com/pivotal-cf/aqueduct-courier

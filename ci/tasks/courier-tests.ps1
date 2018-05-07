@@ -4,6 +4,11 @@ trap { $host.SetShouldExit(1) }
 $env:GOPATH = "$PWD/go"
 $env:PATH += ";${env:GOPATH}/bin"
 
+go version
+if ($LastExitCode -ne 0) {
+  Exit $LastExitCode
+}
+
 go get github.com/onsi/ginkgo/ginkgo
 if ($LastExitCode -ne 0) {
   Exit $LastExitCode
