@@ -1,11 +1,10 @@
 package opsmanager
 
 import (
-	"github.com/pkg/errors"
-
+	"fmt"
 	"io"
 
-	"fmt"
+	"github.com/pkg/errors"
 
 	"github.com/pivotal-cf/om/api"
 )

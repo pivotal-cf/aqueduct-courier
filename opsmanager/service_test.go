@@ -1,15 +1,13 @@
 package opsmanager_test
 
 import (
+	"fmt"
+	"net/http"
+	"strings"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
-
-	"strings"
-
-	"net/http"
-
-	"fmt"
 
 	. "github.com/pivotal-cf/aqueduct-courier/opsmanager"
 	"github.com/pivotal-cf/aqueduct-courier/opsmanager/opsmanagerfakes"

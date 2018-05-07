@@ -1,9 +1,8 @@
 package opsmanager
 
 import (
-	"io"
-
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/pivotal-cf/om/api"

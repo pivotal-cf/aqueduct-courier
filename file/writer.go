@@ -1,21 +1,15 @@
 package file
 
 import (
+	"crypto/md5"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
-	"path/filepath"
-
-	"os"
-
-	"time"
-
 	"io/ioutil"
-
-	"encoding/json"
-
-	"crypto/md5"
-
-	"encoding/base64"
+	"os"
+	"path/filepath"
+	"time"
 
 	"github.com/pkg/errors"
 )

@@ -1,24 +1,18 @@
 package file_test
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-
+	"crypto/md5"
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
-
-	"fmt"
-
-	"encoding/json"
-
-	"crypto/md5"
-
 	"time"
 
-	"encoding/base64"
-
-	"os"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 
 	. "github.com/pivotal-cf/aqueduct-courier/file"
 	"github.com/pivotal-cf/aqueduct-courier/file/filefakes"

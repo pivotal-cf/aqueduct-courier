@@ -1,20 +1,16 @@
 package integration
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"os"
 	"os/exec"
+	"strings"
 	"time"
 
-	"net/http"
-
-	"io/ioutil"
-
-	"os"
-
-	"strings"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
