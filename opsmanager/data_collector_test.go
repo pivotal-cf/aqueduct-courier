@@ -72,19 +72,6 @@ var _ = Describe("DataCollector", func() {
 		assertOmServiceFailure(data, err, "best-product-1", ResourcesDataType, "Requesting things is hard")
 	})
 
-	It("returns an error when omService.DirectorProperties errors", func() {
-		deployedProductsLister.ListReturns(
-			[]api.DeployedProductOutput{
-				{Type: DirectorProductType, GUID: "p-bosh-always-first"},
-				{Type: "best-product-1", GUID: "p1-guid"},
-			},
-			nil,
-		)
-		omService.DirectorPropertiesReturns(nil, errors.New("Requesting things is hard"))
-		data, err := dataCollector.Collect()
-		assertOmServiceFailure(data, err, DirectorProductType, PropertiesDataType, "Requesting things is hard")
-	})
-
 	It("returns an error when omService.VmTypes errors", func() {
 		omService.VmTypesReturns(nil, errors.New("Requesting things is hard"))
 		data, err := dataCollector.Collect()
@@ -98,7 +85,6 @@ var _ = Describe("DataCollector", func() {
 	})
 
 	It("succeeds", func() {
-		directorReader := strings.NewReader("director data")
 		readers := []io.Reader{
 			strings.NewReader("p1 data"),
 			strings.NewReader("p2 data"),
@@ -111,7 +97,6 @@ var _ = Describe("DataCollector", func() {
 			{Type: "best-product-2", GUID: "p2-guid"},
 		}
 		deployedProductsLister.ListReturns(append([]api.DeployedProductOutput{directorProduct}, deployedProducts...), nil)
-		omService.DirectorPropertiesReturns(directorReader, nil)
 		for i, r := range readers {
 			omService.ProductResourcesReturnsOnCall(i, r, nil)
 		}
@@ -120,12 +105,7 @@ var _ = Describe("DataCollector", func() {
 
 		data, err := dataCollector.Collect()
 		Expect(err).ToNot(HaveOccurred())
-		Expect(data).To(ConsistOf(
-			NewData(
-				directorReader,
-				directorProduct.Type,
-				PropertiesDataType,
-			),
+		Expect(data).To(Equal([]Data{
 			NewData(
 				readers[0],
 				deployedProducts[0].Type,
@@ -146,7 +126,7 @@ var _ = Describe("DataCollector", func() {
 				OpsManagerName,
 				DiagnosticReportDataType,
 			),
-		))
+		}))
 	})
 
 	It("succeeds if there are no deployed products", func() {

@@ -22,17 +22,6 @@ type FakeOmService struct {
 		result1 io.Reader
 		result2 error
 	}
-	DirectorPropertiesStub        func() (io.Reader, error)
-	directorPropertiesMutex       sync.RWMutex
-	directorPropertiesArgsForCall []struct{}
-	directorPropertiesReturns     struct {
-		result1 io.Reader
-		result2 error
-	}
-	directorPropertiesReturnsOnCall map[int]struct {
-		result1 io.Reader
-		result2 error
-	}
 	VmTypesStub        func() (io.Reader, error)
 	vmTypesMutex       sync.RWMutex
 	vmTypesArgsForCall []struct{}
@@ -105,49 +94,6 @@ func (fake *FakeOmService) ProductResourcesReturnsOnCall(i int, result1 io.Reade
 		})
 	}
 	fake.productResourcesReturnsOnCall[i] = struct {
-		result1 io.Reader
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeOmService) DirectorProperties() (io.Reader, error) {
-	fake.directorPropertiesMutex.Lock()
-	ret, specificReturn := fake.directorPropertiesReturnsOnCall[len(fake.directorPropertiesArgsForCall)]
-	fake.directorPropertiesArgsForCall = append(fake.directorPropertiesArgsForCall, struct{}{})
-	fake.recordInvocation("DirectorProperties", []interface{}{})
-	fake.directorPropertiesMutex.Unlock()
-	if fake.DirectorPropertiesStub != nil {
-		return fake.DirectorPropertiesStub()
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.directorPropertiesReturns.result1, fake.directorPropertiesReturns.result2
-}
-
-func (fake *FakeOmService) DirectorPropertiesCallCount() int {
-	fake.directorPropertiesMutex.RLock()
-	defer fake.directorPropertiesMutex.RUnlock()
-	return len(fake.directorPropertiesArgsForCall)
-}
-
-func (fake *FakeOmService) DirectorPropertiesReturns(result1 io.Reader, result2 error) {
-	fake.DirectorPropertiesStub = nil
-	fake.directorPropertiesReturns = struct {
-		result1 io.Reader
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeOmService) DirectorPropertiesReturnsOnCall(i int, result1 io.Reader, result2 error) {
-	fake.DirectorPropertiesStub = nil
-	if fake.directorPropertiesReturnsOnCall == nil {
-		fake.directorPropertiesReturnsOnCall = make(map[int]struct {
-			result1 io.Reader
-			result2 error
-		})
-	}
-	fake.directorPropertiesReturnsOnCall[i] = struct {
 		result1 io.Reader
 		result2 error
 	}{result1, result2}
@@ -244,8 +190,6 @@ func (fake *FakeOmService) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.productResourcesMutex.RLock()
 	defer fake.productResourcesMutex.RUnlock()
-	fake.directorPropertiesMutex.RLock()
-	defer fake.directorPropertiesMutex.RUnlock()
 	fake.vmTypesMutex.RLock()
 	defer fake.vmTypesMutex.RUnlock()
 	fake.diagnosticReportMutex.RLock()

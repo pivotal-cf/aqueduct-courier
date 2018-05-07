@@ -11,7 +11,6 @@ import (
 
 const (
 	ProductResourcePathFormat          = "/api/v0/staged/products/%s/resources"
-	DirectorPropertiesPath             = "/api/v0/staged/director/properties"
 	VmTypesPath                        = "/api/v0/vm_types"
 	DiagnosticReportPath               = "/api/v0/diagnostic_report"
 	RequestFailureErrorFormat          = "Failed %s %s"
@@ -29,10 +28,6 @@ type Requestor interface {
 
 func (s *Service) ProductResources(guid string) (io.Reader, error) {
 	return s.makeRequest(fmt.Sprintf(ProductResourcePathFormat, guid))
-}
-
-func (s *Service) DirectorProperties() (io.Reader, error) {
-	return s.makeRequest(DirectorPropertiesPath)
 }
 
 func (s *Service) VmTypes() (io.Reader, error) {

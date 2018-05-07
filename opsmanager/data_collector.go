@@ -37,7 +37,6 @@ type DeployedProductsLister interface {
 //go:generate counterfeiter . OmService
 type OmService interface {
 	ProductResources(guid string) (io.Reader, error)
-	DirectorProperties() (io.Reader, error)
 	VmTypes() (io.Reader, error)
 	DiagnosticReport() (io.Reader, error)
 }
@@ -76,9 +75,7 @@ func (dc DataCollector) Collect() ([]Data, error) {
 	var d []Data
 
 	for _, product := range pl {
-		if product.Type == DirectorProductType {
-			d, err = appendRetrievedData(d, dc.omService.DirectorProperties, product.Type, PropertiesDataType)
-		} else {
+		if product.Type != DirectorProductType {
 			d, err = appendRetrievedData(d, dc.productResourcesCaller(product.GUID), product.Type, ResourcesDataType)
 		}
 		if err != nil {

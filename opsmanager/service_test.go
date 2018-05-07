@@ -16,11 +16,11 @@ import (
 
 var _ = Describe("Service", func() {
 	var (
-		requestor *opsmanagerfakes.FakeRequester
+		requestor *opsmanagerfakes.FakeRequestor
 		service   *Service
 	)
 	BeforeEach(func() {
-		requestor = new(opsmanagerfakes.FakeRequester)
+		requestor = new(opsmanagerfakes.FakeRequestor)
 		service = &Service{
 			Requestor: requestor,
 		}
@@ -67,42 +67,6 @@ var _ = Describe("Service", func() {
 			Expect(actual).To(BeNil())
 			Expect(err).To(MatchError(fmt.Sprintf(
 				RequestUnexpectedStatusErrorFormat, http.MethodGet, expectedProductPath, http.StatusBadGateway,
-			)))
-		})
-	})
-
-	Describe("DirectorProperties", func() {
-		It("returns product resources content", func() {
-			body := strings.NewReader("director-properties")
-
-			requestor.InvokeReturns(api.RequestServiceInvokeOutput{Body: body, StatusCode: http.StatusOK}, nil)
-
-			actual, err := service.DirectorProperties()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(actual).To(Equal(body))
-			Expect(requestor.InvokeCallCount()).To(Equal(1))
-			input := requestor.InvokeArgsForCall(0)
-			Expect(input).To(Equal(api.RequestServiceInvokeInput{Path: DirectorPropertiesPath, Method: http.MethodGet}))
-		})
-
-		It("returns an error when requestor errors", func() {
-			requestor.InvokeReturns(api.RequestServiceInvokeOutput{StatusCode: http.StatusOK}, errors.New("Requesting things is hard"))
-
-			actual, err := service.DirectorProperties()
-			Expect(actual).To(BeNil())
-			Expect(err).To(MatchError(ContainSubstring(
-				fmt.Sprintf(RequestFailureErrorFormat, http.MethodGet, DirectorPropertiesPath),
-			)))
-			Expect(err).To(MatchError(ContainSubstring("Requesting things is hard")))
-		})
-
-		It("returns an error when requestor returns a non 200 status code", func() {
-			requestor.InvokeReturns(api.RequestServiceInvokeOutput{StatusCode: http.StatusBadGateway}, nil)
-
-			actual, err := service.DirectorProperties()
-			Expect(actual).To(BeNil())
-			Expect(err).To(MatchError(fmt.Sprintf(
-				RequestUnexpectedStatusErrorFormat, http.MethodGet, DirectorPropertiesPath, http.StatusBadGateway,
 			)))
 		})
 	})

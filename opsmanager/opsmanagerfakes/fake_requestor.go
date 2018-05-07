@@ -8,7 +8,7 @@ import (
 	"github.com/pivotal-cf/om/api"
 )
 
-type FakeRequester struct {
+type FakeRequestor struct {
 	InvokeStub        func(input api.RequestServiceInvokeInput) (api.RequestServiceInvokeOutput, error)
 	invokeMutex       sync.RWMutex
 	invokeArgsForCall []struct {
@@ -26,7 +26,7 @@ type FakeRequester struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeRequester) Invoke(input api.RequestServiceInvokeInput) (api.RequestServiceInvokeOutput, error) {
+func (fake *FakeRequestor) Invoke(input api.RequestServiceInvokeInput) (api.RequestServiceInvokeOutput, error) {
 	fake.invokeMutex.Lock()
 	ret, specificReturn := fake.invokeReturnsOnCall[len(fake.invokeArgsForCall)]
 	fake.invokeArgsForCall = append(fake.invokeArgsForCall, struct {
@@ -43,19 +43,19 @@ func (fake *FakeRequester) Invoke(input api.RequestServiceInvokeInput) (api.Requ
 	return fake.invokeReturns.result1, fake.invokeReturns.result2
 }
 
-func (fake *FakeRequester) InvokeCallCount() int {
+func (fake *FakeRequestor) InvokeCallCount() int {
 	fake.invokeMutex.RLock()
 	defer fake.invokeMutex.RUnlock()
 	return len(fake.invokeArgsForCall)
 }
 
-func (fake *FakeRequester) InvokeArgsForCall(i int) api.RequestServiceInvokeInput {
+func (fake *FakeRequestor) InvokeArgsForCall(i int) api.RequestServiceInvokeInput {
 	fake.invokeMutex.RLock()
 	defer fake.invokeMutex.RUnlock()
 	return fake.invokeArgsForCall[i].input
 }
 
-func (fake *FakeRequester) InvokeReturns(result1 api.RequestServiceInvokeOutput, result2 error) {
+func (fake *FakeRequestor) InvokeReturns(result1 api.RequestServiceInvokeOutput, result2 error) {
 	fake.InvokeStub = nil
 	fake.invokeReturns = struct {
 		result1 api.RequestServiceInvokeOutput
@@ -63,7 +63,7 @@ func (fake *FakeRequester) InvokeReturns(result1 api.RequestServiceInvokeOutput,
 	}{result1, result2}
 }
 
-func (fake *FakeRequester) InvokeReturnsOnCall(i int, result1 api.RequestServiceInvokeOutput, result2 error) {
+func (fake *FakeRequestor) InvokeReturnsOnCall(i int, result1 api.RequestServiceInvokeOutput, result2 error) {
 	fake.InvokeStub = nil
 	if fake.invokeReturnsOnCall == nil {
 		fake.invokeReturnsOnCall = make(map[int]struct {
@@ -77,7 +77,7 @@ func (fake *FakeRequester) InvokeReturnsOnCall(i int, result1 api.RequestService
 	}{result1, result2}
 }
 
-func (fake *FakeRequester) Invocations() map[string][][]interface{} {
+func (fake *FakeRequestor) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.invokeMutex.RLock()
@@ -89,7 +89,7 @@ func (fake *FakeRequester) Invocations() map[string][][]interface{} {
 	return copiedInvocations
 }
 
-func (fake *FakeRequester) recordInvocation(key string, args []interface{}) {
+func (fake *FakeRequestor) recordInvocation(key string, args []interface{}) {
 	fake.invocationsMutex.Lock()
 	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
@@ -101,4 +101,4 @@ func (fake *FakeRequester) recordInvocation(key string, args []interface{}) {
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ opsmanager.Requestor = new(FakeRequester)
+var _ opsmanager.Requestor = new(FakeRequestor)

@@ -161,19 +161,11 @@ func validatedContentDir(outputDirPath string) string {
 }
 
 func assertContainsJsonFile(contentDir, filename string) {
-	contentFileInfos, err := ioutil.ReadDir(contentDir)
+	jsonFilePath := filepath.Join(contentDir, filename)
+	Expect(jsonFilePath).To(BeAnExistingFile())
+	content, err := ioutil.ReadFile(jsonFilePath)
 	Expect(err).NotTo(HaveOccurred())
-	Expect(len(contentFileInfos)).To(BeNumerically(">", 0), fmt.Sprintf("Expected %s to contain at least 1 file", contentDir))
-	expectedFileExists := false
-	for _, i := range contentFileInfos {
-		if i.Name() == filename {
-			expectedFileExists = true
-			content, err := ioutil.ReadFile(filepath.Join(contentDir, filename))
-			Expect(err).NotTo(HaveOccurred())
-			Expect(json.Valid(content)).To(BeTrue(), fmt.Sprintf("Expected file %s to contain valid json", filename))
-		}
-	}
-	Expect(expectedFileExists).To(BeTrue(), fmt.Sprintf("Expected to find file with name %s, but did not", filename))
+	Expect(json.Valid(content)).To(BeTrue(), fmt.Sprintf("Expected file %s to contain valid json", jsonFilePath))
 }
 
 func assertMetadataFileIsCorrect(contentDir, expectedEnvType string) {
