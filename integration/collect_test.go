@@ -127,7 +127,7 @@ var _ = Describe("Collect", func() {
 			}
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).ToNot(HaveOccurred())
-			Eventually(session).Should(gexec.Exit(1))
+			Eventually(session, 30*time.Second).Should(gexec.Exit(1))
 			Eventually(session.Err).Should(gbytes.Say(fmt.Sprintf(cmd.RequiredConfigErrorFormat, missingFlag)))
 		},
 		Entry(cmd.OpsManagerURLKey, cmd.OpsManagerURLKey, cmd.OpsManagerURLFlag),
