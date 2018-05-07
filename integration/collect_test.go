@@ -30,6 +30,7 @@ var _ = Describe("Collect", func() {
 			cmd.OpsManagerURLKey:      os.Getenv("TEST_OPSMANAGER_URL"),
 			cmd.OpsManagerUsernameKey: os.Getenv("TEST_OPSMANAGER_USERNAME"),
 			cmd.OpsManagerPasswordKey: os.Getenv("TEST_OPSMANAGER_PASSWORD"),
+			cmd.EnvTypeKey:            "Development",
 			cmd.SkipTlsVerifyKey:      "true",
 		}
 		additionalEnvVars map[string]string
@@ -44,6 +45,10 @@ var _ = Describe("Collect", func() {
 		}
 	})
 
+	AfterEach(func() {
+		Expect(os.RemoveAll(outputDirPath)).To(Succeed())
+	})
+
 	It("succeeds with env variables", func() {
 		command := exec.Command(aqueductBinaryPath, "collect")
 		command.Env = os.Environ()
@@ -56,6 +61,7 @@ var _ = Describe("Collect", func() {
 
 		contentDir := validatedContentDir(outputDirPath)
 		assertContainsJsonFile(contentDir, "ops_manager_vm_types")
+		assertMetadataFileIsCorrect(contentDir, "development")
 	})
 
 	It("succeeds with flag configuration", func() {
@@ -63,6 +69,7 @@ var _ = Describe("Collect", func() {
 			cmd.OpsManagerURLFlag:      os.Getenv("TEST_OPSMANAGER_URL"),
 			cmd.OpsManagerUsernameFlag: os.Getenv("TEST_OPSMANAGER_USERNAME"),
 			cmd.OpsManagerPasswordFlag: os.Getenv("TEST_OPSMANAGER_PASSWORD"),
+			cmd.EnvTypeFlag:            "Development",
 			cmd.SkipTlsVerifyFlag:      "true",
 			cmd.OutputPathFlag:         outputDirPath,
 		}
@@ -75,8 +82,27 @@ var _ = Describe("Collect", func() {
 		Eventually(session, 30*time.Second).Should(gexec.Exit(0))
 		contentDir := validatedContentDir(outputDirPath)
 		assertContainsJsonFile(contentDir, "ops_manager_vm_types")
-		assertContainsJsonFile(contentDir, file.MetadataFileName)
+		assertMetadataFileIsCorrect(contentDir, "development")
 	})
+
+	DescribeTable(
+		"succeeds with valid env type configuration",
+		func(envType string) {
+			command := exec.Command(aqueductBinaryPath, "collect")
+			command.Env = os.Environ()
+			for k, v := range merge(defaultEnvVars, additionalEnvVars) {
+				command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))
+			}
+			command.Env = append(command.Env, fmt.Sprintf("%s=%s", cmd.EnvTypeKey, envType))
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session, 30*time.Second).Should(gexec.Exit(0))
+		},
+		Entry(cmd.EnvTypeDevelopment, cmd.EnvTypeDevelopment),
+		Entry(cmd.EnvTypeQA, cmd.EnvTypeQA),
+		Entry(cmd.EnvTypePreProduction, cmd.EnvTypePreProduction),
+		Entry(cmd.EnvTypeProduction, cmd.EnvTypeProduction),
+	)
 
 	It("fails if data collection from Operations Manager fails", func() {
 		additionalEnvVars[cmd.OpsManagerUsernameKey] = "non-real-user"
@@ -107,8 +133,22 @@ var _ = Describe("Collect", func() {
 		Entry(cmd.OpsManagerURLKey, cmd.OpsManagerURLKey, cmd.OpsManagerURLFlag),
 		Entry(cmd.OpsManagerUsernameKey, cmd.OpsManagerUsernameKey, cmd.OpsManagerUsernameFlag),
 		Entry(cmd.OpsManagerPasswordKey, cmd.OpsManagerPasswordKey, cmd.OpsManagerPasswordFlag),
+		Entry(cmd.EnvTypeKey, cmd.EnvTypeKey, cmd.EnvTypeFlag),
 		Entry(cmd.OutputPathKey, cmd.OutputPathKey, cmd.OutputPathFlag),
 	)
+
+	It("fails if the passed in env type is invalid", func() {
+		command := exec.Command(aqueductBinaryPath, "collect")
+		command.Env = os.Environ()
+		for k, v := range merge(defaultEnvVars, additionalEnvVars) {
+			command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))
+		}
+		command.Env = append(command.Env, fmt.Sprintf("%s=%s", cmd.EnvTypeKey, "invalid-type"))
+		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+		Expect(err).NotTo(HaveOccurred())
+		Eventually(session, 30*time.Second).Should(gexec.Exit(1))
+		Expect(session.Err).To(gbytes.Say(fmt.Sprintf(cmd.InvalidEnvTypeFailureFormat, "invalid-type")))
+	})
 })
 
 func validatedContentDir(outputDirPath string) string {
@@ -134,6 +174,14 @@ func assertContainsJsonFile(contentDir, filename string) {
 		}
 	}
 	Expect(expectedFileExists).To(BeTrue(), fmt.Sprintf("Expected to find file with name %s, but did not", filename))
+}
+
+func assertMetadataFileIsCorrect(contentDir, expectedEnvType string) {
+	content, err := ioutil.ReadFile(filepath.Join(contentDir, file.MetadataFileName))
+	Expect(err).NotTo(HaveOccurred(), "Expected metadata file to exist but did not")
+	var metadata file.Metadata
+	Expect(json.Unmarshal(content, &metadata)).To(Succeed())
+	Expect(metadata.EnvType).To(Equal(expectedEnvType))
 }
 
 func merge(maps ...map[string]string) map[string]string {

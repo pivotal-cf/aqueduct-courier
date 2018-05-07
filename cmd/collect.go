@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/pivotal-cf/aqueduct-courier/file"
@@ -9,6 +10,7 @@ import (
 	"github.com/pivotal-cf/aqueduct-courier/opsmanager"
 	"github.com/pivotal-cf/om/api"
 	"github.com/pivotal-cf/om/network"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -17,13 +19,22 @@ const (
 	OpsManagerURLKey       = "OPS_MANAGER_URL"
 	OpsManagerUsernameKey  = "OPS_MANAGER_USERNAME"
 	OpsManagerPasswordKey  = "OPS_MANAGER_PASSWORD"
+	EnvTypeKey             = "ENV_TYPE"
 	OutputPathKey          = "OUTPUT_PATH"
 	SkipTlsVerifyKey       = "INSECURE_SKIP_TLS_VERIFY"
 	OpsManagerURLFlag      = "url"
 	OpsManagerUsernameFlag = "username"
 	OpsManagerPasswordFlag = "password"
+	EnvTypeFlag            = "env-type"
 	OutputPathFlag         = "output"
 	SkipTlsVerifyFlag      = "insecure-skip-tls-verify"
+
+	EnvTypeDevelopment   = "development"
+	EnvTypeQA            = "qa"
+	EnvTypePreProduction = "pre-production"
+	EnvTypeProduction    = "production"
+
+	InvalidEnvTypeFailureFormat = "Invalid env-type %s. See help for the list of valid types."
 )
 
 var collectCmd = &cobra.Command{
@@ -46,6 +57,10 @@ func init() {
 	viper.BindPFlag(OpsManagerPasswordFlag, collectCmd.Flag(OpsManagerPasswordFlag))
 	viper.BindEnv(OpsManagerPasswordFlag, OpsManagerPasswordKey)
 
+	collectCmd.Flags().String(EnvTypeFlag, "", fmt.Sprintf("Environment type. Valid options are: %s, %s, %s, and %s [$%s]", EnvTypeDevelopment, EnvTypeQA, EnvTypePreProduction, EnvTypeProduction, EnvTypeKey))
+	viper.BindPFlag(EnvTypeFlag, collectCmd.Flag(EnvTypeFlag))
+	viper.BindEnv(EnvTypeFlag, EnvTypeKey)
+
 	collectCmd.Flags().String(OutputPathFlag, "", fmt.Sprintf("Local file path to write data [$%s]", OutputPathKey))
 	viper.BindPFlag(OutputPathFlag, collectCmd.Flag(OutputPathFlag))
 	viper.BindEnv(OutputPathFlag, OutputPathKey)
@@ -62,7 +77,11 @@ func init() {
 }
 
 func collect(_ *cobra.Command, _ []string) error {
-	err := verifyRequiredConfig(OpsManagerURLFlag, OpsManagerUsernameFlag, OpsManagerPasswordFlag, OutputPathFlag)
+	err := verifyRequiredConfig(OpsManagerURLFlag, OpsManagerUsernameFlag, OpsManagerPasswordFlag, EnvTypeFlag, OutputPathFlag)
+	if err != nil {
+		return err
+	}
+	envType, err := validateAndNormalizeEnvType()
 	if err != nil {
 		return err
 	}
@@ -87,7 +106,7 @@ func collect(_ *cobra.Command, _ []string) error {
 		api.NewPendingChangesService(authedClient),
 		api.NewDeployedProductsService(authedClient),
 	)
-	writer := &file.Writer{}
+	writer := file.NewWriter(envType)
 	ce := ops.NewCollector(collector, writer)
 
 	err = ce.Collect(viper.GetString(OutputPathFlag))
@@ -95,4 +114,15 @@ func collect(_ *cobra.Command, _ []string) error {
 		return err
 	}
 	return nil
+}
+
+func validateAndNormalizeEnvType() (string, error) {
+	validEnvTypes := []string{EnvTypeDevelopment, EnvTypeQA, EnvTypePreProduction, EnvTypeProduction}
+	envType := strings.ToLower(viper.GetString(EnvTypeFlag))
+	for _, validType := range validEnvTypes {
+		if validType == envType {
+			return envType, nil
+		}
+	}
+	return "", errors.Errorf(InvalidEnvTypeFailureFormat, envType)
 }

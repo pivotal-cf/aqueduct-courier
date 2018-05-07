@@ -32,6 +32,7 @@ type Writer struct {
 }
 
 type Metadata struct {
+	EnvType     string
 	CollectedAt string
 	FileDigests []Digest
 }
@@ -47,6 +48,14 @@ type Data interface {
 	Name() string
 	Content() io.Reader
 	MimeType() string
+}
+
+func NewWriter(envType string) *Writer {
+	return &Writer{
+		metadata: Metadata{
+			EnvType: envType,
+		},
+	}
 }
 
 func (w *Writer) Write(d Data, dir string) error {

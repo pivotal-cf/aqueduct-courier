@@ -18,6 +18,8 @@ import (
 
 	"encoding/base64"
 
+	"os"
+
 	. "github.com/pivotal-cf/aqueduct-courier/file"
 	"github.com/pivotal-cf/aqueduct-courier/file/filefakes"
 	"github.com/pkg/errors"
@@ -45,8 +47,12 @@ var _ = Describe("Writer", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
+		AfterEach(func() {
+			Expect(os.RemoveAll(dir)).To(Succeed())
+		})
+
 		It("writes data content to a file", func() {
-			w := &Writer{}
+			w := NewWriter("")
 			err := w.Write(data, dir)
 			Expect(err).NotTo(HaveOccurred())
 			content, err := ioutil.ReadFile(filepath.Join(dir, "best-name-evar"))
@@ -66,7 +72,7 @@ var _ = Describe("Writer", func() {
 			d2.ContentReturns(strings.NewReader(d2Content))
 			d2.MimeTypeReturns("better-xml")
 
-			w := &Writer{}
+			w := NewWriter("best-env-type-ever")
 			err := w.Write(d1, dir)
 			Expect(err).NotTo(HaveOccurred())
 			err = w.Write(d2, dir)
@@ -81,6 +87,7 @@ var _ = Describe("Writer", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(collectedAtTime.Location()).To(Equal(time.UTC))
 			Expect(collectedAtTime).To(BeTemporally("~", time.Now(), time.Minute))
+			Expect(metadata.EnvType).To(Equal("best-env-type-ever"))
 
 			sum := md5.Sum([]byte(d1Content))
 			d1Checksum := base64.StdEncoding.EncodeToString(sum[:])
@@ -97,7 +104,7 @@ var _ = Describe("Writer", func() {
 			reader := new(filefakes.FakeReader)
 			reader.ReadReturns(0, errors.New("reading things is hard"))
 			data.ContentReturns(reader)
-			w := &Writer{}
+			w := NewWriter("")
 			err := w.Write(data, dir)
 			Expect(err).To(MatchError(ContainSubstring(ContentReadingErrorFormat, data.Name())))
 			Expect(err).To(MatchError(ContainSubstring("reading things is hard")))
@@ -105,7 +112,7 @@ var _ = Describe("Writer", func() {
 
 		It("errors if writing the file returns an error", func() {
 			nonExistentDir := "dir/that/does/not/ever/exist/like/ever"
-			w := &Writer{}
+			w := NewWriter("")
 			err := w.Write(data, nonExistentDir)
 			Expect(err).To(MatchError(ContainSubstring(ContentWritingErrorFormat, data.Name())))
 		})
@@ -116,7 +123,7 @@ var _ = Describe("Writer", func() {
 			dir, err := ioutil.TempDir("", "")
 			Expect(err).NotTo(HaveOccurred())
 
-			w := &Writer{}
+			w := NewWriter("")
 
 			path, err := w.Mkdir(dir)
 			Expect(err).NotTo(HaveOccurred())
@@ -126,10 +133,12 @@ var _ = Describe("Writer", func() {
 			Expect(path).To(MatchRegexp(escapeWindowsPathRegex(
 				filepath.Join(dir, fmt.Sprintf(`%s%s$`, OutputDirPrefix, UnixTimestampRegexp)))),
 			)
+
+			Expect(os.RemoveAll(dir)).To(Succeed())
 		})
 
 		It("errors if the directory cannot be created", func() {
-			w := &Writer{}
+			w := NewWriter("")
 
 			nonExistentDir := "/non-exists/ever/please/do/not"
 			path, err := w.Mkdir(nonExistentDir)

@@ -74,6 +74,10 @@ var _ = Describe("Send", func() {
 			))
 		})
 
+		AfterEach(func() {
+			Expect(os.RemoveAll(dir)).To(Succeed())
+		})
+
 		It("sends data to the configured endpoint with flag configuration", func() {
 			command := exec.Command(binaryPath, "send", "--path="+dir, fmt.Sprintf("--api-key=%s", apiKey))
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)

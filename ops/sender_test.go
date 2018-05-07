@@ -44,6 +44,8 @@ var _ = Describe("Sender", func() {
 	})
 
 	AfterEach(func() {
+		Expect(os.RemoveAll(dataDirectory)).To(Succeed())
+
 		dataLoader.Close()
 	})
 
@@ -103,6 +105,8 @@ var _ = Describe("Sender", func() {
 
 		verifyFileSentInRequest(d1.Name(), reqs[0])
 		verifyFileSentInRequest(d2.Name(), reqs[1])
+
+		Expect(os.RemoveAll(dir)).To(Succeed())
 	})
 
 	It("posts to the data loader with the correct API key in the header", func() {
