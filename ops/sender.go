@@ -46,6 +46,7 @@ func (s SendExecutor) Send(directoryPath, dataLoaderURL, apiToken string) error 
 			apiToken,
 			dataLoaderURL+PostPath,
 			metadata.CollectedAt,
+			metadata.EnvType,
 			digest,
 		)
 		if err != nil {
@@ -64,7 +65,7 @@ func (s SendExecutor) Send(directoryPath, dataLoaderURL, apiToken string) error 
 	return nil
 }
 
-func makeFileUploadRequest(filePath, apiToken, uploadURL, collectedAt string, fileDigest file.Digest) (*http.Request, error) {
+func makeFileUploadRequest(filePath, apiToken, uploadURL, collectedAt, envType string, fileDigest file.Digest) (*http.Request, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, err
@@ -84,6 +85,7 @@ func makeFileUploadRequest(filePath, apiToken, uploadURL, collectedAt string, fi
 		"fileContentType": fileDigest.MimeType,
 		"fileMd5Checksum": fileDigest.MD5Checksum,
 		"collectedAt":     collectedAt,
+		"envType":         envType,
 	}
 	metadataJson, err := json.Marshal(metadata)
 	if err != nil {

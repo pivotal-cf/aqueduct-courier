@@ -38,7 +38,7 @@ var _ = Describe("Sender", func() {
 		fillerData.NameReturns("filler-name")
 		fillerData.MimeTypeReturns("not-a-real-mime")
 		fillerData.ContentReturns(strings.NewReader(""))
-		writer := &file.Writer{}
+		writer := file.NewWriter("")
 		writer.Write(fillerData, dataDirectory)
 	})
 
@@ -52,7 +52,8 @@ var _ = Describe("Sender", func() {
 		//Setup
 		dir, err := ioutil.TempDir("", "")
 		Expect(err).NotTo(HaveOccurred())
-		writer := &file.Writer{}
+		envType := "any-env-type"
+		writer := file.NewWriter(envType)
 
 		d1 := new(filefakes.FakeData)
 		d1.NameReturns("data-file1")
@@ -93,6 +94,7 @@ var _ = Describe("Sender", func() {
 				Expect(metadata["fileContentType"]).To(Equal(fileHeaders.Filename + "-mimetype"))
 				Expect(metadata["fileMd5Checksum"]).To(Equal(checksum))
 				Expect(metadata["collectedAt"]).To(Equal(fileMetadata.CollectedAt))
+				Expect(metadata["envType"]).To(Equal(envType))
 			},
 			ghttp.RespondWith(http.StatusCreated, ""),
 		))
