@@ -14,11 +14,11 @@ jobs:
   - task: run-tests
     file: aqueduct-courier/ci/tasks/courier-tests.yml
     params:
-      TEST_OPSMANAGER_URL: {{courier-ops-manager-url}}
-      TEST_OPSMANAGER_USERNAME: {{courier-ops-manager-username}}
-      TEST_OPSMANAGER_PASSWORD: {{courier-ops-manager-password}}
-      TEST_OPSMANAGER_CLIENT_ID: {{courier-ops-manager-client-id}}
-      TEST_OPSMANAGER_CLIENT_SECRET: {{courier-ops-manager-client-secret}}
+      TEST_OPS_MANAGER_URL: {{courier-ops-manager-url}}
+      TEST_OPS_MANAGER_USERNAME: {{courier-ops-manager-username}}
+      TEST_OPS_MANAGER_PASSWORD: {{courier-ops-manager-password}}
+      TEST_OPS_MANAGER_CLIENT_ID: {{courier-ops-manager-client-id}}
+      TEST_OPS_MANAGER_CLIENT_SECRET: {{courier-ops-manager-client-secret}}
 
 - name: windows-courier-tests
   plan:
@@ -27,8 +27,8 @@ jobs:
   - task: run-tests
     file: aqueduct-courier/ci/tasks/courier-tests-windows.yml
     params:
-      TEST_OPSMANAGER_URL: {{courier-ops-manager-url}}
-      TEST_OPSMANAGER_USERNAME: {{courier-ops-manager-username}}
-      TEST_OPSMANAGER_PASSWORD: {{courier-ops-manager-password}}
-      TEST_OPSMANAGER_CLIENT_ID: {{courier-ops-manager-client-id}}
-      TEST_OPSMANAGER_CLIENT_SECRET: {{courier-ops-manager-client-secret}}
+      TEST_OPS_MANAGER_URL: {{courier-ops-manager-url}}
+      TEST_OPS_MANAGER_USERNAME: {{courier-ops-manager-username}}
+      TEST_OPS_MANAGER_PASSWORD: {{courier-ops-manager-password}}
+      TEST_OPS_MANAGER_CLIENT_ID: {{courier-ops-manager-client-id}}
+      TEST_OPS_MANAGER_CLIENT_SECRET: {{courier-ops-manager-client-secret}}

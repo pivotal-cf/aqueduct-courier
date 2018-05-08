@@ -34,9 +34,9 @@ var _ = Describe("Collect", func() {
 		outputDirPath, err = ioutil.TempDir("", "")
 		Expect(err).NotTo(HaveOccurred())
 		defaultEnvVars = map[string]string{
-			cmd.OpsManagerURLKey:      os.Getenv("TEST_OPSMANAGER_URL"),
-			cmd.OpsManagerUsernameKey: os.Getenv("TEST_OPSMANAGER_USERNAME"),
-			cmd.OpsManagerPasswordKey: os.Getenv("TEST_OPSMANAGER_PASSWORD"),
+			cmd.OpsManagerURLKey:      os.Getenv("TEST_OPS_MANAGER_URL"),
+			cmd.OpsManagerUsernameKey: os.Getenv("TEST_OPS_MANAGER_USERNAME"),
+			cmd.OpsManagerPasswordKey: os.Getenv("TEST_OPS_MANAGER_PASSWORD"),
 			cmd.EnvTypeKey:            "Development",
 			cmd.SkipTlsVerifyKey:      "true",
 			cmd.OutputPathKey:         outputDirPath,
@@ -61,9 +61,9 @@ var _ = Describe("Collect", func() {
 
 		It("succeeds with flag configuration", func() {
 			flagValues := map[string]string{
-				cmd.OpsManagerURLFlag:      os.Getenv("TEST_OPSMANAGER_URL"),
-				cmd.OpsManagerUsernameFlag: os.Getenv("TEST_OPSMANAGER_USERNAME"),
-				cmd.OpsManagerPasswordFlag: os.Getenv("TEST_OPSMANAGER_PASSWORD"),
+				cmd.OpsManagerURLFlag:      os.Getenv("TEST_OPS_MANAGER_URL"),
+				cmd.OpsManagerUsernameFlag: os.Getenv("TEST_OPS_MANAGER_USERNAME"),
+				cmd.OpsManagerPasswordFlag: os.Getenv("TEST_OPS_MANAGER_PASSWORD"),
 				cmd.EnvTypeFlag:            "Development",
 				cmd.SkipTlsVerifyFlag:      "true",
 				cmd.OutputPathFlag:         outputDirPath,
@@ -86,8 +86,8 @@ var _ = Describe("Collect", func() {
 			//needs to change to client/secret not user/pass
 			delete(defaultEnvVars, cmd.OpsManagerUsernameKey)
 			delete(defaultEnvVars, cmd.OpsManagerPasswordKey)
-			defaultEnvVars[cmd.OpsManagerClientIdKey] = os.Getenv("TEST_OPSMANAGER_CLIENT_ID")
-			defaultEnvVars[cmd.OpsManagerClientSecretKey] = os.Getenv("TEST_OPSMANAGER_CLIENT_SECRET")
+			defaultEnvVars[cmd.OpsManagerClientIdKey] = os.Getenv("TEST_OPS_MANAGER_CLIENT_ID")
+			defaultEnvVars[cmd.OpsManagerClientSecretKey] = os.Getenv("TEST_OPS_MANAGER_CLIENT_SECRET")
 			command := buildDefaultCommand(defaultEnvVars)
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
@@ -100,9 +100,9 @@ var _ = Describe("Collect", func() {
 
 		It("succeeds with flag configuration", func() {
 			flagValues := map[string]string{
-				cmd.OpsManagerURLFlag:          os.Getenv("TEST_OPSMANAGER_URL"),
-				cmd.OpsManagerClientIdFlag:     os.Getenv("TEST_OPSMANAGER_CLIENT_ID"),
-				cmd.OpsManagerClientSecretFlag: os.Getenv("TEST_OPSMANAGER_CLIENT_SECRET"),
+				cmd.OpsManagerURLFlag:          os.Getenv("TEST_OPS_MANAGER_URL"),
+				cmd.OpsManagerClientIdFlag:     os.Getenv("TEST_OPS_MANAGER_CLIENT_ID"),
+				cmd.OpsManagerClientSecretFlag: os.Getenv("TEST_OPS_MANAGER_CLIENT_SECRET"),
 				cmd.EnvTypeFlag:                "Development",
 				cmd.SkipTlsVerifyFlag:          "true",
 				cmd.OutputPathFlag:             outputDirPath,
