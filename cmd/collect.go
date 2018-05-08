@@ -89,7 +89,7 @@ func init() {
 	rootCmd.AddCommand(collectCmd)
 }
 
-func collect(_ *cobra.Command, _ []string) error {
+func collect(c *cobra.Command, _ []string) error {
 	if err := verifyRequiredConfig(OpsManagerURLFlag, EnvTypeFlag, OutputPathFlag); err != nil {
 		return err
 	}
@@ -100,6 +100,8 @@ func collect(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+
+	c.SilenceUsage = true
 
 	authedClient, _ := network.NewOAuthClient(
 		viper.GetString(OpsManagerURLFlag),

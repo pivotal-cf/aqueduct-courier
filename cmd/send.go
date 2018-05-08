@@ -35,11 +35,12 @@ func init() {
 	rootCmd.AddCommand(sendCmd)
 }
 
-func send(_ *cobra.Command, _ []string) error {
+func send(c *cobra.Command, _ []string) error {
 	err := verifyRequiredConfig(DirectoryPathFlag, ApiKeyFlag)
 	if err != nil {
 		return err
 	}
+	c.SilenceUsage = true
 
 	sender := ops.SendExecutor{}
 	err = sender.Send(viper.GetString(DirectoryPathFlag), dataLoaderURL, viper.GetString(ApiKeyFlag))

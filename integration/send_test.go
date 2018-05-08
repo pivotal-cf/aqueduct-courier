@@ -98,6 +98,7 @@ var _ = Describe("Send", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(session, 30*time.Second).Should(gexec.Exit(1))
 		Expect(session.Err).To(gbytes.Say(cmd.SendFailureMessage))
+		Expect(session.Err).NotTo(gbytes.Say("Usage:"))
 	})
 
 	It("fails if the path flag has not been set", func() {
@@ -106,6 +107,7 @@ var _ = Describe("Send", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(session, 30*time.Second).Should(gexec.Exit(1))
 		Expect(session.Err).To(gbytes.Say(fmt.Sprintf(cmd.RequiredConfigErrorFormat, cmd.DirectoryPathFlag)))
+		Expect(session.Err).To(gbytes.Say("Usage:"))
 	})
 
 	It("fails if the api-key flag has not been set", func() {
@@ -114,5 +116,6 @@ var _ = Describe("Send", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(session, 30*time.Second).Should(gexec.Exit(1))
 		Expect(session.Err).To(gbytes.Say(fmt.Sprintf(cmd.RequiredConfigErrorFormat, cmd.ApiKeyFlag)))
+		Expect(session.Err).To(gbytes.Say("Usage:"))
 	})
 })

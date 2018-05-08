@@ -149,6 +149,7 @@ var _ = Describe("Collect", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Eventually(session, 30*time.Second).Should(gexec.Exit(1))
 			Eventually(session.Err).Should(gbytes.Say(fmt.Sprintf(cmd.RequiredConfigErrorFormat, missingFlag)))
+			Expect(session.Err).To(gbytes.Say("Usage:"))
 		},
 		Entry(cmd.OpsManagerURLKey, cmd.OpsManagerURLKey, cmd.OpsManagerURLFlag),
 		Entry(cmd.EnvTypeKey, cmd.EnvTypeKey, cmd.EnvTypeFlag),
@@ -170,6 +171,7 @@ var _ = Describe("Collect", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Eventually(session, 30*time.Second).Should(gexec.Exit(1))
 			Eventually(session.Err).Should(gbytes.Say(cmd.InvalidAuthConfigurationMessage))
+			Expect(session.Err).To(gbytes.Say("Usage:"))
 		},
 		Entry("none provided", cmd.OpsManagerUsernameKey, cmd.OpsManagerPasswordKey, cmd.OpsManagerClientIdKey, cmd.OpsManagerClientSecretKey),
 		Entry("missing username and client id", cmd.OpsManagerUsernameKey, cmd.OpsManagerClientIdKey),
@@ -185,6 +187,7 @@ var _ = Describe("Collect", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(session, 30*time.Second).Should(gexec.Exit(1))
 		Expect(session.Err).To(gbytes.Say(fmt.Sprintf(cmd.InvalidEnvTypeFailureFormat, "invalid-type")))
+		Expect(session.Err).To(gbytes.Say("Usage:"))
 	})
 
 	It("fails if data collection from Operations Manager fails", func() {
@@ -194,6 +197,7 @@ var _ = Describe("Collect", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(session, 30*time.Second).Should(gexec.Exit(1))
 		Expect(session.Err).To(gbytes.Say(ops.CollectFailureMessage))
+		Expect(session.Err).NotTo(gbytes.Say("Usage:"))
 	})
 })
 
