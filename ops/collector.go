@@ -40,10 +40,7 @@ func (ce CollectExecutor) Collect(path string) error {
 		return errors.Wrap(err, CollectFailureMessage)
 	}
 
-	collectionId, err := uuid.NewV4()
-	if err != nil {
-		return errors.Wrap(err, UUIDGenerationFailureMessage)
-	}
+	collectionId := uuid.NewV4()
 
 	outputFolderPath, err := ce.w.Mkdir(path)
 	if err != nil {
