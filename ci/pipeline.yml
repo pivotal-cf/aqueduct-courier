@@ -8,6 +8,7 @@ resources:
 
 jobs:
 - name: courier-tests
+  serial_groups: [opsmanager-lock]
   plan:
   - get: aqueduct-courier
     trigger: true
@@ -21,6 +22,7 @@ jobs:
       TEST_OPS_MANAGER_CLIENT_SECRET: {{courier-ops-manager-client-secret}}
 
 - name: windows-courier-tests
+  serial_groups: [opsmanager-lock]
   plan:
   - get: aqueduct-courier
     trigger: true
