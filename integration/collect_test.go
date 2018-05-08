@@ -26,22 +26,20 @@ const (
 var _ = Describe("Collect", func() {
 	var (
 		outputDirPath  string
-		defaultEnvVars = map[string]string{
-			cmd.OpsManagerURLKey:      os.Getenv("TEST_OPSMANAGER_URL"),
-			cmd.OpsManagerUsernameKey: os.Getenv("TEST_OPSMANAGER_USERNAME"),
-			cmd.OpsManagerPasswordKey: os.Getenv("TEST_OPSMANAGER_PASSWORD"),
-			cmd.EnvTypeKey:            "Development",
-			cmd.SkipTlsVerifyKey:      "true",
-		}
-		additionalEnvVars map[string]string
+		defaultEnvVars map[string]string
 	)
 
 	BeforeEach(func() {
 		var err error
 		outputDirPath, err = ioutil.TempDir("", "")
 		Expect(err).NotTo(HaveOccurred())
-		additionalEnvVars = map[string]string{
-			cmd.OutputPathKey: outputDirPath,
+		defaultEnvVars = map[string]string{
+			cmd.OpsManagerURLKey:      os.Getenv("TEST_OPSMANAGER_URL"),
+			cmd.OpsManagerUsernameKey: os.Getenv("TEST_OPSMANAGER_USERNAME"),
+			cmd.OpsManagerPasswordKey: os.Getenv("TEST_OPSMANAGER_PASSWORD"),
+			cmd.EnvTypeKey:            "Development",
+			cmd.SkipTlsVerifyKey:      "true",
+			cmd.OutputPathKey:         outputDirPath,
 		}
 	})
 
@@ -49,50 +47,84 @@ var _ = Describe("Collect", func() {
 		Expect(os.RemoveAll(outputDirPath)).To(Succeed())
 	})
 
-	It("succeeds with env variables", func() {
-		command := exec.Command(aqueductBinaryPath, "collect")
-		command.Env = os.Environ()
-		for k, v := range merge(defaultEnvVars, additionalEnvVars) {
-			command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))
-		}
-		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-		Expect(err).NotTo(HaveOccurred())
-		Eventually(session, 30*time.Second).Should(gexec.Exit(0))
+	Context("user/password authentication", func() {
+		It("succeeds with env variable configuration", func() {
+			command := buildDefaultCommand(defaultEnvVars)
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session, 30*time.Second).Should(gexec.Exit(0))
 
-		contentDir := validatedContentDir(outputDirPath)
-		assertContainsJsonFile(contentDir, "ops_manager_vm_types")
-		assertMetadataFileIsCorrect(contentDir, "development")
+			contentDir := validatedContentDir(outputDirPath)
+			assertContainsJsonFile(contentDir, "ops_manager_vm_types")
+			assertMetadataFileIsCorrect(contentDir, "development")
+		})
+
+		It("succeeds with flag configuration", func() {
+			flagValues := map[string]string{
+				cmd.OpsManagerURLFlag:      os.Getenv("TEST_OPSMANAGER_URL"),
+				cmd.OpsManagerUsernameFlag: os.Getenv("TEST_OPSMANAGER_USERNAME"),
+				cmd.OpsManagerPasswordFlag: os.Getenv("TEST_OPSMANAGER_PASSWORD"),
+				cmd.EnvTypeFlag:            "Development",
+				cmd.SkipTlsVerifyFlag:      "true",
+				cmd.OutputPathFlag:         outputDirPath,
+			}
+			command := exec.Command(aqueductBinaryPath, "collect")
+			for k, v := range flagValues {
+				command.Args = append(command.Args, fmt.Sprintf("--%s=%s", k, v))
+			}
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session, 30*time.Second).Should(gexec.Exit(0))
+			contentDir := validatedContentDir(outputDirPath)
+			assertContainsJsonFile(contentDir, "ops_manager_vm_types")
+			assertMetadataFileIsCorrect(contentDir, "development")
+		})
 	})
 
-	It("succeeds with flag configuration", func() {
-		flagValues := map[string]string{
-			cmd.OpsManagerURLFlag:      os.Getenv("TEST_OPSMANAGER_URL"),
-			cmd.OpsManagerUsernameFlag: os.Getenv("TEST_OPSMANAGER_USERNAME"),
-			cmd.OpsManagerPasswordFlag: os.Getenv("TEST_OPSMANAGER_PASSWORD"),
-			cmd.EnvTypeFlag:            "Development",
-			cmd.SkipTlsVerifyFlag:      "true",
-			cmd.OutputPathFlag:         outputDirPath,
-		}
-		command := exec.Command(aqueductBinaryPath, "collect")
-		for k, v := range flagValues {
-			command.Args = append(command.Args, fmt.Sprintf("--%s=%s", k, v))
-		}
-		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-		Expect(err).NotTo(HaveOccurred())
-		Eventually(session, 30*time.Second).Should(gexec.Exit(0))
-		contentDir := validatedContentDir(outputDirPath)
-		assertContainsJsonFile(contentDir, "ops_manager_vm_types")
-		assertMetadataFileIsCorrect(contentDir, "development")
+	Context("client/secret authentication", func() {
+		It("succeeds with env variable configuration", func() {
+			//needs to change to client/secret not user/pass
+			delete(defaultEnvVars, cmd.OpsManagerUsernameKey)
+			delete(defaultEnvVars, cmd.OpsManagerPasswordKey)
+			defaultEnvVars[cmd.OpsManagerClientIdKey] = os.Getenv("TEST_OPSMANAGER_CLIENT_ID")
+			defaultEnvVars[cmd.OpsManagerClientSecretKey] = os.Getenv("TEST_OPSMANAGER_CLIENT_SECRET")
+			command := buildDefaultCommand(defaultEnvVars)
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session, 30*time.Second).Should(gexec.Exit(0))
+
+			contentDir := validatedContentDir(outputDirPath)
+			assertContainsJsonFile(contentDir, "ops_manager_vm_types")
+			assertMetadataFileIsCorrect(contentDir, "development")
+		})
+
+		It("succeeds with flag configuration", func() {
+			flagValues := map[string]string{
+				cmd.OpsManagerURLFlag:          os.Getenv("TEST_OPSMANAGER_URL"),
+				cmd.OpsManagerClientIdFlag:     os.Getenv("TEST_OPSMANAGER_CLIENT_ID"),
+				cmd.OpsManagerClientSecretFlag: os.Getenv("TEST_OPSMANAGER_CLIENT_SECRET"),
+				cmd.EnvTypeFlag:                "Development",
+				cmd.SkipTlsVerifyFlag:          "true",
+				cmd.OutputPathFlag:             outputDirPath,
+			}
+			command := exec.Command(aqueductBinaryPath, "collect")
+			for k, v := range flagValues {
+				command.Args = append(command.Args, fmt.Sprintf("--%s=%s", k, v))
+			}
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session, 30*time.Second).Should(gexec.Exit(0))
+			contentDir := validatedContentDir(outputDirPath)
+			assertContainsJsonFile(contentDir, "ops_manager_vm_types")
+			assertMetadataFileIsCorrect(contentDir, "development")
+		})
+
 	})
 
 	DescribeTable(
 		"succeeds with valid env type configuration",
 		func(envType string) {
-			command := exec.Command(aqueductBinaryPath, "collect")
-			command.Env = os.Environ()
-			for k, v := range merge(defaultEnvVars, additionalEnvVars) {
-				command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))
-			}
+			command := buildDefaultCommand(defaultEnvVars)
 			command.Env = append(command.Env, fmt.Sprintf("%s=%s", cmd.EnvTypeKey, envType))
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
@@ -104,23 +136,11 @@ var _ = Describe("Collect", func() {
 		Entry(cmd.EnvTypeProduction, cmd.EnvTypeProduction),
 	)
 
-	It("fails if data collection from Operations Manager fails", func() {
-		additionalEnvVars[cmd.OpsManagerUsernameKey] = "non-real-user"
-		command := exec.Command(aqueductBinaryPath, "collect")
-		for k, v := range merge(defaultEnvVars, additionalEnvVars) {
-			command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))
-		}
-		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-		Expect(err).NotTo(HaveOccurred())
-		Eventually(session, 30*time.Second).Should(gexec.Exit(1))
-		Expect(session.Err).To(gbytes.Say(ops.CollectFailureMessage))
-	})
-
 	DescribeTable(
 		"fails when required variable is not set",
 		func(missingKey, missingFlag string) {
 			command := exec.Command(aqueductBinaryPath, "collect")
-			for k, v := range merge(defaultEnvVars, additionalEnvVars) {
+			for k, v := range defaultEnvVars {
 				if k != missingKey {
 					command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))
 				}
@@ -131,23 +151,49 @@ var _ = Describe("Collect", func() {
 			Eventually(session.Err).Should(gbytes.Say(fmt.Sprintf(cmd.RequiredConfigErrorFormat, missingFlag)))
 		},
 		Entry(cmd.OpsManagerURLKey, cmd.OpsManagerURLKey, cmd.OpsManagerURLFlag),
-		Entry(cmd.OpsManagerUsernameKey, cmd.OpsManagerUsernameKey, cmd.OpsManagerUsernameFlag),
-		Entry(cmd.OpsManagerPasswordKey, cmd.OpsManagerPasswordKey, cmd.OpsManagerPasswordFlag),
 		Entry(cmd.EnvTypeKey, cmd.EnvTypeKey, cmd.EnvTypeFlag),
 		Entry(cmd.OutputPathKey, cmd.OutputPathKey, cmd.OutputPathFlag),
 	)
 
+	DescribeTable(
+		"fails when there is no pair of auth credentials",
+		func(keysToRemove ...string) {
+			command := exec.Command(aqueductBinaryPath, "collect")
+			for _, key := range keysToRemove {
+				delete(defaultEnvVars, key)
+			}
+			for k, v := range defaultEnvVars {
+				command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))
+			}
+
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).ToNot(HaveOccurred())
+			Eventually(session, 30*time.Second).Should(gexec.Exit(1))
+			Eventually(session.Err).Should(gbytes.Say(cmd.InvalidAuthConfigurationMessage))
+		},
+		Entry("none provided", cmd.OpsManagerUsernameKey, cmd.OpsManagerPasswordKey, cmd.OpsManagerClientIdKey, cmd.OpsManagerClientSecretKey),
+		Entry("missing username and client id", cmd.OpsManagerUsernameKey, cmd.OpsManagerClientIdKey),
+		Entry("missing username and client secret", cmd.OpsManagerUsernameKey, cmd.OpsManagerClientSecretKey),
+		Entry("missing password and client id", cmd.OpsManagerPasswordKey, cmd.OpsManagerClientIdKey),
+		Entry("missing password and client secret", cmd.OpsManagerPasswordKey, cmd.OpsManagerClientSecretKey),
+	)
+
 	It("fails if the passed in env type is invalid", func() {
-		command := exec.Command(aqueductBinaryPath, "collect")
-		command.Env = os.Environ()
-		for k, v := range merge(defaultEnvVars, additionalEnvVars) {
-			command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))
-		}
+		command := buildDefaultCommand(defaultEnvVars)
 		command.Env = append(command.Env, fmt.Sprintf("%s=%s", cmd.EnvTypeKey, "invalid-type"))
 		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(session, 30*time.Second).Should(gexec.Exit(1))
 		Expect(session.Err).To(gbytes.Say(fmt.Sprintf(cmd.InvalidEnvTypeFailureFormat, "invalid-type")))
+	})
+
+	It("fails if data collection from Operations Manager fails", func() {
+		defaultEnvVars[cmd.OpsManagerUsernameKey] = "non-real-user"
+		command := buildDefaultCommand(defaultEnvVars)
+		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+		Expect(err).NotTo(HaveOccurred())
+		Eventually(session, 30*time.Second).Should(gexec.Exit(1))
+		Expect(session.Err).To(gbytes.Say(ops.CollectFailureMessage))
 	})
 })
 
@@ -176,13 +222,11 @@ func assertMetadataFileIsCorrect(contentDir, expectedEnvType string) {
 	Expect(metadata.EnvType).To(Equal(expectedEnvType))
 }
 
-func merge(maps ...map[string]string) map[string]string {
-	response := map[string]string{}
-	for _, m := range maps {
-		for k, v := range m {
-			response[k] = v
-		}
+func buildDefaultCommand(envVars map[string]string) *exec.Cmd {
+	command := exec.Command(aqueductBinaryPath, "collect")
+	command.Env = os.Environ()
+	for k, v := range envVars {
+		command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))
 	}
-
-	return response
+	return command
 }

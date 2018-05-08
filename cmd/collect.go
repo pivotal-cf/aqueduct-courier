@@ -16,25 +16,30 @@ import (
 )
 
 const (
-	OpsManagerURLKey       = "OPS_MANAGER_URL"
-	OpsManagerUsernameKey  = "OPS_MANAGER_USERNAME"
-	OpsManagerPasswordKey  = "OPS_MANAGER_PASSWORD"
-	EnvTypeKey             = "ENV_TYPE"
-	OutputPathKey          = "OUTPUT_PATH"
-	SkipTlsVerifyKey       = "INSECURE_SKIP_TLS_VERIFY"
-	OpsManagerURLFlag      = "url"
-	OpsManagerUsernameFlag = "username"
-	OpsManagerPasswordFlag = "password"
-	EnvTypeFlag            = "env-type"
-	OutputPathFlag         = "output"
-	SkipTlsVerifyFlag      = "insecure-skip-tls-verify"
+	OpsManagerURLKey           = "OPS_MANAGER_URL"
+	OpsManagerUsernameKey      = "OPS_MANAGER_USERNAME"
+	OpsManagerPasswordKey      = "OPS_MANAGER_PASSWORD"
+	OpsManagerClientIdKey      = "OPS_MANAGER_CLIENT_ID"
+	OpsManagerClientSecretKey  = "OPS_MANAGER_CLIENT_SECRET"
+	EnvTypeKey                 = "ENV_TYPE"
+	OutputPathKey              = "OUTPUT_PATH"
+	SkipTlsVerifyKey           = "INSECURE_SKIP_TLS_VERIFY"
+	OpsManagerURLFlag          = "url"
+	OpsManagerUsernameFlag     = "username"
+	OpsManagerPasswordFlag     = "password"
+	OpsManagerClientIdFlag     = "client-id"
+	OpsManagerClientSecretFlag = "client-secret"
+	EnvTypeFlag                = "env-type"
+	OutputPathFlag             = "output"
+	SkipTlsVerifyFlag          = "insecure-skip-tls-verify"
 
 	EnvTypeDevelopment   = "development"
 	EnvTypeQA            = "qa"
 	EnvTypePreProduction = "pre-production"
 	EnvTypeProduction    = "production"
 
-	InvalidEnvTypeFailureFormat = "Invalid env-type %s. See help for the list of valid types."
+	InvalidEnvTypeFailureFormat     = "Invalid env-type %s. See help for the list of valid types."
+	InvalidAuthConfigurationMessage = "Invalid auth configuration. Requires username/password or client/secret to be set."
 )
 
 var collectCmd = &cobra.Command{
@@ -57,6 +62,14 @@ func init() {
 	viper.BindPFlag(OpsManagerPasswordFlag, collectCmd.Flag(OpsManagerPasswordFlag))
 	viper.BindEnv(OpsManagerPasswordFlag, OpsManagerPasswordKey)
 
+	collectCmd.Flags().String(OpsManagerClientIdFlag, "", fmt.Sprintf("Operations Manager client id [$%s]", OpsManagerClientIdKey))
+	viper.BindPFlag(OpsManagerClientIdFlag, collectCmd.Flag(OpsManagerClientIdFlag))
+	viper.BindEnv(OpsManagerClientIdFlag, OpsManagerClientIdKey)
+
+	collectCmd.Flags().String(OpsManagerClientSecretFlag, "", fmt.Sprintf("Operations Manager client secret [$%s]", OpsManagerClientSecretKey))
+	viper.BindPFlag(OpsManagerClientSecretFlag, collectCmd.Flag(OpsManagerClientSecretFlag))
+	viper.BindEnv(OpsManagerClientSecretFlag, OpsManagerClientSecretKey)
+
 	collectCmd.Flags().String(EnvTypeFlag, "", fmt.Sprintf("Environment type. Valid options are: %s, %s, %s, and %s [$%s]", EnvTypeDevelopment, EnvTypeQA, EnvTypePreProduction, EnvTypeProduction, EnvTypeKey))
 	viper.BindPFlag(EnvTypeFlag, collectCmd.Flag(EnvTypeFlag))
 	viper.BindEnv(EnvTypeFlag, EnvTypeKey)
@@ -77,8 +90,10 @@ func init() {
 }
 
 func collect(_ *cobra.Command, _ []string) error {
-	err := verifyRequiredConfig(OpsManagerURLFlag, OpsManagerUsernameFlag, OpsManagerPasswordFlag, EnvTypeFlag, OutputPathFlag)
-	if err != nil {
+	if err := verifyRequiredConfig(OpsManagerURLFlag, EnvTypeFlag, OutputPathFlag); err != nil {
+		return err
+	}
+	if err := validateCredConfig(); err != nil {
 		return err
 	}
 	envType, err := validateAndNormalizeEnvType()
@@ -90,8 +105,8 @@ func collect(_ *cobra.Command, _ []string) error {
 		viper.GetString(OpsManagerURLFlag),
 		viper.GetString(OpsManagerUsernameFlag),
 		viper.GetString(OpsManagerPasswordFlag),
-		"",
-		"",
+		viper.GetString(OpsManagerClientIdFlag),
+		viper.GetString(OpsManagerClientSecretFlag),
 		viper.GetBool(SkipTlsVerifyFlag),
 		false,
 		30*time.Second,
@@ -113,6 +128,16 @@ func collect(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func validateCredConfig() error {
+	noUsernamePasswordAuth := viper.GetString(OpsManagerUsernameFlag) == "" || viper.GetString(OpsManagerPasswordFlag) == ""
+	noClientSecretAuth := viper.GetString(OpsManagerClientIdFlag) == "" || viper.GetString(OpsManagerClientSecretFlag) == ""
+	if noUsernamePasswordAuth && noClientSecretAuth {
+		return errors.New(InvalidAuthConfigurationMessage)
+	}
+
 	return nil
 }
 
