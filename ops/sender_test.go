@@ -39,7 +39,7 @@ var _ = Describe("Sender", func() {
 		fillerData.MimeTypeReturns("not-a-real-mime")
 		fillerData.ContentReturns(strings.NewReader(""))
 		writer := file.NewWriter("")
-		writer.Write(fillerData, dataDirectory)
+		writer.Write(fillerData, dataDirectory, "")
 	})
 
 	AfterEach(func() {
@@ -65,9 +65,9 @@ var _ = Describe("Sender", func() {
 		d2.ContentReturns(strings.NewReader("data-file2-contents"))
 		d2.MimeTypeReturns("data-file2-mimetype")
 
-		err = writer.Write(d1, dir)
+		err = writer.Write(d1, dir, "best-uuid")
 		Expect(err).NotTo(HaveOccurred())
-		err = writer.Write(d2, dir)
+		err = writer.Write(d2, dir, "best-uuid")
 		Expect(err).NotTo(HaveOccurred())
 
 		mFile, err := ioutil.ReadFile(filepath.Join(dir, file.MetadataFileName))
@@ -95,6 +95,7 @@ var _ = Describe("Sender", func() {
 				Expect(metadata["fileMd5Checksum"]).To(Equal(checksum))
 				Expect(metadata["collectedAt"]).To(Equal(fileMetadata.CollectedAt))
 				Expect(metadata["envType"]).To(Equal(envType))
+				Expect(metadata["collectionId"]).To(Equal("best-uuid"))
 			},
 			ghttp.RespondWith(http.StatusCreated, ""),
 		))

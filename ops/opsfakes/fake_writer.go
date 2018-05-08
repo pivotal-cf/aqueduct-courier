@@ -8,11 +8,12 @@ import (
 )
 
 type FakeWriter struct {
-	WriteStub        func(file.Data, string) error
+	WriteStub        func(file.Data, string, string) error
 	writeMutex       sync.RWMutex
 	writeArgsForCall []struct {
 		arg1 file.Data
 		arg2 string
+		arg3 string
 	}
 	writeReturns struct {
 		result1 error
@@ -37,17 +38,18 @@ type FakeWriter struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeWriter) Write(arg1 file.Data, arg2 string) error {
+func (fake *FakeWriter) Write(arg1 file.Data, arg2 string, arg3 string) error {
 	fake.writeMutex.Lock()
 	ret, specificReturn := fake.writeReturnsOnCall[len(fake.writeArgsForCall)]
 	fake.writeArgsForCall = append(fake.writeArgsForCall, struct {
 		arg1 file.Data
 		arg2 string
-	}{arg1, arg2})
-	fake.recordInvocation("Write", []interface{}{arg1, arg2})
+		arg3 string
+	}{arg1, arg2, arg3})
+	fake.recordInvocation("Write", []interface{}{arg1, arg2, arg3})
 	fake.writeMutex.Unlock()
 	if fake.WriteStub != nil {
-		return fake.WriteStub(arg1, arg2)
+		return fake.WriteStub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
@@ -61,10 +63,10 @@ func (fake *FakeWriter) WriteCallCount() int {
 	return len(fake.writeArgsForCall)
 }
 
-func (fake *FakeWriter) WriteArgsForCall(i int) (file.Data, string) {
+func (fake *FakeWriter) WriteArgsForCall(i int) (file.Data, string, string) {
 	fake.writeMutex.RLock()
 	defer fake.writeMutex.RUnlock()
-	return fake.writeArgsForCall[i].arg1, fake.writeArgsForCall[i].arg2
+	return fake.writeArgsForCall[i].arg1, fake.writeArgsForCall[i].arg2, fake.writeArgsForCall[i].arg3
 }
 
 func (fake *FakeWriter) WriteReturns(result1 error) {

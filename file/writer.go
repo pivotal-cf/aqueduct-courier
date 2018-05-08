@@ -26,9 +26,10 @@ type Writer struct {
 }
 
 type Metadata struct {
-	EnvType     string
-	CollectedAt string
-	FileDigests []Digest
+	EnvType      string
+	CollectedAt  string
+	CollectionId string
+	FileDigests  []Digest
 }
 
 type Digest struct {
@@ -52,7 +53,7 @@ func NewWriter(envType string) *Writer {
 	}
 }
 
-func (w *Writer) Write(d Data, dir string) error {
+func (w *Writer) Write(d Data, dir, collectionId string) error {
 	dataContents, err := ioutil.ReadAll(d.Content())
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf(ContentReadingErrorFormat, d.Name()))
@@ -67,7 +68,7 @@ func (w *Writer) Write(d Data, dir string) error {
 		return errors.Wrap(err, fmt.Sprintf(ContentWritingErrorFormat, d.Name()))
 	}
 
-	err = w.writeOrUpdateMetadata(d, dataContents, dir)
+	err = w.writeOrUpdateMetadata(d, dataContents, dir, collectionId)
 	if err != nil {
 		return err
 	}
@@ -86,8 +87,9 @@ func (w *Writer) Mkdir(dirPrefix string) (string, error) {
 	return outputFolderPath, nil
 }
 
-func (w *Writer) writeOrUpdateMetadata(d Data, content []byte, dir string) error {
+func (w *Writer) writeOrUpdateMetadata(d Data, content []byte, dir, collectionId string) error {
 	w.metadata.CollectedAt = time.Now().UTC().Format(time.RFC3339)
+	w.metadata.CollectionId = collectionId
 	md5Sum := md5.Sum(content)
 	fileMetadata := Digest{
 		Name:        d.Name(),

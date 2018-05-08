@@ -59,7 +59,7 @@ var _ = Describe("Send", func() {
 			d1.ContentReturns(strings.NewReader("data-file1-contents"))
 			d1.MimeTypeReturns("data-file1-mimetype")
 			writer := &file.Writer{}
-			err = writer.Write(d1, dir)
+			err = writer.Write(d1, dir, "")
 			Expect(err).NotTo(HaveOccurred())
 
 			dataLoader.RouteToHandler(http.MethodPost, ops.PostPath, ghttp.CombineHandlers(

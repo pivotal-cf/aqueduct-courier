@@ -41,13 +41,16 @@ func (s SendExecutor) Send(directoryPath, dataLoaderURL, apiToken string) error 
 	}
 
 	for _, digest := range metadata.FileDigests {
+		metadataReader, err := constructMetadataReader(metadata, digest)
+		if err != nil {
+			return errors.Wrap(err, RequestCreationFailureMessage)
+		}
+
 		req, err := makeFileUploadRequest(
 			filepath.Join(directoryPath, digest.Name),
 			apiToken,
 			dataLoaderURL+PostPath,
-			metadata.CollectedAt,
-			metadata.EnvType,
-			digest,
+			metadataReader,
 		)
 		if err != nil {
 			return errors.Wrap(err, RequestCreationFailureMessage)
@@ -65,7 +68,24 @@ func (s SendExecutor) Send(directoryPath, dataLoaderURL, apiToken string) error 
 	return nil
 }
 
-func makeFileUploadRequest(filePath, apiToken, uploadURL, collectedAt, envType string, fileDigest file.Digest) (*http.Request, error) {
+func constructMetadataReader(metadata file.Metadata, digest file.Digest) (io.Reader, error) {
+	metadataMap := map[string]string{
+		"filename":        digest.Name,
+		"fileContentType": digest.MimeType,
+		"fileMd5Checksum": digest.MD5Checksum,
+		"collectedAt":     metadata.CollectedAt,
+		"envType":         metadata.EnvType,
+		"collectionId":    metadata.CollectionId,
+	}
+	metadataJson, err := json.Marshal(metadataMap)
+	if err != nil {
+		return nil, err
+	}
+
+	return bytes.NewReader(metadataJson), nil
+}
+
+func makeFileUploadRequest(filePath, apiToken, uploadURL string, metadataReader io.Reader) (*http.Request, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, err
@@ -80,19 +100,7 @@ func makeFileUploadRequest(filePath, apiToken, uploadURL, collectedAt, envType s
 		return nil, err
 	}
 
-	metadata := map[string]string{
-		"filename":        fileDigest.Name,
-		"fileContentType": fileDigest.MimeType,
-		"fileMd5Checksum": fileDigest.MD5Checksum,
-		"collectedAt":     collectedAt,
-		"envType":         envType,
-	}
-	metadataJson, err := json.Marshal(metadata)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = io.Copy(metadataPart, bytes.NewReader(metadataJson))
+	_, err = io.Copy(metadataPart, metadataReader)
 	if err != nil {
 		return nil, err
 	}

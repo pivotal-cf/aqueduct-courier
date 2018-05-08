@@ -47,7 +47,7 @@ var _ = Describe("Writer", func() {
 
 		It("writes data content to a file", func() {
 			w := NewWriter("")
-			err := w.Write(data, dir)
+			err := w.Write(data, dir, "")
 			Expect(err).NotTo(HaveOccurred())
 			content, err := ioutil.ReadFile(filepath.Join(dir, "best-name-evar"))
 			Expect(err).NotTo(HaveOccurred())
@@ -67,9 +67,9 @@ var _ = Describe("Writer", func() {
 			d2.MimeTypeReturns("better-xml")
 
 			w := NewWriter("best-env-type-ever")
-			err := w.Write(d1, dir)
+			err := w.Write(d1, dir, "best-uuid")
 			Expect(err).NotTo(HaveOccurred())
-			err = w.Write(d2, dir)
+			err = w.Write(d2, dir, "best-uuid")
 			Expect(err).NotTo(HaveOccurred())
 
 			content, err := ioutil.ReadFile(filepath.Join(dir, MetadataFileName))
@@ -92,6 +92,7 @@ var _ = Describe("Writer", func() {
 				{Name: d2.Name(), MimeType: d2.MimeType(), MD5Checksum: d2Checksum},
 				{Name: d1.Name(), MimeType: d1.MimeType(), MD5Checksum: d1Checksum},
 			}))
+			Expect(metadata.CollectionId).To(Equal("best-uuid"))
 		})
 
 		It("returns an error when the content reader errors", func() {
@@ -99,7 +100,7 @@ var _ = Describe("Writer", func() {
 			reader.ReadReturns(0, errors.New("reading things is hard"))
 			data.ContentReturns(reader)
 			w := NewWriter("")
-			err := w.Write(data, dir)
+			err := w.Write(data, dir, "")
 			Expect(err).To(MatchError(ContainSubstring(ContentReadingErrorFormat, data.Name())))
 			Expect(err).To(MatchError(ContainSubstring("reading things is hard")))
 		})
@@ -107,7 +108,7 @@ var _ = Describe("Writer", func() {
 		It("errors if writing the file returns an error", func() {
 			nonExistentDir := "dir/that/does/not/ever/exist/like/ever"
 			w := NewWriter("")
-			err := w.Write(data, nonExistentDir)
+			err := w.Write(data, nonExistentDir, "")
 			Expect(err).To(MatchError(ContainSubstring(ContentWritingErrorFormat, data.Name())))
 		})
 	})

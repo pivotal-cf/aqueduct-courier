@@ -2,6 +2,7 @@ package ops_test
 
 import (
 	. "github.com/pivotal-cf/aqueduct-courier/ops"
+	"github.com/satori/go.uuid"
 
 	"errors"
 
@@ -30,14 +31,27 @@ var _ = Describe("Collector", func() {
 		d2 := opsmanager.NewData(nil, "d2", "better-kind")
 		dataToWrite := []opsmanager.Data{d1, d2}
 		dataCollector.CollectReturns(dataToWrite, nil)
+		writer.MkdirReturns("some/path/appended/to", nil)
 
 		err := collector.Collect("some/path")
 		Expect(err).NotTo(HaveOccurred())
 		Expect(writer.MkdirCallCount()).To(Equal(1))
 		Expect(writer.MkdirArgsForCall(0)).To(Equal("some/path"))
 		Expect(writer.WriteCallCount()).To(Equal(2))
-		Expect(writer.WriteArgsForCall(0)).To(Equal(d1))
-		Expect(writer.WriteArgsForCall(1)).To(Equal(d2))
+
+		data, folderPath, collectionId1 := writer.WriteArgsForCall(0)
+		Expect(data).To(Equal(d1))
+		Expect(folderPath).To(Equal("some/path/appended/to"))
+		_, err = uuid.FromString(collectionId1)
+		Expect(err).NotTo(HaveOccurred())
+
+		data, folderPath, collectionId2 := writer.WriteArgsForCall(0)
+		Expect(data).To(Equal(d1))
+		Expect(folderPath).To(Equal("some/path/appended/to"))
+		_, err = uuid.FromString(collectionId2)
+		Expect(err).NotTo(HaveOccurred())
+
+		Expect(collectionId1).To(Equal(collectionId2))
 	})
 
 	It("returns an error when the collection errors", func() {
