@@ -58,4 +58,4 @@ jobs:
       DATA_LOADER_URL: {{staging-data-loader-url}}
   - put: staging-binaries
     params:
-      file: aqueduct-binaries/aqueduct-courier-staging.tgz
+      file: aqueduct-binaries/*.tgz
