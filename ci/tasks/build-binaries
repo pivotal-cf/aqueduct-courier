@@ -7,11 +7,11 @@ GOARCH=amd64
 
 go version
 
-GO_FLAGS="-ldflags '-X github.com/pivotal-cf/aqueduct-courier/cmd.dataLoaderURL=$DATA_LOADER_URL'"
+GO_FLAGS="-ldflags '-X=github.com/pivotal-cf/aqueduct-courier/cmd.dataLoaderURL=$DATA_LOADER_URL'"
 
-go build -o "aqueduct-linux-$GOARCH" "$GO_FLAGS" github.com/pivotal-cf/aqueduct-courier
-GOOS=darwin go build -o "aqueduct-darwin-$GOARCH" "$GO_FLAGS" github.com/pivotal-cf/aqueduct-courier
-GOOS=windows go build -o "aqueduct-windows-$GOARCH.exe" "$GO_FLAGS" github.com/pivotal-cf/aqueduct-courier
+go build -o "aqueduct-linux-$GOARCH" $GO_FLAGS github.com/pivotal-cf/aqueduct-courier
+GOOS=darwin go build -o "aqueduct-darwin-$GOARCH" $GO_FLAGS github.com/pivotal-cf/aqueduct-courier
+GOOS=windows go build -o "aqueduct-windows-$GOARCH.exe" $GO_FLAGS github.com/pivotal-cf/aqueduct-courier
 
 mkdir output-binaries
 tar czvf aqueduct-binaries/aqueduct-courier-staging.tgz \
