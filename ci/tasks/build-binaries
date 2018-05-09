@@ -13,7 +13,6 @@ go build -o "aqueduct-linux-$GOARCH" $GO_FLAGS github.com/pivotal-cf/aqueduct-co
 GOOS=darwin go build -o "aqueduct-darwin-$GOARCH" $GO_FLAGS github.com/pivotal-cf/aqueduct-courier
 GOOS=windows go build -o "aqueduct-windows-$GOARCH.exe" $GO_FLAGS github.com/pivotal-cf/aqueduct-courier
 
-mkdir output-binaries
 tar czvf aqueduct-binaries/aqueduct-cli.tgz \
     "aqueduct-linux-$GOARCH" \
     "aqueduct-darwin-$GOARCH" \
