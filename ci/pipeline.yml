@@ -16,7 +16,7 @@ resources:
   source:
     bucket: {{courier-staging-builds-bucket}}
     json_key: {{courier-gcp-service-account-key}}
-    versioned_file: aqueduct-courier-staging.tgz
+    versioned_file: aqueduct-cli.tgz
 
 jobs:
 - name: courier-tests
@@ -58,4 +58,4 @@ jobs:
       DATA_LOADER_URL: {{staging-data-loader-url}}
   - put: staging-binaries
     params:
-      file: aqueduct-binaries/*.tgz
+      file: aqueduct-binaries/aqueduct-cli.tgz
