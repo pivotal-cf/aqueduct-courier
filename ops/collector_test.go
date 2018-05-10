@@ -76,6 +76,7 @@ var _ = Describe("Collector", func() {
 		dataCollector.CollectReturns([]opsmanager.Data{}, errors.New("collecting is hard"))
 
 		err := collector.Collect("")
+		Expect(tarWriter.CloseCallCount()).To(Equal(1))
 		Expect(err).To(MatchError(ContainSubstring(CollectFailureMessage)))
 		Expect(err).To(MatchError(ContainSubstring("collecting is hard")))
 	})
@@ -87,6 +88,7 @@ var _ = Describe("Collector", func() {
 		dataCollector.CollectReturns([]opsmanager.Data{failingData}, nil)
 
 		err := collector.Collect("")
+		Expect(tarWriter.CloseCallCount()).To(Equal(1))
 		Expect(err).To(MatchError(ContainSubstring(ContentReadingFailureMessage)))
 		Expect(err).To(MatchError(ContainSubstring("reading is hard")))
 	})
@@ -97,6 +99,7 @@ var _ = Describe("Collector", func() {
 		tarWriter.AddFileReturnsOnCall(0, errors.New("tarring is hard"))
 
 		err := collector.Collect("")
+		Expect(tarWriter.CloseCallCount()).To(Equal(1))
 		Expect(err).To(MatchError(ContainSubstring(DataWriteFailureMessage)))
 		Expect(err).To(MatchError(ContainSubstring("tarring is hard")))
 	})
@@ -105,16 +108,9 @@ var _ = Describe("Collector", func() {
 		tarWriter.AddFileReturns(errors.New("tarring is hard"))
 
 		err := collector.Collect("")
+		Expect(tarWriter.CloseCallCount()).To(Equal(1))
 		Expect(err).To(MatchError(ContainSubstring(DataWriteFailureMessage)))
 		Expect(err).To(MatchError(ContainSubstring("tarring is hard")))
-	})
-
-	It("returns an error when closing the tarWriter fails", func() {
-		tarWriter.CloseReturns(errors.New("closing is hard"))
-
-		err := collector.Collect("")
-		Expect(err).To(MatchError(ContainSubstring(DataWriteFailureMessage)))
-		Expect(err).To(MatchError(ContainSubstring("closing is hard")))
 	})
 })
 

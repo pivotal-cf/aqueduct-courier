@@ -51,6 +51,8 @@ func NewCollector(c dataCollector, tw tarWriter) CollectExecutor {
 }
 
 func (ce CollectExecutor) Collect(envType string) error {
+	defer ce.tw.Close()
+
 	omData, err := ce.c.Collect()
 	if err != nil {
 		return errors.Wrap(err, CollectFailureMessage)
@@ -89,9 +91,5 @@ func (ce CollectExecutor) Collect(envType string) error {
 		return errors.Wrap(err, DataWriteFailureMessage)
 	}
 
-	err = ce.tw.Close()
-	if err != nil {
-		return errors.Wrap(err, DataWriteFailureMessage)
-	}
 	return nil
 }
