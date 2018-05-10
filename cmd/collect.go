@@ -25,7 +25,6 @@ const (
 	OpsManagerClientSecretKey  = "OPS_MANAGER_CLIENT_SECRET"
 	EnvTypeKey                 = "ENV_TYPE"
 	OutputPathKey              = "OUTPUT_PATH"
-	SkipTlsVerifyKey           = "INSECURE_SKIP_TLS_VERIFY"
 	OpsManagerURLFlag          = "url"
 	OpsManagerUsernameFlag     = "username"
 	OpsManagerPasswordFlag     = "password"
@@ -84,10 +83,9 @@ func init() {
 	collectCmd.Flags().Bool(
 		SkipTlsVerifyFlag,
 		false,
-		fmt.Sprintf("Skip TLS validation on http requests to Operations Manager. Defaults to false. [$%s]", SkipTlsVerifyKey),
+		"Skip TLS validation on http requests to Operations Manager",
 	)
 	viper.BindPFlag(SkipTlsVerifyFlag, collectCmd.Flag(SkipTlsVerifyFlag))
-	viper.BindEnv(SkipTlsVerifyFlag, SkipTlsVerifyKey)
 
 	rootCmd.AddCommand(collectCmd)
 }

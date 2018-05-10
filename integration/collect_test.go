@@ -39,7 +39,6 @@ var _ = Describe("Collect", func() {
 			cmd.OpsManagerUsernameKey: os.Getenv("TEST_OPS_MANAGER_USERNAME"),
 			cmd.OpsManagerPasswordKey: os.Getenv("TEST_OPS_MANAGER_PASSWORD"),
 			cmd.EnvTypeKey:            "Development",
-			cmd.SkipTlsVerifyKey:      "true",
 			cmd.OutputPathKey:         outputDirPath,
 		}
 	})
@@ -251,7 +250,7 @@ func assertOutputDirEmpty(outputDirPath string) {
 }
 
 func buildDefaultCommand(envVars map[string]string) *exec.Cmd {
-	command := exec.Command(aqueductBinaryPath, "collect")
+	command := exec.Command(aqueductBinaryPath, "collect", "--"+cmd.SkipTlsVerifyFlag)
 	command.Env = os.Environ()
 	for k, v := range envVars {
 		command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))
