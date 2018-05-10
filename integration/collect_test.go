@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/mholt/archiver"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
@@ -54,9 +55,8 @@ var _ = Describe("Collect", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session, 30*time.Second).Should(gexec.Exit(0))
 
-			contentDir := validatedContentDir(outputDirPath)
-			assertContainsJsonFile(contentDir, "ops_manager_vm_types")
-			assertMetadataFileIsCorrect(contentDir, "development")
+			tarFilePath := validatedTarFilePath(outputDirPath)
+			assertValidOutput(tarFilePath, "ops_manager_vm_types", "development")
 		})
 
 		It("succeeds with flag configuration", func() {
@@ -75,9 +75,8 @@ var _ = Describe("Collect", func() {
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session, 30*time.Second).Should(gexec.Exit(0))
-			contentDir := validatedContentDir(outputDirPath)
-			assertContainsJsonFile(contentDir, "ops_manager_vm_types")
-			assertMetadataFileIsCorrect(contentDir, "development")
+			tarFilePath := validatedTarFilePath(outputDirPath)
+			assertValidOutput(tarFilePath, "ops_manager_vm_types", "development")
 		})
 	})
 
@@ -93,9 +92,8 @@ var _ = Describe("Collect", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session, 30*time.Second).Should(gexec.Exit(0))
 
-			contentDir := validatedContentDir(outputDirPath)
-			assertContainsJsonFile(contentDir, "ops_manager_vm_types")
-			assertMetadataFileIsCorrect(contentDir, "development")
+			tarFilePath := validatedTarFilePath(outputDirPath)
+			assertValidOutput(tarFilePath, "ops_manager_vm_types", "development")
 		})
 
 		It("succeeds with flag configuration", func() {
@@ -114,9 +112,8 @@ var _ = Describe("Collect", func() {
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session, 30*time.Second).Should(gexec.Exit(0))
-			contentDir := validatedContentDir(outputDirPath)
-			assertContainsJsonFile(contentDir, "ops_manager_vm_types")
-			assertMetadataFileIsCorrect(contentDir, "development")
+			tarFilePath := validatedTarFilePath(outputDirPath)
+			assertValidOutput(tarFilePath, "ops_manager_vm_types", "development")
 		})
 
 	})
@@ -199,29 +196,46 @@ var _ = Describe("Collect", func() {
 		Expect(session.Err).To(gbytes.Say(ops.CollectFailureMessage))
 		Expect(session.Err).NotTo(gbytes.Say("Usage:"))
 	})
+
+	It("fails if the output directory does not exist", func() {
+		defaultEnvVars[cmd.OutputPathKey] = "/not/a/real/path"
+		command := buildDefaultCommand(defaultEnvVars)
+		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+		Expect(err).NotTo(HaveOccurred())
+		Eventually(session, 30*time.Second).Should(gexec.Exit(1))
+		Expect(session.Err).To(gbytes.Say(fmt.Sprintf(file.CreateTarFileFailureFormat, "")))
+		Expect(session.Err).NotTo(gbytes.Say("Usage:"))
+	})
 })
 
-func validatedContentDir(outputDirPath string) string {
+func validatedTarFilePath(outputDirPath string) string {
 	fileInfos, err := ioutil.ReadDir(outputDirPath)
 	Expect(err).NotTo(HaveOccurred())
-	Expect(len(fileInfos)).To(Equal(1), fmt.Sprintf("Expected output dir %s to include a single directory", outputDirPath))
-	Expect(fileInfos[0].IsDir()).To(BeTrue(), fmt.Sprintf("Expected file %s found in %s to be a directory", fileInfos[0], outputDirPath))
-	Expect(fileInfos[0].Name()).To(MatchRegexp(fmt.Sprintf(`%s%s$`, file.OutputDirPrefix, UnixTimestampRegexp)))
+	Expect(len(fileInfos)).To(Equal(1), fmt.Sprintf("Expected output dir %s to include a single file", outputDirPath))
+	Expect(fileInfos[0].Name()).To(MatchRegexp(fmt.Sprintf(`%s%s.tar$`, cmd.OutputFilePrefix, UnixTimestampRegexp)))
 	return filepath.Join(outputDirPath, fileInfos[0].Name())
 }
 
-func assertContainsJsonFile(contentDir, filename string) {
-	jsonFilePath := filepath.Join(contentDir, filename)
+func assertValidOutput(tarFilePath, filename, envType string) {
+	tmpDir, err := ioutil.TempDir("", "")
+	Expect(err).NotTo(HaveOccurred())
+	defer os.RemoveAll(tmpDir)
+
+	err = archiver.Tar.Open(tarFilePath, tmpDir)
+	Expect(err).NotTo(HaveOccurred())
+
+	jsonFilePath := filepath.Join(tmpDir, filename)
 	Expect(jsonFilePath).To(BeAnExistingFile())
 	content, err := ioutil.ReadFile(jsonFilePath)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(json.Valid(content)).To(BeTrue(), fmt.Sprintf("Expected file %s to contain valid json", jsonFilePath))
+	assertMetadataFileIsCorrect(tmpDir, envType)
 }
 
 func assertMetadataFileIsCorrect(contentDir, expectedEnvType string) {
-	content, err := ioutil.ReadFile(filepath.Join(contentDir, file.MetadataFileName))
+	content, err := ioutil.ReadFile(filepath.Join(contentDir, ops.MetadataFileName))
 	Expect(err).NotTo(HaveOccurred(), "Expected metadata file to exist but did not")
-	var metadata file.Metadata
+	var metadata ops.Metadata
 	Expect(json.Unmarshal(content, &metadata)).To(Succeed())
 	Expect(metadata.EnvType).To(Equal(expectedEnvType))
 }

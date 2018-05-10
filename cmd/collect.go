@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -38,6 +39,7 @@ const (
 	EnvTypePreProduction = "pre-production"
 	EnvTypeProduction    = "production"
 
+	OutputFilePrefix                = "FoundationDetails_"
 	InvalidEnvTypeFailureFormat     = "Invalid env-type %s. See help for the list of valid types."
 	InvalidAuthConfigurationMessage = "Invalid auth configuration. Requires username/password or client/secret to be set."
 )
@@ -123,10 +125,19 @@ func collect(c *cobra.Command, _ []string) error {
 		api.NewPendingChangesService(authedClient),
 		api.NewDeployedProductsService(authedClient),
 	)
-	writer := file.NewWriter(envType)
-	ce := ops.NewCollector(collector, writer)
 
-	err = ce.Collect(viper.GetString(OutputPathFlag))
+	tarFilePath := filepath.Join(
+		viper.GetString(OutputPathFlag),
+		fmt.Sprintf("%s%d.tar", OutputFilePrefix, time.Now().UTC().Unix()),
+	)
+	tarWriter, err := file.NewTarWriter(tarFilePath)
+	if err != nil {
+		return err
+	}
+
+	ce := ops.NewCollector(collector, tarWriter)
+
+	err = ce.Collect(envType)
 	if err != nil {
 		return err
 	}
