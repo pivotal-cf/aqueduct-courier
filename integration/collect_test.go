@@ -147,6 +147,7 @@ var _ = Describe("Collect", func() {
 			Eventually(session, 30*time.Second).Should(gexec.Exit(1))
 			Eventually(session.Err).Should(gbytes.Say(fmt.Sprintf(cmd.RequiredConfigErrorFormat, missingFlag)))
 			Expect(session.Err).To(gbytes.Say("Usage:"))
+			assertOutputDirEmpty(outputDirPath)
 		},
 		Entry(cmd.OpsManagerURLKey, cmd.OpsManagerURLKey, cmd.OpsManagerURLFlag),
 		Entry(cmd.EnvTypeKey, cmd.EnvTypeKey, cmd.EnvTypeFlag),
@@ -169,6 +170,7 @@ var _ = Describe("Collect", func() {
 			Eventually(session, 30*time.Second).Should(gexec.Exit(1))
 			Eventually(session.Err).Should(gbytes.Say(cmd.InvalidAuthConfigurationMessage))
 			Expect(session.Err).To(gbytes.Say("Usage:"))
+			assertOutputDirEmpty(outputDirPath)
 		},
 		Entry("none provided", cmd.OpsManagerUsernameKey, cmd.OpsManagerPasswordKey, cmd.OpsManagerClientIdKey, cmd.OpsManagerClientSecretKey),
 		Entry("missing username and client id", cmd.OpsManagerUsernameKey, cmd.OpsManagerClientIdKey),
@@ -185,6 +187,7 @@ var _ = Describe("Collect", func() {
 		Eventually(session, 30*time.Second).Should(gexec.Exit(1))
 		Expect(session.Err).To(gbytes.Say(fmt.Sprintf(cmd.InvalidEnvTypeFailureFormat, "invalid-type")))
 		Expect(session.Err).To(gbytes.Say("Usage:"))
+		assertOutputDirEmpty(outputDirPath)
 	})
 
 	It("fails if data collection from Operations Manager fails", func() {
@@ -195,6 +198,7 @@ var _ = Describe("Collect", func() {
 		Eventually(session, 30*time.Second).Should(gexec.Exit(1))
 		Expect(session.Err).To(gbytes.Say(ops.CollectFailureMessage))
 		Expect(session.Err).NotTo(gbytes.Say("Usage:"))
+		assertOutputDirEmpty(outputDirPath)
 	})
 
 	It("fails if the output directory does not exist", func() {
@@ -238,6 +242,12 @@ func assertMetadataFileIsCorrect(contentDir, expectedEnvType string) {
 	var metadata ops.Metadata
 	Expect(json.Unmarshal(content, &metadata)).To(Succeed())
 	Expect(metadata.EnvType).To(Equal(expectedEnvType))
+}
+
+func assertOutputDirEmpty(outputDirPath string) {
+	fileInfos, err := ioutil.ReadDir(outputDirPath)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(len(fileInfos)).To(Equal(0), fmt.Sprintf("Expected output dir %s to be empty", outputDirPath))
 }
 
 func buildDefaultCommand(envVars map[string]string) *exec.Cmd {

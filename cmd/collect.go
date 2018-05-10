@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -139,6 +140,7 @@ func collect(c *cobra.Command, _ []string) error {
 
 	err = ce.Collect(envType)
 	if err != nil {
+		os.Remove(tarFilePath)
 		return err
 	}
 	return nil
