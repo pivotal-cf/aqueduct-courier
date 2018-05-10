@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/pivotal-cf/aqueduct-courier/ops"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -28,7 +30,7 @@ func init() {
 	sendCmd.Flags().String(DirectoryPathFlag, "", "Directory containing files from 'collect' command")
 	viper.BindPFlag(DirectoryPathFlag, sendCmd.Flag(DirectoryPathFlag))
 
-	sendCmd.Flags().String(ApiKeyFlag, "", "API Key used to authenticate with Pivotal")
+	sendCmd.Flags().String(ApiKeyFlag, "", fmt.Sprintf("API Key used to authenticate with Pivotal [$%s]", ApiKeyKey))
 	viper.BindPFlag(ApiKeyFlag, sendCmd.Flag(ApiKeyFlag))
 	viper.BindEnv(ApiKeyFlag, ApiKeyKey)
 
