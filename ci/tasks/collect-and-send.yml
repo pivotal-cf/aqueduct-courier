@@ -1,0 +1,21 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: ubuntu
+    tag: xenial
+
+inputs:
+- name: aqueduct-courier
+- name: binaries
+
+run:
+  path: aqueduct-courier/ci/tasks/collect-and-send
+
+params:
+  OPS_MANAGER_URL:
+  OPS_MANAGER_USERNAME:
+  OPS_MANAGER_PASSWORD:
+  API_KEY:

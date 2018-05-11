@@ -59,3 +59,20 @@ jobs:
   - put: staging-binaries
     params:
       file: aqueduct-binaries/aqueduct-cli.tgz
+
+- name: test-collect-and-send
+  plan:
+  - get: aqueduct-courier
+    passed: [build-staging-binaries]
+    trigger: true
+  - get: staging-binaries
+    passed: [build-staging-binaries]
+  - task: collect-and-send
+    input_mapping:
+      binaries: staging-binaries
+    file: aqueduct-courier/ci/tasks/collect-and-send.yml
+    params:
+      OPS_MANAGER_URL: {{courier-ops-manager-url}}
+      OPS_MANAGER_USERNAME: {{courier-ops-manager-username}}
+      OPS_MANAGER_PASSWORD: {{courier-ops-manager-password}}
+      API_KEY: {{loader-api-key}}
