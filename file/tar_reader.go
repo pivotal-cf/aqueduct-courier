@@ -29,6 +29,8 @@ func (tr *TarReader) ReadFile(fileName string) ([]byte, error) {
 	if err != nil {
 		return []byte{}, errors.Wrapf(err, OpenTarFileFailureFormat, tr.sourceTarFile)
 	}
+	defer file.Close()
+
 	reader := tar.NewReader(file)
 
 	for {

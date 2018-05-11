@@ -76,11 +76,10 @@ func generateValidTarFile(destinationDir string) string {
 
 	writer, err := NewTarWriter(tarFilePath)
 	Expect(err).NotTo(HaveOccurred())
+	defer writer.Close()
 
 	Expect(writer.AddFile([]byte("contents1"), "file1")).To(Succeed())
 	Expect(writer.AddFile([]byte("contents2"), "file2")).To(Succeed())
-
-	Expect(writer.Close()).To(Succeed())
 
 	return tarFilePath
 }
