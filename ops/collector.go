@@ -1,6 +1,7 @@
 package ops
 
 import (
+	"crypto/md5"
 	"encoding/base64"
 	"encoding/json"
 	"io/ioutil"
@@ -75,10 +76,11 @@ func (ce CollectExecutor) Collect(envType string) error {
 			return errors.Wrap(err, DataWriteFailureMessage)
 		}
 
+		md5Sum := md5.Sum([]byte(dataContents))
 		metadata.FileDigests = append(metadata.FileDigests, FileDigest{
 			Name:        data.Name(),
 			MimeType:    data.MimeType(),
-			MD5Checksum: base64.StdEncoding.EncodeToString(dataContents),
+			MD5Checksum: base64.StdEncoding.EncodeToString(md5Sum[:]),
 		})
 	}
 	metadataContents, err := json.Marshal(metadata)

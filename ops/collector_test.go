@@ -1,6 +1,7 @@
 package ops_test
 
 import (
+	"crypto/md5"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -32,9 +33,11 @@ var _ = Describe("Collector", func() {
 
 	It("collects data and writes it", func() {
 		expectedD1Contents := "d1-content"
-		d1ContentMd5 := base64.StdEncoding.EncodeToString([]byte(expectedD1Contents))
+		md5SumD1 := md5.Sum([]byte(expectedD1Contents))
+		d1ContentMd5 := base64.StdEncoding.EncodeToString(md5SumD1[:])
 		expectedD2Contents := "d2-content"
-		d2ContentMd5 := base64.StdEncoding.EncodeToString([]byte(expectedD2Contents))
+		md5SumD2 := md5.Sum([]byte(expectedD2Contents))
+		d2ContentMd5 := base64.StdEncoding.EncodeToString(md5SumD2[:])
 		d1 := opsmanager.NewData(strings.NewReader(expectedD1Contents), "d1", "best-kind")
 		d2 := opsmanager.NewData(strings.NewReader(expectedD2Contents), "d2", "better-kind")
 		dataToWrite := []opsmanager.Data{d1, d2}
