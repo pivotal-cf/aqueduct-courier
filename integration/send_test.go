@@ -1,12 +1,13 @@
 package integration
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
-	"strings"
+	"path/filepath"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -17,14 +18,16 @@ import (
 	"github.com/onsi/gomega/ghttp"
 	"github.com/pivotal-cf/aqueduct-courier/cmd"
 	"github.com/pivotal-cf/aqueduct-courier/file"
-	"github.com/pivotal-cf/aqueduct-courier/file/filefakes"
 	"github.com/pivotal-cf/aqueduct-courier/ops"
 )
 
 var _ = Describe("Send", func() {
 	var (
-		binaryPath string
-		dataLoader *ghttp.Server
+		binaryPath            string
+		dataLoader            *ghttp.Server
+		tempDir               string
+		sourceDataTarFilePath string
+		validApiKey           = "best-key"
 	)
 
 	BeforeEach(func() {
@@ -37,63 +40,50 @@ var _ = Describe("Send", func() {
 			fmt.Sprintf("-X github.com/pivotal-cf/aqueduct-courier/cmd.dataLoaderURL=%s", dataLoader.URL()),
 		)
 		Expect(err).NotTo(HaveOccurred())
+
+		tempDir, err = ioutil.TempDir("", "")
+		Expect(err).NotTo(HaveOccurred())
+
+		sourceDataTarFilePath = generateValidDataTarFile(tempDir)
 	})
 
 	AfterEach(func() {
 		dataLoader.Close()
+		Expect(os.RemoveAll(tempDir)).To(Succeed())
 	})
 
 	Context("success", func() {
-		var (
-			dir    string
-			apiKey = "best-key"
-		)
-
 		BeforeEach(func() {
-			var err error
-			dir, err = ioutil.TempDir("", "")
-			Expect(err).NotTo(HaveOccurred())
-
-			d1 := new(filefakes.FakeData)
-			d1.NameReturns("data-file1")
-			d1.ContentReturns(strings.NewReader("data-file1-contents"))
-			d1.MimeTypeReturns("data-file1-mimetype")
-			writer := &file.Writer{}
-			err = writer.Write(d1, dir, "")
-			Expect(err).NotTo(HaveOccurred())
-
 			dataLoader.RouteToHandler(http.MethodPost, ops.PostPath, ghttp.CombineHandlers(
 				ghttp.VerifyHeader(http.Header{
-					"Authorization": []string{fmt.Sprintf("Token %s", apiKey)},
+					"Authorization": []string{fmt.Sprintf("Token %s", validApiKey)},
 				}),
 				ghttp.RespondWith(http.StatusCreated, ""),
 			))
 		})
 
-		AfterEach(func() {
-			Expect(os.RemoveAll(dir)).To(Succeed())
-		})
-
 		It("sends data to the configured endpoint with flag configuration", func() {
-			command := exec.Command(binaryPath, "send", "--path="+dir, fmt.Sprintf("--api-key=%s", apiKey))
+			command := exec.Command(binaryPath, "send", "--path="+sourceDataTarFilePath, "--api-key="+validApiKey)
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session, 30*time.Second).Should(gexec.Exit(0))
-			Expect(len(dataLoader.ReceivedRequests())).To(Equal(1))
+			Expect(len(dataLoader.ReceivedRequests())).To(Equal(2))
 		})
 
 		It("sends data to the configured endpoint with api key as an env variable", func() {
-			command := exec.Command(binaryPath, "send", "--path="+dir)
-			command.Env = append(os.Environ(), fmt.Sprintf("%s=%s", cmd.ApiKeyKey, apiKey))
+			command := exec.Command(binaryPath, "send", "--path="+sourceDataTarFilePath)
+			command.Env = append(os.Environ(), fmt.Sprintf("%s=%s", cmd.ApiKeyKey, validApiKey))
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session, 30*time.Second).Should(gexec.Exit(0))
-			Expect(len(dataLoader.ReceivedRequests())).To(Equal(1))
+			Expect(len(dataLoader.ReceivedRequests())).To(Equal(2))
 		})
 	})
 
 	It("exits non-zero when sending to pivotal fails", func() {
-		command := exec.Command(binaryPath, "send", "--path=/path/to/data", "--api-key=incorrect-key")
+		dataLoader.RouteToHandler(http.MethodPost, ops.PostPath, ghttp.RespondWith(http.StatusUnauthorized, ""))
+
+		command := exec.Command(binaryPath, "send", "--path="+sourceDataTarFilePath, "--api-key=incorrect-key")
 		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(session, 30*time.Second).Should(gexec.Exit(1))
@@ -102,16 +92,16 @@ var _ = Describe("Send", func() {
 	})
 
 	It("fails if the path flag has not been set", func() {
-		command := exec.Command(binaryPath, "send", "--api-key=best-key")
+		command := exec.Command(binaryPath, "send", "--api-key="+validApiKey)
 		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(session, 30*time.Second).Should(gexec.Exit(1))
-		Expect(session.Err).To(gbytes.Say(fmt.Sprintf(cmd.RequiredConfigErrorFormat, cmd.DirectoryPathFlag)))
+		Expect(session.Err).To(gbytes.Say(fmt.Sprintf(cmd.RequiredConfigErrorFormat, cmd.DataTarFilePathFlag)))
 		Expect(session.Err).To(gbytes.Say("Usage:"))
 	})
 
 	It("fails if the api-key flag has not been set", func() {
-		command := exec.Command(binaryPath, "send", "--path=/path/to/data")
+		command := exec.Command(binaryPath, "send", "--path="+sourceDataTarFilePath)
 		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(session, 30*time.Second).Should(gexec.Exit(1))
@@ -119,3 +109,24 @@ var _ = Describe("Send", func() {
 		Expect(session.Err).To(gbytes.Say("Usage:"))
 	})
 })
+
+func generateValidDataTarFile(destinationDir string) string {
+	tarFilePath := filepath.Join(destinationDir, "some-foundation-data")
+
+	writer, err := file.NewTarWriter(tarFilePath)
+	Expect(err).NotTo(HaveOccurred())
+
+	Expect(writer.AddFile([]byte(""), "file1")).To(Succeed())
+	Expect(writer.AddFile([]byte(""), "file2")).To(Succeed())
+
+	var metadata ops.Metadata
+	metadata.FileDigests = []ops.FileDigest{
+		{Name: "file1"},
+		{Name: "file2"},
+	}
+	metadataContents, err := json.Marshal(metadata)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(writer.AddFile(metadataContents, ops.MetadataFileName)).To(Succeed())
+
+	return tarFilePath
+}

@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/pivotal-cf/aqueduct-courier/file"
 	"github.com/pivotal-cf/aqueduct-courier/ops"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -10,9 +11,9 @@ import (
 )
 
 const (
-	DirectoryPathFlag = "path"
-	ApiKeyFlag        = "api-key"
-	ApiKeyKey         = "API_KEY"
+	DataTarFilePathFlag = "path"
+	ApiKeyFlag          = "api-key"
+	ApiKeyKey           = "API_KEY"
 
 	SendFailureMessage = "Failed to send data"
 )
@@ -27,8 +28,8 @@ var sendCmd = &cobra.Command{
 }
 
 func init() {
-	sendCmd.Flags().String(DirectoryPathFlag, "", "Directory containing files from 'collect' command")
-	viper.BindPFlag(DirectoryPathFlag, sendCmd.Flag(DirectoryPathFlag))
+	sendCmd.Flags().String(DataTarFilePathFlag, "", "Tar archive containing data from 'collect' command")
+	viper.BindPFlag(DataTarFilePathFlag, sendCmd.Flag(DataTarFilePathFlag))
 
 	sendCmd.Flags().String(ApiKeyFlag, "", fmt.Sprintf("API Key used to authenticate with Pivotal [$%s]", ApiKeyKey))
 	viper.BindPFlag(ApiKeyFlag, sendCmd.Flag(ApiKeyFlag))
@@ -38,14 +39,15 @@ func init() {
 }
 
 func send(c *cobra.Command, _ []string) error {
-	err := verifyRequiredConfig(DirectoryPathFlag, ApiKeyFlag)
+	err := verifyRequiredConfig(DataTarFilePathFlag, ApiKeyFlag)
 	if err != nil {
 		return err
 	}
 	c.SilenceUsage = true
 
 	sender := ops.SendExecutor{}
-	err = sender.Send(viper.GetString(DirectoryPathFlag), dataLoaderURL, viper.GetString(ApiKeyFlag))
+	tarReader := file.NewTarReader(viper.GetString(DataTarFilePathFlag))
+	err = sender.Send(tarReader, dataLoaderURL, viper.GetString(ApiKeyFlag))
 	if err != nil {
 		return errors.Wrap(err, SendFailureMessage)
 	}

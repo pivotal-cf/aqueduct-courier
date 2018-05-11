@@ -4,13 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
-	"os"
-	"path/filepath"
 
-	"github.com/pivotal-cf/aqueduct-courier/file"
 	"github.com/pkg/errors"
 )
 
@@ -18,36 +14,46 @@ const (
 	AuthorizationHeaderKey = "Authorization"
 	PostPath               = "/placeholder"
 
-	RequestCreationFailureMessage  = "Failed make request object"
-	PostFailedMessage              = "Failed to do request"
-	UnexpectedResponseCodeFormat   = "Unexpected response code %d, request failed"
-	ReadMetadataFileErrorFormat    = "Error reading metadata from file %s"
-	InvalidMetadataFileErrorFormat = "Metadata file %s is invalid"
+	RequestCreationFailureMessage = "Failed make request object"
+	PostFailedMessage             = "Failed to do request"
+	UnexpectedResponseCodeFormat  = "Unexpected response code %d, request failed"
+	ReadMetadataFileError         = "Unable to read metadata file"
+	ReadDataFileError             = "Unable to read data file "
+	InvalidMetadataFileError      = "Metadata file is invalid"
 )
 
 type SendExecutor struct{}
 
-func (s SendExecutor) Send(directoryPath, dataLoaderURL, apiToken string) error {
-	metadataPath := filepath.Join(directoryPath, file.MetadataFileName)
-	metadataContent, err := ioutil.ReadFile(metadataPath)
+//go:generate counterfeiter . tarReader
+type tarReader interface {
+	ReadFile(string) ([]byte, error)
+}
+
+func (s SendExecutor) Send(reader tarReader, dataLoaderURL, apiToken string) error {
+	metadataContent, err := reader.ReadFile(MetadataFileName)
 	if err != nil {
-		return errors.Wrapf(err, ReadMetadataFileErrorFormat, metadataPath)
+		return errors.Wrap(err, ReadMetadataFileError)
 	}
 
-	var metadata file.Metadata
+	var metadata Metadata
 	err = json.Unmarshal(metadataContent, &metadata)
 	if err != nil {
-		return errors.Wrapf(err, InvalidMetadataFileErrorFormat, metadataPath)
+		return errors.Wrap(err, InvalidMetadataFileError)
 	}
 
 	for _, digest := range metadata.FileDigests {
-		metadataReader, err := constructMetadataReader(metadata, digest)
+		metadataReader, err := constructFileMetadataReader(metadata, digest)
 		if err != nil {
 			return errors.Wrap(err, RequestCreationFailureMessage)
 		}
 
+		fileContents, err := reader.ReadFile(digest.Name)
+		if err != nil {
+			return errors.Wrap(err, ReadDataFileError)
+		}
 		req, err := makeFileUploadRequest(
-			filepath.Join(directoryPath, digest.Name),
+			fileContents,
+			digest.Name,
 			apiToken,
 			dataLoaderURL+PostPath,
 			metadataReader,
@@ -68,7 +74,7 @@ func (s SendExecutor) Send(directoryPath, dataLoaderURL, apiToken string) error 
 	return nil
 }
 
-func constructMetadataReader(metadata file.Metadata, digest file.Digest) (io.Reader, error) {
+func constructFileMetadataReader(metadata Metadata, digest FileDigest) (io.Reader, error) {
 	metadataMap := map[string]string{
 		"filename":        digest.Name,
 		"fileContentType": digest.MimeType,
@@ -85,13 +91,7 @@ func constructMetadataReader(metadata file.Metadata, digest file.Digest) (io.Rea
 	return bytes.NewReader(metadataJson), nil
 }
 
-func makeFileUploadRequest(filePath, apiToken, uploadURL string, metadataReader io.Reader) (*http.Request, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
+func makeFileUploadRequest(fileContent []byte, fileName, apiToken, uploadURL string, metadataReader io.Reader) (*http.Request, error) {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 
@@ -105,12 +105,12 @@ func makeFileUploadRequest(filePath, apiToken, uploadURL string, metadataReader 
 		return nil, err
 	}
 
-	dataPart, err := writer.CreateFormFile("data", filepath.Base(filePath))
+	dataPart, err := writer.CreateFormFile("data", fileName)
 	if err != nil {
 		return nil, err
 	}
-	_, err = io.Copy(dataPart, file)
-	if err != nil {
+
+	if _, err := dataPart.Write(fileContent); err != nil {
 		return nil, err
 	}
 
