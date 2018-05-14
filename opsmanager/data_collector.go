@@ -18,7 +18,6 @@ const (
 	OpsManagerName      = "ops_manager"
 	DirectorProductType = "p-bosh"
 
-	PropertiesDataType       = "properties"
 	ResourcesDataType        = "resources"
 	VmTypesDataType          = "vm_types"
 	DiagnosticReportDataType = "diagnostic_report"
