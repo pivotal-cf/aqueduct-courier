@@ -2,6 +2,7 @@ package opsmanager_test
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -180,17 +181,45 @@ var _ = Describe("Service", func() {
 	})
 
 	Describe("Installations", func() {
-		It("returns installations content", func() {
-			body := strings.NewReader("installations-contents")
+		It("removes user names from the installation content and returns the rest", func() {
+			body := strings.NewReader(`{"installations": [{"user_name": "foo", "other": 42}, {"user_name": "bar", "other": 24}]}`)
 
 			requestor.InvokeReturns(api.RequestServiceInvokeOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
 			actual, err := service.Installations()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(actual).To(Equal(body))
+			actualContent, err := ioutil.ReadAll(actual)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(actualContent)).To(Equal(`{"installations":[{"other":42},{"other":24}]}`))
 			Expect(requestor.InvokeCallCount()).To(Equal(1))
 			input := requestor.InvokeArgsForCall(0)
 			Expect(input).To(Equal(api.RequestServiceInvokeInput{Path: InstallationsPath, Method: http.MethodGet}))
+		})
+
+		It("errors if the contents cannot be read from the response", func() {
+			badReader := new(opsmanagerfakes.FakeReader)
+			badReader.ReadReturns(0, errors.New("Reading things is hard"))
+
+			requestor.InvokeReturns(api.RequestServiceInvokeOutput{Body: badReader, StatusCode: http.StatusOK}, nil)
+
+			actual, err := service.Installations()
+			Expect(actual).To(BeNil())
+			Expect(err).To(MatchError(ContainSubstring(
+				fmt.Sprintf(ReadResponseBodyFailureFormat, InstallationsPath),
+			)))
+			Expect(err).To(MatchError(ContainSubstring("Reading things is hard")))
+		})
+
+		It("errors if the contents are not json", func() {
+			body := strings.NewReader(`you-thought-this-was-json`)
+
+			requestor.InvokeReturns(api.RequestServiceInvokeOutput{Body: body, StatusCode: http.StatusOK}, nil)
+
+			actual, err := service.Installations()
+			Expect(actual).To(BeNil())
+			Expect(err).To(MatchError(ContainSubstring(
+				fmt.Sprintf(InvalidResponseErrorFormat, InstallationsPath),
+			)))
 		})
 
 		It("returns an error when requestor errors", func() {
@@ -215,3 +244,8 @@ var _ = Describe("Service", func() {
 		})
 	})
 })
+
+//go:generate counterfeiter . reader
+type reader interface {
+	Read(p []byte) (n int, err error)
+}

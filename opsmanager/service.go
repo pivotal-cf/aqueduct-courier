@@ -1,8 +1,11 @@
 package opsmanager
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/pivotal-cf/om/api"
@@ -10,11 +13,14 @@ import (
 )
 
 const (
-	ProductResourcePathFormat          = "/api/v0/staged/products/%s/resources"
-	InstallationsPath                  = "/api/v0/installations"
-	DeployedProductsPath               = "/api/v0/deployed/products"
-	VmTypesPath                        = "/api/v0/vm_types"
-	DiagnosticReportPath               = "/api/v0/diagnostic_report"
+	ProductResourcePathFormat = "/api/v0/staged/products/%s/resources"
+	InstallationsPath         = "/api/v0/installations"
+	DeployedProductsPath      = "/api/v0/deployed/products"
+	VmTypesPath               = "/api/v0/vm_types"
+	DiagnosticReportPath      = "/api/v0/diagnostic_report"
+
+	ReadResponseBodyFailureFormat      = "Unable to read response from %s"
+	InvalidResponseErrorFormat         = "Invalid response format for request to %s"
 	RequestFailureErrorFormat          = "Failed %s %s"
 	RequestUnexpectedStatusErrorFormat = "%s %s returned with unexpected status %d"
 )
@@ -23,13 +29,40 @@ type Service struct {
 	Requestor Requestor
 }
 
+type installations struct {
+	Installations []map[string]interface{} `json:"installations"`
+}
+
 //go:generate counterfeiter . Requestor
 type Requestor interface {
 	Invoke(input api.RequestServiceInvokeInput) (api.RequestServiceInvokeOutput, error)
 }
 
 func (s *Service) Installations() (io.Reader, error) {
-	return s.makeRequest(InstallationsPath)
+	contentReader, err := s.makeRequest(InstallationsPath)
+	if err != nil {
+		return nil, err
+	}
+
+	contents, err := ioutil.ReadAll(contentReader)
+	if err != nil {
+		return nil, errors.Wrapf(err, ReadResponseBodyFailureFormat, InstallationsPath)
+	}
+
+	var i installations
+	if err := json.Unmarshal([]byte(contents), &i); err != nil {
+		return nil, errors.Wrapf(err, InvalidResponseErrorFormat, InstallationsPath)
+	}
+	for _, installation := range i.Installations {
+		delete(installation, "user_name")
+	}
+
+	redactedContent, err := json.Marshal(i)
+	if err != nil {
+		return nil, err
+	}
+
+	return bytes.NewReader(redactedContent), nil
 }
 
 func (s *Service) DeployedProducts() (io.Reader, error) {
