@@ -55,6 +55,17 @@ type FakeOmService struct {
 		result1 io.Reader
 		result2 error
 	}
+	InstallationsStub        func() (io.Reader, error)
+	installationsMutex       sync.RWMutex
+	installationsArgsForCall []struct{}
+	installationsReturns     struct {
+		result1 io.Reader
+		result2 error
+	}
+	installationsReturnsOnCall map[int]struct {
+		result1 io.Reader
+		result2 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -239,6 +250,49 @@ func (fake *FakeOmService) DeployedProductsReturnsOnCall(i int, result1 io.Reade
 	}{result1, result2}
 }
 
+func (fake *FakeOmService) Installations() (io.Reader, error) {
+	fake.installationsMutex.Lock()
+	ret, specificReturn := fake.installationsReturnsOnCall[len(fake.installationsArgsForCall)]
+	fake.installationsArgsForCall = append(fake.installationsArgsForCall, struct{}{})
+	fake.recordInvocation("Installations", []interface{}{})
+	fake.installationsMutex.Unlock()
+	if fake.InstallationsStub != nil {
+		return fake.InstallationsStub()
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.installationsReturns.result1, fake.installationsReturns.result2
+}
+
+func (fake *FakeOmService) InstallationsCallCount() int {
+	fake.installationsMutex.RLock()
+	defer fake.installationsMutex.RUnlock()
+	return len(fake.installationsArgsForCall)
+}
+
+func (fake *FakeOmService) InstallationsReturns(result1 io.Reader, result2 error) {
+	fake.InstallationsStub = nil
+	fake.installationsReturns = struct {
+		result1 io.Reader
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeOmService) InstallationsReturnsOnCall(i int, result1 io.Reader, result2 error) {
+	fake.InstallationsStub = nil
+	if fake.installationsReturnsOnCall == nil {
+		fake.installationsReturnsOnCall = make(map[int]struct {
+			result1 io.Reader
+			result2 error
+		})
+	}
+	fake.installationsReturnsOnCall[i] = struct {
+		result1 io.Reader
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeOmService) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -250,6 +304,8 @@ func (fake *FakeOmService) Invocations() map[string][][]interface{} {
 	defer fake.diagnosticReportMutex.RUnlock()
 	fake.deployedProductsMutex.RLock()
 	defer fake.deployedProductsMutex.RUnlock()
+	fake.installationsMutex.RLock()
+	defer fake.installationsMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

@@ -90,6 +90,12 @@ var _ = Describe("DataCollector", func() {
 		assertOmServiceFailure(data, err, OpsManagerName, DeployedProductsDataType, "Requesting things is hard")
 	})
 
+	It("returns an error when omService.Installations errors", func() {
+		omService.InstallationsReturns(nil, errors.New("Requesting things is hard"))
+		data, err := dataCollector.Collect()
+		assertOmServiceFailure(data, err, OpsManagerName, InstallationsDataType, "Requesting things is hard")
+	})
+
 	It("succeeds", func() {
 		readers := []io.Reader{
 			strings.NewReader("p1 data"),
@@ -98,6 +104,7 @@ var _ = Describe("DataCollector", func() {
 		vmTypesReader := strings.NewReader("vm_types data")
 		diagnosticReportReader := strings.NewReader("diagnostic data")
 		deployedProductsReader := strings.NewReader("deployed products data")
+		installationsReader := strings.NewReader("installations data")
 		directorProduct := api.DeployedProductOutput{Type: DirectorProductType, GUID: "p-bosh-always-first"}
 		deployedProducts := []api.DeployedProductOutput{
 			{Type: "best-product-1", GUID: "p1-guid"},
@@ -110,10 +117,11 @@ var _ = Describe("DataCollector", func() {
 		omService.VmTypesReturns(vmTypesReader, nil)
 		omService.DiagnosticReportReturns(diagnosticReportReader, nil)
 		omService.DeployedProductsReturns(deployedProductsReader, nil)
+		omService.InstallationsReturns(installationsReader, nil)
 
 		data, err := dataCollector.Collect()
 		Expect(err).ToNot(HaveOccurred())
-		Expect(data).To(Equal([]Data{
+		Expect(data).To(ConsistOf(
 			NewData(
 				deployedProductsReader,
 				OpsManagerName,
@@ -139,7 +147,12 @@ var _ = Describe("DataCollector", func() {
 				OpsManagerName,
 				DiagnosticReportDataType,
 			),
-		}))
+			NewData(
+				installationsReader,
+				OpsManagerName,
+				InstallationsDataType,
+			),
+		))
 	})
 
 	It("succeeds if there are no deployed products", func() {
@@ -149,6 +162,7 @@ var _ = Describe("DataCollector", func() {
 			NewData(nil, OpsManagerName, DeployedProductsDataType),
 			NewData(nil, OpsManagerName, VmTypesDataType),
 			NewData(nil, OpsManagerName, DiagnosticReportDataType),
+			NewData(nil, OpsManagerName, InstallationsDataType),
 		))
 	})
 })

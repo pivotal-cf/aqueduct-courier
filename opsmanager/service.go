@@ -11,6 +11,7 @@ import (
 
 const (
 	ProductResourcePathFormat          = "/api/v0/staged/products/%s/resources"
+	InstallationsPath                  = "/api/v0/installations"
 	DeployedProductsPath               = "/api/v0/deployed/products"
 	VmTypesPath                        = "/api/v0/vm_types"
 	DiagnosticReportPath               = "/api/v0/diagnostic_report"
@@ -25,6 +26,10 @@ type Service struct {
 //go:generate counterfeiter . Requestor
 type Requestor interface {
 	Invoke(input api.RequestServiceInvokeInput) (api.RequestServiceInvokeOutput, error)
+}
+
+func (s *Service) Installations() (io.Reader, error) {
+	return s.makeRequest(InstallationsPath)
 }
 
 func (s *Service) DeployedProducts() (io.Reader, error) {
