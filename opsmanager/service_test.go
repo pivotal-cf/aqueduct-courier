@@ -26,6 +26,42 @@ var _ = Describe("Service", func() {
 		}
 	})
 
+	Describe("DeployedProducts", func() {
+		It("returns deployed products content", func() {
+			body := strings.NewReader("deployed-products")
+
+			requestor.InvokeReturns(api.RequestServiceInvokeOutput{Body: body, StatusCode: http.StatusOK}, nil)
+
+			actual, err := service.DeployedProducts()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(actual).To(Equal(body))
+			Expect(requestor.InvokeCallCount()).To(Equal(1))
+			input := requestor.InvokeArgsForCall(0)
+			Expect(input).To(Equal(api.RequestServiceInvokeInput{Path: DeployedProductsPath, Method: http.MethodGet}))
+		})
+
+		It("returns an error when requestor errors", func() {
+			requestor.InvokeReturns(api.RequestServiceInvokeOutput{StatusCode: http.StatusOK}, errors.New("Requesting things is hard"))
+
+			actual, err := service.DeployedProducts()
+			Expect(actual).To(BeNil())
+			Expect(err).To(MatchError(ContainSubstring(
+				fmt.Sprintf(RequestFailureErrorFormat, http.MethodGet, DeployedProductsPath),
+			)))
+			Expect(err).To(MatchError(ContainSubstring("Requesting things is hard")))
+		})
+
+		It("returns an error when requestor returns a non 200 status code", func() {
+			requestor.InvokeReturns(api.RequestServiceInvokeOutput{StatusCode: http.StatusBadGateway}, nil)
+
+			actual, err := service.DeployedProducts()
+			Expect(actual).To(BeNil())
+			Expect(err).To(MatchError(fmt.Sprintf(
+				RequestUnexpectedStatusErrorFormat, http.MethodGet, DeployedProductsPath, http.StatusBadGateway,
+			)))
+		})
+	})
+
 	Describe("ProductResources", func() {
 		var expectedProductPath string
 

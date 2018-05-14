@@ -84,6 +84,12 @@ var _ = Describe("DataCollector", func() {
 		assertOmServiceFailure(data, err, OpsManagerName, DiagnosticReportDataType, "Requesting things is hard")
 	})
 
+	It("returns an error when omService.DeployedProducts errors", func() {
+		omService.DeployedProductsReturns(nil, errors.New("Requesting things is hard"))
+		data, err := dataCollector.Collect()
+		assertOmServiceFailure(data, err, OpsManagerName, DeployedProductsDataType, "Requesting things is hard")
+	})
+
 	It("succeeds", func() {
 		readers := []io.Reader{
 			strings.NewReader("p1 data"),
@@ -91,6 +97,7 @@ var _ = Describe("DataCollector", func() {
 		}
 		vmTypesReader := strings.NewReader("vm_types data")
 		diagnosticReportReader := strings.NewReader("diagnostic data")
+		deployedProductsReader := strings.NewReader("deployed products data")
 		directorProduct := api.DeployedProductOutput{Type: DirectorProductType, GUID: "p-bosh-always-first"}
 		deployedProducts := []api.DeployedProductOutput{
 			{Type: "best-product-1", GUID: "p1-guid"},
@@ -102,10 +109,16 @@ var _ = Describe("DataCollector", func() {
 		}
 		omService.VmTypesReturns(vmTypesReader, nil)
 		omService.DiagnosticReportReturns(diagnosticReportReader, nil)
+		omService.DeployedProductsReturns(deployedProductsReader, nil)
 
 		data, err := dataCollector.Collect()
 		Expect(err).ToNot(HaveOccurred())
 		Expect(data).To(Equal([]Data{
+			NewData(
+				deployedProductsReader,
+				OpsManagerName,
+				DeployedProductsDataType,
+			),
 			NewData(
 				readers[0],
 				deployedProducts[0].Type,
@@ -133,6 +146,7 @@ var _ = Describe("DataCollector", func() {
 		data, err := dataCollector.Collect()
 		Expect(err).ToNot(HaveOccurred())
 		Expect(data).To(ConsistOf(
+			NewData(nil, OpsManagerName, DeployedProductsDataType),
 			NewData(nil, OpsManagerName, VmTypesDataType),
 			NewData(nil, OpsManagerName, DiagnosticReportDataType),
 		))

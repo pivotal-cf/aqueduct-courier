@@ -21,6 +21,7 @@ const (
 	ResourcesDataType        = "resources"
 	VmTypesDataType          = "vm_types"
 	DiagnosticReportDataType = "diagnostic_report"
+	DeployedProductsDataType = "deployed_products"
 )
 
 //go:generate counterfeiter . PendingChangesLister
@@ -38,6 +39,7 @@ type OmService interface {
 	ProductResources(guid string) (io.Reader, error)
 	VmTypes() (io.Reader, error)
 	DiagnosticReport() (io.Reader, error)
+	DeployedProducts() (io.Reader, error)
 }
 
 type dataRetriever func() (io.Reader, error)
@@ -72,6 +74,11 @@ func (dc DataCollector) Collect() ([]Data, error) {
 	}
 
 	var d []Data
+
+	d, err = appendRetrievedData(d, dc.omService.DeployedProducts, OpsManagerName, DeployedProductsDataType)
+	if err != nil {
+		return []Data{}, err
+	}
 
 	for _, product := range pl {
 		if product.Type != DirectorProductType {
