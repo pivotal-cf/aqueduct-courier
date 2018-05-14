@@ -11,12 +11,16 @@ import (
 
 const RequiredConfigErrorFormat = "Requires --%s to be set"
 
-var rootCmd = &cobra.Command{
-	Use:   "aqueduct",
-	Short: "Utility for collecting information about a PCF Foundation",
-}
+var (
+	version = "dev"
+	rootCmd = &cobra.Command{
+		Use:   "aqueduct",
+		Short: "Utility for collecting information about a PCF Foundation",
+	}
+)
 
 func Execute() {
+	rootCmd.Version = version
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
