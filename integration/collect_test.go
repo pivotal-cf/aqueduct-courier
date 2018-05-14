@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"time"
 
 	"github.com/mholt/archiver"
 	. "github.com/onsi/ginkgo"
@@ -52,7 +51,7 @@ var _ = Describe("Collect", func() {
 			command := buildDefaultCommand(defaultEnvVars)
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
-			Eventually(session, 30*time.Second).Should(gexec.Exit(0))
+			Eventually(session).Should(gexec.Exit(0))
 
 			tarFilePath := validatedTarFilePath(outputDirPath)
 			assertValidOutput(tarFilePath, "ops_manager_vm_types", "development")
@@ -73,7 +72,7 @@ var _ = Describe("Collect", func() {
 			}
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
-			Eventually(session, 30*time.Second).Should(gexec.Exit(0))
+			Eventually(session).Should(gexec.Exit(0))
 			tarFilePath := validatedTarFilePath(outputDirPath)
 			assertValidOutput(tarFilePath, "ops_manager_vm_types", "development")
 		})
@@ -81,7 +80,6 @@ var _ = Describe("Collect", func() {
 
 	Context("client/secret authentication", func() {
 		It("succeeds with env variable configuration", func() {
-			//needs to change to client/secret not user/pass
 			delete(defaultEnvVars, cmd.OpsManagerUsernameKey)
 			delete(defaultEnvVars, cmd.OpsManagerPasswordKey)
 			defaultEnvVars[cmd.OpsManagerClientIdKey] = os.Getenv("TEST_OPS_MANAGER_CLIENT_ID")
@@ -89,7 +87,7 @@ var _ = Describe("Collect", func() {
 			command := buildDefaultCommand(defaultEnvVars)
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
-			Eventually(session, 30*time.Second).Should(gexec.Exit(0))
+			Eventually(session).Should(gexec.Exit(0))
 
 			tarFilePath := validatedTarFilePath(outputDirPath)
 			assertValidOutput(tarFilePath, "ops_manager_vm_types", "development")
@@ -110,7 +108,7 @@ var _ = Describe("Collect", func() {
 			}
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
-			Eventually(session, 30*time.Second).Should(gexec.Exit(0))
+			Eventually(session).Should(gexec.Exit(0))
 			tarFilePath := validatedTarFilePath(outputDirPath)
 			assertValidOutput(tarFilePath, "ops_manager_vm_types", "development")
 		})
@@ -124,7 +122,7 @@ var _ = Describe("Collect", func() {
 			command.Env = append(command.Env, fmt.Sprintf("%s=%s", cmd.EnvTypeKey, envType))
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
-			Eventually(session, 30*time.Second).Should(gexec.Exit(0))
+			Eventually(session).Should(gexec.Exit(0))
 		},
 		Entry(cmd.EnvTypeDevelopment, cmd.EnvTypeDevelopment),
 		Entry(cmd.EnvTypeQA, cmd.EnvTypeQA),
@@ -143,7 +141,7 @@ var _ = Describe("Collect", func() {
 			}
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).ToNot(HaveOccurred())
-			Eventually(session, 30*time.Second).Should(gexec.Exit(1))
+			Eventually(session).Should(gexec.Exit(1))
 			Eventually(session.Err).Should(gbytes.Say(fmt.Sprintf(cmd.RequiredConfigErrorFormat, missingFlag)))
 			Expect(session.Err).To(gbytes.Say("Usage:"))
 			assertOutputDirEmpty(outputDirPath)
@@ -166,7 +164,7 @@ var _ = Describe("Collect", func() {
 
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).ToNot(HaveOccurred())
-			Eventually(session, 30*time.Second).Should(gexec.Exit(1))
+			Eventually(session).Should(gexec.Exit(1))
 			Eventually(session.Err).Should(gbytes.Say(cmd.InvalidAuthConfigurationMessage))
 			Expect(session.Err).To(gbytes.Say("Usage:"))
 			assertOutputDirEmpty(outputDirPath)
@@ -183,7 +181,7 @@ var _ = Describe("Collect", func() {
 		command.Env = append(command.Env, fmt.Sprintf("%s=%s", cmd.EnvTypeKey, "invalid-type"))
 		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
-		Eventually(session, 30*time.Second).Should(gexec.Exit(1))
+		Eventually(session).Should(gexec.Exit(1))
 		Expect(session.Err).To(gbytes.Say(fmt.Sprintf(cmd.InvalidEnvTypeFailureFormat, "invalid-type")))
 		Expect(session.Err).To(gbytes.Say("Usage:"))
 		assertOutputDirEmpty(outputDirPath)
@@ -194,7 +192,7 @@ var _ = Describe("Collect", func() {
 		command := buildDefaultCommand(defaultEnvVars)
 		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
-		Eventually(session, 30*time.Second).Should(gexec.Exit(1))
+		Eventually(session).Should(gexec.Exit(1))
 		Expect(session.Err).To(gbytes.Say(ops.CollectFailureMessage))
 		Expect(session.Err).NotTo(gbytes.Say("Usage:"))
 		assertOutputDirEmpty(outputDirPath)
@@ -205,7 +203,7 @@ var _ = Describe("Collect", func() {
 		command := buildDefaultCommand(defaultEnvVars)
 		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
-		Eventually(session, 30*time.Second).Should(gexec.Exit(1))
+		Eventually(session).Should(gexec.Exit(1))
 		Expect(session.Err).To(gbytes.Say(fmt.Sprintf(file.CreateTarFileFailureFormat, "")))
 		Expect(session.Err).NotTo(gbytes.Say("Usage:"))
 	})

@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -66,7 +65,7 @@ var _ = Describe("Send", func() {
 			command := exec.Command(binaryPath, "send", "--path="+sourceDataTarFilePath, "--api-key="+validApiKey)
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
-			Eventually(session, 30*time.Second).Should(gexec.Exit(0))
+			Eventually(session).Should(gexec.Exit(0))
 			Expect(len(dataLoader.ReceivedRequests())).To(Equal(2))
 		})
 
@@ -75,7 +74,7 @@ var _ = Describe("Send", func() {
 			command.Env = append(os.Environ(), fmt.Sprintf("%s=%s", cmd.ApiKeyKey, validApiKey))
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
-			Eventually(session, 30*time.Second).Should(gexec.Exit(0))
+			Eventually(session).Should(gexec.Exit(0))
 			Expect(len(dataLoader.ReceivedRequests())).To(Equal(2))
 		})
 	})
@@ -86,7 +85,7 @@ var _ = Describe("Send", func() {
 		command := exec.Command(binaryPath, "send", "--path="+sourceDataTarFilePath, "--api-key=incorrect-key")
 		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
-		Eventually(session, 30*time.Second).Should(gexec.Exit(1))
+		Eventually(session).Should(gexec.Exit(1))
 		Expect(session.Err).To(gbytes.Say(cmd.SendFailureMessage))
 		Expect(session.Err).NotTo(gbytes.Say("Usage:"))
 	})
@@ -95,7 +94,7 @@ var _ = Describe("Send", func() {
 		command := exec.Command(binaryPath, "send", "--api-key="+validApiKey)
 		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
-		Eventually(session, 30*time.Second).Should(gexec.Exit(1))
+		Eventually(session).Should(gexec.Exit(1))
 		Expect(session.Err).To(gbytes.Say(fmt.Sprintf(cmd.RequiredConfigErrorFormat, cmd.DataTarFilePathFlag)))
 		Expect(session.Err).To(gbytes.Say("Usage:"))
 	})
@@ -104,7 +103,7 @@ var _ = Describe("Send", func() {
 		command := exec.Command(binaryPath, "send", "--path="+sourceDataTarFilePath)
 		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
-		Eventually(session, 30*time.Second).Should(gexec.Exit(1))
+		Eventually(session).Should(gexec.Exit(1))
 		Expect(session.Err).To(gbytes.Say(fmt.Sprintf(cmd.RequiredConfigErrorFormat, cmd.ApiKeyFlag)))
 		Expect(session.Err).To(gbytes.Say("Usage:"))
 	})

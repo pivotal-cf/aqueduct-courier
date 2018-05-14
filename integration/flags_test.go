@@ -3,7 +3,6 @@ package integration
 import (
 	"fmt"
 	"os/exec"
-	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -25,7 +24,7 @@ var _ = Describe("Flags", func() {
 			command := exec.Command(binaryWithVersion, "--version")
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
-			Eventually(session, 30*time.Second).Should(gexec.Exit(0))
+			Eventually(session).Should(gexec.Exit(0))
 			Expect(session.Out).To(gbytes.Say("aqueduct version " + expectedVersion))
 		})
 
@@ -33,7 +32,7 @@ var _ = Describe("Flags", func() {
 			command := exec.Command(aqueductBinaryPath, "--version")
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
-			Eventually(session, 30*time.Second).Should(gexec.Exit(0))
+			Eventually(session).Should(gexec.Exit(0))
 			Expect(session.Out).To(gbytes.Say("aqueduct version dev"))
 		})
 	})

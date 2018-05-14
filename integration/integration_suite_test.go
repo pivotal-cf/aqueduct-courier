@@ -2,6 +2,7 @@ package integration
 
 import (
 	"testing"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -10,6 +11,7 @@ import (
 
 func TestAqueductCollector(t *testing.T) {
 	RegisterFailHandler(Fail)
+	SetDefaultEventuallyTimeout(45 * time.Second)
 	RunSpecs(t, "Integration Suite")
 }
 
