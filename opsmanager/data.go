@@ -11,17 +11,17 @@ const (
 )
 
 type Data struct {
-	reader io.Reader
-	name   string
-	kind   string
+	reader      io.Reader
+	productType string
+	dataType    string
 }
 
-func NewData(reader io.Reader, name, kind string) Data {
-	return Data{reader: reader, name: name, kind: kind}
+func NewData(reader io.Reader, productType, dataType string) Data {
+	return Data{reader: reader, productType: productType, dataType: dataType}
 }
 
 func (d Data) Name() string {
-	return fmt.Sprintf("%s_%s", d.name, d.kind)
+	return fmt.Sprintf("%s_%s", d.productType, d.dataType)
 }
 
 func (d Data) Content() io.Reader {
@@ -30,4 +30,8 @@ func (d Data) Content() io.Reader {
 
 func (d Data) MimeType() string {
 	return DefaultDataType
+}
+
+func (d Data) Type() string {
+	return d.productType
 }

@@ -62,8 +62,8 @@ var _ = Describe("Collector", func() {
 		Expect(json.Unmarshal(metadataContents, &metadata)).To(Succeed())
 		Expect(metadata.EnvType).To(Equal(envType))
 		Expect(metadata.FileDigests).To(ConsistOf(
-			FileDigest{Name: d1.Name(), MimeType: d1.MimeType(), MD5Checksum: d1ContentMd5},
-			FileDigest{Name: d2.Name(), MimeType: d2.MimeType(), MD5Checksum: d2ContentMd5},
+			FileDigest{Name: d1.Name(), MimeType: d1.MimeType(), MD5Checksum: d1ContentMd5, ProductType: d1.Type()},
+			FileDigest{Name: d2.Name(), MimeType: d2.MimeType(), MD5Checksum: d2ContentMd5, ProductType: d2.Type()},
 		))
 		_, err = uuid.FromString(metadata.CollectionId)
 		Expect(err).NotTo(HaveOccurred())

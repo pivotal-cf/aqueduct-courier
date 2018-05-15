@@ -121,5 +121,5 @@ func appendRetrievedData(d []Data, retriever dataRetriever, productType, dataTyp
 		return d, errors.Wrap(err, fmt.Sprintf(RequestorFailureErrorFormat, productType, dataType))
 	}
 
-	return append(d, Data{reader: output, name: productType, kind: dataType}), nil
+	return append(d, NewData(output, productType, dataType)), nil
 }

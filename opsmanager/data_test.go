@@ -29,4 +29,9 @@ var _ = Describe("data", func() {
 		d := NewData(nil, "", "")
 		Expect(d.MimeType()).To(Equal(JSONDataType))
 	})
+
+	It("returns the product type", func() {
+		d := NewData(nil, "best-product-type", "")
+		Expect(d.Type()).To(Equal("best-product-type"))
+	})
 })
