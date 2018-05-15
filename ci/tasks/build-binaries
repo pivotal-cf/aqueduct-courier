@@ -14,7 +14,7 @@ popd
 
 VERSION_FLAG="-X=github.com/pivotal-cf/aqueduct-courier/cmd.version=$VERSION"
 DATA_LOADER_FLAG="-X=github.com/pivotal-cf/aqueduct-courier/cmd.dataLoaderURL=$DATA_LOADER_URL"
-GO_FLAGS="-ldflags $VERSION_FLAG $DATA_LOADER_FLAG"
+GO_FLAGS="-ldflags $VERSION_FLAG -ldflags $DATA_LOADER_FLAG"
 
 go build -o "aqueduct-linux-$GOARCH" $GO_FLAGS github.com/pivotal-cf/aqueduct-courier
 GOOS=darwin go build -o "aqueduct-darwin-$GOARCH" $GO_FLAGS github.com/pivotal-cf/aqueduct-courier
