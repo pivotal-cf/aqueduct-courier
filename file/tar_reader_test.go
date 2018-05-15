@@ -69,6 +69,14 @@ var _ = Describe("TarReader", func() {
 			Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(UnexpectedFileTypeFormat, invalidFilePath))))
 		})
 	})
+
+	Describe("TarFilePath", func() {
+		It("returns the sourceTarFile path", func() {
+			tarFilePath := "path/to/tarfile"
+			tarReader := NewTarReader(tarFilePath)
+			Expect(tarReader.TarFilePath()).To(Equal(tarFilePath))
+		})
+	})
 })
 
 func generateValidTarFile(destinationDir string) string {

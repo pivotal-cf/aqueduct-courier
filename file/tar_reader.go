@@ -54,3 +54,7 @@ func (tr *TarReader) ReadFile(fileName string) ([]byte, error) {
 
 	return contents, nil
 }
+
+func (tr *TarReader) TarFilePath() string {
+	return tr.sourceTarFile
+}

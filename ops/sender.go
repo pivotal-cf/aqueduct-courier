@@ -2,10 +2,15 @@ package ops
 
 import (
 	"bytes"
+	"crypto/md5"
+	"encoding/base64"
 	"encoding/json"
+	"hash"
 	"io"
 	"mime/multipart"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 )
@@ -13,6 +18,7 @@ import (
 const (
 	AuthorizationHeaderKey = "Authorization"
 	PostPath               = "/placeholder"
+	TarMimeType            = "application/tar"
 
 	RequestCreationFailureMessage = "Failed make request object"
 	PostFailedMessage             = "Failed to do request"
@@ -27,6 +33,7 @@ type SendExecutor struct{}
 //go:generate counterfeiter . tarReader
 type tarReader interface {
 	ReadFile(string) ([]byte, error)
+	TarFilePath() string
 }
 
 func (s SendExecutor) Send(reader tarReader, dataLoaderURL, apiToken string) error {
@@ -41,44 +48,31 @@ func (s SendExecutor) Send(reader tarReader, dataLoaderURL, apiToken string) err
 		return errors.Wrap(err, InvalidMetadataFileError)
 	}
 
-	for _, digest := range metadata.FileDigests {
-		metadataReader, err := constructFileMetadataReader(metadata, digest)
-		if err != nil {
-			return errors.Wrap(err, RequestCreationFailureMessage)
-		}
-
-		fileContents, err := reader.ReadFile(digest.Name)
-		if err != nil {
-			return errors.Wrap(err, ReadDataFileError)
-		}
-		req, err := makeFileUploadRequest(
-			fileContents,
-			digest.Name,
-			apiToken,
-			dataLoaderURL+PostPath,
-			metadataReader,
-		)
-		if err != nil {
-			return errors.Wrap(err, RequestCreationFailureMessage)
-		}
-
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			return errors.Wrap(err, PostFailedMessage)
-		}
-		if resp.StatusCode != http.StatusCreated {
-			return errors.Errorf(UnexpectedResponseCodeFormat, resp.StatusCode)
-		}
+	req, err := makeFileUploadRequest(
+		reader.TarFilePath(),
+		apiToken,
+		dataLoaderURL+PostPath,
+		metadata,
+	)
+	if err != nil {
+		return errors.Wrap(err, RequestCreationFailureMessage)
 	}
 
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return errors.Wrap(err, PostFailedMessage)
+	}
+	if resp.StatusCode != http.StatusCreated {
+		return errors.Errorf(UnexpectedResponseCodeFormat, resp.StatusCode)
+	}
 	return nil
 }
 
-func constructFileMetadataReader(metadata Metadata, digest FileDigest) (io.Reader, error) {
+func constructFileMetadataReader(metadata Metadata, fileName string, hashWriter hash.Hash) (io.Reader, error) {
 	metadataMap := map[string]string{
-		"filename":        digest.Name,
-		"fileContentType": digest.MimeType,
-		"fileMd5Checksum": digest.MD5Checksum,
+		"filename":        fileName,
+		"fileContentType": TarMimeType,
+		"fileMd5Checksum": base64.StdEncoding.EncodeToString(hashWriter.Sum([]byte{})),
 		"collectedAt":     metadata.CollectedAt,
 		"envType":         metadata.EnvType,
 		"collectionId":    metadata.CollectionId,
@@ -91,9 +85,29 @@ func constructFileMetadataReader(metadata Metadata, digest FileDigest) (io.Reade
 	return bytes.NewReader(metadataJson), nil
 }
 
-func makeFileUploadRequest(fileContent []byte, fileName, apiToken, uploadURL string, metadataReader io.Reader) (*http.Request, error) {
+func makeFileUploadRequest(filePath, apiToken, uploadURL string, metadata Metadata) (*http.Request, error) {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, errors.Wrap(err, ReadDataFileError)
+	}
+
+	dataPart, err := writer.CreateFormFile("data", filepath.Base(filePath))
+	if err != nil {
+		return nil, err
+	}
+
+	hashWriter := md5.New()
+	if _, err := io.Copy(io.MultiWriter(dataPart, hashWriter), file); err != nil {
+		return nil, err
+	}
+
+	metadataReader, err := constructFileMetadataReader(metadata, filepath.Base(filePath), hashWriter)
+	if err != nil {
+		return nil, err
+	}
 
 	metadataPart, err := writer.CreateFormField("metadata")
 	if err != nil {
@@ -102,15 +116,6 @@ func makeFileUploadRequest(fileContent []byte, fileName, apiToken, uploadURL str
 
 	_, err = io.Copy(metadataPart, metadataReader)
 	if err != nil {
-		return nil, err
-	}
-
-	dataPart, err := writer.CreateFormFile("data", fileName)
-	if err != nil {
-		return nil, err
-	}
-
-	if _, err := dataPart.Write(fileContent); err != nil {
 		return nil, err
 	}
 

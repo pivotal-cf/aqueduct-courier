@@ -19,6 +19,15 @@ type FakeTarReader struct {
 		result1 []byte
 		result2 error
 	}
+	TarFilePathStub        func() string
+	tarFilePathMutex       sync.RWMutex
+	tarFilePathArgsForCall []struct{}
+	tarFilePathReturns     struct {
+		result1 string
+	}
+	tarFilePathReturnsOnCall map[int]struct {
+		result1 string
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -74,11 +83,53 @@ func (fake *FakeTarReader) ReadFileReturnsOnCall(i int, result1 []byte, result2 
 	}{result1, result2}
 }
 
+func (fake *FakeTarReader) TarFilePath() string {
+	fake.tarFilePathMutex.Lock()
+	ret, specificReturn := fake.tarFilePathReturnsOnCall[len(fake.tarFilePathArgsForCall)]
+	fake.tarFilePathArgsForCall = append(fake.tarFilePathArgsForCall, struct{}{})
+	fake.recordInvocation("TarFilePath", []interface{}{})
+	fake.tarFilePathMutex.Unlock()
+	if fake.TarFilePathStub != nil {
+		return fake.TarFilePathStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.tarFilePathReturns.result1
+}
+
+func (fake *FakeTarReader) TarFilePathCallCount() int {
+	fake.tarFilePathMutex.RLock()
+	defer fake.tarFilePathMutex.RUnlock()
+	return len(fake.tarFilePathArgsForCall)
+}
+
+func (fake *FakeTarReader) TarFilePathReturns(result1 string) {
+	fake.TarFilePathStub = nil
+	fake.tarFilePathReturns = struct {
+		result1 string
+	}{result1}
+}
+
+func (fake *FakeTarReader) TarFilePathReturnsOnCall(i int, result1 string) {
+	fake.TarFilePathStub = nil
+	if fake.tarFilePathReturnsOnCall == nil {
+		fake.tarFilePathReturnsOnCall = make(map[int]struct {
+			result1 string
+		})
+	}
+	fake.tarFilePathReturnsOnCall[i] = struct {
+		result1 string
+	}{result1}
+}
+
 func (fake *FakeTarReader) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.readFileMutex.RLock()
 	defer fake.readFileMutex.RUnlock()
+	fake.tarFilePathMutex.RLock()
+	defer fake.tarFilePathMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

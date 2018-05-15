@@ -1,10 +1,13 @@
 package ops_test
 
 import (
+	"crypto/md5"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -18,8 +21,10 @@ var _ = Describe("Sender", func() {
 	var (
 		dataLoader *ghttp.Server
 		tarReader  *opsfakes.FakeTarReader
-
-		sender SendExecutor
+		metadata   Metadata
+		tmpFile    *os.File
+		tarContent string
+		sender     SendExecutor
 	)
 
 	BeforeEach(func() {
@@ -28,82 +33,58 @@ var _ = Describe("Sender", func() {
 
 		tarReader = new(opsfakes.FakeTarReader)
 
-		metadata := Metadata{
+		metadata = Metadata{
 			CollectedAt:  "collected-at",
 			CollectionId: "collection-id",
 			EnvType:      "some-env-type",
-			FileDigests: []FileDigest{
-				{Name: "file1", MD5Checksum: "file1-checksum", MimeType: "file1-mimetype"},
-			},
 		}
 		metadataContents, err := json.Marshal(metadata)
 		Expect(err).NotTo(HaveOccurred())
+
+		tmpFile, err = ioutil.TempFile("", "")
+		Expect(err).NotTo(HaveOccurred())
+		tarContent = "tar-content"
+		_, err = tmpFile.Write([]byte(tarContent))
+		Expect(err).NotTo(HaveOccurred())
+		Expect(tmpFile.Close()).To(Succeed())
 
 		tarReader.ReadFileStub = func(fileName string) ([]byte, error) {
 			if fileName == MetadataFileName {
 				return metadataContents, nil
 			}
 
-			if fileName == metadata.FileDigests[0].Name {
-				return []byte("file1-contents"), nil
-			}
-
 			return []byte{}, errors.New("unexpected file requested")
 		}
+		tarReader.TarFilePathReturns(tmpFile.Name())
 
 	})
 
 	AfterEach(func() {
 		dataLoader.Close()
+		Expect(os.RemoveAll(tmpFile.Name())).To(Succeed())
 	})
 
 	It("posts to the data loader with the file as content and the file metadata", func() {
-		metadata := Metadata{
-			CollectedAt:  "collected-at",
-			CollectionId: "collection-id",
-			EnvType:      "some-env-type",
-			FileDigests: []FileDigest{
-				{Name: "file1", MD5Checksum: "file1-checksum", MimeType: "file1-mimetype"},
-				{Name: "file2", MD5Checksum: "file2-checksum", MimeType: "file2-mimetype"},
-			},
-		}
-		metadataContents, err := json.Marshal(metadata)
-		Expect(err).NotTo(HaveOccurred())
-
-		tarReader.ReadFileStub = func(fileName string) ([]byte, error) {
-			if fileName == MetadataFileName {
-				return metadataContents, nil
-			}
-
-			if fileName == metadata.FileDigests[0].Name {
-				return []byte("file1-contents"), nil
-			}
-
-			if fileName == metadata.FileDigests[1].Name {
-				return []byte("file2-contents"), nil
-			}
-
-			return []byte{}, errors.New("unexpected file requested")
-		}
-
 		dataLoader.RouteToHandler(http.MethodPost, PostPath, ghttp.CombineHandlers(
 			func(w http.ResponseWriter, req *http.Request) {
 				f, fileHeaders, err := req.FormFile("data")
 				Expect(err).ToNot(HaveOccurred())
 				contents, err := ioutil.ReadAll(f)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(string(contents)).To(Equal(fileHeaders.Filename + "-contents"))
+				Expect(string(contents)).To(Equal(tarContent))
 
 				metadataStr := req.FormValue("metadata")
 				var metadataMap map[string]string
 				Expect(json.Unmarshal([]byte(metadataStr), &metadataMap)).To(Succeed())
 
 				Expect(metadataMap["filename"]).To(Equal(fileHeaders.Filename))
-				Expect(metadataMap["fileContentType"]).To(Equal(fileHeaders.Filename + "-mimetype"))
-				Expect(metadataMap["fileMd5Checksum"]).To(Equal(fileHeaders.Filename + "-checksum"))
-				Expect(metadataMap["collectedAt"]).To(Equal(metadata.CollectedAt))
 				Expect(metadataMap["envType"]).To(Equal(metadata.EnvType))
+				Expect(metadataMap["collectedAt"]).To(Equal(metadata.CollectedAt))
 				Expect(metadataMap["collectionId"]).To(Equal(metadata.CollectionId))
+				Expect(metadataMap["fileContentType"]).To(Equal(TarMimeType))
+
+				md5Sum := md5.Sum([]byte(tarContent))
+				Expect(metadataMap["fileMd5Checksum"]).To(Equal(base64.StdEncoding.EncodeToString(md5Sum[:])))
 			},
 			ghttp.RespondWith(http.StatusCreated, ""),
 		))
@@ -111,10 +92,7 @@ var _ = Describe("Sender", func() {
 		Expect(sender.Send(tarReader, dataLoader.URL(), "some-key")).To(Succeed())
 
 		reqs := dataLoader.ReceivedRequests()
-		Expect(len(reqs)).To(Equal(2))
-
-		verifyFileSentInRequest(metadata.FileDigests[0].Name, reqs[0])
-		verifyFileSentInRequest(metadata.FileDigests[1].Name, reqs[1])
+		Expect(len(reqs)).To(Equal(1))
 	})
 
 	It("posts to the data loader with the correct API key in the header", func() {
@@ -159,24 +137,10 @@ var _ = Describe("Sender", func() {
 		Expect(err).To(MatchError(fmt.Sprintf(UnexpectedResponseCodeFormat, http.StatusUnauthorized)))
 	})
 
-	It("errors when reading the data files fail", func() {
-		metadata := Metadata{
-			FileDigests: []FileDigest{
-				{Name: "file1"},
-			},
-		}
-		metadataContents, err := json.Marshal(metadata)
-		Expect(err).NotTo(HaveOccurred())
-		tarReader.ReadFileReturnsOnCall(0, metadataContents, nil)
-		tarReader.ReadFileReturnsOnCall(1, []byte{}, errors.New("failed to read data file"))
+	It("when the tarFile does not exist", func() {
+		tarReader.TarFilePathReturns("path/to/not/the/tarFile")
 
-		err = sender.Send(tarReader, dataLoader.URL(), "some-key")
+		err := sender.Send(tarReader, dataLoader.URL(), "some-key")
 		Expect(err).To(MatchError(ContainSubstring(ReadDataFileError)))
 	})
 })
-
-func verifyFileSentInRequest(filename string, req *http.Request) {
-	_, fileHeader, err := req.FormFile("data")
-	Expect(err).NotTo(HaveOccurred())
-	Expect(fileHeader.Filename).To(Equal(filename))
-}
