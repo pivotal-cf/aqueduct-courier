@@ -17,6 +17,15 @@ resources:
     bucket: {{courier-staging-builds-bucket}}
     json_key: {{courier-gcp-service-account-key}}
     versioned_file: aqueduct-cli.tgz
+- name: version
+  type: semver
+  source:
+    initial_version: 0.0.1
+    driver: git
+    uri: git@github.com:pivotal-cf/aqueduct-courier
+    branch: version
+    file: VERSION
+    private_key: {{courier-git-deploy-private-key}}
 
 jobs:
 - name: courier-tests
@@ -52,6 +61,8 @@ jobs:
   - get: aqueduct-courier
     passed: [courier-tests, windows-courier-tests]
     trigger: true
+  - get: version
+    params: {pre: build}
   - task: build-binaries
     file: aqueduct-courier/ci/tasks/build-binaries.yml
     params:
@@ -59,6 +70,8 @@ jobs:
   - put: staging-binaries
     params:
       file: aqueduct-binaries/aqueduct-cli.tgz
+  - put: version
+    params: {file: version/VERSION}
 
 - name: test-collect-and-send
   plan:

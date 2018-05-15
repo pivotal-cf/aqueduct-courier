@@ -10,6 +10,7 @@ image_resource:
 inputs:
 - name: aqueduct-courier
   path: go/src/github.com/pivotal-cf/aqueduct-courier
+- name: version
 
 outputs:
 - name: aqueduct-binaries
