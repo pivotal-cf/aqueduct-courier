@@ -7,7 +7,7 @@ GOARCH=amd64
 
 go version
 
-VERSION=$(cat version/VERSION)
+VERSION=$(cat version/version)
 pushd "$PWD/go/src/github.com/pivotal-cf/aqueduct-courier"
     VERSION="$VERSION.$(git rev-parse --short HEAD)"
 popd

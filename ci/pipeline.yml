@@ -20,7 +20,6 @@ resources:
 - name: version
   type: semver
   source:
-    initial_version: 0.0.1
     driver: git
     uri: git@github.com:pivotal-cf/aqueduct-courier
     branch: version
@@ -71,7 +70,7 @@ jobs:
     params:
       file: aqueduct-binaries/aqueduct-cli.tgz
   - put: version
-    params: {file: version/VERSION}
+    params: {file: version/version}
 
 - name: test-collect-and-send
   plan:
