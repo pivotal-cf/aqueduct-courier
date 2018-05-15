@@ -93,6 +93,7 @@ func makeFileUploadRequest(filePath, apiToken, uploadURL string, metadata Metada
 	if err != nil {
 		return nil, errors.Wrap(err, ReadDataFileError)
 	}
+	defer file.Close()
 
 	dataPart, err := writer.CreateFormFile("data", filepath.Base(filePath))
 	if err != nil {
