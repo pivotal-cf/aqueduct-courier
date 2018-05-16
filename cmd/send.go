@@ -23,7 +23,7 @@ var dataLoaderURL string
 var sendCmd = &cobra.Command{
 	Use:   "send",
 	Short: "Sends information to Pivotal",
-	Long:  `Sends information from your file system to Pivotal`,
+	Long:  `Sends specified file to Pivotal at ` + dataLoaderURL,
 	RunE:  send,
 }
 
