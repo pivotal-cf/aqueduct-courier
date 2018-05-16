@@ -6,6 +6,6 @@ tar xvf binaries/*.tgz
 
 ./aqueduct-linux-amd64 --version
 
-./aqueduct-linux-amd64 collect --env-type development --output . --insecure-skip-tls-verify
+./aqueduct-linux-amd64 collect --env-type development --output-dir . --insecure-skip-tls-verify
 
 ./aqueduct-linux-amd64 send --path *.tar

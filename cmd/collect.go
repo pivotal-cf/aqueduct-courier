@@ -24,14 +24,14 @@ const (
 	OpsManagerClientIdKey      = "OPS_MANAGER_CLIENT_ID"
 	OpsManagerClientSecretKey  = "OPS_MANAGER_CLIENT_SECRET"
 	EnvTypeKey                 = "ENV_TYPE"
-	OutputPathKey              = "OUTPUT_PATH"
+	OutputPathKey              = "OUTPUT_DIR"
 	OpsManagerURLFlag          = "url"
 	OpsManagerUsernameFlag     = "username"
 	OpsManagerPasswordFlag     = "password"
 	OpsManagerClientIdFlag     = "client-id"
 	OpsManagerClientSecretFlag = "client-secret"
 	EnvTypeFlag                = "env-type"
-	OutputPathFlag             = "output"
+	OutputPathFlag             = "output-dir"
 	SkipTlsVerifyFlag          = "insecure-skip-tls-verify"
 
 	EnvTypeDevelopment   = "development"
@@ -76,7 +76,7 @@ func init() {
 	viper.BindPFlag(EnvTypeFlag, collectCmd.Flag(EnvTypeFlag))
 	viper.BindEnv(EnvTypeFlag, EnvTypeKey)
 
-	collectCmd.Flags().String(OutputPathFlag, "", fmt.Sprintf("Local file path to write data [$%s]", OutputPathKey))
+	collectCmd.Flags().String(OutputPathFlag, "", fmt.Sprintf("Local directory to write data [$%s]", OutputPathKey))
 	viper.BindPFlag(OutputPathFlag, collectCmd.Flag(OutputPathFlag))
 	viper.BindEnv(OutputPathFlag, OutputPathKey)
 
