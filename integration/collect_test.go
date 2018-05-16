@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/mholt/archiver"
 	. "github.com/onsi/ginkgo"
@@ -221,6 +222,20 @@ func validatedTarFilePath(outputDirPath string) string {
 	return filepath.Join(outputDirPath, fileInfos[0].Name())
 }
 
+func assertMetadataFileIsCorrect(contentDir, expectedEnvType string) {
+	content, err := ioutil.ReadFile(filepath.Join(contentDir, ops.MetadataFileName))
+	Expect(err).NotTo(HaveOccurred(), "Expected metadata file to exist but did not")
+	var metadata ops.Metadata
+	Expect(json.Unmarshal(content, &metadata)).To(Succeed())
+	Expect(metadata.EnvType).To(Equal(expectedEnvType))
+}
+
+func assertOutputDirEmpty(outputDirPath string) {
+	fileInfos, err := ioutil.ReadDir(outputDirPath)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(len(fileInfos)).To(Equal(0), fmt.Sprintf("Expected output dir %s to be empty", outputDirPath))
+}
+
 func assertValidOutput(tarFilePath, filename, envType string) {
 	tmpDir, err := ioutil.TempDir("", "")
 	Expect(err).NotTo(HaveOccurred())
@@ -239,22 +254,12 @@ func assertValidOutput(tarFilePath, filename, envType string) {
 
 func assertLogging(session *gexec.Session, tarFilePath, url string) {
 	Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Collecting data from Operations Manager at %s\n", url)))
-	Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Wrote output to %s\n", tarFilePath)))
+	Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Wrote output to %s\n", escapeWindowsPathRegex(tarFilePath))))
 	Expect(session.Out).To(gbytes.Say("Success!\n"))
 }
 
-func assertMetadataFileIsCorrect(contentDir, expectedEnvType string) {
-	content, err := ioutil.ReadFile(filepath.Join(contentDir, ops.MetadataFileName))
-	Expect(err).NotTo(HaveOccurred(), "Expected metadata file to exist but did not")
-	var metadata ops.Metadata
-	Expect(json.Unmarshal(content, &metadata)).To(Succeed())
-	Expect(metadata.EnvType).To(Equal(expectedEnvType))
-}
-
-func assertOutputDirEmpty(outputDirPath string) {
-	fileInfos, err := ioutil.ReadDir(outputDirPath)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(len(fileInfos)).To(Equal(0), fmt.Sprintf("Expected output dir %s to be empty", outputDirPath))
+func escapeWindowsPathRegex(path string) string {
+	return strings.Replace(path, `\`, `\\`, -1)
 }
 
 func buildDefaultCommand(envVars map[string]string) *exec.Cmd {
