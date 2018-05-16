@@ -56,23 +56,23 @@ func init() {
 	viper.BindPFlag(OpsManagerURLFlag, collectCmd.Flag(OpsManagerURLFlag))
 	viper.BindEnv(OpsManagerURLFlag, OpsManagerURLKey)
 
-	collectCmd.Flags().String(OpsManagerUsernameFlag, "", fmt.Sprintf("Operations Manager username [$%s]", OpsManagerUsernameKey))
+	collectCmd.Flags().String(OpsManagerUsernameFlag, "", fmt.Sprintf("Operations Manager username [$%s]\nNote: not required if using client/secret authentication", OpsManagerUsernameKey))
 	viper.BindPFlag(OpsManagerUsernameFlag, collectCmd.Flag(OpsManagerUsernameFlag))
 	viper.BindEnv(OpsManagerUsernameFlag, OpsManagerUsernameKey)
 
-	collectCmd.Flags().String(OpsManagerPasswordFlag, "", fmt.Sprintf("Operations Manager password [$%s]", OpsManagerPasswordKey))
+	collectCmd.Flags().String(OpsManagerPasswordFlag, "", fmt.Sprintf("Operations Manager password [$%s]\nNote: not required if using client/secret authentication", OpsManagerPasswordKey))
 	viper.BindPFlag(OpsManagerPasswordFlag, collectCmd.Flag(OpsManagerPasswordFlag))
 	viper.BindEnv(OpsManagerPasswordFlag, OpsManagerPasswordKey)
 
-	collectCmd.Flags().String(OpsManagerClientIdFlag, "", fmt.Sprintf("Operations Manager client id [$%s]", OpsManagerClientIdKey))
+	collectCmd.Flags().String(OpsManagerClientIdFlag, "", fmt.Sprintf("Operations Manager client id [$%s]\nNote: not required if using username/password authentication", OpsManagerClientIdKey))
 	viper.BindPFlag(OpsManagerClientIdFlag, collectCmd.Flag(OpsManagerClientIdFlag))
 	viper.BindEnv(OpsManagerClientIdFlag, OpsManagerClientIdKey)
 
-	collectCmd.Flags().String(OpsManagerClientSecretFlag, "", fmt.Sprintf("Operations Manager client secret [$%s]", OpsManagerClientSecretKey))
+	collectCmd.Flags().String(OpsManagerClientSecretFlag, "", fmt.Sprintf("Operations Manager client secret [$%s]\nNote: not required if using username/password authentication", OpsManagerClientSecretKey))
 	viper.BindPFlag(OpsManagerClientSecretFlag, collectCmd.Flag(OpsManagerClientSecretFlag))
 	viper.BindEnv(OpsManagerClientSecretFlag, OpsManagerClientSecretKey)
 
-	collectCmd.Flags().String(EnvTypeFlag, "", fmt.Sprintf("Describe the type of environment you're collecting from.\nValid options are: %s, %s, %s, and %s [$%s]", EnvTypeDevelopment, EnvTypeQA, EnvTypePreProduction, EnvTypeProduction, EnvTypeKey))
+	collectCmd.Flags().String(EnvTypeFlag, "", fmt.Sprintf("Describe the type of environment you're collecting from [$%s]\nValid options: %s, %s, %s, %s", EnvTypeKey, EnvTypeDevelopment, EnvTypeQA, EnvTypePreProduction, EnvTypeProduction))
 	viper.BindPFlag(EnvTypeFlag, collectCmd.Flag(EnvTypeFlag))
 	viper.BindEnv(EnvTypeFlag, EnvTypeKey)
 
@@ -80,11 +80,7 @@ func init() {
 	viper.BindPFlag(OutputPathFlag, collectCmd.Flag(OutputPathFlag))
 	viper.BindEnv(OutputPathFlag, OutputPathKey)
 
-	collectCmd.Flags().Bool(
-		SkipTlsVerifyFlag,
-		false,
-		"Skip TLS validation on http requests to Operations Manager",
-	)
+	collectCmd.Flags().Bool(SkipTlsVerifyFlag, false, "Skip TLS validation on http requests to Operations Manager")
 	viper.BindPFlag(SkipTlsVerifyFlag, collectCmd.Flag(SkipTlsVerifyFlag))
 
 	rootCmd.AddCommand(collectCmd)
