@@ -55,6 +55,7 @@ var _ = Describe("Collect", func() {
 
 			tarFilePath := validatedTarFilePath(outputDirPath)
 			assertValidOutput(tarFilePath, "ops_manager_vm_types", "development")
+			assertLogging(session, tarFilePath, defaultEnvVars[cmd.OpsManagerURLKey])
 		})
 
 		It("succeeds with flag configuration", func() {
@@ -75,6 +76,7 @@ var _ = Describe("Collect", func() {
 			Eventually(session).Should(gexec.Exit(0))
 			tarFilePath := validatedTarFilePath(outputDirPath)
 			assertValidOutput(tarFilePath, "ops_manager_vm_types", "development")
+			assertLogging(session, tarFilePath, flagValues[cmd.OpsManagerURLFlag])
 		})
 	})
 
@@ -91,6 +93,7 @@ var _ = Describe("Collect", func() {
 
 			tarFilePath := validatedTarFilePath(outputDirPath)
 			assertValidOutput(tarFilePath, "ops_manager_vm_types", "development")
+			assertLogging(session, tarFilePath, defaultEnvVars[cmd.OpsManagerURLKey])
 		})
 
 		It("succeeds with flag configuration", func() {
@@ -111,6 +114,7 @@ var _ = Describe("Collect", func() {
 			Eventually(session).Should(gexec.Exit(0))
 			tarFilePath := validatedTarFilePath(outputDirPath)
 			assertValidOutput(tarFilePath, "ops_manager_vm_types", "development")
+			assertLogging(session, tarFilePath, flagValues[cmd.OpsManagerURLFlag])
 		})
 
 	})
@@ -231,6 +235,12 @@ func assertValidOutput(tarFilePath, filename, envType string) {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(json.Valid(content)).To(BeTrue(), fmt.Sprintf("Expected file %s to contain valid json", jsonFilePath))
 	assertMetadataFileIsCorrect(tmpDir, envType)
+}
+
+func assertLogging(session *gexec.Session, tarFilePath, url string) {
+	Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Collecting data from Operations Manager at %s\n", url)))
+	Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Wrote output to %s\n", tarFilePath)))
+	Expect(session.Out).To(gbytes.Say("Success!\n"))
 }
 
 func assertMetadataFileIsCorrect(contentDir, expectedEnvType string) {

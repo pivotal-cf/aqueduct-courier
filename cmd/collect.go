@@ -136,11 +136,15 @@ func collect(c *cobra.Command, _ []string) error {
 
 	ce := ops.NewCollector(collector, tarWriter)
 
+	fmt.Printf("Collecting data from Operations Manager at %s\n", viper.GetString(OpsManagerURLFlag))
 	err = ce.Collect(envType)
 	if err != nil {
 		os.Remove(tarFilePath)
 		return err
 	}
+
+	fmt.Printf("Wrote output to %s\n", tarFilePath)
+	fmt.Println("Success!")
 	return nil
 }
 
