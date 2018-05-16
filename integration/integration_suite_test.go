@@ -1,6 +1,7 @@
 package integration
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -26,3 +27,7 @@ var _ = BeforeSuite(func() {
 var _ = AfterSuite(func() {
 	gexec.CleanupBuildArtifacts()
 })
+
+func escapeWindowsPathRegex(path string) string {
+	return strings.Replace(path, `\`, `\\`, -1)
+}

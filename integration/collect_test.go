@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 
 	"github.com/mholt/archiver"
 	. "github.com/onsi/ginkgo"
@@ -256,10 +255,6 @@ func assertLogging(session *gexec.Session, tarFilePath, url string) {
 	Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Collecting data from Operations Manager at %s\n", url)))
 	Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Wrote output to %s\n", escapeWindowsPathRegex(tarFilePath))))
 	Expect(session.Out).To(gbytes.Say("Success!\n"))
-}
-
-func escapeWindowsPathRegex(path string) string {
-	return strings.Replace(path, `\`, `\\`, -1)
 }
 
 func buildDefaultCommand(envVars map[string]string) *exec.Cmd {

@@ -47,10 +47,14 @@ func send(c *cobra.Command, _ []string) error {
 
 	sender := ops.SendExecutor{}
 	tarReader := file.NewTarReader(viper.GetString(DataTarFilePathFlag))
+
+	fmt.Printf("Sending %s to Pivotal at %s\n", viper.GetString(DataTarFilePathFlag), dataLoaderURL)
 	err = sender.Send(tarReader, dataLoaderURL, viper.GetString(ApiKeyFlag))
 	if err != nil {
 		return errors.Wrap(err, SendFailureMessage)
 	}
+
+	fmt.Println("Success!")
 
 	return nil
 }

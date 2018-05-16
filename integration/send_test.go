@@ -67,6 +67,8 @@ var _ = Describe("Send", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
 			Expect(len(dataLoader.ReceivedRequests())).To(Equal(1))
+			Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Sending %s to Pivotal at %s\n", escapeWindowsPathRegex(sourceDataTarFilePath), dataLoader.URL())))
+			Expect(session.Out).To(gbytes.Say("Success!\n"))
 		})
 
 		It("sends data to the configured endpoint with api key as an env variable", func() {
@@ -76,6 +78,8 @@ var _ = Describe("Send", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
 			Expect(len(dataLoader.ReceivedRequests())).To(Equal(1))
+			Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Sending %s to Pivotal at %s\n", escapeWindowsPathRegex(sourceDataTarFilePath), dataLoader.URL())))
+			Expect(session.Out).To(gbytes.Say("Success!\n"))
 		})
 	})
 
