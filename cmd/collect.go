@@ -72,7 +72,7 @@ func init() {
 	viper.BindPFlag(OpsManagerClientSecretFlag, collectCmd.Flag(OpsManagerClientSecretFlag))
 	viper.BindEnv(OpsManagerClientSecretFlag, OpsManagerClientSecretKey)
 
-	collectCmd.Flags().String(EnvTypeFlag, "", fmt.Sprintf("Environment type. Valid options are: %s, %s, %s, and %s [$%s]", EnvTypeDevelopment, EnvTypeQA, EnvTypePreProduction, EnvTypeProduction, EnvTypeKey))
+	collectCmd.Flags().String(EnvTypeFlag, "", fmt.Sprintf("Describe the type of environment you're collecting from.\nValid options are: %s, %s, %s, and %s [$%s]", EnvTypeDevelopment, EnvTypeQA, EnvTypePreProduction, EnvTypeProduction, EnvTypeKey))
 	viper.BindPFlag(EnvTypeFlag, collectCmd.Flag(EnvTypeFlag))
 	viper.BindEnv(EnvTypeFlag, EnvTypeKey)
 
