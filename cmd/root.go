@@ -4,12 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-const RequiredConfigErrorFormat = "Requires --%s to be set"
+const RequiredConfigErrorFormat = "Missing required flags: %s"
 
 var (
 	version = "dev"
@@ -27,10 +28,17 @@ func Execute() {
 }
 
 func verifyRequiredConfig(keys ...string) error {
+	var missingFlags []string
 	for _, k := range keys {
 		if viper.GetString(k) == "" {
-			return errors.New(fmt.Sprintf(RequiredConfigErrorFormat, k))
+			missingFlags = append(missingFlags, "--"+k)
+
 		}
 	}
+
+	if len(missingFlags) > 0 {
+		return errors.New(fmt.Sprintf(RequiredConfigErrorFormat, strings.Join(missingFlags, ", ")))
+	}
+
 	return nil
 }

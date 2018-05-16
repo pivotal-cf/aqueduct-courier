@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -94,21 +95,13 @@ var _ = Describe("Send", func() {
 		Expect(session.Err).NotTo(gbytes.Say("Usage:"))
 	})
 
-	It("fails if the path flag has not been set", func() {
-		command := exec.Command(binaryPath, "send", "--api-key="+validApiKey)
+	It("fails if required flags have not been set", func() {
+		command := exec.Command(binaryPath, "send")
 		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(session).Should(gexec.Exit(1))
-		Expect(session.Err).To(gbytes.Say(fmt.Sprintf(cmd.RequiredConfigErrorFormat, cmd.DataTarFilePathFlag)))
-		Expect(session.Err).To(gbytes.Say("Usage:"))
-	})
-
-	It("fails if the api-key flag has not been set", func() {
-		command := exec.Command(binaryPath, "send", "--path="+sourceDataTarFilePath)
-		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-		Expect(err).NotTo(HaveOccurred())
-		Eventually(session).Should(gexec.Exit(1))
-		Expect(session.Err).To(gbytes.Say(fmt.Sprintf(cmd.RequiredConfigErrorFormat, cmd.ApiKeyFlag)))
+		requiredFlags := []string{"--" + cmd.DataTarFilePathFlag, "--" + cmd.ApiKeyFlag}
+		Expect(session.Err).To(gbytes.Say(fmt.Sprintf(cmd.RequiredConfigErrorFormat, strings.Join(requiredFlags, ", "))))
 		Expect(session.Err).To(gbytes.Say("Usage:"))
 	})
 })

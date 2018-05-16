@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/mholt/archiver"
 	. "github.com/onsi/ginkgo"
@@ -134,26 +135,16 @@ var _ = Describe("Collect", func() {
 		Entry(cmd.EnvTypeProduction, cmd.EnvTypeProduction),
 	)
 
-	DescribeTable(
-		"fails when required variable is not set",
-		func(missingKey, missingFlag string) {
-			command := exec.Command(aqueductBinaryPath, "collect")
-			for k, v := range defaultEnvVars {
-				if k != missingKey {
-					command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))
-				}
-			}
-			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-			Expect(err).ToNot(HaveOccurred())
-			Eventually(session).Should(gexec.Exit(1))
-			Eventually(session.Err).Should(gbytes.Say(fmt.Sprintf(cmd.RequiredConfigErrorFormat, missingFlag)))
-			Expect(session.Err).To(gbytes.Say("Usage:"))
-			assertOutputDirEmpty(outputDirPath)
-		},
-		Entry(cmd.OpsManagerURLKey, cmd.OpsManagerURLKey, cmd.OpsManagerURLFlag),
-		Entry(cmd.EnvTypeKey, cmd.EnvTypeKey, cmd.EnvTypeFlag),
-		Entry(cmd.OutputPathKey, cmd.OutputPathKey, cmd.OutputPathFlag),
-	)
+	It("fails with the correct error message when required variables are not set", func() {
+		command := exec.Command(aqueductBinaryPath, "collect")
+		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+		Expect(err).ToNot(HaveOccurred())
+		Eventually(session).Should(gexec.Exit(1))
+		requiredFlags := []string{"--" + cmd.OpsManagerURLFlag, "--" + cmd.EnvTypeFlag, "--" + cmd.OutputPathFlag}
+		Expect(session.Err).To(gbytes.Say(fmt.Sprintf(cmd.RequiredConfigErrorFormat, strings.Join(requiredFlags, ", "))))
+		Expect(session.Err).To(gbytes.Say("Usage:"))
+		assertOutputDirEmpty(outputDirPath)
+	})
 
 	DescribeTable(
 		"fails when there is no pair of auth credentials",
