@@ -10,12 +10,10 @@ image_resource:
 inputs:
 - name: aqueduct-courier
 - name: binaries
+- name: collected-data
 
 run:
-  path: aqueduct-courier/ci/tasks/collect-and-send
+  path: aqueduct-courier/ci/tasks/send
 
 params:
-  OPS_MANAGER_URL:
-  OPS_MANAGER_USERNAME:
-  OPS_MANAGER_PASSWORD:
   API_KEY:

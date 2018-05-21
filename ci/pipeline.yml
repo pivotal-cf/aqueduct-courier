@@ -79,12 +79,18 @@ jobs:
     trigger: true
   - get: staging-binaries
     passed: [build-staging-binaries]
-  - task: collect-and-send
+  - task: collect
     input_mapping:
       binaries: staging-binaries
-    file: aqueduct-courier/ci/tasks/collect-and-send.yml
+    file: aqueduct-courier/ci/tasks/collect.yml
     params:
       OPS_MANAGER_URL: {{courier-ops-manager-url}}
       OPS_MANAGER_USERNAME: {{courier-ops-manager-username}}
       OPS_MANAGER_PASSWORD: {{courier-ops-manager-password}}
+      ENV_TYPE: development
+  - task: send
+    input_mapping:
+      binaries: staging-binaries
+    file: aqueduct-courier/ci/tasks/send.yml
+    params:
       API_KEY: {{loader-api-key}}
