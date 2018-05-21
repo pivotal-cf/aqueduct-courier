@@ -6,6 +6,15 @@ import (
 )
 
 type FakeTarReader struct {
+	TarFilePathStub        func() string
+	tarFilePathMutex       sync.RWMutex
+	tarFilePathArgsForCall []struct{}
+	tarFilePathReturns     struct {
+		result1 string
+	}
+	tarFilePathReturnsOnCall map[int]struct {
+		result1 string
+	}
 	ReadFileStub        func(string) ([]byte, error)
 	readFileMutex       sync.RWMutex
 	readFileArgsForCall []struct {
@@ -19,17 +28,59 @@ type FakeTarReader struct {
 		result1 []byte
 		result2 error
 	}
-	TarFilePathStub        func() string
-	tarFilePathMutex       sync.RWMutex
-	tarFilePathArgsForCall []struct{}
-	tarFilePathReturns     struct {
-		result1 string
+	FileMd5sStub        func() (map[string]string, error)
+	fileMd5sMutex       sync.RWMutex
+	fileMd5sArgsForCall []struct{}
+	fileMd5sReturns     struct {
+		result1 map[string]string
+		result2 error
 	}
-	tarFilePathReturnsOnCall map[int]struct {
-		result1 string
+	fileMd5sReturnsOnCall map[int]struct {
+		result1 map[string]string
+		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
+}
+
+func (fake *FakeTarReader) TarFilePath() string {
+	fake.tarFilePathMutex.Lock()
+	ret, specificReturn := fake.tarFilePathReturnsOnCall[len(fake.tarFilePathArgsForCall)]
+	fake.tarFilePathArgsForCall = append(fake.tarFilePathArgsForCall, struct{}{})
+	fake.recordInvocation("TarFilePath", []interface{}{})
+	fake.tarFilePathMutex.Unlock()
+	if fake.TarFilePathStub != nil {
+		return fake.TarFilePathStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.tarFilePathReturns.result1
+}
+
+func (fake *FakeTarReader) TarFilePathCallCount() int {
+	fake.tarFilePathMutex.RLock()
+	defer fake.tarFilePathMutex.RUnlock()
+	return len(fake.tarFilePathArgsForCall)
+}
+
+func (fake *FakeTarReader) TarFilePathReturns(result1 string) {
+	fake.TarFilePathStub = nil
+	fake.tarFilePathReturns = struct {
+		result1 string
+	}{result1}
+}
+
+func (fake *FakeTarReader) TarFilePathReturnsOnCall(i int, result1 string) {
+	fake.TarFilePathStub = nil
+	if fake.tarFilePathReturnsOnCall == nil {
+		fake.tarFilePathReturnsOnCall = make(map[int]struct {
+			result1 string
+		})
+	}
+	fake.tarFilePathReturnsOnCall[i] = struct {
+		result1 string
+	}{result1}
 }
 
 func (fake *FakeTarReader) ReadFile(arg1 string) ([]byte, error) {
@@ -83,53 +134,58 @@ func (fake *FakeTarReader) ReadFileReturnsOnCall(i int, result1 []byte, result2 
 	}{result1, result2}
 }
 
-func (fake *FakeTarReader) TarFilePath() string {
-	fake.tarFilePathMutex.Lock()
-	ret, specificReturn := fake.tarFilePathReturnsOnCall[len(fake.tarFilePathArgsForCall)]
-	fake.tarFilePathArgsForCall = append(fake.tarFilePathArgsForCall, struct{}{})
-	fake.recordInvocation("TarFilePath", []interface{}{})
-	fake.tarFilePathMutex.Unlock()
-	if fake.TarFilePathStub != nil {
-		return fake.TarFilePathStub()
+func (fake *FakeTarReader) FileMd5s() (map[string]string, error) {
+	fake.fileMd5sMutex.Lock()
+	ret, specificReturn := fake.fileMd5sReturnsOnCall[len(fake.fileMd5sArgsForCall)]
+	fake.fileMd5sArgsForCall = append(fake.fileMd5sArgsForCall, struct{}{})
+	fake.recordInvocation("FileMd5s", []interface{}{})
+	fake.fileMd5sMutex.Unlock()
+	if fake.FileMd5sStub != nil {
+		return fake.FileMd5sStub()
 	}
 	if specificReturn {
-		return ret.result1
+		return ret.result1, ret.result2
 	}
-	return fake.tarFilePathReturns.result1
+	return fake.fileMd5sReturns.result1, fake.fileMd5sReturns.result2
 }
 
-func (fake *FakeTarReader) TarFilePathCallCount() int {
-	fake.tarFilePathMutex.RLock()
-	defer fake.tarFilePathMutex.RUnlock()
-	return len(fake.tarFilePathArgsForCall)
+func (fake *FakeTarReader) FileMd5sCallCount() int {
+	fake.fileMd5sMutex.RLock()
+	defer fake.fileMd5sMutex.RUnlock()
+	return len(fake.fileMd5sArgsForCall)
 }
 
-func (fake *FakeTarReader) TarFilePathReturns(result1 string) {
-	fake.TarFilePathStub = nil
-	fake.tarFilePathReturns = struct {
-		result1 string
-	}{result1}
+func (fake *FakeTarReader) FileMd5sReturns(result1 map[string]string, result2 error) {
+	fake.FileMd5sStub = nil
+	fake.fileMd5sReturns = struct {
+		result1 map[string]string
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *FakeTarReader) TarFilePathReturnsOnCall(i int, result1 string) {
-	fake.TarFilePathStub = nil
-	if fake.tarFilePathReturnsOnCall == nil {
-		fake.tarFilePathReturnsOnCall = make(map[int]struct {
-			result1 string
+func (fake *FakeTarReader) FileMd5sReturnsOnCall(i int, result1 map[string]string, result2 error) {
+	fake.FileMd5sStub = nil
+	if fake.fileMd5sReturnsOnCall == nil {
+		fake.fileMd5sReturnsOnCall = make(map[int]struct {
+			result1 map[string]string
+			result2 error
 		})
 	}
-	fake.tarFilePathReturnsOnCall[i] = struct {
-		result1 string
-	}{result1}
+	fake.fileMd5sReturnsOnCall[i] = struct {
+		result1 map[string]string
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *FakeTarReader) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.readFileMutex.RLock()
-	defer fake.readFileMutex.RUnlock()
 	fake.tarFilePathMutex.RLock()
 	defer fake.tarFilePathMutex.RUnlock()
+	fake.readFileMutex.RLock()
+	defer fake.readFileMutex.RUnlock()
+	fake.fileMd5sMutex.RLock()
+	defer fake.fileMd5sMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

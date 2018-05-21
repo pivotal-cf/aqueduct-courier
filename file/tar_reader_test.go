@@ -1,6 +1,8 @@
 package file_test
 
 import (
+	"crypto/md5"
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -75,6 +77,49 @@ var _ = Describe("TarReader", func() {
 			tarFilePath := "path/to/tarfile"
 			tarReader := NewTarReader(tarFilePath)
 			Expect(tarReader.TarFilePath()).To(Equal(tarFilePath))
+		})
+	})
+
+	Describe("FileMd5s", func() {
+		It("returns the list of fileNames in the tarfile", func() {
+			tarFilePath := generateValidTarFile(tempDir)
+			tarReader := NewTarReader(tarFilePath)
+
+			file1Content, err := tarReader.ReadFile("file1")
+			Expect(err).NotTo(HaveOccurred())
+			file1Sum := md5.Sum(file1Content)
+			file1Md5 := base64.StdEncoding.EncodeToString(file1Sum[:])
+
+			file2Content, err := tarReader.ReadFile("file2")
+			Expect(err).NotTo(HaveOccurred())
+			file2Sum := md5.Sum(file2Content)
+			file2Md5 := base64.StdEncoding.EncodeToString(file2Sum[:])
+
+			fileMd5s, err := tarReader.FileMd5s()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(fileMd5s).To(Equal(map[string]string{
+				"file1": file1Md5,
+				"file2": file2Md5,
+			}))
+		})
+
+		It("it fails if the sourceTarFile does not exist", func() {
+			reader := NewTarReader("path/to/not/real/file")
+
+			fileNames, err := reader.FileMd5s()
+			Expect(fileNames).To(Equal(map[string]string{}))
+			Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(OpenTarFileFailureFormat, "path/to/not/real/file"))))
+		})
+
+		It("it errors if the file specified does not have real tar headers", func() {
+			invalidFilePath := filepath.Join(tempDir, "not-a-tarfile")
+			Expect(ioutil.WriteFile(invalidFilePath, []byte("not-tar"), 0644)).To(Succeed())
+
+			reader := NewTarReader(invalidFilePath)
+
+			fileNames, err := reader.FileMd5s()
+			Expect(fileNames).To(Equal(map[string]string{}))
+			Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(UnexpectedFileTypeFormat, invalidFilePath))))
 		})
 	})
 })

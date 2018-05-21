@@ -37,9 +37,20 @@ var _ = Describe("Sender", func() {
 			CollectedAt:  "collected-at",
 			CollectionId: "collection-id",
 			EnvType:      "some-env-type",
+			FileDigests: []FileDigest{
+				{Name: "file1", MD5Checksum: "file1-md5"},
+				{Name: "file2", MD5Checksum: "file2-md5"},
+			},
 		}
 		metadataContents, err := json.Marshal(metadata)
 		Expect(err).NotTo(HaveOccurred())
+		tarReader.FileMd5sReturns(
+			map[string]string{
+				"file1": "file1-md5",
+				"file2": "file2-md5",
+			},
+			nil,
+		)
 
 		tmpFile, err = ioutil.TempFile("", "")
 		Expect(err).NotTo(HaveOccurred())
@@ -142,5 +153,82 @@ var _ = Describe("Sender", func() {
 
 		err := sender.Send(tarReader, dataLoader.URL(), "some-key")
 		Expect(err).To(MatchError(ContainSubstring(ReadDataFileError)))
+	})
+
+	It("fails if the tar file contains more files than what is in the metadata", func() {
+		metadata = Metadata{
+			FileDigests: []FileDigest{
+				{Name: "file1", MD5Checksum: "file1-md5"},
+				{Name: "file2", MD5Checksum: "file2-md5"},
+			},
+		}
+		metadataContents, err := json.Marshal(metadata)
+		Expect(err).NotTo(HaveOccurred())
+
+		fileMd5s := map[string]string{
+			"file1":          "file1-md5",
+			"file2":          "file2-md5",
+			"too-many-files": "dun dun dunnnnn",
+			MetadataFileName: "file-to-skip-checking",
+		}
+
+		tarReader.FileMd5sReturns(fileMd5s, nil)
+		tarReader.ReadFileReturns(metadataContents, nil)
+
+		err = sender.Send(tarReader, dataLoader.URL(), "token")
+		Expect(err).To(MatchError(fmt.Sprintf(ExtraFilesInTarMessageFormat, tarReader.TarFilePath())))
+	})
+
+	It("fails if the tar file is missing files listed in the metadata", func() {
+		metadata = Metadata{
+			FileDigests: []FileDigest{
+				{Name: "file1", MD5Checksum: "file1-md5"},
+				{Name: "file2", MD5Checksum: "file2-md5"},
+			},
+		}
+		metadataContents, err := json.Marshal(metadata)
+		Expect(err).NotTo(HaveOccurred())
+
+		fileMd5s := map[string]string{
+			"file1":          "file1-md5",
+			MetadataFileName: "file-to-skip-checking",
+		}
+
+		tarReader.FileMd5sReturns(fileMd5s, nil)
+		tarReader.ReadFileReturns(metadataContents, nil)
+
+		err = sender.Send(tarReader, dataLoader.URL(), "token")
+		Expect(err).To(MatchError(fmt.Sprintf(MissingFilesInTarMessageFormat, tarReader.TarFilePath())))
+	})
+
+	It("fails if the file checksums in the tarball do not match the metadata", func() {
+		metadata = Metadata{
+			FileDigests: []FileDigest{
+				{Name: "file1", MD5Checksum: "file1-md5"},
+				{Name: "file2", MD5Checksum: "file2-md5"},
+			},
+		}
+		metadataContents, err := json.Marshal(metadata)
+		Expect(err).NotTo(HaveOccurred())
+
+		fileMd5s := map[string]string{
+			"file1":          "file1-md5",
+			"file2":          "not-matching-today",
+			MetadataFileName: "file-to-skip-checking",
+		}
+
+		tarReader.FileMd5sReturns(fileMd5s, nil)
+		tarReader.ReadFileReturns(metadataContents, nil)
+
+		err = sender.Send(tarReader, dataLoader.URL(), "token")
+		Expect(err).To(MatchError(fmt.Sprintf(InvalidFilesInTarMessageFormat, tarReader.TarFilePath())))
+	})
+
+	It("fails if listing the files with their md5s fails", func() {
+		tarReader.FileMd5sReturns(map[string]string{}, errors.New("listing files and md5s is hard"))
+
+		err := sender.Send(tarReader, dataLoader.URL(), "token")
+		Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(UnableToListFilesMessageFormat, tarReader.TarFilePath()))))
+		Expect(err).To(MatchError(ContainSubstring("listing files and md5s is hard")))
 	})
 })

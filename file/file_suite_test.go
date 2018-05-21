@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestFileWriter(t *testing.T) {
+func TestFile(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "File Suite")
 }

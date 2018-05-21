@@ -2,6 +2,8 @@ package file
 
 import (
 	"archive/tar"
+	"crypto/md5"
+	"encoding/base64"
 	"io"
 	"io/ioutil"
 	"os"
@@ -22,6 +24,10 @@ type TarReader struct {
 
 func NewTarReader(sourceTarfile string) *TarReader {
 	return &TarReader{sourceTarFile: sourceTarfile}
+}
+
+func (tr *TarReader) TarFilePath() string {
+	return tr.sourceTarFile
 }
 
 func (tr *TarReader) ReadFile(fileName string) ([]byte, error) {
@@ -55,6 +61,34 @@ func (tr *TarReader) ReadFile(fileName string) ([]byte, error) {
 	return contents, nil
 }
 
-func (tr *TarReader) TarFilePath() string {
-	return tr.sourceTarFile
+func (tr *TarReader) FileMd5s() (map[string]string, error) {
+	file, err := os.Open(tr.sourceTarFile)
+	if err != nil {
+		return map[string]string{}, errors.Wrapf(err, OpenTarFileFailureFormat, tr.sourceTarFile)
+	}
+	defer file.Close()
+
+	reader := tar.NewReader(file)
+
+	fileMd5s := map[string]string{}
+	for {
+		hdr, err := reader.Next()
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			return map[string]string{}, errors.Wrapf(err, UnexpectedFileTypeFormat, tr.sourceTarFile)
+		}
+
+		contents, err := ioutil.ReadAll(reader)
+		if err != nil {
+			return map[string]string{}, errors.Wrapf(err, UnableToReadFileFormat, hdr.Name, tr.sourceTarFile)
+		}
+
+		fileSum := md5.Sum(contents)
+		fileMd5s[hdr.Name] = base64.StdEncoding.EncodeToString(fileSum[:])
+	}
+
+	return fileMd5s, nil
 }

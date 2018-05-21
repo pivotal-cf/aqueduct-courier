@@ -19,6 +19,8 @@ import (
 	"github.com/pivotal-cf/aqueduct-courier/cmd"
 	"github.com/pivotal-cf/aqueduct-courier/file"
 	"github.com/pivotal-cf/aqueduct-courier/ops"
+	"crypto/md5"
+	"encoding/base64"
 )
 
 var _ = Describe("Send", func() {
@@ -113,13 +115,15 @@ func generateValidDataTarFile(destinationDir string) string {
 	Expect(err).NotTo(HaveOccurred())
 	defer writer.Close()
 
-	Expect(writer.AddFile([]byte(""), "file1")).To(Succeed())
-	Expect(writer.AddFile([]byte(""), "file2")).To(Succeed())
+	Expect(writer.AddFile([]byte{}, "file1")).To(Succeed())
+	Expect(writer.AddFile([]byte{}, "file2")).To(Succeed())
+	sum := md5.Sum([]byte{})
+	emptyFileChecksum := base64.StdEncoding.EncodeToString(sum[:])
 
 	var metadata ops.Metadata
 	metadata.FileDigests = []ops.FileDigest{
-		{Name: "file1"},
-		{Name: "file2"},
+		{Name: "file1", MD5Checksum: emptyFileChecksum},
+		{Name: "file2", MD5Checksum: emptyFileChecksum},
 	}
 	metadataContents, err := json.Marshal(metadata)
 	Expect(err).NotTo(HaveOccurred())
