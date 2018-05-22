@@ -22,6 +22,19 @@ type FakeOmService struct {
 		result1 io.Reader
 		result2 error
 	}
+	ProductPropertiesStub        func(guid string) (io.Reader, error)
+	productPropertiesMutex       sync.RWMutex
+	productPropertiesArgsForCall []struct {
+		guid string
+	}
+	productPropertiesReturns struct {
+		result1 io.Reader
+		result2 error
+	}
+	productPropertiesReturnsOnCall map[int]struct {
+		result1 io.Reader
+		result2 error
+	}
 	VmTypesStub        func() (io.Reader, error)
 	vmTypesMutex       sync.RWMutex
 	vmTypesArgsForCall []struct{}
@@ -116,6 +129,57 @@ func (fake *FakeOmService) ProductResourcesReturnsOnCall(i int, result1 io.Reade
 		})
 	}
 	fake.productResourcesReturnsOnCall[i] = struct {
+		result1 io.Reader
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeOmService) ProductProperties(guid string) (io.Reader, error) {
+	fake.productPropertiesMutex.Lock()
+	ret, specificReturn := fake.productPropertiesReturnsOnCall[len(fake.productPropertiesArgsForCall)]
+	fake.productPropertiesArgsForCall = append(fake.productPropertiesArgsForCall, struct {
+		guid string
+	}{guid})
+	fake.recordInvocation("ProductProperties", []interface{}{guid})
+	fake.productPropertiesMutex.Unlock()
+	if fake.ProductPropertiesStub != nil {
+		return fake.ProductPropertiesStub(guid)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.productPropertiesReturns.result1, fake.productPropertiesReturns.result2
+}
+
+func (fake *FakeOmService) ProductPropertiesCallCount() int {
+	fake.productPropertiesMutex.RLock()
+	defer fake.productPropertiesMutex.RUnlock()
+	return len(fake.productPropertiesArgsForCall)
+}
+
+func (fake *FakeOmService) ProductPropertiesArgsForCall(i int) string {
+	fake.productPropertiesMutex.RLock()
+	defer fake.productPropertiesMutex.RUnlock()
+	return fake.productPropertiesArgsForCall[i].guid
+}
+
+func (fake *FakeOmService) ProductPropertiesReturns(result1 io.Reader, result2 error) {
+	fake.ProductPropertiesStub = nil
+	fake.productPropertiesReturns = struct {
+		result1 io.Reader
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeOmService) ProductPropertiesReturnsOnCall(i int, result1 io.Reader, result2 error) {
+	fake.ProductPropertiesStub = nil
+	if fake.productPropertiesReturnsOnCall == nil {
+		fake.productPropertiesReturnsOnCall = make(map[int]struct {
+			result1 io.Reader
+			result2 error
+		})
+	}
+	fake.productPropertiesReturnsOnCall[i] = struct {
 		result1 io.Reader
 		result2 error
 	}{result1, result2}
@@ -298,6 +362,8 @@ func (fake *FakeOmService) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.productResourcesMutex.RLock()
 	defer fake.productResourcesMutex.RUnlock()
+	fake.productPropertiesMutex.RLock()
+	defer fake.productPropertiesMutex.RUnlock()
 	fake.vmTypesMutex.RLock()
 	defer fake.vmTypesMutex.RUnlock()
 	fake.diagnosticReportMutex.RLock()

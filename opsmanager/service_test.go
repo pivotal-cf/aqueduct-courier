@@ -69,7 +69,7 @@ var _ = Describe("Service", func() {
 		const productGUID = "product-guid"
 
 		BeforeEach(func() {
-			expectedProductPath = fmt.Sprintf(ProductResourcePathFormat, productGUID)
+			expectedProductPath = fmt.Sprintf(ProductResourcesPathFormat, productGUID)
 		})
 
 		It("returns product resources content", func() {
@@ -101,6 +101,51 @@ var _ = Describe("Service", func() {
 			requestor.InvokeReturns(api.RequestServiceInvokeOutput{StatusCode: http.StatusBadGateway}, nil)
 
 			actual, err := service.ProductResources(productGUID)
+			Expect(actual).To(BeNil())
+			Expect(err).To(MatchError(fmt.Sprintf(
+				RequestUnexpectedStatusErrorFormat, http.MethodGet, expectedProductPath, http.StatusBadGateway,
+			)))
+		})
+	})
+
+	Describe("ProductProperties", func() {
+		var expectedProductPath string
+
+		const productGUID = "product-guid"
+
+		BeforeEach(func() {
+			expectedProductPath = fmt.Sprintf(ProductPropertiesPathFormat, productGUID)
+		})
+
+		It("returns product properties content", func() {
+			body := strings.NewReader("product-properties")
+
+			requestor.InvokeReturns(api.RequestServiceInvokeOutput{Body: body, StatusCode: http.StatusOK}, nil)
+
+			actual, err := service.ProductProperties(productGUID)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(actual).To(Equal(body))
+
+			Expect(requestor.InvokeCallCount()).To(Equal(1))
+			input := requestor.InvokeArgsForCall(0)
+			Expect(input).To(Equal(api.RequestServiceInvokeInput{Path: expectedProductPath, Method: http.MethodGet}))
+		})
+
+		It("returns an error when requestor errors", func() {
+			requestor.InvokeReturns(api.RequestServiceInvokeOutput{StatusCode: http.StatusOK}, errors.New("Requesting things is hard"))
+
+			actual, err := service.ProductProperties(productGUID)
+			Expect(actual).To(BeNil())
+			Expect(err).To(MatchError(ContainSubstring(
+				fmt.Sprintf(RequestFailureErrorFormat, http.MethodGet, expectedProductPath),
+			)))
+			Expect(err).To(MatchError(ContainSubstring("Requesting things is hard")))
+		})
+
+		It("returns an error when requestor returns a non 200 status code", func() {
+			requestor.InvokeReturns(api.RequestServiceInvokeOutput{StatusCode: http.StatusBadGateway}, nil)
+
+			actual, err := service.ProductProperties(productGUID)
 			Expect(actual).To(BeNil())
 			Expect(err).To(MatchError(fmt.Sprintf(
 				RequestUnexpectedStatusErrorFormat, http.MethodGet, expectedProductPath, http.StatusBadGateway,

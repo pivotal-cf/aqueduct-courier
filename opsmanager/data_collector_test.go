@@ -72,6 +72,19 @@ var _ = Describe("DataCollector", func() {
 		assertOmServiceFailure(data, err, "best-product-1", ResourcesDataType, "Requesting things is hard")
 	})
 
+	It("returns an error when omService.ProductProperties errors", func() {
+		deployedProductsLister.ListReturns(
+			[]api.DeployedProductOutput{
+				{Type: DirectorProductType, GUID: "p-bosh-always-first"},
+				{Type: "best-product-1", GUID: "p1-guid"},
+			},
+			nil,
+		)
+		omService.ProductPropertiesReturns(nil, errors.New("Requesting things is hard"))
+		data, err := dataCollector.Collect()
+		assertOmServiceFailure(data, err, "best-product-1", PropertiesDataType, "Requesting things is hard")
+	})
+
 	It("returns an error when omService.VmTypes errors", func() {
 		omService.VmTypesReturns(nil, errors.New("Requesting things is hard"))
 		data, err := dataCollector.Collect()
@@ -97,7 +110,11 @@ var _ = Describe("DataCollector", func() {
 	})
 
 	It("succeeds", func() {
-		readers := []io.Reader{
+		resourcesReaders := []io.Reader{
+			strings.NewReader("r1 data"),
+			strings.NewReader("r2 data"),
+		}
+		propertiesReaders := []io.Reader{
 			strings.NewReader("p1 data"),
 			strings.NewReader("p2 data"),
 		}
@@ -111,8 +128,11 @@ var _ = Describe("DataCollector", func() {
 			{Type: "best-product-2", GUID: "p2-guid"},
 		}
 		deployedProductsLister.ListReturns(append([]api.DeployedProductOutput{directorProduct}, deployedProducts...), nil)
-		for i, r := range readers {
+		for i, r := range resourcesReaders {
 			omService.ProductResourcesReturnsOnCall(i, r, nil)
+		}
+		for i, r := range propertiesReaders {
+			omService.ProductPropertiesReturnsOnCall(i, r, nil)
 		}
 		omService.VmTypesReturns(vmTypesReader, nil)
 		omService.DiagnosticReportReturns(diagnosticReportReader, nil)
@@ -128,14 +148,24 @@ var _ = Describe("DataCollector", func() {
 				DeployedProductsDataType,
 			),
 			NewData(
-				readers[0],
+				resourcesReaders[0],
 				deployedProducts[0].Type,
 				ResourcesDataType,
 			),
 			NewData(
-				readers[1],
+				resourcesReaders[1],
 				deployedProducts[1].Type,
 				ResourcesDataType,
+			),
+			NewData(
+				propertiesReaders[0],
+				deployedProducts[0].Type,
+				PropertiesDataType,
+			),
+			NewData(
+				propertiesReaders[1],
+				deployedProducts[1].Type,
+				PropertiesDataType,
 			),
 			NewData(
 				vmTypesReader,

@@ -23,6 +23,7 @@ const (
 	DiagnosticReportDataType = "diagnostic_report"
 	DeployedProductsDataType = "deployed_products"
 	InstallationsDataType    = "installations"
+	PropertiesDataType       = "properties"
 )
 
 //go:generate counterfeiter . PendingChangesLister
@@ -38,6 +39,7 @@ type DeployedProductsLister interface {
 //go:generate counterfeiter . OmService
 type OmService interface {
 	ProductResources(guid string) (io.Reader, error)
+	ProductProperties(guid string) (io.Reader, error)
 	VmTypes() (io.Reader, error)
 	DiagnosticReport() (io.Reader, error)
 	DeployedProducts() (io.Reader, error)
@@ -85,9 +87,14 @@ func (dc DataCollector) Collect() ([]Data, error) {
 	for _, product := range pl {
 		if product.Type != DirectorProductType {
 			d, err = appendRetrievedData(d, dc.productResourcesCaller(product.GUID), product.Type, ResourcesDataType)
-		}
-		if err != nil {
-			return []Data{}, err
+			if err != nil {
+				return []Data{}, err
+			}
+
+			d, err = appendRetrievedData(d, dc.productPropertiesCaller(product.GUID), product.Type, PropertiesDataType)
+			if err != nil {
+				return []Data{}, err
+			}
 		}
 	}
 
@@ -112,6 +119,12 @@ func (dc DataCollector) Collect() ([]Data, error) {
 func (dc DataCollector) productResourcesCaller(guid string) dataRetriever {
 	return func() (io.Reader, error) {
 		return dc.omService.ProductResources(guid)
+	}
+}
+
+func (dc DataCollector) productPropertiesCaller(guid string) dataRetriever {
+	return func() (io.Reader, error) {
+		return dc.omService.ProductProperties(guid)
 	}
 }
 

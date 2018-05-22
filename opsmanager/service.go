@@ -13,11 +13,12 @@ import (
 )
 
 const (
-	ProductResourcePathFormat = "/api/v0/staged/products/%s/resources"
-	InstallationsPath         = "/api/v0/installations"
-	DeployedProductsPath      = "/api/v0/deployed/products"
-	VmTypesPath               = "/api/v0/vm_types"
-	DiagnosticReportPath      = "/api/v0/diagnostic_report"
+	ProductResourcesPathFormat  = "/api/v0/staged/products/%s/resources"
+	ProductPropertiesPathFormat = "/api/v0/staged/products/%s/properties"
+	InstallationsPath           = "/api/v0/installations"
+	DeployedProductsPath        = "/api/v0/deployed/products"
+	VmTypesPath                 = "/api/v0/vm_types"
+	DiagnosticReportPath        = "/api/v0/diagnostic_report"
 
 	ReadResponseBodyFailureFormat      = "Unable to read response from %s"
 	InvalidResponseErrorFormat         = "Invalid response format for request to %s"
@@ -70,7 +71,11 @@ func (s *Service) DeployedProducts() (io.Reader, error) {
 }
 
 func (s *Service) ProductResources(guid string) (io.Reader, error) {
-	return s.makeRequest(fmt.Sprintf(ProductResourcePathFormat, guid))
+	return s.makeRequest(fmt.Sprintf(ProductResourcesPathFormat, guid))
+}
+
+func (s *Service) ProductProperties(guid string) (io.Reader, error) {
+	return s.makeRequest(fmt.Sprintf(ProductPropertiesPathFormat, guid))
 }
 
 func (s *Service) VmTypes() (io.Reader, error) {
