@@ -34,6 +34,18 @@ type installations struct {
 	Installations []map[string]interface{} `json:"installations"`
 }
 
+type productProperties struct {
+	Properties map[string]property `json:"properties"`
+}
+
+type property struct {
+	Type string `json:"type"`
+	Value interface{} `json:"value"`
+	Configurable bool `json:"configurable"`
+	Credential bool `json:"credential"`
+	Optional bool `json:"optional"`
+}
+
 //go:generate counterfeiter . Requestor
 type Requestor interface {
 	Invoke(input api.RequestServiceInvokeInput) (api.RequestServiceInvokeOutput, error)
@@ -75,7 +87,33 @@ func (s *Service) ProductResources(guid string) (io.Reader, error) {
 }
 
 func (s *Service) ProductProperties(guid string) (io.Reader, error) {
-	return s.makeRequest(fmt.Sprintf(ProductPropertiesPathFormat, guid))
+	productPropertiesPath := fmt.Sprintf(ProductPropertiesPathFormat, guid)
+	contentReader, err := s.makeRequest(productPropertiesPath)
+	if err != nil {
+		return nil, err
+	}
+
+	contents, err := ioutil.ReadAll(contentReader)
+	if err != nil {
+		return nil, errors.Wrapf(err, ReadResponseBodyFailureFormat, productPropertiesPath)
+	}
+
+	var ps productProperties
+	if err := json.Unmarshal([]byte(contents), &ps); err != nil {
+		return nil, errors.Wrapf(err, InvalidResponseErrorFormat, productPropertiesPath)
+	}
+	for propertyName, property := range ps.Properties {
+		if !allowedPropertyType(property.Type) {
+			delete(ps.Properties, propertyName)
+		}
+	}
+
+	redactedContent, err := json.Marshal(ps)
+	if err != nil {
+		return nil, err
+	}
+
+	return bytes.NewReader(redactedContent), nil
 }
 
 func (s *Service) VmTypes() (io.Reader, error) {
@@ -99,4 +137,13 @@ func (s *Service) makeRequest(path string) (io.Reader, error) {
 		return nil, errors.New(fmt.Sprintf(RequestUnexpectedStatusErrorFormat, http.MethodGet, path, output.StatusCode))
 	}
 	return output.Body, nil
+}
+
+func allowedPropertyType(propertyType string) bool {
+	for _, p := range []string{"integer", "boolean", "dropdown_select", "multi_select_options", "selector"} {
+		if propertyType == p {
+			return true
+		}
+	}
+	return false
 }

@@ -13,6 +13,8 @@ import (
 	. "github.com/pivotal-cf/aqueduct-courier/opsmanager"
 	"github.com/pivotal-cf/aqueduct-courier/opsmanager/opsmanagerfakes"
 	"github.com/pivotal-cf/om/api"
+	"encoding/json"
+	"bytes"
 )
 
 var _ = Describe("Service", func() {
@@ -109,26 +111,112 @@ var _ = Describe("Service", func() {
 	})
 
 	Describe("ProductProperties", func() {
-		var expectedProductPath string
+		var expectedProductPropertiesPath string
 
 		const productGUID = "product-guid"
 
 		BeforeEach(func() {
-			expectedProductPath = fmt.Sprintf(ProductPropertiesPathFormat, productGUID)
+			expectedProductPropertiesPath = fmt.Sprintf(ProductPropertiesPathFormat, productGUID)
 		})
 
-		It("returns product properties content", func() {
-			body := strings.NewReader("product-properties")
+		It("returns product properties with specific safe types", func() {
+			properties := map[string]map[string]map[string]interface{}{
+				"properties": {
+					"path.to1": {
+						"type": "boolean",
+						"value": true,
+						"otherKey": 1234,
+						"configurable": true,
+						"credential": true,
+						"optional": true,
+					},
+					"path.to2": {
+						"type": "integer",
+						"value": "2",
+						"configurable": false,
+						"credential": false,
+						"optional": false,
+					},
+					"path.to3": {
+						"type": "dropdown_select",
+						"value": "whatever",
+						"configurable": false,
+						"credential": false,
+						"optional": false,
+					},
+					"path.to4": {
+						"type": "multi_select_options",
+						"value": "true",
+						"configurable": false,
+						"credential": false,
+						"optional": false,
+					},
+					"path.to5": {
+						"type": "selector",
+						"value": "selected_option_words",
+						"configurable": false,
+						"credential": false,
+						"optional": false,
+					},
+					"remove1": {
+						"type": "unknown",
+						"value": "other stuff",
+					},
+					"remove2": {
+						"type": "collection",
+						"value": "stuff",
+					},
+				},
+			}
+			propertiesJson, err  := json.Marshal(properties)
+			Expect(err).NotTo(HaveOccurred())
+			body := bytes.NewReader(propertiesJson)
+
+			requestor.InvokeReturns(api.RequestServiceInvokeOutput{Body: body, StatusCode: http.StatusOK}, nil)
+
+			expectedProperties := properties
+			delete(expectedProperties["properties"]["path.to1"], "otherKey")
+			delete(expectedProperties["properties"], "remove1")
+			delete(expectedProperties["properties"], "remove2")
+
+			actual, err := service.ProductProperties(productGUID)
+			Expect(err).NotTo(HaveOccurred())
+			actualContent, err := ioutil.ReadAll(actual)
+			Expect(err).NotTo(HaveOccurred())
+
+			var actualProperties map[string]map[string]map[string]interface{}
+			Expect(json.Unmarshal(actualContent, &actualProperties)).To(Succeed())
+			Expect(actualProperties).To(Equal(expectedProperties))
+
+			Expect(requestor.InvokeCallCount()).To(Equal(1))
+			input := requestor.InvokeArgsForCall(0)
+			Expect(input).To(Equal(api.RequestServiceInvokeInput{Path: expectedProductPropertiesPath, Method: http.MethodGet}))
+		})
+
+		It("errors if the contents cannot be read from the response", func() {
+			badReader := new(opsmanagerfakes.FakeReader)
+			badReader.ReadReturns(0, errors.New("Reading things is hard"))
+
+			requestor.InvokeReturns(api.RequestServiceInvokeOutput{Body: badReader, StatusCode: http.StatusOK}, nil)
+
+			actual, err := service.ProductProperties(productGUID)
+			Expect(actual).To(BeNil())
+			Expect(err).To(MatchError(ContainSubstring(
+				fmt.Sprintf(ReadResponseBodyFailureFormat, expectedProductPropertiesPath),
+			)))
+			Expect(err).To(MatchError(ContainSubstring("Reading things is hard")))
+		})
+
+		It("errors if the contents are not json", func() {
+			body := strings.NewReader(`you-thought-this-was-json`)
 
 			requestor.InvokeReturns(api.RequestServiceInvokeOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
 			actual, err := service.ProductProperties(productGUID)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(actual).To(Equal(body))
-
-			Expect(requestor.InvokeCallCount()).To(Equal(1))
-			input := requestor.InvokeArgsForCall(0)
-			Expect(input).To(Equal(api.RequestServiceInvokeInput{Path: expectedProductPath, Method: http.MethodGet}))
+			Expect(actual).To(BeNil())
+			Expect(err).To(MatchError(ContainSubstring(
+				fmt.Sprintf(InvalidResponseErrorFormat, expectedProductPropertiesPath),
+			)))
 		})
 
 		It("returns an error when requestor errors", func() {
@@ -137,7 +225,7 @@ var _ = Describe("Service", func() {
 			actual, err := service.ProductProperties(productGUID)
 			Expect(actual).To(BeNil())
 			Expect(err).To(MatchError(ContainSubstring(
-				fmt.Sprintf(RequestFailureErrorFormat, http.MethodGet, expectedProductPath),
+				fmt.Sprintf(RequestFailureErrorFormat, http.MethodGet, expectedProductPropertiesPath),
 			)))
 			Expect(err).To(MatchError(ContainSubstring("Requesting things is hard")))
 		})
@@ -148,7 +236,7 @@ var _ = Describe("Service", func() {
 			actual, err := service.ProductProperties(productGUID)
 			Expect(actual).To(BeNil())
 			Expect(err).To(MatchError(fmt.Sprintf(
-				RequestUnexpectedStatusErrorFormat, http.MethodGet, expectedProductPath, http.StatusBadGateway,
+				RequestUnexpectedStatusErrorFormat, http.MethodGet, expectedProductPropertiesPath, http.StatusBadGateway,
 			)))
 		})
 	})
