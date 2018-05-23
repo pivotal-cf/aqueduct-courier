@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"io"
 	"strings"
 	"time"
 
@@ -119,5 +120,5 @@ var _ = Describe("Collector", func() {
 
 //go:generate counterfeiter . reader
 type reader interface {
-	Read(p []byte) (n int, err error)
+	io.Reader
 }

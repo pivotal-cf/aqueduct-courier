@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -380,5 +381,5 @@ var _ = Describe("Service", func() {
 
 //go:generate counterfeiter . reader
 type reader interface {
-	Read(p []byte) (n int, err error)
+	io.Reader
 }
