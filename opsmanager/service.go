@@ -39,11 +39,11 @@ type productProperties struct {
 }
 
 type property struct {
-	Type string `json:"type"`
-	Value interface{} `json:"value"`
-	Configurable bool `json:"configurable"`
-	Credential bool `json:"credential"`
-	Optional bool `json:"optional"`
+	Type         string      `json:"type"`
+	Value        interface{} `json:"value"`
+	Configurable bool        `json:"configurable"`
+	Credential   bool        `json:"credential"`
+	Optional     bool        `json:"optional"`
 }
 
 //go:generate counterfeiter . Requestor

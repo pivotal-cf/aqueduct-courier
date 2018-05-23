@@ -1,6 +1,8 @@
 package opsmanager_test
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -13,8 +15,6 @@ import (
 	. "github.com/pivotal-cf/aqueduct-courier/opsmanager"
 	"github.com/pivotal-cf/aqueduct-courier/opsmanager/opsmanagerfakes"
 	"github.com/pivotal-cf/om/api"
-	"encoding/json"
-	"bytes"
 )
 
 var _ = Describe("Service", func() {
@@ -123,52 +123,52 @@ var _ = Describe("Service", func() {
 			properties := map[string]map[string]map[string]interface{}{
 				"properties": {
 					"path.to1": {
-						"type": "boolean",
-						"value": true,
-						"otherKey": 1234,
+						"type":         "boolean",
+						"value":        true,
+						"otherKey":     1234,
 						"configurable": true,
-						"credential": true,
-						"optional": true,
+						"credential":   true,
+						"optional":     true,
 					},
 					"path.to2": {
-						"type": "integer",
-						"value": "2",
+						"type":         "integer",
+						"value":        "2",
 						"configurable": false,
-						"credential": false,
-						"optional": false,
+						"credential":   false,
+						"optional":     false,
 					},
 					"path.to3": {
-						"type": "dropdown_select",
-						"value": "whatever",
+						"type":         "dropdown_select",
+						"value":        "whatever",
 						"configurable": false,
-						"credential": false,
-						"optional": false,
+						"credential":   false,
+						"optional":     false,
 					},
 					"path.to4": {
-						"type": "multi_select_options",
-						"value": "true",
+						"type":         "multi_select_options",
+						"value":        "true",
 						"configurable": false,
-						"credential": false,
-						"optional": false,
+						"credential":   false,
+						"optional":     false,
 					},
 					"path.to5": {
-						"type": "selector",
-						"value": "selected_option_words",
+						"type":         "selector",
+						"value":        "selected_option_words",
 						"configurable": false,
-						"credential": false,
-						"optional": false,
+						"credential":   false,
+						"optional":     false,
 					},
 					"remove1": {
-						"type": "unknown",
+						"type":  "unknown",
 						"value": "other stuff",
 					},
 					"remove2": {
-						"type": "collection",
+						"type":  "collection",
 						"value": "stuff",
 					},
 				},
 			}
-			propertiesJson, err  := json.Marshal(properties)
+			propertiesJson, err := json.Marshal(properties)
 			Expect(err).NotTo(HaveOccurred())
 			body := bytes.NewReader(propertiesJson)
 

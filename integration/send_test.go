@@ -1,6 +1,8 @@
 package integration
 
 import (
+	"crypto/md5"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -19,8 +21,6 @@ import (
 	"github.com/pivotal-cf/aqueduct-courier/cmd"
 	"github.com/pivotal-cf/aqueduct-courier/file"
 	"github.com/pivotal-cf/aqueduct-courier/ops"
-	"crypto/md5"
-	"encoding/base64"
 )
 
 var _ = Describe("Send", func() {

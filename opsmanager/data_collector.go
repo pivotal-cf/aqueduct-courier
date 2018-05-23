@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/pkg/errors"
-
 	"github.com/pivotal-cf/om/api"
+	"github.com/pkg/errors"
 )
 
 const (
