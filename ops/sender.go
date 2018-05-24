@@ -72,6 +72,8 @@ func (s SendExecutor) Send(reader tarReader, dataLoaderURL, apiToken string) err
 	if err != nil {
 		return errors.Wrap(err, PostFailedMessage)
 	}
+	defer resp.Body.Close()
+
 	if resp.StatusCode != http.StatusCreated {
 		return errors.Errorf(UnexpectedResponseCodeFormat, resp.StatusCode)
 	}
