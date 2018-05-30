@@ -46,6 +46,7 @@ type FileDigest struct {
 	MimeType    string
 	MD5Checksum string
 	ProductType string
+	DataType    string
 }
 
 func NewCollector(c dataCollector, tw tarWriter) CollectExecutor {
@@ -82,6 +83,7 @@ func (ce CollectExecutor) Collect(envType string) error {
 			Name:        data.Name(),
 			MimeType:    data.MimeType(),
 			ProductType: data.Type(),
+			DataType:    data.DataType(),
 			MD5Checksum: base64.StdEncoding.EncodeToString(md5Sum[:]),
 		})
 	}

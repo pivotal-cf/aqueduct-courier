@@ -35,3 +35,7 @@ func (d Data) MimeType() string {
 func (d Data) Type() string {
 	return d.productType
 }
+
+func (d Data) DataType() string {
+	return d.dataType
+}

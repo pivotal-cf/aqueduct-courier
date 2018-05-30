@@ -34,4 +34,9 @@ var _ = Describe("data", func() {
 		d := NewData(nil, "best-product-type", "")
 		Expect(d.Type()).To(Equal("best-product-type"))
 	})
+
+	It("returns the data type", func() {
+		d := NewData(nil, "no-matter", "bar")
+		Expect(d.DataType()).To(Equal("bar"))
+	})
 })
