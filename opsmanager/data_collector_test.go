@@ -88,25 +88,25 @@ var _ = Describe("DataCollector", func() {
 	It("returns an error when omService.VmTypes errors", func() {
 		omService.VmTypesReturns(nil, errors.New("Requesting things is hard"))
 		data, err := dataCollector.Collect()
-		assertOmServiceFailure(data, err, OpsManagerName, VmTypesDataType, "Requesting things is hard")
+		assertOmServiceFailure(data, err, OpsManagerProductType, VmTypesDataType, "Requesting things is hard")
 	})
 
 	It("returns an error when omService.DiagnosticReport errors", func() {
 		omService.DiagnosticReportReturns(nil, errors.New("Requesting things is hard"))
 		data, err := dataCollector.Collect()
-		assertOmServiceFailure(data, err, OpsManagerName, DiagnosticReportDataType, "Requesting things is hard")
+		assertOmServiceFailure(data, err, OpsManagerProductType, DiagnosticReportDataType, "Requesting things is hard")
 	})
 
 	It("returns an error when omService.DeployedProducts errors", func() {
 		omService.DeployedProductsReturns(nil, errors.New("Requesting things is hard"))
 		data, err := dataCollector.Collect()
-		assertOmServiceFailure(data, err, OpsManagerName, DeployedProductsDataType, "Requesting things is hard")
+		assertOmServiceFailure(data, err, OpsManagerProductType, DeployedProductsDataType, "Requesting things is hard")
 	})
 
 	It("returns an error when omService.Installations errors", func() {
 		omService.InstallationsReturns(nil, errors.New("Requesting things is hard"))
 		data, err := dataCollector.Collect()
-		assertOmServiceFailure(data, err, OpsManagerName, InstallationsDataType, "Requesting things is hard")
+		assertOmServiceFailure(data, err, OpsManagerProductType, InstallationsDataType, "Requesting things is hard")
 	})
 
 	It("succeeds", func() {
@@ -144,7 +144,7 @@ var _ = Describe("DataCollector", func() {
 		Expect(data).To(ConsistOf(
 			NewData(
 				deployedProductsReader,
-				OpsManagerName,
+				OpsManagerProductType,
 				DeployedProductsDataType,
 			),
 			NewData(
@@ -169,17 +169,17 @@ var _ = Describe("DataCollector", func() {
 			),
 			NewData(
 				vmTypesReader,
-				OpsManagerName,
+				OpsManagerProductType,
 				VmTypesDataType,
 			),
 			NewData(
 				diagnosticReportReader,
-				OpsManagerName,
+				OpsManagerProductType,
 				DiagnosticReportDataType,
 			),
 			NewData(
 				installationsReader,
-				OpsManagerName,
+				OpsManagerProductType,
 				InstallationsDataType,
 			),
 		))
@@ -189,10 +189,10 @@ var _ = Describe("DataCollector", func() {
 		data, err := dataCollector.Collect()
 		Expect(err).ToNot(HaveOccurred())
 		Expect(data).To(ConsistOf(
-			NewData(nil, OpsManagerName, DeployedProductsDataType),
-			NewData(nil, OpsManagerName, VmTypesDataType),
-			NewData(nil, OpsManagerName, DiagnosticReportDataType),
-			NewData(nil, OpsManagerName, InstallationsDataType),
+			NewData(nil, OpsManagerProductType, DeployedProductsDataType),
+			NewData(nil, OpsManagerProductType, VmTypesDataType),
+			NewData(nil, OpsManagerProductType, DiagnosticReportDataType),
+			NewData(nil, OpsManagerProductType, InstallationsDataType),
 		))
 	})
 })

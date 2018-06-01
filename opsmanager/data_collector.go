@@ -14,8 +14,8 @@ const (
 	DeployedProductsFailedMessage = "Failed to retrieve deployed products list from Operations Manager"
 	RequestorFailureErrorFormat   = "Failed retrieving %s %s"
 
-	OpsManagerName      = "ops_manager"
-	DirectorProductType = "p-bosh"
+	OpsManagerProductType = "ops_manager"
+	DirectorProductType   = "p-bosh"
 
 	ResourcesDataType        = "resources"
 	VmTypesDataType          = "vm_types"
@@ -78,7 +78,7 @@ func (dc DataCollector) Collect() ([]Data, error) {
 
 	var d []Data
 
-	d, err = appendRetrievedData(d, dc.omService.DeployedProducts, OpsManagerName, DeployedProductsDataType)
+	d, err = appendRetrievedData(d, dc.omService.DeployedProducts, OpsManagerProductType, DeployedProductsDataType)
 	if err != nil {
 		return []Data{}, err
 	}
@@ -97,17 +97,17 @@ func (dc DataCollector) Collect() ([]Data, error) {
 		}
 	}
 
-	d, err = appendRetrievedData(d, dc.omService.VmTypes, OpsManagerName, VmTypesDataType)
+	d, err = appendRetrievedData(d, dc.omService.VmTypes, OpsManagerProductType, VmTypesDataType)
 	if err != nil {
 		return []Data{}, err
 	}
 
-	d, err = appendRetrievedData(d, dc.omService.DiagnosticReport, OpsManagerName, DiagnosticReportDataType)
+	d, err = appendRetrievedData(d, dc.omService.DiagnosticReport, OpsManagerProductType, DiagnosticReportDataType)
 	if err != nil {
 		return []Data{}, err
 	}
 
-	d, err = appendRetrievedData(d, dc.omService.Installations, OpsManagerName, InstallationsDataType)
+	d, err = appendRetrievedData(d, dc.omService.Installations, OpsManagerProductType, InstallationsDataType)
 	if err != nil {
 		return []Data{}, err
 	}
