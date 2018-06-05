@@ -14,10 +14,6 @@ const (
 	StatusFailed    = "failed"
 )
 
-type InstallationsService struct {
-	client httpClient
-}
-
 type InstallationsServiceOutput struct {
 	ID         int
 	Status     string
@@ -27,26 +23,20 @@ type InstallationsServiceOutput struct {
 	UserName   string     `json:"user_name"`
 }
 
-func NewInstallationsService(client httpClient) InstallationsService {
-	return InstallationsService{
-		client: client,
-	}
-}
-
-func (is InstallationsService) ListInstallations() ([]InstallationsServiceOutput, error) {
+func (a Api) ListInstallations() ([]InstallationsServiceOutput, error) {
 	req, err := http.NewRequest("GET", "/api/v0/installations", nil)
 	if err != nil {
 		return []InstallationsServiceOutput{}, err
 	}
 
-	resp, err := is.client.Do(req)
+	resp, err := a.client.Do(req)
 	if err != nil {
 		return []InstallationsServiceOutput{}, fmt.Errorf("could not make api request to installations endpoint: %s", err)
 	}
 
 	defer resp.Body.Close()
 
-	if err = ValidateStatusOK(resp); err != nil {
+	if err = validateStatusOK(resp); err != nil {
 		return []InstallationsServiceOutput{}, err
 	}
 
@@ -61,7 +51,7 @@ func (is InstallationsService) ListInstallations() ([]InstallationsServiceOutput
 	return responseStruct.Installations, nil
 }
 
-func (is InstallationsService) Trigger(ignoreWarnings bool, deployProducts bool) (InstallationsServiceOutput, error) {
+func (a Api) CreateInstallation(ignoreWarnings bool, deployProducts bool) (InstallationsServiceOutput, error) {
 	deployProductsVal := "none"
 	if deployProducts {
 		deployProductsVal = "all"
@@ -85,14 +75,14 @@ func (is InstallationsService) Trigger(ignoreWarnings bool, deployProducts bool)
 
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := is.client.Do(req)
+	resp, err := a.client.Do(req)
 	if err != nil {
 		return InstallationsServiceOutput{}, fmt.Errorf("could not make api request to installations endpoint: %s", err)
 	}
 
 	defer resp.Body.Close()
 
-	if err = ValidateStatusOK(resp); err != nil {
+	if err = validateStatusOK(resp); err != nil {
 		return InstallationsServiceOutput{}, err
 	}
 
@@ -109,18 +99,7 @@ func (is InstallationsService) Trigger(ignoreWarnings bool, deployProducts bool)
 	return InstallationsServiceOutput{ID: installation.Install.ID}, nil
 }
 
-func (is InstallationsService) RunningInstallation() (InstallationsServiceOutput, error) {
-	installationOutput, err := is.ListInstallations()
-	if err != nil {
-		return InstallationsServiceOutput{}, err
-	}
-	if len(installationOutput) > 0 && installationOutput[0].Status == StatusRunning {
-		return installationOutput[0], nil
-	}
-	return InstallationsServiceOutput{}, nil
-}
-
-func (is InstallationsService) Status(id int) (InstallationsServiceOutput, error) {
+func (a Api) GetInstallation(id int) (InstallationsServiceOutput, error) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("/api/v0/installations/%d", id), nil)
 	if err != nil {
 		return InstallationsServiceOutput{}, err
@@ -128,14 +107,14 @@ func (is InstallationsService) Status(id int) (InstallationsServiceOutput, error
 
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := is.client.Do(req)
+	resp, err := a.client.Do(req)
 	if err != nil {
 		return InstallationsServiceOutput{}, fmt.Errorf("could not make api request to installations status endpoint: %s", err)
 	}
 
 	defer resp.Body.Close()
 
-	if err = ValidateStatusOK(resp); err != nil {
+	if err = validateStatusOK(resp); err != nil {
 		return InstallationsServiceOutput{}, err
 	}
 
@@ -150,7 +129,7 @@ func (is InstallationsService) Status(id int) (InstallationsServiceOutput, error
 	return InstallationsServiceOutput{Status: output.Status}, nil
 }
 
-func (is InstallationsService) Logs(id int) (InstallationsServiceOutput, error) {
+func (a Api) GetInstallationLogs(id int) (InstallationsServiceOutput, error) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("/api/v0/installations/%d/logs", id), nil)
 	if err != nil {
 		return InstallationsServiceOutput{}, err
@@ -158,14 +137,14 @@ func (is InstallationsService) Logs(id int) (InstallationsServiceOutput, error) 
 
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := is.client.Do(req)
+	resp, err := a.client.Do(req)
 	if err != nil {
 		return InstallationsServiceOutput{}, fmt.Errorf("could not make api request to installations logs endpoint: %s", err)
 	}
 
 	defer resp.Body.Close()
 
-	if err = ValidateStatusOK(resp); err != nil {
+	if err = validateStatusOK(resp); err != nil {
 		return InstallationsServiceOutput{}, err
 	}
 

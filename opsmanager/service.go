@@ -48,7 +48,7 @@ type property struct {
 
 //go:generate counterfeiter . Requestor
 type Requestor interface {
-	Invoke(input api.RequestServiceInvokeInput) (api.RequestServiceInvokeOutput, error)
+	Curl(input api.RequestServiceCurlInput) (api.RequestServiceCurlOutput, error)
 }
 
 func (s *Service) Installations() (io.Reader, error) {
@@ -125,11 +125,11 @@ func (s *Service) DiagnosticReport() (io.Reader, error) {
 }
 
 func (s *Service) makeRequest(path string) (io.Reader, error) {
-	input := api.RequestServiceInvokeInput{
+	input := api.RequestServiceCurlInput{
 		Path:   path,
 		Method: http.MethodGet,
 	}
-	output, err := s.Requestor.Invoke(input)
+	output, err := s.Requestor.Curl(input)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf(RequestFailureErrorFormat, http.MethodGet, path))
 	}

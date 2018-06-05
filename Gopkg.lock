@@ -2,18 +2,6 @@
 
 
 [[projects]]
-  name = "github.com/PuerkitoBio/goquery"
-  packages = ["."]
-  revision = "a86ea073017a6beddef78c8659e7224e8ca634b0"
-  version = "v1.4.0"
-
-[[projects]]
-  name = "github.com/andybalholm/cascadia"
-  packages = ["."]
-  revision = "901648c87902174f774fac311d7f176f8647bdaa"
-  version = "v1.0.0"
-
-[[projects]]
   branch = "master"
   name = "github.com/dsnet/compress"
   packages = [
@@ -31,6 +19,12 @@
   packages = ["."]
   revision = "c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9"
   version = "v1.4.7"
+
+[[projects]]
+  name = "github.com/ghodss/yaml"
+  packages = ["."]
+  revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
+  version = "v1.0.0"
 
 [[projects]]
   name = "github.com/golang/protobuf"
@@ -66,6 +60,12 @@
   packages = ["."]
   revision = "c3beff4c2358b44d0493c7dda585e7db7ff28ae6"
   version = "v1.7.6"
+
+[[projects]]
+  name = "github.com/mattn/go-runewidth"
+  packages = ["."]
+  revision = "9e777a8366cce605130a531d2cd6363d07ad7317"
+  version = "v0.0.2"
 
 [[projects]]
   name = "github.com/mholt/archiver"
@@ -152,10 +152,11 @@
   name = "github.com/pivotal-cf/om"
   packages = [
     "api",
-    "network"
+    "network",
+    "progress"
   ]
-  revision = "669ed56768a8fcd4532e30a1af1b53f79ae87cb2"
-  version = "0.35.0"
+  revision = "d59d335ee0e473378e303a64c49e4d1407ea6cf1"
+  version = "0.37.0"
 
 [[projects]]
   name = "github.com/pkg/errors"
@@ -287,6 +288,12 @@
   ]
   revision = "150dc57a1b433e64154302bdc40b6bb8aefa313a"
   version = "v1.0.0"
+
+[[projects]]
+  name = "gopkg.in/cheggaaa/pb.v1"
+  packages = ["."]
+  revision = "2af8bbdea9e99e83b3ac400d8f6b6d1b8cbbf338"
+  version = "v1.0.25"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"

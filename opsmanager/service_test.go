@@ -34,18 +34,18 @@ var _ = Describe("Service", func() {
 		It("returns deployed products content", func() {
 			body := strings.NewReader("deployed-products")
 
-			requestor.InvokeReturns(api.RequestServiceInvokeOutput{Body: body, StatusCode: http.StatusOK}, nil)
+			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
 			actual, err := service.DeployedProducts()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(actual).To(Equal(body))
-			Expect(requestor.InvokeCallCount()).To(Equal(1))
-			input := requestor.InvokeArgsForCall(0)
-			Expect(input).To(Equal(api.RequestServiceInvokeInput{Path: DeployedProductsPath, Method: http.MethodGet}))
+			Expect(requestor.CurlCallCount()).To(Equal(1))
+			input := requestor.CurlArgsForCall(0)
+			Expect(input).To(Equal(api.RequestServiceCurlInput{Path: DeployedProductsPath, Method: http.MethodGet}))
 		})
 
 		It("returns an error when requestor errors", func() {
-			requestor.InvokeReturns(api.RequestServiceInvokeOutput{StatusCode: http.StatusOK}, errors.New("Requesting things is hard"))
+			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusOK}, errors.New("Requesting things is hard"))
 
 			actual, err := service.DeployedProducts()
 			Expect(actual).To(BeNil())
@@ -56,7 +56,7 @@ var _ = Describe("Service", func() {
 		})
 
 		It("returns an error when requestor returns a non 200 status code", func() {
-			requestor.InvokeReturns(api.RequestServiceInvokeOutput{StatusCode: http.StatusBadGateway}, nil)
+			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusBadGateway}, nil)
 
 			actual, err := service.DeployedProducts()
 			Expect(actual).To(BeNil())
@@ -78,19 +78,19 @@ var _ = Describe("Service", func() {
 		It("returns product resources content", func() {
 			body := strings.NewReader("product-resources")
 
-			requestor.InvokeReturns(api.RequestServiceInvokeOutput{Body: body, StatusCode: http.StatusOK}, nil)
+			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
 			actual, err := service.ProductResources(productGUID)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(actual).To(Equal(body))
 
-			Expect(requestor.InvokeCallCount()).To(Equal(1))
-			input := requestor.InvokeArgsForCall(0)
-			Expect(input).To(Equal(api.RequestServiceInvokeInput{Path: expectedProductPath, Method: http.MethodGet}))
+			Expect(requestor.CurlCallCount()).To(Equal(1))
+			input := requestor.CurlArgsForCall(0)
+			Expect(input).To(Equal(api.RequestServiceCurlInput{Path: expectedProductPath, Method: http.MethodGet}))
 		})
 
 		It("returns an error when requestor errors", func() {
-			requestor.InvokeReturns(api.RequestServiceInvokeOutput{StatusCode: http.StatusOK}, errors.New("Requesting things is hard"))
+			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusOK}, errors.New("Requesting things is hard"))
 
 			actual, err := service.ProductResources(productGUID)
 			Expect(actual).To(BeNil())
@@ -101,7 +101,7 @@ var _ = Describe("Service", func() {
 		})
 
 		It("returns an error when requestor returns a non 200 status code", func() {
-			requestor.InvokeReturns(api.RequestServiceInvokeOutput{StatusCode: http.StatusBadGateway}, nil)
+			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusBadGateway}, nil)
 
 			actual, err := service.ProductResources(productGUID)
 			Expect(actual).To(BeNil())
@@ -173,7 +173,7 @@ var _ = Describe("Service", func() {
 			Expect(err).NotTo(HaveOccurred())
 			body := bytes.NewReader(propertiesJson)
 
-			requestor.InvokeReturns(api.RequestServiceInvokeOutput{Body: body, StatusCode: http.StatusOK}, nil)
+			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
 			expectedProperties := properties
 			delete(expectedProperties["properties"]["path.to1"], "otherKey")
@@ -189,16 +189,16 @@ var _ = Describe("Service", func() {
 			Expect(json.Unmarshal(actualContent, &actualProperties)).To(Succeed())
 			Expect(actualProperties).To(Equal(expectedProperties))
 
-			Expect(requestor.InvokeCallCount()).To(Equal(1))
-			input := requestor.InvokeArgsForCall(0)
-			Expect(input).To(Equal(api.RequestServiceInvokeInput{Path: expectedProductPropertiesPath, Method: http.MethodGet}))
+			Expect(requestor.CurlCallCount()).To(Equal(1))
+			input := requestor.CurlArgsForCall(0)
+			Expect(input).To(Equal(api.RequestServiceCurlInput{Path: expectedProductPropertiesPath, Method: http.MethodGet}))
 		})
 
 		It("errors if the contents cannot be read from the response", func() {
 			badReader := new(opsmanagerfakes.FakeReader)
 			badReader.ReadReturns(0, errors.New("Reading things is hard"))
 
-			requestor.InvokeReturns(api.RequestServiceInvokeOutput{Body: badReader, StatusCode: http.StatusOK}, nil)
+			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: badReader, StatusCode: http.StatusOK}, nil)
 
 			actual, err := service.ProductProperties(productGUID)
 			Expect(actual).To(BeNil())
@@ -211,7 +211,7 @@ var _ = Describe("Service", func() {
 		It("errors if the contents are not json", func() {
 			body := strings.NewReader(`you-thought-this-was-json`)
 
-			requestor.InvokeReturns(api.RequestServiceInvokeOutput{Body: body, StatusCode: http.StatusOK}, nil)
+			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
 			actual, err := service.ProductProperties(productGUID)
 			Expect(actual).To(BeNil())
@@ -221,7 +221,7 @@ var _ = Describe("Service", func() {
 		})
 
 		It("returns an error when requestor errors", func() {
-			requestor.InvokeReturns(api.RequestServiceInvokeOutput{StatusCode: http.StatusOK}, errors.New("Requesting things is hard"))
+			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusOK}, errors.New("Requesting things is hard"))
 
 			actual, err := service.ProductProperties(productGUID)
 			Expect(actual).To(BeNil())
@@ -232,7 +232,7 @@ var _ = Describe("Service", func() {
 		})
 
 		It("returns an error when requestor returns a non 200 status code", func() {
-			requestor.InvokeReturns(api.RequestServiceInvokeOutput{StatusCode: http.StatusBadGateway}, nil)
+			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusBadGateway}, nil)
 
 			actual, err := service.ProductProperties(productGUID)
 			Expect(actual).To(BeNil())
@@ -246,18 +246,18 @@ var _ = Describe("Service", func() {
 		It("returns product resources content", func() {
 			body := strings.NewReader("vm-types")
 
-			requestor.InvokeReturns(api.RequestServiceInvokeOutput{Body: body, StatusCode: http.StatusOK}, nil)
+			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
 			actual, err := service.VmTypes()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(actual).To(Equal(body))
-			Expect(requestor.InvokeCallCount()).To(Equal(1))
-			input := requestor.InvokeArgsForCall(0)
-			Expect(input).To(Equal(api.RequestServiceInvokeInput{Path: VmTypesPath, Method: http.MethodGet}))
+			Expect(requestor.CurlCallCount()).To(Equal(1))
+			input := requestor.CurlArgsForCall(0)
+			Expect(input).To(Equal(api.RequestServiceCurlInput{Path: VmTypesPath, Method: http.MethodGet}))
 		})
 
 		It("returns an error when requestor errors", func() {
-			requestor.InvokeReturns(api.RequestServiceInvokeOutput{StatusCode: http.StatusOK}, errors.New("Requesting things is hard"))
+			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusOK}, errors.New("Requesting things is hard"))
 
 			actual, err := service.VmTypes()
 			Expect(actual).To(BeNil())
@@ -268,7 +268,7 @@ var _ = Describe("Service", func() {
 		})
 
 		It("returns an error when requestor returns a non 200 status code", func() {
-			requestor.InvokeReturns(api.RequestServiceInvokeOutput{StatusCode: http.StatusBadGateway}, nil)
+			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusBadGateway}, nil)
 
 			actual, err := service.VmTypes()
 			Expect(actual).To(BeNil())
@@ -282,18 +282,18 @@ var _ = Describe("Service", func() {
 		It("returns product resources content", func() {
 			body := strings.NewReader("diagnostic-report")
 
-			requestor.InvokeReturns(api.RequestServiceInvokeOutput{Body: body, StatusCode: http.StatusOK}, nil)
+			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
 			actual, err := service.DiagnosticReport()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(actual).To(Equal(body))
-			Expect(requestor.InvokeCallCount()).To(Equal(1))
-			input := requestor.InvokeArgsForCall(0)
-			Expect(input).To(Equal(api.RequestServiceInvokeInput{Path: DiagnosticReportPath, Method: http.MethodGet}))
+			Expect(requestor.CurlCallCount()).To(Equal(1))
+			input := requestor.CurlArgsForCall(0)
+			Expect(input).To(Equal(api.RequestServiceCurlInput{Path: DiagnosticReportPath, Method: http.MethodGet}))
 		})
 
 		It("returns an error when requestor errors", func() {
-			requestor.InvokeReturns(api.RequestServiceInvokeOutput{StatusCode: http.StatusOK}, errors.New("Requesting things is hard"))
+			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusOK}, errors.New("Requesting things is hard"))
 
 			actual, err := service.DiagnosticReport()
 			Expect(actual).To(BeNil())
@@ -304,7 +304,7 @@ var _ = Describe("Service", func() {
 		})
 
 		It("returns an error when requestor returns a non 200 status code", func() {
-			requestor.InvokeReturns(api.RequestServiceInvokeOutput{StatusCode: http.StatusBadGateway}, nil)
+			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusBadGateway}, nil)
 
 			actual, err := service.DiagnosticReport()
 			Expect(actual).To(BeNil())
@@ -318,23 +318,23 @@ var _ = Describe("Service", func() {
 		It("removes user names from the installation content and returns the rest", func() {
 			body := strings.NewReader(`{"installations": [{"user_name": "foo", "other": 42}, {"user_name": "bar", "other": 24}]}`)
 
-			requestor.InvokeReturns(api.RequestServiceInvokeOutput{Body: body, StatusCode: http.StatusOK}, nil)
+			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
 			actual, err := service.Installations()
 			Expect(err).NotTo(HaveOccurred())
 			actualContent, err := ioutil.ReadAll(actual)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(actualContent)).To(Equal(`{"installations":[{"other":42},{"other":24}]}`))
-			Expect(requestor.InvokeCallCount()).To(Equal(1))
-			input := requestor.InvokeArgsForCall(0)
-			Expect(input).To(Equal(api.RequestServiceInvokeInput{Path: InstallationsPath, Method: http.MethodGet}))
+			Expect(requestor.CurlCallCount()).To(Equal(1))
+			input := requestor.CurlArgsForCall(0)
+			Expect(input).To(Equal(api.RequestServiceCurlInput{Path: InstallationsPath, Method: http.MethodGet}))
 		})
 
 		It("errors if the contents cannot be read from the response", func() {
 			badReader := new(opsmanagerfakes.FakeReader)
 			badReader.ReadReturns(0, errors.New("Reading things is hard"))
 
-			requestor.InvokeReturns(api.RequestServiceInvokeOutput{Body: badReader, StatusCode: http.StatusOK}, nil)
+			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: badReader, StatusCode: http.StatusOK}, nil)
 
 			actual, err := service.Installations()
 			Expect(actual).To(BeNil())
@@ -347,7 +347,7 @@ var _ = Describe("Service", func() {
 		It("errors if the contents are not json", func() {
 			body := strings.NewReader(`you-thought-this-was-json`)
 
-			requestor.InvokeReturns(api.RequestServiceInvokeOutput{Body: body, StatusCode: http.StatusOK}, nil)
+			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
 			actual, err := service.Installations()
 			Expect(actual).To(BeNil())
@@ -357,7 +357,7 @@ var _ = Describe("Service", func() {
 		})
 
 		It("returns an error when requestor errors", func() {
-			requestor.InvokeReturns(api.RequestServiceInvokeOutput{StatusCode: http.StatusOK}, errors.New("Requesting things is hard"))
+			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusOK}, errors.New("Requesting things is hard"))
 
 			actual, err := service.Installations()
 			Expect(actual).To(BeNil())
@@ -368,7 +368,7 @@ var _ = Describe("Service", func() {
 		})
 
 		It("returns an error when requestor returns a non 200 status code", func() {
-			requestor.InvokeReturns(api.RequestServiceInvokeOutput{StatusCode: http.StatusBadGateway}, nil)
+			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusBadGateway}, nil)
 
 			actual, err := service.Installations()
 			Expect(actual).To(BeNil())

@@ -35,7 +35,7 @@ var _ = Describe("DataCollector", func() {
 
 	It("returns an error if there are pending changes", func() {
 		nonEmptyPendingChanges := api.PendingChangesOutput{ChangeList: []api.ProductChange{{}}}
-		pendingChangesLister.ListReturns(nonEmptyPendingChanges, nil)
+		pendingChangesLister.ListStagedPendingChangesReturns(nonEmptyPendingChanges, nil)
 
 		data, err := dataCollector.Collect()
 		Expect(data).To(BeEmpty())
@@ -43,7 +43,7 @@ var _ = Describe("DataCollector", func() {
 	})
 
 	It("returns an error if listing pending changes errors", func() {
-		pendingChangesLister.ListReturns(api.PendingChangesOutput{}, errors.New("Listing things is hard"))
+		pendingChangesLister.ListStagedPendingChangesReturns(api.PendingChangesOutput{}, errors.New("Listing things is hard"))
 
 		data, err := dataCollector.Collect()
 		Expect(data).To(BeEmpty())
@@ -52,7 +52,7 @@ var _ = Describe("DataCollector", func() {
 	})
 
 	It("returns an error if listing deployed products errors", func() {
-		deployedProductsLister.ListReturns([]api.DeployedProductOutput{}, errors.New("Listing things is hard"))
+		deployedProductsLister.ListDeployedProductsReturns([]api.DeployedProductOutput{}, errors.New("Listing things is hard"))
 
 		data, err := dataCollector.Collect()
 		Expect(data).To(BeEmpty())
@@ -61,7 +61,7 @@ var _ = Describe("DataCollector", func() {
 	})
 
 	It("returns an error when omService.ProductResources errors", func() {
-		deployedProductsLister.ListReturns(
+		deployedProductsLister.ListDeployedProductsReturns(
 			[]api.DeployedProductOutput{
 				{Type: data.DirectorProductType, GUID: "p-bosh-always-first"},
 				{Type: "best-product-1", GUID: "p1-guid"},
@@ -74,7 +74,7 @@ var _ = Describe("DataCollector", func() {
 	})
 
 	It("returns an error when omService.ProductProperties errors", func() {
-		deployedProductsLister.ListReturns(
+		deployedProductsLister.ListDeployedProductsReturns(
 			[]api.DeployedProductOutput{
 				{Type: data.DirectorProductType, GUID: "p-bosh-always-first"},
 				{Type: "best-product-1", GUID: "p1-guid"},
@@ -128,7 +128,7 @@ var _ = Describe("DataCollector", func() {
 			{Type: "best-product-1", GUID: "p1-guid"},
 			{Type: "best-product-2", GUID: "p2-guid"},
 		}
-		deployedProductsLister.ListReturns(append([]api.DeployedProductOutput{directorProduct}, deployedProducts...), nil)
+		deployedProductsLister.ListDeployedProductsReturns(append([]api.DeployedProductOutput{directorProduct}, deployedProducts...), nil)
 		for i, r := range resourcesReaders {
 			omService.ProductResourcesReturnsOnCall(i, r, nil)
 		}

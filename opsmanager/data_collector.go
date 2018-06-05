@@ -18,12 +18,12 @@ const (
 
 //go:generate counterfeiter . PendingChangesLister
 type PendingChangesLister interface {
-	List() (api.PendingChangesOutput, error)
+	ListStagedPendingChanges() (api.PendingChangesOutput, error)
 }
 
 //go:generate counterfeiter . DeployedProductsLister
 type DeployedProductsLister interface {
-	List() ([]api.DeployedProductOutput, error)
+	ListDeployedProducts() ([]api.DeployedProductOutput, error)
 }
 
 //go:generate counterfeiter . OmService
@@ -53,7 +53,7 @@ func NewDataCollector(oms OmService, pcs PendingChangesLister, dps DeployedProdu
 }
 
 func (dc DataCollector) Collect() ([]Data, error) {
-	pc, err := dc.pendingChangesService.List()
+	pc, err := dc.pendingChangesService.ListStagedPendingChanges()
 	if err != nil {
 		return []Data{}, errors.Wrap(err, PendingChangesFailedMessage)
 	}
@@ -62,7 +62,7 @@ func (dc DataCollector) Collect() ([]Data, error) {
 		return []Data{}, errors.New(PendingChangesExistsMessage)
 	}
 
-	pl, err := dc.deployProductsService.List()
+	pl, err := dc.deployProductsService.ListDeployedProducts()
 	if err != nil {
 		return []Data{}, errors.Wrap(err, DeployedProductsFailedMessage)
 	}

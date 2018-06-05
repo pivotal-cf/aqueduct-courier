@@ -109,16 +109,18 @@ func collect(c *cobra.Command, _ []string) error {
 		viper.GetBool(SkipTlsVerifyFlag),
 		false,
 		30*time.Second,
+		15*time.Second,
 	)
 
+	apiService := api.New(api.ApiInput{Client: authedClient})
 	omService := &opsmanager.Service{
-		Requestor: api.NewRequestService(authedClient),
+		Requestor: apiService,
 	}
 
 	collector := opsmanager.NewDataCollector(
 		omService,
-		api.NewPendingChangesService(authedClient),
-		api.NewDeployedProductsService(authedClient),
+		apiService,
+		apiService,
 	)
 
 	tarFilePath := filepath.Join(
