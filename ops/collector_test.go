@@ -10,6 +10,7 @@ import (
 	"time"
 
 	. "github.com/pivotal-cf/aqueduct-courier/ops"
+	"github.com/pivotal-cf/aqueduct-utils/data"
 	"github.com/satori/go.uuid"
 
 	. "github.com/onsi/ginkgo"
@@ -59,12 +60,12 @@ var _ = Describe("Collector", func() {
 		Expect(d2Name).To(Equal(d2.Name()))
 
 		Expect(metadataName).To(Equal(MetadataFileName))
-		var metadata Metadata
+		var metadata data.Metadata
 		Expect(json.Unmarshal(metadataContents, &metadata)).To(Succeed())
 		Expect(metadata.EnvType).To(Equal(envType))
 		Expect(metadata.FileDigests).To(ConsistOf(
-			FileDigest{Name: d1.Name(), MimeType: d1.MimeType(), MD5Checksum: d1ContentMd5, ProductType: d1.Type(), DataType: d1.DataType()},
-			FileDigest{Name: d2.Name(), MimeType: d2.MimeType(), MD5Checksum: d2ContentMd5, ProductType: d2.Type(), DataType: d2.DataType()},
+			data.FileDigest{Name: d1.Name(), MimeType: d1.MimeType(), MD5Checksum: d1ContentMd5, ProductType: d1.Type(), DataType: d1.DataType()},
+			data.FileDigest{Name: d2.Name(), MimeType: d2.MimeType(), MD5Checksum: d2ContentMd5, ProductType: d2.Type(), DataType: d2.DataType()},
 		))
 		_, err = uuid.FromString(metadata.CollectionId)
 		Expect(err).NotTo(HaveOccurred())

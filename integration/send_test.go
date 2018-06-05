@@ -14,6 +14,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/pivotal-cf/aqueduct-utils/data"
 
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
@@ -120,8 +121,8 @@ func generateValidDataTarFile(destinationDir string) string {
 	sum := md5.Sum([]byte{})
 	emptyFileChecksum := base64.StdEncoding.EncodeToString(sum[:])
 
-	var metadata ops.Metadata
-	metadata.FileDigests = []ops.FileDigest{
+	var metadata data.Metadata
+	metadata.FileDigests = []data.FileDigest{
 		{Name: "file1", MD5Checksum: emptyFileChecksum},
 		{Name: "file2", MD5Checksum: emptyFileChecksum},
 	}

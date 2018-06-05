@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/pivotal-cf/aqueduct-utils/data"
 	"github.com/pivotal-cf/om/api"
 	"github.com/pkg/errors"
 )
@@ -13,16 +14,6 @@ const (
 	PendingChangesFailedMessage   = "Failed to retrieve pending change list from Operations Manager"
 	DeployedProductsFailedMessage = "Failed to retrieve deployed products list from Operations Manager"
 	RequestorFailureErrorFormat   = "Failed retrieving %s %s"
-
-	OpsManagerProductType = "ops_manager"
-	DirectorProductType   = "p-bosh"
-
-	ResourcesDataType        = "resources"
-	VmTypesDataType          = "vm_types"
-	DiagnosticReportDataType = "diagnostic_report"
-	DeployedProductsDataType = "deployed_products"
-	InstallationsDataType    = "installations"
-	PropertiesDataType       = "properties"
 )
 
 //go:generate counterfeiter . PendingChangesLister
@@ -78,36 +69,36 @@ func (dc DataCollector) Collect() ([]Data, error) {
 
 	var d []Data
 
-	d, err = appendRetrievedData(d, dc.omService.DeployedProducts, OpsManagerProductType, DeployedProductsDataType)
+	d, err = appendRetrievedData(d, dc.omService.DeployedProducts, data.OpsManagerProductType, data.DeployedProductsDataType)
 	if err != nil {
 		return []Data{}, err
 	}
 
 	for _, product := range pl {
-		if product.Type != DirectorProductType {
-			d, err = appendRetrievedData(d, dc.productResourcesCaller(product.GUID), product.Type, ResourcesDataType)
+		if product.Type != data.DirectorProductType {
+			d, err = appendRetrievedData(d, dc.productResourcesCaller(product.GUID), product.Type, data.ResourcesDataType)
 			if err != nil {
 				return []Data{}, err
 			}
 
-			d, err = appendRetrievedData(d, dc.productPropertiesCaller(product.GUID), product.Type, PropertiesDataType)
+			d, err = appendRetrievedData(d, dc.productPropertiesCaller(product.GUID), product.Type, data.PropertiesDataType)
 			if err != nil {
 				return []Data{}, err
 			}
 		}
 	}
 
-	d, err = appendRetrievedData(d, dc.omService.VmTypes, OpsManagerProductType, VmTypesDataType)
+	d, err = appendRetrievedData(d, dc.omService.VmTypes, data.OpsManagerProductType, data.VmTypesDataType)
 	if err != nil {
 		return []Data{}, err
 	}
 
-	d, err = appendRetrievedData(d, dc.omService.DiagnosticReport, OpsManagerProductType, DiagnosticReportDataType)
+	d, err = appendRetrievedData(d, dc.omService.DiagnosticReport, data.OpsManagerProductType, data.DiagnosticReportDataType)
 	if err != nil {
 		return []Data{}, err
 	}
 
-	d, err = appendRetrievedData(d, dc.omService.Installations, OpsManagerProductType, InstallationsDataType)
+	d, err = appendRetrievedData(d, dc.omService.Installations, data.OpsManagerProductType, data.InstallationsDataType)
 	if err != nil {
 		return []Data{}, err
 	}

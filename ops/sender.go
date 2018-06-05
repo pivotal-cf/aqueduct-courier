@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/pivotal-cf/aqueduct-utils/data"
 	"github.com/pkg/errors"
 )
 
@@ -48,7 +49,7 @@ func (s SendExecutor) Send(reader tarReader, dataLoaderURL, apiToken string) err
 		return errors.Wrap(err, ReadMetadataFileError)
 	}
 
-	var metadata Metadata
+	var metadata data.Metadata
 	err = json.Unmarshal(metadataContent, &metadata)
 	if err != nil {
 		return errors.Wrap(err, InvalidMetadataFileError)
@@ -80,7 +81,7 @@ func (s SendExecutor) Send(reader tarReader, dataLoaderURL, apiToken string) err
 	return nil
 }
 
-func constructFileMetadataReader(metadata Metadata, fileName string, hashWriter hash.Hash) (io.Reader, error) {
+func constructFileMetadataReader(metadata data.Metadata, fileName string, hashWriter hash.Hash) (io.Reader, error) {
 	metadataMap := map[string]string{
 		"filename":        fileName,
 		"fileContentType": TarMimeType,
@@ -97,7 +98,7 @@ func constructFileMetadataReader(metadata Metadata, fileName string, hashWriter 
 	return bytes.NewReader(metadataJson), nil
 }
 
-func makeFileUploadRequest(filePath, apiToken, uploadURL string, metadata Metadata) (*http.Request, error) {
+func makeFileUploadRequest(filePath, apiToken, uploadURL string, metadata data.Metadata) (*http.Request, error) {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 
@@ -146,7 +147,7 @@ func makeFileUploadRequest(filePath, apiToken, uploadURL string, metadata Metada
 	return req, nil
 }
 
-func validateTarFile(reader tarReader, metadata Metadata) error {
+func validateTarFile(reader tarReader, metadata data.Metadata) error {
 	fileMd5s, err := reader.FileMd5s()
 	if err != nil {
 		return errors.Wrapf(err, UnableToListFilesMessageFormat, reader.TarFilePath())

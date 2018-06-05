@@ -18,6 +18,7 @@ import (
 	"github.com/pivotal-cf/aqueduct-courier/cmd"
 	"github.com/pivotal-cf/aqueduct-courier/file"
 	"github.com/pivotal-cf/aqueduct-courier/ops"
+	"github.com/pivotal-cf/aqueduct-utils/data"
 )
 
 const (
@@ -215,7 +216,7 @@ func validatedTarFilePath(outputDirPath string) string {
 func assertMetadataFileIsCorrect(contentDir, expectedEnvType string) {
 	content, err := ioutil.ReadFile(filepath.Join(contentDir, ops.MetadataFileName))
 	Expect(err).NotTo(HaveOccurred(), "Expected metadata file to exist but did not")
-	var metadata ops.Metadata
+	var metadata data.Metadata
 	Expect(json.Unmarshal(content, &metadata)).To(Succeed())
 	Expect(metadata.EnvType).To(Equal(expectedEnvType))
 }

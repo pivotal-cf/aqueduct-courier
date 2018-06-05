@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/pivotal-cf/aqueduct-courier/opsmanager"
+	"github.com/pivotal-cf/aqueduct-utils/data"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 )
@@ -35,20 +36,6 @@ type CollectExecutor struct {
 	tw tarWriter
 }
 
-type Metadata struct {
-	EnvType      string
-	CollectedAt  string
-	CollectionId string
-	FileDigests  []FileDigest
-}
-type FileDigest struct {
-	Name        string
-	MimeType    string
-	MD5Checksum string
-	ProductType string
-	DataType    string
-}
-
 func NewCollector(c dataCollector, tw tarWriter) CollectExecutor {
 	return CollectExecutor{c: c, tw: tw}
 }
@@ -56,34 +43,34 @@ func NewCollector(c dataCollector, tw tarWriter) CollectExecutor {
 func (ce CollectExecutor) Collect(envType string) error {
 	defer ce.tw.Close()
 
-	omData, err := ce.c.Collect()
+	omDatas, err := ce.c.Collect()
 	if err != nil {
 		return errors.Wrap(err, CollectFailureMessage)
 	}
 
-	metadata := Metadata{
+	metadata := data.Metadata{
 		EnvType:      envType,
 		CollectionId: uuid.NewV4().String(),
 		CollectedAt:  time.Now().UTC().Format(time.RFC3339),
 	}
 
-	for _, data := range omData {
-		dataContents, err := ioutil.ReadAll(data.Content())
+	for _, omData := range omDatas {
+		dataContents, err := ioutil.ReadAll(omData.Content())
 		if err != nil {
 			return errors.Wrap(err, ContentReadingFailureMessage)
 		}
 
-		err = ce.tw.AddFile(dataContents, data.Name())
+		err = ce.tw.AddFile(dataContents, omData.Name())
 		if err != nil {
 			return errors.Wrap(err, DataWriteFailureMessage)
 		}
 
 		md5Sum := md5.Sum([]byte(dataContents))
-		metadata.FileDigests = append(metadata.FileDigests, FileDigest{
-			Name:        data.Name(),
-			MimeType:    data.MimeType(),
-			ProductType: data.Type(),
-			DataType:    data.DataType(),
+		metadata.FileDigests = append(metadata.FileDigests, data.FileDigest{
+			Name:        omData.Name(),
+			MimeType:    omData.MimeType(),
+			ProductType: omData.Type(),
+			DataType:    omData.DataType(),
 			MD5Checksum: base64.StdEncoding.EncodeToString(md5Sum[:]),
 		})
 	}

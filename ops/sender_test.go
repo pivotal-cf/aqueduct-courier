@@ -14,6 +14,7 @@ import (
 	"github.com/onsi/gomega/ghttp"
 	. "github.com/pivotal-cf/aqueduct-courier/ops"
 	"github.com/pivotal-cf/aqueduct-courier/ops/opsfakes"
+	"github.com/pivotal-cf/aqueduct-utils/data"
 	"github.com/pkg/errors"
 )
 
@@ -21,7 +22,7 @@ var _ = Describe("Sender", func() {
 	var (
 		dataLoader *ghttp.Server
 		tarReader  *opsfakes.FakeTarReader
-		metadata   Metadata
+		metadata   data.Metadata
 		tmpFile    *os.File
 		tarContent string
 		sender     SendExecutor
@@ -33,11 +34,11 @@ var _ = Describe("Sender", func() {
 
 		tarReader = new(opsfakes.FakeTarReader)
 
-		metadata = Metadata{
+		metadata = data.Metadata{
 			CollectedAt:  "collected-at",
 			CollectionId: "collection-id",
 			EnvType:      "some-env-type",
-			FileDigests: []FileDigest{
+			FileDigests: []data.FileDigest{
 				{Name: "file1", MD5Checksum: "file1-md5"},
 				{Name: "file2", MD5Checksum: "file2-md5"},
 			},
@@ -156,8 +157,8 @@ var _ = Describe("Sender", func() {
 	})
 
 	It("fails if the tar file contains more files than what is in the metadata", func() {
-		metadata = Metadata{
-			FileDigests: []FileDigest{
+		metadata = data.Metadata{
+			FileDigests: []data.FileDigest{
 				{Name: "file1", MD5Checksum: "file1-md5"},
 				{Name: "file2", MD5Checksum: "file2-md5"},
 			},
@@ -180,8 +181,8 @@ var _ = Describe("Sender", func() {
 	})
 
 	It("fails if the tar file is missing files listed in the metadata", func() {
-		metadata = Metadata{
-			FileDigests: []FileDigest{
+		metadata = data.Metadata{
+			FileDigests: []data.FileDigest{
 				{Name: "file1", MD5Checksum: "file1-md5"},
 				{Name: "file2", MD5Checksum: "file2-md5"},
 			},
@@ -202,8 +203,8 @@ var _ = Describe("Sender", func() {
 	})
 
 	It("fails if the file checksums in the tarball do not match the metadata", func() {
-		metadata = Metadata{
-			FileDigests: []FileDigest{
+		metadata = data.Metadata{
+			FileDigests: []data.FileDigest{
 				{Name: "file1", MD5Checksum: "file1-md5"},
 				{Name: "file2", MD5Checksum: "file2-md5"},
 			},

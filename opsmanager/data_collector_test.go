@@ -8,6 +8,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-cf/aqueduct-courier/opsmanager/opsmanagerfakes"
+	"github.com/pivotal-cf/aqueduct-utils/data"
 
 	"github.com/pkg/errors"
 
@@ -62,51 +63,51 @@ var _ = Describe("DataCollector", func() {
 	It("returns an error when omService.ProductResources errors", func() {
 		deployedProductsLister.ListReturns(
 			[]api.DeployedProductOutput{
-				{Type: DirectorProductType, GUID: "p-bosh-always-first"},
+				{Type: data.DirectorProductType, GUID: "p-bosh-always-first"},
 				{Type: "best-product-1", GUID: "p1-guid"},
 			},
 			nil,
 		)
 		omService.ProductResourcesReturns(nil, errors.New("Requesting things is hard"))
-		data, err := dataCollector.Collect()
-		assertOmServiceFailure(data, err, "best-product-1", ResourcesDataType, "Requesting things is hard")
+		collectedData, err := dataCollector.Collect()
+		assertOmServiceFailure(collectedData, err, "best-product-1", data.ResourcesDataType, "Requesting things is hard")
 	})
 
 	It("returns an error when omService.ProductProperties errors", func() {
 		deployedProductsLister.ListReturns(
 			[]api.DeployedProductOutput{
-				{Type: DirectorProductType, GUID: "p-bosh-always-first"},
+				{Type: data.DirectorProductType, GUID: "p-bosh-always-first"},
 				{Type: "best-product-1", GUID: "p1-guid"},
 			},
 			nil,
 		)
 		omService.ProductPropertiesReturns(nil, errors.New("Requesting things is hard"))
-		data, err := dataCollector.Collect()
-		assertOmServiceFailure(data, err, "best-product-1", PropertiesDataType, "Requesting things is hard")
+		collectedData, err := dataCollector.Collect()
+		assertOmServiceFailure(collectedData, err, "best-product-1", data.PropertiesDataType, "Requesting things is hard")
 	})
 
 	It("returns an error when omService.VmTypes errors", func() {
 		omService.VmTypesReturns(nil, errors.New("Requesting things is hard"))
-		data, err := dataCollector.Collect()
-		assertOmServiceFailure(data, err, OpsManagerProductType, VmTypesDataType, "Requesting things is hard")
+		collectedData, err := dataCollector.Collect()
+		assertOmServiceFailure(collectedData, err, data.OpsManagerProductType, data.VmTypesDataType, "Requesting things is hard")
 	})
 
 	It("returns an error when omService.DiagnosticReport errors", func() {
 		omService.DiagnosticReportReturns(nil, errors.New("Requesting things is hard"))
-		data, err := dataCollector.Collect()
-		assertOmServiceFailure(data, err, OpsManagerProductType, DiagnosticReportDataType, "Requesting things is hard")
+		collectedData, err := dataCollector.Collect()
+		assertOmServiceFailure(collectedData, err, data.OpsManagerProductType, data.DiagnosticReportDataType, "Requesting things is hard")
 	})
 
 	It("returns an error when omService.DeployedProducts errors", func() {
 		omService.DeployedProductsReturns(nil, errors.New("Requesting things is hard"))
-		data, err := dataCollector.Collect()
-		assertOmServiceFailure(data, err, OpsManagerProductType, DeployedProductsDataType, "Requesting things is hard")
+		collectedData, err := dataCollector.Collect()
+		assertOmServiceFailure(collectedData, err, data.OpsManagerProductType, data.DeployedProductsDataType, "Requesting things is hard")
 	})
 
 	It("returns an error when omService.Installations errors", func() {
 		omService.InstallationsReturns(nil, errors.New("Requesting things is hard"))
-		data, err := dataCollector.Collect()
-		assertOmServiceFailure(data, err, OpsManagerProductType, InstallationsDataType, "Requesting things is hard")
+		collectedData, err := dataCollector.Collect()
+		assertOmServiceFailure(collectedData, err, data.OpsManagerProductType, data.InstallationsDataType, "Requesting things is hard")
 	})
 
 	It("succeeds", func() {
@@ -122,7 +123,7 @@ var _ = Describe("DataCollector", func() {
 		diagnosticReportReader := strings.NewReader("diagnostic data")
 		deployedProductsReader := strings.NewReader("deployed products data")
 		installationsReader := strings.NewReader("installations data")
-		directorProduct := api.DeployedProductOutput{Type: DirectorProductType, GUID: "p-bosh-always-first"}
+		directorProduct := api.DeployedProductOutput{Type: data.DirectorProductType, GUID: "p-bosh-always-first"}
 		deployedProducts := []api.DeployedProductOutput{
 			{Type: "best-product-1", GUID: "p1-guid"},
 			{Type: "best-product-2", GUID: "p2-guid"},
@@ -139,60 +140,60 @@ var _ = Describe("DataCollector", func() {
 		omService.DeployedProductsReturns(deployedProductsReader, nil)
 		omService.InstallationsReturns(installationsReader, nil)
 
-		data, err := dataCollector.Collect()
+		collectedData, err := dataCollector.Collect()
 		Expect(err).ToNot(HaveOccurred())
-		Expect(data).To(ConsistOf(
+		Expect(collectedData).To(ConsistOf(
 			NewData(
 				deployedProductsReader,
-				OpsManagerProductType,
-				DeployedProductsDataType,
+				data.OpsManagerProductType,
+				data.DeployedProductsDataType,
 			),
 			NewData(
 				resourcesReaders[0],
 				deployedProducts[0].Type,
-				ResourcesDataType,
+				data.ResourcesDataType,
 			),
 			NewData(
 				resourcesReaders[1],
 				deployedProducts[1].Type,
-				ResourcesDataType,
+				data.ResourcesDataType,
 			),
 			NewData(
 				propertiesReaders[0],
 				deployedProducts[0].Type,
-				PropertiesDataType,
+				data.PropertiesDataType,
 			),
 			NewData(
 				propertiesReaders[1],
 				deployedProducts[1].Type,
-				PropertiesDataType,
+				data.PropertiesDataType,
 			),
 			NewData(
 				vmTypesReader,
-				OpsManagerProductType,
-				VmTypesDataType,
+				data.OpsManagerProductType,
+				data.VmTypesDataType,
 			),
 			NewData(
 				diagnosticReportReader,
-				OpsManagerProductType,
-				DiagnosticReportDataType,
+				data.OpsManagerProductType,
+				data.DiagnosticReportDataType,
 			),
 			NewData(
 				installationsReader,
-				OpsManagerProductType,
-				InstallationsDataType,
+				data.OpsManagerProductType,
+				data.InstallationsDataType,
 			),
 		))
 	})
 
 	It("succeeds if there are no deployed products", func() {
-		data, err := dataCollector.Collect()
+		collectedData, err := dataCollector.Collect()
 		Expect(err).ToNot(HaveOccurred())
-		Expect(data).To(ConsistOf(
-			NewData(nil, OpsManagerProductType, DeployedProductsDataType),
-			NewData(nil, OpsManagerProductType, VmTypesDataType),
-			NewData(nil, OpsManagerProductType, DiagnosticReportDataType),
-			NewData(nil, OpsManagerProductType, InstallationsDataType),
+		Expect(collectedData).To(ConsistOf(
+			NewData(nil, data.OpsManagerProductType, data.DeployedProductsDataType),
+			NewData(nil, data.OpsManagerProductType, data.VmTypesDataType),
+			NewData(nil, data.OpsManagerProductType, data.DiagnosticReportDataType),
+			NewData(nil, data.OpsManagerProductType, data.InstallationsDataType),
 		))
 	})
 })

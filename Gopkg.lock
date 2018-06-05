@@ -140,6 +140,12 @@
   version = "v1.1.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/pivotal-cf/aqueduct-utils"
+  packages = ["data"]
+  revision = "f752507351b0a91873c4d7951d672e697c91f418"
+
+[[projects]]
   name = "github.com/pivotal-cf/om"
   packages = [
     "api",
@@ -288,6 +294,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f666eeebe8398c2471f6d85db56eadd5292133002e7c4e2b669f836e8f87db83"
+  inputs-digest = "79f16f059913403a8e8302943ed7c351b7aeb8b9a432722da7656cc03fad547a"
   solver-name = "gps-cdcl"
   solver-version = 1
