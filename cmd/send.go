@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/pivotal-cf/aqueduct-courier/file"
 	"github.com/pivotal-cf/aqueduct-courier/ops"
+	"github.com/pivotal-cf/aqueduct-utils/file"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

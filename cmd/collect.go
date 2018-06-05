@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pivotal-cf/aqueduct-courier/file"
 	"github.com/pivotal-cf/aqueduct-courier/ops"
 	"github.com/pivotal-cf/aqueduct-courier/opsmanager"
+	"github.com/pivotal-cf/aqueduct-utils/file"
 	"github.com/pivotal-cf/om/api"
 	"github.com/pivotal-cf/om/network"
 	"github.com/pkg/errors"

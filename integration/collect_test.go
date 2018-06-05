@@ -16,9 +16,9 @@ import (
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-cf/aqueduct-courier/cmd"
-	"github.com/pivotal-cf/aqueduct-courier/file"
 	"github.com/pivotal-cf/aqueduct-courier/ops"
 	"github.com/pivotal-cf/aqueduct-utils/data"
+	"github.com/pivotal-cf/aqueduct-utils/file"
 )
 
 const (
