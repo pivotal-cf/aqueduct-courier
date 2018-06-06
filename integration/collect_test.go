@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/mholt/archiver"
 	. "github.com/onsi/ginkgo"
@@ -15,6 +17,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
+	"github.com/onsi/gomega/ghttp"
 	"github.com/pivotal-cf/aqueduct-courier/cmd"
 	"github.com/pivotal-cf/aqueduct-courier/ops"
 	"github.com/pivotal-cf/aqueduct-utils/data"
@@ -118,7 +121,64 @@ var _ = Describe("Collect", func() {
 			assertValidOutput(tarFilePath, "ops_manager_vm_types", "development")
 			assertLogging(session, tarFilePath, flagValues[cmd.OpsManagerURLFlag])
 		})
+	})
 
+	Context("specifying ops manager timeout", func() {
+		var server *ghttp.Server
+		BeforeEach(func() {
+			server = ghttp.NewServer()
+			server.AppendHandlers(
+				func(w http.ResponseWriter, req *http.Request) {
+					w.Header().Set("Content-Type", "application/json")
+
+					w.Write([]byte(`{
+					"access_token": "some-opsman-token",
+					"token_type": "bearer",
+					"expires_in": 3600
+					}`))
+				},
+				func(w http.ResponseWriter, req *http.Request) {
+					time.Sleep(3 * time.Second)
+				},
+			)
+		})
+
+		AfterEach(func() {
+			server.Close()
+		})
+
+		It("uses the timeout specified with env variable", func() {
+			defaultEnvVars[cmd.OpsManagerURLKey] = server.URL()
+			defaultEnvVars[cmd.OpsManagerTimeoutKey] = "1"
+			command := buildDefaultCommand(defaultEnvVars)
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(1))
+			Eventually(session.Err).Should(gbytes.Say("Timeout exceeded"))
+			Expect(session.Err).NotTo(gbytes.Say("Usage:"))
+			assertOutputDirEmpty(outputDirPath)
+		})
+
+		It("uses the timeout specified by flag configuration", func() {
+			flagValues := map[string]string{
+				cmd.OpsManagerTimeoutFlag:      "1",
+				cmd.OpsManagerURLFlag:          server.URL(),
+				cmd.OpsManagerClientIdFlag:     "whatever",
+				cmd.OpsManagerClientSecretFlag: "whatever",
+				cmd.EnvTypeFlag:                "Development",
+				cmd.OutputPathFlag:             outputDirPath,
+			}
+			command := exec.Command(aqueductBinaryPath, "collect")
+			for k, v := range flagValues {
+				command.Args = append(command.Args, fmt.Sprintf("--%s=%s", k, v))
+			}
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(1))
+			Eventually(session.Err).Should(gbytes.Say("Timeout exceeded"))
+			Expect(session.Err).NotTo(gbytes.Say("Usage:"))
+			assertOutputDirEmpty(outputDirPath)
+		})
 	})
 
 	DescribeTable(

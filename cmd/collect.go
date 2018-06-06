@@ -23,6 +23,7 @@ const (
 	OpsManagerPasswordKey      = "OPS_MANAGER_PASSWORD"
 	OpsManagerClientIdKey      = "OPS_MANAGER_CLIENT_ID"
 	OpsManagerClientSecretKey  = "OPS_MANAGER_CLIENT_SECRET"
+	OpsManagerTimeoutKey       = "OPS_MANAGER_TIMEOUT"
 	EnvTypeKey                 = "ENV_TYPE"
 	OutputPathKey              = "OUTPUT_DIR"
 	OpsManagerURLFlag          = "url"
@@ -30,6 +31,7 @@ const (
 	OpsManagerPasswordFlag     = "password"
 	OpsManagerClientIdFlag     = "client-id"
 	OpsManagerClientSecretFlag = "client-secret"
+	OpsManagerTimeoutFlag      = "ops-manager-timeout"
 	EnvTypeFlag                = "env-type"
 	OutputPathFlag             = "output-dir"
 	SkipTlsVerifyFlag          = "insecure-skip-tls-verify"
@@ -72,6 +74,10 @@ func init() {
 	viper.BindPFlag(OpsManagerClientSecretFlag, collectCmd.Flag(OpsManagerClientSecretFlag))
 	viper.BindEnv(OpsManagerClientSecretFlag, OpsManagerClientSecretKey)
 
+	collectCmd.Flags().Int(OpsManagerTimeoutFlag, 30, "Timeout (in seconds) for Operations Manager HTTP requests")
+	viper.BindPFlag(OpsManagerTimeoutFlag, collectCmd.Flag(OpsManagerTimeoutFlag))
+	viper.BindEnv(OpsManagerTimeoutFlag, OpsManagerTimeoutKey)
+
 	collectCmd.Flags().String(EnvTypeFlag, "", fmt.Sprintf("Describe the type of environment you're collecting from [$%s]\nValid options: %s, %s, %s, %s", EnvTypeKey, EnvTypeDevelopment, EnvTypeQA, EnvTypePreProduction, EnvTypeProduction))
 	viper.BindPFlag(EnvTypeFlag, collectCmd.Flag(EnvTypeFlag))
 	viper.BindEnv(EnvTypeFlag, EnvTypeKey)
@@ -108,8 +114,8 @@ func collect(c *cobra.Command, _ []string) error {
 		viper.GetString(OpsManagerClientSecretFlag),
 		viper.GetBool(SkipTlsVerifyFlag),
 		false,
-		30*time.Second,
-		15*time.Second,
+		time.Duration(viper.GetInt(OpsManagerTimeoutFlag))*time.Second,
+		5*time.Second,
 	)
 
 	apiService := api.New(api.ApiInput{Client: authedClient})
