@@ -3,8 +3,8 @@ name: windows-worker
 releases:
 - name: concourse-windows-worker
   version: 3.13.0
-  url: https://bosh.io/d/github.com/pivotal-cf-experimental/concourse-windows-worker-release?v=3.13.0
-  sha1: 98454e4863c3819f1ccfc1d0b0d07f6ee4efdb1b
+  url: https://bosh.io/d/github.com/pivotal-cf-experimental/concourse-windows-worker-release?v=3.14.1
+  sha1: 5681463f0766e786a5ea8bf12558238bf69fc8f3
 - name: windows-tools
   version: 8
   url: https://bosh.io/d/github.com/cloudfoundry-incubator/windows-tools-release?v=8
