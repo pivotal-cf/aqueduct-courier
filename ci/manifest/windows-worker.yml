@@ -29,7 +29,7 @@ instance_groups:
 - name: windows-worker
   instances: 1
   vm_type: default
-  vm_extensions: [50GB_ephemeral_disk]
+  vm_extensions: [100GB_ephemeral_disk]
   stemcell: windows2016
   networks: [{name: default}]
   azs: [z1]
