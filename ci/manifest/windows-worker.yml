@@ -2,7 +2,7 @@ name: windows-worker
 
 releases:
 - name: concourse-windows-worker
-  version: 3.13.0
+  version: 3.14.1
   url: https://bosh.io/d/github.com/pivotal-cf-experimental/concourse-windows-worker-release?v=3.14.1
   sha1: 5681463f0766e786a5ea8bf12558238bf69fc8f3
 - name: windows-tools
