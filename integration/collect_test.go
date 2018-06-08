@@ -30,24 +30,51 @@ const (
 
 var _ = Describe("Collect", func() {
 	var (
-		outputDirPath  string
-		defaultEnvVars map[string]string
+		outputDirPath    string
+		defaultEnvVars   map[string]string
+		opsManagerServer *ghttp.Server
 	)
 
 	BeforeEach(func() {
 		var err error
 		outputDirPath, err = ioutil.TempDir("", "")
 		Expect(err).NotTo(HaveOccurred())
+
+		opsManagerServer = ghttp.NewServer()
+		opsManagerServer.RouteToHandler(http.MethodPost, "/uaa/oauth/token", func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+
+			w.Write([]byte(`{
+					"access_token": "some-opsman-token",
+					"token_type": "bearer",
+					"expires_in": 3600
+					}`))
+		})
+		emptyObjectResponse := func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.Write([]byte(`{}`))
+		}
+		emptyArrayResponse := func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.Write([]byte(`[]`))
+		}
+		opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/staged/pending_changes", emptyObjectResponse)
+		opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/deployed/products", emptyArrayResponse)
+		opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/vm_types", emptyArrayResponse)
+		opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/diagnostic_report", emptyObjectResponse)
+		opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/installations", emptyObjectResponse)
+
 		defaultEnvVars = map[string]string{
-			cmd.OpsManagerURLKey:      os.Getenv("TEST_OPS_MANAGER_URL"),
-			cmd.OpsManagerUsernameKey: os.Getenv("TEST_OPS_MANAGER_USERNAME"),
-			cmd.OpsManagerPasswordKey: os.Getenv("TEST_OPS_MANAGER_PASSWORD"),
+			cmd.OpsManagerURLKey:      opsManagerServer.URL(),
+			cmd.OpsManagerUsernameKey: "some-username",
+			cmd.OpsManagerPasswordKey: "some-password",
 			cmd.EnvTypeKey:            "Development",
 			cmd.OutputPathKey:         outputDirPath,
 		}
 	})
 
 	AfterEach(func() {
+		opsManagerServer.Close()
 		Expect(os.RemoveAll(outputDirPath)).To(Succeed())
 	})
 
@@ -65,9 +92,9 @@ var _ = Describe("Collect", func() {
 
 		It("succeeds with flag configuration", func() {
 			flagValues := map[string]string{
-				cmd.OpsManagerURLFlag:      os.Getenv("TEST_OPS_MANAGER_URL"),
-				cmd.OpsManagerUsernameFlag: os.Getenv("TEST_OPS_MANAGER_USERNAME"),
-				cmd.OpsManagerPasswordFlag: os.Getenv("TEST_OPS_MANAGER_PASSWORD"),
+				cmd.OpsManagerURLFlag:      opsManagerServer.URL(),
+				cmd.OpsManagerUsernameFlag: "some-username",
+				cmd.OpsManagerPasswordFlag: "some-password",
 				cmd.EnvTypeFlag:            "Development",
 				cmd.SkipTlsVerifyFlag:      "true",
 				cmd.OutputPathFlag:         outputDirPath,
@@ -89,8 +116,8 @@ var _ = Describe("Collect", func() {
 		It("succeeds with env variable configuration", func() {
 			delete(defaultEnvVars, cmd.OpsManagerUsernameKey)
 			delete(defaultEnvVars, cmd.OpsManagerPasswordKey)
-			defaultEnvVars[cmd.OpsManagerClientIdKey] = os.Getenv("TEST_OPS_MANAGER_CLIENT_ID")
-			defaultEnvVars[cmd.OpsManagerClientSecretKey] = os.Getenv("TEST_OPS_MANAGER_CLIENT_SECRET")
+			defaultEnvVars[cmd.OpsManagerClientIdKey] = "some-client-id"
+			defaultEnvVars[cmd.OpsManagerClientSecretKey] = "some-client-secret"
 			command := buildDefaultCommand(defaultEnvVars)
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
@@ -103,9 +130,9 @@ var _ = Describe("Collect", func() {
 
 		It("succeeds with flag configuration", func() {
 			flagValues := map[string]string{
-				cmd.OpsManagerURLFlag:          os.Getenv("TEST_OPS_MANAGER_URL"),
-				cmd.OpsManagerClientIdFlag:     os.Getenv("TEST_OPS_MANAGER_CLIENT_ID"),
-				cmd.OpsManagerClientSecretFlag: os.Getenv("TEST_OPS_MANAGER_CLIENT_SECRET"),
+				cmd.OpsManagerURLFlag:          opsManagerServer.URL(),
+				cmd.OpsManagerClientIdFlag:     "some-client-id",
+				cmd.OpsManagerClientSecretFlag: "some-client-secret",
 				cmd.EnvTypeFlag:                "Development",
 				cmd.SkipTlsVerifyFlag:          "true",
 				cmd.OutputPathFlag:             outputDirPath,
@@ -124,10 +151,10 @@ var _ = Describe("Collect", func() {
 	})
 
 	Context("specifying ops manager timeout", func() {
-		var server *ghttp.Server
+		var slowServer *ghttp.Server
 		BeforeEach(func() {
-			server = ghttp.NewServer()
-			server.AppendHandlers(
+			slowServer = ghttp.NewServer()
+			slowServer.AppendHandlers(
 				func(w http.ResponseWriter, req *http.Request) {
 					w.Header().Set("Content-Type", "application/json")
 
@@ -144,11 +171,11 @@ var _ = Describe("Collect", func() {
 		})
 
 		AfterEach(func() {
-			server.Close()
+			slowServer.Close()
 		})
 
 		It("uses the timeout specified with env variable", func() {
-			defaultEnvVars[cmd.OpsManagerURLKey] = server.URL()
+			defaultEnvVars[cmd.OpsManagerURLKey] = slowServer.URL()
 			defaultEnvVars[cmd.OpsManagerTimeoutKey] = "1"
 			command := buildDefaultCommand(defaultEnvVars)
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
@@ -162,7 +189,7 @@ var _ = Describe("Collect", func() {
 		It("uses the timeout specified by flag configuration", func() {
 			flagValues := map[string]string{
 				cmd.OpsManagerTimeoutFlag:      "1",
-				cmd.OpsManagerURLFlag:          server.URL(),
+				cmd.OpsManagerURLFlag:          slowServer.URL(),
 				cmd.OpsManagerClientIdFlag:     "whatever",
 				cmd.OpsManagerClientSecretFlag: "whatever",
 				cmd.EnvTypeFlag:                "Development",
@@ -244,7 +271,14 @@ var _ = Describe("Collect", func() {
 	})
 
 	It("fails if data collection from Operations Manager fails", func() {
-		defaultEnvVars[cmd.OpsManagerUsernameKey] = "non-real-user"
+		failingServer := ghttp.NewServer()
+		failingServer.AppendHandlers(
+			func(w http.ResponseWriter, req *http.Request) {
+				w.WriteHeader(500)
+			},
+		)
+		defer failingServer.Close()
+		defaultEnvVars[cmd.OpsManagerURLKey] = failingServer.URL()
 		command := buildDefaultCommand(defaultEnvVars)
 		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())

@@ -34,12 +34,6 @@ jobs:
     trigger: true
   - task: run-tests
     file: aqueduct-courier/ci/tasks/courier-tests.yml
-    params:
-      TEST_OPS_MANAGER_URL: {{courier-ops-manager-url}}
-      TEST_OPS_MANAGER_USERNAME: {{courier-ops-manager-username}}
-      TEST_OPS_MANAGER_PASSWORD: {{courier-ops-manager-password}}
-      TEST_OPS_MANAGER_CLIENT_ID: {{courier-ops-manager-client-id}}
-      TEST_OPS_MANAGER_CLIENT_SECRET: {{courier-ops-manager-client-secret}}
 
 - name: windows-courier-tests
   serial_groups: [opsmanager-lock]
@@ -48,12 +42,6 @@ jobs:
     trigger: true
   - task: run-tests
     file: aqueduct-courier/ci/tasks/courier-tests-windows.yml
-    params:
-      TEST_OPS_MANAGER_URL: {{courier-ops-manager-url}}
-      TEST_OPS_MANAGER_USERNAME: {{courier-ops-manager-username}}
-      TEST_OPS_MANAGER_PASSWORD: {{courier-ops-manager-password}}
-      TEST_OPS_MANAGER_CLIENT_ID: {{courier-ops-manager-client-id}}
-      TEST_OPS_MANAGER_CLIENT_SECRET: {{courier-ops-manager-client-secret}}
 
 - name: build-staging-binaries
   plan:
@@ -79,7 +67,7 @@ jobs:
     trigger: true
   - get: staging-binaries
     passed: [build-staging-binaries]
-  - task: collect
+  - task: collect-with-user-creds
     input_mapping:
       binaries: staging-binaries
     file: aqueduct-courier/ci/tasks/collect.yml
@@ -87,6 +75,17 @@ jobs:
       OPS_MANAGER_URL: {{courier-ops-manager-url}}
       OPS_MANAGER_USERNAME: {{courier-ops-manager-username}}
       OPS_MANAGER_PASSWORD: {{courier-ops-manager-password}}
+      ENV_TYPE: development
+  - task: collect-with-client-creds
+    input_mapping:
+      binaries: staging-binaries
+    output_mapping:
+      collected-data: collected-data-with-client-creds
+    file: aqueduct-courier/ci/tasks/collect.yml
+    params:
+      OPS_MANAGER_URL: {{courier-ops-manager-url}}
+      OPS_MANAGER_CLIENT_ID: {{courier-ops-manager-client-id}}
+      OPS_MANAGER_CLIENT_SECRET: {{courier-ops-manager-client-secret}}
       ENV_TYPE: development
   - task: send
     input_mapping:
