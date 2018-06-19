@@ -18,7 +18,7 @@ import (
 
 const (
 	AuthorizationHeaderKey = "Authorization"
-	PostPath               = "/placeholder"
+	PostPath               = "/collections/foundation"
 	TarMimeType            = "application/tar"
 
 	RequestCreationFailureMessage = "Failed make request object"
