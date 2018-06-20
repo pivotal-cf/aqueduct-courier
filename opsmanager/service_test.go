@@ -159,6 +159,20 @@ var _ = Describe("Service", func() {
 						"credential":   false,
 						"optional":     false,
 					},
+					"path.to6": {
+						"type":         "vm_type_dropdown",
+						"value":        "selected_vm_type",
+						"configurable": false,
+						"credential":   false,
+						"optional":     false,
+					},
+					"path.to7": {
+						"type":         "disk_type_dropdown",
+						"value":        "selected_disk_type",
+						"configurable": false,
+						"credential":   false,
+						"optional":     false,
+					},
 					"remove1": {
 						"type":  "unknown",
 						"value": "other stuff",

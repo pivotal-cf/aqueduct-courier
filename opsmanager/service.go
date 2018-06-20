@@ -140,7 +140,16 @@ func (s *Service) makeRequest(path string) (io.Reader, error) {
 }
 
 func allowedPropertyType(propertyType string) bool {
-	for _, p := range []string{"integer", "boolean", "dropdown_select", "multi_select_options", "selector"} {
+	allowedTypes := []string{
+		"integer",
+		"boolean",
+		"dropdown_select",
+		"multi_select_options",
+		"selector",
+		"vm_type_dropdown",
+		"disk_type_dropdown",
+	}
+	for _, p := range allowedTypes {
 		if propertyType == p {
 			return true
 		}
