@@ -28,7 +28,6 @@ resources:
 
 jobs:
 - name: courier-tests
-  serial_groups: [opsmanager-lock]
   plan:
   - get: aqueduct-courier
     trigger: true
@@ -36,7 +35,6 @@ jobs:
     file: aqueduct-courier/ci/tasks/courier-tests.yml
 
 - name: windows-courier-tests
-  serial_groups: [opsmanager-lock]
   plan:
   - get: aqueduct-courier
     trigger: true
