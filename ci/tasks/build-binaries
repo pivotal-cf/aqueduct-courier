@@ -7,9 +7,9 @@ GOARCH=amd64
 
 go version
 
-VERSION=$(cat version/version)
+RAW_VERSION=$(cat version/version)
 pushd "$PWD/go/src/github.com/pivotal-cf/aqueduct-courier"
-    VERSION="$VERSION+$(git rev-parse --short HEAD)"
+    VERSION="$RAW_VERSION+$(git rev-parse --short HEAD)"
 popd
 
 VERSION_FLAG="-X=github.com/pivotal-cf/aqueduct-courier/cmd.version=$VERSION"
@@ -20,7 +20,10 @@ GOOS=linux go build -o "aqueduct-linux-$GOARCH" -ldflags "$LDFLAGS" github.com/p
 GOOS=darwin go build -o "aqueduct-darwin-$GOARCH" -ldflags "$LDFLAGS" github.com/pivotal-cf/aqueduct-courier
 GOOS=windows go build -o "aqueduct-windows-$GOARCH.exe" -ldflags "$LDFLAGS" github.com/pivotal-cf/aqueduct-courier
 
-tar czvf aqueduct-binaries/aqueduct-cli.tgz \
+tar czvf "aqueduct-binaries/aqueduct-cli-${RAW_VERSION}.tgz" \
     "aqueduct-linux-$GOARCH" \
     "aqueduct-darwin-$GOARCH" \
     "aqueduct-windows-$GOARCH.exe"
+
+cp "aqueduct-linux-$GOARCH" artifacts-for-docker-image/
+cp "${GOPATH}/github.com/pivotal-cf/aqueduct-courier/Dockerfile" artifacts-for-docker-image/
