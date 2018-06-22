@@ -16,7 +16,13 @@ resources:
   source:
     bucket: {{courier-staging-builds-bucket}}
     json_key: {{courier-gcp-service-account-key}}
-    versioned_file: aqueduct-cli.tgz
+    regexp: aqueduct-cli-(.*).tgz
+- name: aqueduct-staging-docker-image
+  type: docker-image
+  source:
+    repository: platforminsightsteam/aqueduct-staging
+    username: {{dockerhub_username}}
+    password: {{dockerhub_password}}
 - name: version
   type: semver
   source:
@@ -54,7 +60,12 @@ jobs:
       DATA_LOADER_URL: {{staging-data-loader-url}}
   - put: staging-binaries
     params:
-      file: aqueduct-binaries/aqueduct-cli.tgz
+      file: aqueduct-binaries/aqueduct-cli-*.tgz
+  - put: aqueduct-staging-docker-image
+    params:
+      build: artifacts-for-docker-image
+      tag: version/version
+      tag_as_latest: true
   - put: version
     params: {file: version/version}
 
