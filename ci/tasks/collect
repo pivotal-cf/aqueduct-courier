@@ -2,8 +2,6 @@
 
 set -xeou pipefail
 
-tar xvf binaries/*.tgz
+aqueduct --version
 
-./aqueduct-linux-amd64 --version
-
-./aqueduct-linux-amd64 collect --output-dir ./collected-data --insecure-skip-tls-verify
+aqueduct collect --output-dir ./collected-data --insecure-skip-tls-verify
