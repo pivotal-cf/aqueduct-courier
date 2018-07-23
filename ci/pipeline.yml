@@ -17,6 +17,12 @@ resources:
     bucket: {{courier-staging-builds-bucket}}
     json_key: {{courier-gcp-service-account-key}}
     regexp: aqueduct-cli-(.*).tgz
+- name: production-package-receipt
+  type: gcs-resource
+  source:
+    bucket: {{courier-production-builds-bucket}}
+    json_key: {{courier-gcp-service-account-key}}
+    versioned_file: docker-image-package-receipt
 - name: aqueduct-staging-docker-image
   type: docker-image
   source:
@@ -66,6 +72,10 @@ jobs:
       build: artifacts-for-docker-image
       tag: version/version
       tag_as_latest: true
+  - task: generate-package-receipt
+    file: aqueduct-courier/ci/tasks/generate-package-receipt.yml
+  - put: production-package-receipt
+    file: package-receipt/docker-image-package-receipt
   - put: version
     params: {file: version/version}
 
