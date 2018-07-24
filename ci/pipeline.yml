@@ -75,7 +75,8 @@ jobs:
   - task: generate-package-receipt
     file: aqueduct-courier/ci/tasks/generate-package-receipt.yml
   - put: production-package-receipt
-    file: package-receipt/docker-image-package-receipt
+    params:
+      file: package-receipt/docker-image-package-receipt
   - put: version
     params: {file: version/version}
 
