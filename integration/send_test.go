@@ -128,7 +128,7 @@ func generateValidDataTarFile(destinationDir string) string {
 	}
 	metadataContents, err := json.Marshal(metadata)
 	Expect(err).NotTo(HaveOccurred())
-	Expect(writer.AddFile(metadataContents, ops.MetadataFileName)).To(Succeed())
+	Expect(writer.AddFile(metadataContents, data.MetadataFileName)).To(Succeed())
 
 	return tarFilePath
 }

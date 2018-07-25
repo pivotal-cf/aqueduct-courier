@@ -59,7 +59,7 @@ var _ = Describe("Collector", func() {
 		Expect(string(d2Contents)).To(Equal(expectedD2Contents))
 		Expect(d2Name).To(Equal(d2.Name()))
 
-		Expect(metadataName).To(Equal(MetadataFileName))
+		Expect(metadataName).To(Equal(data.MetadataFileName))
 		var metadata data.Metadata
 		Expect(json.Unmarshal(metadataContents, &metadata)).To(Succeed())
 		Expect(metadata.EnvType).To(Equal(envType))

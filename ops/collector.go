@@ -17,7 +17,6 @@ const (
 	CollectFailureMessage        = "Failed collecting from Operations Manager"
 	DataWriteFailureMessage      = "Failed writing data"
 	ContentReadingFailureMessage = "Failed to read content"
-	MetadataFileName             = "aqueduct_metadata"
 )
 
 //go:generate counterfeiter . dataCollector
@@ -79,7 +78,7 @@ func (ce CollectExecutor) Collect(envType string) error {
 		return err
 	}
 
-	err = ce.tw.AddFile(metadataContents, MetadataFileName)
+	err = ce.tw.AddFile(metadataContents, data.MetadataFileName)
 	if err != nil {
 		return errors.Wrap(err, DataWriteFailureMessage)
 	}

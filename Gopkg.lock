@@ -146,7 +146,7 @@
     "data",
     "file"
   ]
-  revision = "f752507351b0a91873c4d7951d672e697c91f418"
+  revision = "b8bd0c3e8a1b8d0e5785335760f6641e3b3aeb2e"
 
 [[projects]]
   name = "github.com/pivotal-cf/om"

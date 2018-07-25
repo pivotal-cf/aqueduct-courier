@@ -308,7 +308,7 @@ func validatedTarFilePath(outputDirPath string) string {
 }
 
 func assertMetadataFileIsCorrect(contentDir, expectedEnvType string) {
-	content, err := ioutil.ReadFile(filepath.Join(contentDir, ops.MetadataFileName))
+	content, err := ioutil.ReadFile(filepath.Join(contentDir, data.MetadataFileName))
 	Expect(err).NotTo(HaveOccurred(), "Expected metadata file to exist but did not")
 	var metadata data.Metadata
 	Expect(json.Unmarshal(content, &metadata)).To(Succeed())

@@ -44,7 +44,7 @@ type tarReader interface {
 }
 
 func (s SendExecutor) Send(reader tarReader, dataLoaderURL, apiToken string) error {
-	metadataContent, err := reader.ReadFile(MetadataFileName)
+	metadataContent, err := reader.ReadFile(data.MetadataFileName)
 	if err != nil {
 		return errors.Wrap(err, ReadMetadataFileError)
 	}
@@ -153,7 +153,7 @@ func validateTarFile(reader tarReader, metadata data.Metadata) error {
 		return errors.Wrapf(err, UnableToListFilesMessageFormat, reader.TarFilePath())
 	}
 
-	delete(fileMd5s, MetadataFileName)
+	delete(fileMd5s, data.MetadataFileName)
 
 	for _, digest := range metadata.FileDigests {
 		if checksum, exists := fileMd5s[digest.Name]; exists {

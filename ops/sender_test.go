@@ -61,7 +61,7 @@ var _ = Describe("Sender", func() {
 		Expect(tmpFile.Close()).To(Succeed())
 
 		tarReader.ReadFileStub = func(fileName string) ([]byte, error) {
-			if fileName == MetadataFileName {
+			if fileName == data.MetadataFileName {
 				return metadataContents, nil
 			}
 
@@ -170,7 +170,7 @@ var _ = Describe("Sender", func() {
 			"file1":          "file1-md5",
 			"file2":          "file2-md5",
 			"too-many-files": "dun dun dunnnnn",
-			MetadataFileName: "file-to-skip-checking",
+			data.MetadataFileName: "file-to-skip-checking",
 		}
 
 		tarReader.FileMd5sReturns(fileMd5s, nil)
@@ -192,7 +192,7 @@ var _ = Describe("Sender", func() {
 
 		fileMd5s := map[string]string{
 			"file1":          "file1-md5",
-			MetadataFileName: "file-to-skip-checking",
+			data.MetadataFileName: "file-to-skip-checking",
 		}
 
 		tarReader.FileMd5sReturns(fileMd5s, nil)
@@ -215,7 +215,7 @@ var _ = Describe("Sender", func() {
 		fileMd5s := map[string]string{
 			"file1":          "file1-md5",
 			"file2":          "not-matching-today",
-			MetadataFileName: "file-to-skip-checking",
+			data.MetadataFileName: "file-to-skip-checking",
 		}
 
 		tarReader.FileMd5sReturns(fileMd5s, nil)
