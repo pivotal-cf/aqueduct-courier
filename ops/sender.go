@@ -28,10 +28,7 @@ const (
 	ReadDataFileError             = "Unable to read data file "
 	InvalidMetadataFileError      = "Metadata file is invalid"
 
-	ExtraFilesInTarMessageFormat   = "Tar file %s contains unexpected extra files"
-	MissingFilesInTarMessageFormat = "Tar file %s is missing contents"
-	InvalidFilesInTarMessageFormat = "Tar file %s content does not match recorded value"
-	UnableToListFilesMessageFormat = "Unable to list files in %s"
+	FileValidationFailedMessageFormat = "File %s is invalid"
 )
 
 type SendExecutor struct{}
@@ -43,7 +40,12 @@ type tarReader interface {
 	FileMd5s() (map[string]string, error)
 }
 
-func (s SendExecutor) Send(reader tarReader, dataLoaderURL, apiToken string) error {
+//go:generate counterfeiter . validator
+type validator interface {
+	Validate() error
+}
+
+func (s SendExecutor) Send(reader tarReader, tValidator validator, dataLoaderURL, apiToken string) error {
 	metadataContent, err := reader.ReadFile(data.MetadataFileName)
 	if err != nil {
 		return errors.Wrap(err, ReadMetadataFileError)
@@ -55,8 +57,8 @@ func (s SendExecutor) Send(reader tarReader, dataLoaderURL, apiToken string) err
 		return errors.Wrap(err, InvalidMetadataFileError)
 	}
 
-	if err := validateTarFile(reader, metadata); err != nil {
-		return err
+	if err := tValidator.Validate(); err != nil {
+		return errors.Wrapf(err, FileValidationFailedMessageFormat, reader.TarFilePath())
 	}
 
 	req, err := makeFileUploadRequest(
@@ -145,29 +147,4 @@ func makeFileUploadRequest(filePath, apiToken, uploadURL string, metadata data.M
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 
 	return req, nil
-}
-
-func validateTarFile(reader tarReader, metadata data.Metadata) error {
-	fileMd5s, err := reader.FileMd5s()
-	if err != nil {
-		return errors.Wrapf(err, UnableToListFilesMessageFormat, reader.TarFilePath())
-	}
-
-	delete(fileMd5s, data.MetadataFileName)
-
-	for _, digest := range metadata.FileDigests {
-		if checksum, exists := fileMd5s[digest.Name]; exists {
-			if digest.MD5Checksum != checksum {
-				return errors.Errorf(InvalidFilesInTarMessageFormat, reader.TarFilePath())
-			}
-			delete(fileMd5s, digest.Name)
-		} else {
-			return errors.Errorf(MissingFilesInTarMessageFormat, reader.TarFilePath())
-		}
-	}
-	if len(fileMd5s) != 0 {
-		return errors.Errorf(ExtraFilesInTarMessageFormat, reader.TarFilePath())
-	}
-
-	return nil
 }

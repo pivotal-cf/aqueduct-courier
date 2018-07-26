@@ -22,6 +22,7 @@ var _ = Describe("Sender", func() {
 	var (
 		dataLoader *ghttp.Server
 		tarReader  *opsfakes.FakeTarReader
+		validator  *opsfakes.FakeValidator
 		metadata   data.Metadata
 		tmpFile    *os.File
 		tarContent string
@@ -33,6 +34,7 @@ var _ = Describe("Sender", func() {
 		sender = SendExecutor{}
 
 		tarReader = new(opsfakes.FakeTarReader)
+		validator = new(opsfakes.FakeValidator)
 
 		metadata = data.Metadata{
 			CollectedAt:  "collected-at",
@@ -101,7 +103,7 @@ var _ = Describe("Sender", func() {
 			ghttp.RespondWith(http.StatusCreated, ""),
 		))
 
-		Expect(sender.Send(tarReader, dataLoader.URL(), "some-key")).To(Succeed())
+		Expect(sender.Send(tarReader, validator, dataLoader.URL(), "some-key")).To(Succeed())
 
 		reqs := dataLoader.ReceivedRequests()
 		Expect(len(reqs)).To(Equal(1))
@@ -114,29 +116,30 @@ var _ = Describe("Sender", func() {
 			}),
 			ghttp.RespondWith(http.StatusCreated, ""),
 		))
-		Expect(sender.Send(tarReader, dataLoader.URL(), "some-key")).To(Succeed())
+		Expect(sender.Send(tarReader, validator, dataLoader.URL(), "some-key")).To(Succeed())
 	})
 
-	It("errors when the metadata file does not exist", func() {
-		tarReader.ReadFileReturns([]byte{}, errors.New("can't find the metadata file"))
-		err := sender.Send(tarReader, dataLoader.URL(), "some-key")
-		Expect(err).To(MatchError(ContainSubstring(ReadMetadataFileError)))
+	It("errors when validation fails", func() {
+		validator.ValidateReturns(errors.New("totally invalid tar"))
+		tarReader.TarFilePathReturns("path/to/file")
+		err := sender.Send(tarReader, validator, dataLoader.URL(), "some-key")
+		Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(FileValidationFailedMessageFormat, "path/to/file"))))
 	})
 
 	It("fails if the metadata file cannot be unmarshalled", func() {
 		tarReader.ReadFileReturns([]byte("some-bad-metadata"), nil)
 
-		err := sender.Send(tarReader, dataLoader.URL(), "some-key")
+		err := sender.Send(tarReader, validator, dataLoader.URL(), "some-key")
 		Expect(err).To(MatchError(ContainSubstring(InvalidMetadataFileError)))
 	})
 
 	It("fails if the request object cannot be created", func() {
-		err := sender.Send(tarReader, "127.0.0.1:a", "some-key")
+		err := sender.Send(tarReader, validator, "127.0.0.1:a", "some-key")
 		Expect(err).To(MatchError(ContainSubstring(RequestCreationFailureMessage)))
 	})
 
 	It("errors when the POST cannot be completed", func() {
-		err := sender.Send(tarReader, "http://127.0.0.1:999999", "some-key")
+		err := sender.Send(tarReader, validator, "http://127.0.0.1:999999", "some-key")
 		Expect(err).To(MatchError(ContainSubstring(PostFailedMessage)))
 	})
 
@@ -145,91 +148,14 @@ var _ = Describe("Sender", func() {
 			ghttp.RespondWith(http.StatusUnauthorized, ""),
 		)
 
-		err := sender.Send(tarReader, dataLoader.URL(), "invalid-key")
+		err := sender.Send(tarReader, validator, dataLoader.URL(), "invalid-key")
 		Expect(err).To(MatchError(fmt.Sprintf(UnexpectedResponseCodeFormat, http.StatusUnauthorized)))
 	})
 
 	It("when the tarFile does not exist", func() {
 		tarReader.TarFilePathReturns("path/to/not/the/tarFile")
 
-		err := sender.Send(tarReader, dataLoader.URL(), "some-key")
+		err := sender.Send(tarReader, validator, dataLoader.URL(), "some-key")
 		Expect(err).To(MatchError(ContainSubstring(ReadDataFileError)))
-	})
-
-	It("fails if the tar file contains more files than what is in the metadata", func() {
-		metadata = data.Metadata{
-			FileDigests: []data.FileDigest{
-				{Name: "file1", MD5Checksum: "file1-md5"},
-				{Name: "file2", MD5Checksum: "file2-md5"},
-			},
-		}
-		metadataContents, err := json.Marshal(metadata)
-		Expect(err).NotTo(HaveOccurred())
-
-		fileMd5s := map[string]string{
-			"file1":          "file1-md5",
-			"file2":          "file2-md5",
-			"too-many-files": "dun dun dunnnnn",
-			data.MetadataFileName: "file-to-skip-checking",
-		}
-
-		tarReader.FileMd5sReturns(fileMd5s, nil)
-		tarReader.ReadFileReturns(metadataContents, nil)
-
-		err = sender.Send(tarReader, dataLoader.URL(), "token")
-		Expect(err).To(MatchError(fmt.Sprintf(ExtraFilesInTarMessageFormat, tarReader.TarFilePath())))
-	})
-
-	It("fails if the tar file is missing files listed in the metadata", func() {
-		metadata = data.Metadata{
-			FileDigests: []data.FileDigest{
-				{Name: "file1", MD5Checksum: "file1-md5"},
-				{Name: "file2", MD5Checksum: "file2-md5"},
-			},
-		}
-		metadataContents, err := json.Marshal(metadata)
-		Expect(err).NotTo(HaveOccurred())
-
-		fileMd5s := map[string]string{
-			"file1":          "file1-md5",
-			data.MetadataFileName: "file-to-skip-checking",
-		}
-
-		tarReader.FileMd5sReturns(fileMd5s, nil)
-		tarReader.ReadFileReturns(metadataContents, nil)
-
-		err = sender.Send(tarReader, dataLoader.URL(), "token")
-		Expect(err).To(MatchError(fmt.Sprintf(MissingFilesInTarMessageFormat, tarReader.TarFilePath())))
-	})
-
-	It("fails if the file checksums in the tarball do not match the metadata", func() {
-		metadata = data.Metadata{
-			FileDigests: []data.FileDigest{
-				{Name: "file1", MD5Checksum: "file1-md5"},
-				{Name: "file2", MD5Checksum: "file2-md5"},
-			},
-		}
-		metadataContents, err := json.Marshal(metadata)
-		Expect(err).NotTo(HaveOccurred())
-
-		fileMd5s := map[string]string{
-			"file1":          "file1-md5",
-			"file2":          "not-matching-today",
-			data.MetadataFileName: "file-to-skip-checking",
-		}
-
-		tarReader.FileMd5sReturns(fileMd5s, nil)
-		tarReader.ReadFileReturns(metadataContents, nil)
-
-		err = sender.Send(tarReader, dataLoader.URL(), "token")
-		Expect(err).To(MatchError(fmt.Sprintf(InvalidFilesInTarMessageFormat, tarReader.TarFilePath())))
-	})
-
-	It("fails if listing the files with their md5s fails", func() {
-		tarReader.FileMd5sReturns(map[string]string{}, errors.New("listing files and md5s is hard"))
-
-		err := sender.Send(tarReader, dataLoader.URL(), "token")
-		Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(UnableToListFilesMessageFormat, tarReader.TarFilePath()))))
-		Expect(err).To(MatchError(ContainSubstring("listing files and md5s is hard")))
 	})
 })

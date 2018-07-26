@@ -44,6 +44,7 @@ type FileDigest struct {
 	DataType    string
 }
 type FileValidator struct {
+	tReader tarReader
 }
 
 //go:generate counterfeiter . tarReader
@@ -53,13 +54,17 @@ type tarReader interface {
 	TarFilePath() string
 }
 
-func (v *FileValidator) Validate(tReader tarReader) error {
-	metadata, err := v.readMetadata(tReader)
+func NewFileValidator(tReader tarReader) *FileValidator {
+	return &FileValidator{tReader: tReader}
+}
+
+func (v *FileValidator) Validate() error {
+	metadata, err := v.readMetadata()
 	if err != nil {
 		return err
 	}
 
-	fileMd5s, err := tReader.FileMd5s()
+	fileMd5s, err := v.tReader.FileMd5s()
 	if err != nil {
 		return errors.Wrapf(err, UnableToListFilesMessageFormat)
 	}
@@ -67,28 +72,28 @@ func (v *FileValidator) Validate(tReader tarReader) error {
 
 	for _, digest := range metadata.FileDigests {
 		if strings.Contains(digest.Name, ".") || strings.Contains(digest.Name, "/") {
-			return errors.Errorf(InvalidFileNameInTarMessageFormat, tReader.TarFilePath())
+			return errors.Errorf(InvalidFileNameInTarMessageFormat, v.tReader.TarFilePath())
 		}
 		if checksum, exists := fileMd5s[digest.Name]; exists {
 			if digest.MD5Checksum != checksum {
-				return errors.Errorf(InvalidFilesInTarMessageFormat, tReader.TarFilePath())
+				return errors.Errorf(InvalidFilesInTarMessageFormat, v.tReader.TarFilePath())
 			}
 			delete(fileMd5s, digest.Name)
 		} else {
-			return errors.Errorf(MissingFilesInTarMessageFormat, tReader.TarFilePath())
+			return errors.Errorf(MissingFilesInTarMessageFormat, v.tReader.TarFilePath())
 		}
 	}
 	if len(fileMd5s) != 0 {
-		return errors.Errorf(ExtraFilesInTarMessageFormat, tReader.TarFilePath())
+		return errors.Errorf(ExtraFilesInTarMessageFormat, v.tReader.TarFilePath())
 	}
 
 	return nil
 }
 
-func (v *FileValidator) readMetadata(tReader tarReader) (Metadata, error) {
+func (v *FileValidator) readMetadata() (Metadata, error) {
 	var metadata Metadata
 
-	metadataBytes, err := tReader.ReadFile(MetadataFileName)
+	metadataBytes, err := v.tReader.ReadFile(MetadataFileName)
 	if err != nil {
 		return metadata, errors.Wrap(err, ReadMetadataFileError)
 	}
