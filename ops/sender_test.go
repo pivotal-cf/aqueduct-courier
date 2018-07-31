@@ -69,8 +69,6 @@ var _ = Describe("Sender", func() {
 
 			return []byte{}, errors.New("unexpected file requested")
 		}
-		tarReader.TarFilePathReturns(tmpFile.Name())
-
 	})
 
 	AfterEach(func() {
@@ -103,7 +101,7 @@ var _ = Describe("Sender", func() {
 			ghttp.RespondWith(http.StatusCreated, ""),
 		))
 
-		Expect(sender.Send(tarReader, validator, dataLoader.URL(), "some-key")).To(Succeed())
+		Expect(sender.Send(tarReader, validator, tmpFile.Name(), dataLoader.URL(), "some-key")).To(Succeed())
 
 		reqs := dataLoader.ReceivedRequests()
 		Expect(len(reqs)).To(Equal(1))
@@ -116,30 +114,29 @@ var _ = Describe("Sender", func() {
 			}),
 			ghttp.RespondWith(http.StatusCreated, ""),
 		))
-		Expect(sender.Send(tarReader, validator, dataLoader.URL(), "some-key")).To(Succeed())
+		Expect(sender.Send(tarReader, validator, tmpFile.Name(), dataLoader.URL(), "some-key")).To(Succeed())
 	})
 
 	It("errors when validation fails", func() {
 		validator.ValidateReturns(errors.New("totally invalid tar"))
-		tarReader.TarFilePathReturns("path/to/file")
-		err := sender.Send(tarReader, validator, dataLoader.URL(), "some-key")
+		err := sender.Send(tarReader, validator, "path/to/file", dataLoader.URL(), "some-key")
 		Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(FileValidationFailedMessageFormat, "path/to/file"))))
 	})
 
 	It("fails if the metadata file cannot be unmarshalled", func() {
 		tarReader.ReadFileReturns([]byte("some-bad-metadata"), nil)
 
-		err := sender.Send(tarReader, validator, dataLoader.URL(), "some-key")
+		err := sender.Send(tarReader, validator, tmpFile.Name(), dataLoader.URL(), "some-key")
 		Expect(err).To(MatchError(ContainSubstring(InvalidMetadataFileError)))
 	})
 
 	It("fails if the request object cannot be created", func() {
-		err := sender.Send(tarReader, validator, "127.0.0.1:a", "some-key")
+		err := sender.Send(tarReader, validator, tmpFile.Name(), "127.0.0.1:a", "some-key")
 		Expect(err).To(MatchError(ContainSubstring(RequestCreationFailureMessage)))
 	})
 
 	It("errors when the POST cannot be completed", func() {
-		err := sender.Send(tarReader, validator, "http://127.0.0.1:999999", "some-key")
+		err := sender.Send(tarReader, validator, tmpFile.Name(),"http://127.0.0.1:999999", "some-key")
 		Expect(err).To(MatchError(ContainSubstring(PostFailedMessage)))
 	})
 
@@ -148,14 +145,12 @@ var _ = Describe("Sender", func() {
 			ghttp.RespondWith(http.StatusUnauthorized, ""),
 		)
 
-		err := sender.Send(tarReader, validator, dataLoader.URL(), "invalid-key")
+		err := sender.Send(tarReader, validator, tmpFile.Name(), dataLoader.URL(), "invalid-key")
 		Expect(err).To(MatchError(fmt.Sprintf(UnexpectedResponseCodeFormat, http.StatusUnauthorized)))
 	})
 
 	It("when the tarFile does not exist", func() {
-		tarReader.TarFilePathReturns("path/to/not/the/tarFile")
-
-		err := sender.Send(tarReader, validator, dataLoader.URL(), "some-key")
+		err := sender.Send(tarReader, validator, "path/to/not/the/tarFile", dataLoader.URL(), "some-key")
 		Expect(err).To(MatchError(ContainSubstring(ReadDataFileError)))
 	})
 })

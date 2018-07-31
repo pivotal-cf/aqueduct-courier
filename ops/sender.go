@@ -35,7 +35,6 @@ type SendExecutor struct{}
 
 //go:generate counterfeiter . tarReader
 type tarReader interface {
-	TarFilePath() string
 	ReadFile(string) ([]byte, error)
 	FileMd5s() (map[string]string, error)
 }
@@ -45,7 +44,7 @@ type validator interface {
 	Validate() error
 }
 
-func (s SendExecutor) Send(reader tarReader, tValidator validator, dataLoaderURL, apiToken string) error {
+func (s SendExecutor) Send(reader tarReader, tValidator validator, tarFilePath, dataLoaderURL, apiToken string) error {
 	metadataContent, err := reader.ReadFile(data.MetadataFileName)
 	if err != nil {
 		return errors.Wrap(err, ReadMetadataFileError)
@@ -58,11 +57,11 @@ func (s SendExecutor) Send(reader tarReader, tValidator validator, dataLoaderURL
 	}
 
 	if err := tValidator.Validate(); err != nil {
-		return errors.Wrapf(err, FileValidationFailedMessageFormat, reader.TarFilePath())
+		return errors.Wrapf(err, FileValidationFailedMessageFormat, tarFilePath)
 	}
 
 	req, err := makeFileUploadRequest(
-		reader.TarFilePath(),
+		tarFilePath,
 		apiToken,
 		dataLoaderURL+PostPath,
 		metadata,

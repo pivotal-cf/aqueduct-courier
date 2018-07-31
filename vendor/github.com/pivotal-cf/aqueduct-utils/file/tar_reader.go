@@ -6,38 +6,27 @@ import (
 	"encoding/base64"
 	"io"
 	"io/ioutil"
-	"os"
 
 	"github.com/pkg/errors"
 )
 
 const (
-	OpenTarFileFailureFormat = "Could not open tar file %s"
-	UnableToFindFileFormat   = "Could not find file %s in tar archive"
-	UnexpectedFileTypeFormat = "Expected %s to be a tar file"
-	UnableToReadFileFormat   = "Unable to read file %s from tar file %s"
+	UnableToFindFileFormat  = "Could not find file %s in tar archive"
+	UnexpectedFormatMessage = "Expected tar format"
+	UnableToReadFileFormat  = "Unable to read file %s from tar file %s"
 )
 
 type TarReader struct {
-	sourceTarFile string
+	sourceTar io.ReadSeeker
 }
 
-func NewTarReader(sourceTarfile string) *TarReader {
-	return &TarReader{sourceTarFile: sourceTarfile}
-}
-
-func (tr *TarReader) TarFilePath() string {
-	return tr.sourceTarFile
+func NewTarReader(sourceTar io.ReadSeeker) *TarReader {
+	return &TarReader{sourceTar: sourceTar}
 }
 
 func (tr *TarReader) ReadFile(fileName string) ([]byte, error) {
-	file, err := os.Open(tr.sourceTarFile)
-	if err != nil {
-		return []byte{}, errors.Wrapf(err, OpenTarFileFailureFormat, tr.sourceTarFile)
-	}
-	defer file.Close()
-
-	reader := tar.NewReader(file)
+	tr.sourceTar.Seek(0, 0)
+	reader := tar.NewReader(tr.sourceTar)
 
 	for {
 		hdr, err := reader.Next()
@@ -45,7 +34,7 @@ func (tr *TarReader) ReadFile(fileName string) ([]byte, error) {
 			return []byte{}, errors.Wrapf(err, UnableToFindFileFormat, fileName)
 		}
 		if err != nil {
-			return []byte{}, errors.Wrapf(err, UnexpectedFileTypeFormat, tr.sourceTarFile)
+			return []byte{}, errors.Wrap(err, UnexpectedFormatMessage)
 		}
 
 		if hdr.Name == fileName {
@@ -55,20 +44,15 @@ func (tr *TarReader) ReadFile(fileName string) ([]byte, error) {
 
 	contents, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return []byte{}, errors.Wrapf(err, UnableToReadFileFormat, fileName, tr.sourceTarFile)
+		return []byte{}, errors.Wrapf(err, UnableToReadFileFormat, fileName, tr.sourceTar)
 	}
 
 	return contents, nil
 }
 
 func (tr *TarReader) FileMd5s() (map[string]string, error) {
-	file, err := os.Open(tr.sourceTarFile)
-	if err != nil {
-		return map[string]string{}, errors.Wrapf(err, OpenTarFileFailureFormat, tr.sourceTarFile)
-	}
-	defer file.Close()
-
-	reader := tar.NewReader(file)
+	tr.sourceTar.Seek(0, 0)
+	reader := tar.NewReader(tr.sourceTar)
 
 	fileMd5s := map[string]string{}
 	for {
@@ -78,12 +62,12 @@ func (tr *TarReader) FileMd5s() (map[string]string, error) {
 		}
 
 		if err != nil {
-			return map[string]string{}, errors.Wrapf(err, UnexpectedFileTypeFormat, tr.sourceTarFile)
+			return map[string]string{}, errors.Wrap(err, UnexpectedFormatMessage)
 		}
 
 		contents, err := ioutil.ReadAll(reader)
 		if err != nil {
-			return map[string]string{}, errors.Wrapf(err, UnableToReadFileFormat, hdr.Name, tr.sourceTarFile)
+			return map[string]string{}, errors.Wrapf(err, UnableToReadFileFormat, hdr.Name, tr.sourceTar)
 		}
 
 		fileSum := md5.Sum(contents)

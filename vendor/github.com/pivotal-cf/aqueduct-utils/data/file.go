@@ -21,13 +21,13 @@ const (
 
 	MetadataFileName = "aqueduct_metadata"
 
-	ReadMetadataFileError             = "Unable to read metadata file"
-	InvalidMetadataFileError          = "Metadata file is invalid"
-	ExtraFilesInTarMessageFormat      = "Tar file %s contains unexpected extra files"
-	MissingFilesInTarMessageFormat    = "Tar file %s is missing contents"
-	InvalidFilesInTarMessageFormat    = "Tar file %s content does not match recorded value"
-	InvalidFileNameInTarMessageFormat = "Tar file %s has files with invalid names"
-	UnableToListFilesMessageFormat    = "Unable to list files in %s"
+	ReadMetadataFileError            = "Unable to read metadata file"
+	InvalidMetadataFileError         = "Metadata file is invalid"
+	ExtraFilesInTarMessageError      = "Tar contains unexpected extra files"
+	MissingFilesInTarMessageError    = "Tar is missing contents"
+	InvalidFilesInTarMessageError    = "Tar content does not match recorded value"
+	InvalidFileNameInTarMessageError = "Tar has files with invalid names"
+	UnableToListFilesMessageError    = "Unable to list files in tar"
 )
 
 type Metadata struct {
@@ -51,7 +51,6 @@ type FileValidator struct {
 type tarReader interface {
 	ReadFile(fileName string) ([]byte, error)
 	FileMd5s() (map[string]string, error)
-	TarFilePath() string
 }
 
 func NewFileValidator(tReader tarReader) *FileValidator {
@@ -66,25 +65,25 @@ func (v *FileValidator) Validate() error {
 
 	fileMd5s, err := v.tReader.FileMd5s()
 	if err != nil {
-		return errors.Wrapf(err, UnableToListFilesMessageFormat)
+		return errors.Wrapf(err, UnableToListFilesMessageError)
 	}
 	delete(fileMd5s, MetadataFileName)
 
 	for _, digest := range metadata.FileDigests {
 		if strings.Contains(digest.Name, ".") || strings.Contains(digest.Name, "/") {
-			return errors.Errorf(InvalidFileNameInTarMessageFormat, v.tReader.TarFilePath())
+			return errors.New(InvalidFileNameInTarMessageError)
 		}
 		if checksum, exists := fileMd5s[digest.Name]; exists {
 			if digest.MD5Checksum != checksum {
-				return errors.Errorf(InvalidFilesInTarMessageFormat, v.tReader.TarFilePath())
+				return errors.New(InvalidFilesInTarMessageError)
 			}
 			delete(fileMd5s, digest.Name)
 		} else {
-			return errors.Errorf(MissingFilesInTarMessageFormat, v.tReader.TarFilePath())
+			return errors.New(MissingFilesInTarMessageError)
 		}
 	}
 	if len(fileMd5s) != 0 {
-		return errors.Errorf(ExtraFilesInTarMessageFormat, v.tReader.TarFilePath())
+		return errors.New(ExtraFilesInTarMessageError)
 	}
 
 	return nil

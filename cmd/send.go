@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/pivotal-cf/aqueduct-utils/data"
+	"os"
 )
 
 const (
@@ -47,11 +48,16 @@ func send(c *cobra.Command, _ []string) error {
 	c.SilenceUsage = true
 
 	sender := ops.SendExecutor{}
-	tarReader := file.NewTarReader(viper.GetString(DataTarFilePathFlag))
+	tarFile, err := os.Open(viper.GetString(DataTarFilePathFlag))
+	if err != nil {
+		panic(err)
+	}
+
+	tarReader := file.NewTarReader(tarFile)
 	tValidator := data.NewFileValidator(tarReader)
 
 	fmt.Printf("Sending %s to Pivotal at %s\n", viper.GetString(DataTarFilePathFlag), dataLoaderURL)
-	err = sender.Send(tarReader, tValidator, dataLoaderURL, viper.GetString(ApiKeyFlag))
+	err = sender.Send(tarReader, tValidator, tarFile.Name(), dataLoaderURL, viper.GetString(ApiKeyFlag))
 	if err != nil {
 		return errors.Wrap(err, SendFailureMessage)
 	}
