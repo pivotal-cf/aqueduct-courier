@@ -58,7 +58,7 @@ func (dc DataCollector) Collect() ([]Data, error) {
 		return []Data{}, errors.Wrap(err, PendingChangesFailedMessage)
 	}
 
-	if len(pc.ChangeList) > 0 {
+	if hasPendingChanges(pc.ChangeList) {
 		return []Data{}, errors.New(PendingChangesExistsMessage)
 	}
 
@@ -116,6 +116,15 @@ func (dc DataCollector) productPropertiesCaller(guid string) dataRetriever {
 	return func() (io.Reader, error) {
 		return dc.omService.ProductProperties(guid)
 	}
+}
+
+func hasPendingChanges(changeList []api.ProductChange) bool {
+	for _, change := range changeList {
+		if change.Action != "unchanged" {
+			return true
+		}
+	}
+	return false
 }
 
 func appendRetrievedData(d []Data, retriever dataRetriever, productType, dataType string) ([]Data, error) {

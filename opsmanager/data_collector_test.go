@@ -33,8 +33,10 @@ var _ = Describe("DataCollector", func() {
 		dataCollector = NewDataCollector(omService, pendingChangesLister, deployedProductsLister)
 	})
 
-	It("returns an error if there are pending changes", func() {
-		nonEmptyPendingChanges := api.PendingChangesOutput{ChangeList: []api.ProductChange{{}}}
+	It("returns an error if there are pending changes with an action other than unchanged", func() {
+		nonEmptyPendingChanges := api.PendingChangesOutput{
+			ChangeList: []api.ProductChange{{Action: "unchanged"}, {Action: "totally-changed"}},
+		}
 		pendingChangesLister.ListStagedPendingChangesReturns(nonEmptyPendingChanges, nil)
 
 		data, err := dataCollector.Collect()
