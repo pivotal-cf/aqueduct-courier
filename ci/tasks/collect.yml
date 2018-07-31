@@ -20,7 +20,7 @@ run:
   - |
     #!/bin/bash
 
-    set -xeou pipefail
+    set -xe
 
     tar xvf binaries/*.tgz
     ./aqueduct-linux-amd64 --version
