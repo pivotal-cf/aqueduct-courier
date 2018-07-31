@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-set -xeou pipefail
-
-aqueduct --version
-
-aqueduct send --path ./collected-data/*.tar

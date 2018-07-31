@@ -4,15 +4,25 @@ platform: linux
 image_resource:
   type: docker-image
   source:
-    repository: platforminsightsteam/aqueduct-staging
-    tag: latest
+    repository: ubuntu
+    tag: xenial
 
 inputs:
-- name: aqueduct-courier
+- name: binaries
 - name: collected-data
 
 run:
-  path: aqueduct-courier/ci/tasks/send
+  path: sh
+  args:
+  - -c
+  - |
+    #!/bin/bash
+
+    set -xeou pipefail
+
+    tar xvf binaries/*.tgz
+    ./aqueduct-linux-amd64 --version
+    ./aqueduct-linux-amd64 collect --output-dir ./collected-data --insecure-skip-tls-verify
 
 params:
   API_KEY:

@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-set -xeou pipefail
-
-aqueduct --version
-
-aqueduct collect --output-dir ./collected-data --insecure-skip-tls-verify
