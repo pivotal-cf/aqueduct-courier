@@ -19,7 +19,7 @@ const (
 	InstallationsDataType    = "installations"
 	PropertiesDataType       = "properties"
 
-	MetadataFileName = "aqueduct_metadata"
+	MetadataFileName = "metadata"
 
 	ReadMetadataFileError            = "Unable to read metadata file"
 	InvalidMetadataFileError         = "Metadata file is invalid"
