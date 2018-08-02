@@ -89,6 +89,7 @@ func init() {
 	collectCmd.Flags().Bool(SkipTlsVerifyFlag, false, "Skip TLS validation on http requests to Operations Manager")
 	viper.BindPFlag(SkipTlsVerifyFlag, collectCmd.Flag(SkipTlsVerifyFlag))
 
+	collectCmd.Flags().BoolP("help", "h", false, "Help for collect")
 	rootCmd.AddCommand(collectCmd)
 }
 

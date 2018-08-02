@@ -37,6 +37,7 @@ func init() {
 	viper.BindPFlag(ApiKeyFlag, sendCmd.Flag(ApiKeyFlag))
 	viper.BindEnv(ApiKeyFlag, ApiKeyKey)
 
+	sendCmd.Flags().BoolP("help", "h", false, "Help for send")
 	rootCmd.AddCommand(sendCmd)
 }
 

@@ -25,7 +25,7 @@ var _ = Describe("Flags", func() {
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
-			Expect(session.Out).To(gbytes.Say("aqueduct version " + expectedVersion))
+			Expect(session.Out).To(gbytes.Say("platform-insights-collector version " + expectedVersion))
 		})
 
 		It("prints 'dev' as the version when not compiled with a version value", func() {
@@ -33,7 +33,7 @@ var _ = Describe("Flags", func() {
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
-			Expect(session.Out).To(gbytes.Say("aqueduct version dev"))
+			Expect(session.Out).To(gbytes.Say("platform-insights-collector version dev"))
 		})
 	})
 })

@@ -10,18 +10,23 @@ import (
 	"github.com/spf13/viper"
 )
 
-const RequiredConfigErrorFormat = "Missing required flags: %s"
+const (
+	RequiredConfigErrorFormat = "Missing required flags: %s"
+	toolName                  = "platform-insights-collector"
+)
 
 var (
 	version = "dev"
 	rootCmd = &cobra.Command{
-		Use:   "aqueduct",
+		Use:   toolName,
 		Short: "Utility for collecting information about a PCF Foundation",
 	}
 )
 
 func Execute() {
 	rootCmd.Version = version
+	rootCmd.Flags().BoolP("help", "h", false, fmt.Sprintf("Help for %s", toolName))
+	rootCmd.Flags().BoolP("version", "v", false, fmt.Sprintf("Version for %s", toolName))
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}

@@ -21,8 +21,8 @@ run:
     set -xe
 
     tar xvf binaries/*.tgz
-    ./aqueduct-linux-amd64 --version
-    ./aqueduct-linux-amd64 send --path ./collected-data/*.tar
+    ./platform-insights-collector-linux-amd64 --version
+    ./platform-insights-collector-linux-amd64 send --path ./collected-data/*.tar
 
 params:
   API_KEY:
