@@ -2,7 +2,7 @@ name: windows-worker
 
 releases:
 - name: concourse
-  version: 4.0.1
+  version: 4.0.1-rc.6
   url: https://s3.amazonaws.com/concourse-release-candidates/concourse-4.0.1-rc.6.tgz
   sha1: 739ff95802f9db73b89c76b14679410c624df64a
 - name: windows-tools
