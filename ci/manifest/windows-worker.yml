@@ -41,12 +41,11 @@ instance_groups:
   - name: worker-windows
     release: concourse
     properties:
-      concourse_windows:
-        team: ((team))
-        tsa:
-          host: ((tsa_host))
-          host_public_key: ((tsa_host_public_key))
-          worker_key: ((worker_private_key))
+      team: ((team))
+      tsa:
+        host: ((tsa_host))
+        host_public_key: ((tsa_host_public_key))
+        worker_key: ((worker_private_key))
   - name: golang-windows
     release: windows-tools
   - name: git
