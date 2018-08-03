@@ -16,11 +16,11 @@ VERSION_FLAG="-X=github.com/pivotal-cf/aqueduct-courier/cmd.version=$VERSION"
 DATA_LOADER_FLAG="-X=github.com/pivotal-cf/aqueduct-courier/cmd.dataLoaderURL=$DATA_LOADER_URL"
 LDFLAGS="$VERSION_FLAG $DATA_LOADER_FLAG"
 
-GOOS=linux go build -o "platform-insights-collector-linux-$GOARCH" -ldflags "$LDFLAGS" github.com/pivotal-cf/aqueduct-courier
-GOOS=darwin go build -o "platform-insights-collector-darwin-$GOARCH" -ldflags "$LDFLAGS" github.com/pivotal-cf/aqueduct-courier
-GOOS=windows go build -o "platform-insights-collector-windows-$GOARCH.exe" -ldflags "$LDFLAGS" github.com/pivotal-cf/aqueduct-courier
+GOOS=linux go build -o "insights-collector-linux-$GOARCH" -ldflags "$LDFLAGS" github.com/pivotal-cf/aqueduct-courier
+GOOS=darwin go build -o "insights-collector-darwin-$GOARCH" -ldflags "$LDFLAGS" github.com/pivotal-cf/aqueduct-courier
+GOOS=windows go build -o "insights-collector-windows-$GOARCH.exe" -ldflags "$LDFLAGS" github.com/pivotal-cf/aqueduct-courier
 
 tar czvf "aqueduct-binaries/aqueduct-cli-${RAW_VERSION}.tgz" \
-    "platform-insights-collector-linux-$GOARCH" \
-    "platform-insights-collector-darwin-$GOARCH" \
-    "platform-insights-collector-windows-$GOARCH.exe"
+    "insights-collector-linux-$GOARCH" \
+    "insights-collector-darwin-$GOARCH" \
+    "insights-collector-windows-$GOARCH.exe"

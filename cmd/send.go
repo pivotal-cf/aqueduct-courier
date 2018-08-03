@@ -2,14 +2,14 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/pivotal-cf/aqueduct-courier/ops"
+	"github.com/pivotal-cf/aqueduct-utils/data"
 	"github.com/pivotal-cf/aqueduct-utils/file"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/pivotal-cf/aqueduct-utils/data"
-	"os"
 )
 
 const (
@@ -33,7 +33,7 @@ func init() {
 	sendCmd.Flags().String(DataTarFilePathFlag, "", "Tar archive containing data from 'collect' command")
 	viper.BindPFlag(DataTarFilePathFlag, sendCmd.Flag(DataTarFilePathFlag))
 
-	sendCmd.Flags().String(ApiKeyFlag, "", fmt.Sprintf("API Key used to authenticate with Pivotal [$%s]", ApiKeyKey))
+	sendCmd.Flags().String(ApiKeyFlag, "", fmt.Sprintf("Insights Collector API Key used to authenticate with Pivotal [$%s]", ApiKeyKey))
 	viper.BindPFlag(ApiKeyFlag, sendCmd.Flag(ApiKeyFlag))
 	viper.BindEnv(ApiKeyFlag, ApiKeyKey)
 

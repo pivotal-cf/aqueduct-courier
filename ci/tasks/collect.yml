@@ -23,8 +23,8 @@ run:
     set -xe
 
     tar xvf binaries/*.tgz
-    ./platform-insights-collector-linux-amd64 --version
-    ./platform-insights-collector-linux-amd64 collect --output-dir ./collected-data --insecure-skip-tls-verify
+    ./insights-collector-linux-amd64 --version
+    ./insights-collector-linux-amd64 collect --output-dir ./collected-data --insecure-skip-tls-verify
 
 params:
   OPS_MANAGER_URL:

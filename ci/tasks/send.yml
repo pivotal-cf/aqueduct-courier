@@ -21,8 +21,8 @@ run:
     set -xe
 
     tar xvf binaries/*.tgz
-    ./platform-insights-collector-linux-amd64 --version
-    ./platform-insights-collector-linux-amd64 send --path ./collected-data/*.tar
+    ./insights-collector-linux-amd64 --version
+    ./insights-collector-linux-amd64 send --path ./collected-data/*.tar
 
 params:
   API_KEY:

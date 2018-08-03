@@ -12,7 +12,7 @@ import (
 
 const (
 	RequiredConfigErrorFormat = "Missing required flags: %s"
-	toolName                  = "platform-insights-collector"
+	toolName                  = "insights-collector"
 )
 
 var (
