@@ -1,10 +1,10 @@
 name: windows-worker
 
 releases:
-- name: concourse-windows-worker
-  version: 3.14.1
-  url: https://bosh.io/d/github.com/pivotal-cf-experimental/concourse-windows-worker-release?v=3.14.1
-  sha1: 5681463f0766e786a5ea8bf12558238bf69fc8f3
+- name: concourse
+  version: 4.0.1
+  url: https://s3.amazonaws.com/concourse-release-candidates/concourse-4.0.1-rc.6.tgz
+  sha1: 739ff95802f9db73b89c76b14679410c624df64a
 - name: windows-tools
   version: 8
   url: https://bosh.io/d/github.com/cloudfoundry-incubator/windows-tools-release?v=8
@@ -34,14 +34,19 @@ instance_groups:
   networks: [{name: default}]
   azs: [z1]
   jobs:
-  - name: concourse_windows
-    release: concourse-windows-worker
+  - name: houdini-windows
+    release: concourse
+  - name: baggageclaim-windows
+    release: concourse
+  - name: worker-windows
+    release: concourse
     properties:
       concourse_windows:
         team: ((team))
-        tsa_host: ((tsa_host))
-        tsa_public_key: ((tsa_host_public_key))
-        tsa_worker_private_key: ((worker_private_key))
+        tsa:
+          host: ((tsa_host))
+          host_public_key: ((tsa_host_public_key))
+          worker_key: ((worker_private_key))
   - name: golang-windows
     release: windows-tools
   - name: git
