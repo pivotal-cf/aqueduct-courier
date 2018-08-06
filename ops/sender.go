@@ -44,7 +44,7 @@ type validator interface {
 	Validate() error
 }
 
-func (s SendExecutor) Send(reader tarReader, tValidator validator, tarFilePath, dataLoaderURL, apiToken string) error {
+func (s SendExecutor) Send(reader tarReader, tValidator validator, tarFilePath, dataLoaderURL, apiToken, senderVersion string) error {
 	metadataContent, err := reader.ReadFile(data.MetadataFileName)
 	if err != nil {
 		return errors.Wrap(err, ReadMetadataFileError)
@@ -64,6 +64,7 @@ func (s SendExecutor) Send(reader tarReader, tValidator validator, tarFilePath, 
 		tarFilePath,
 		apiToken,
 		dataLoaderURL+PostPath,
+		senderVersion,
 		metadata,
 	)
 	if err != nil {
@@ -82,14 +83,17 @@ func (s SendExecutor) Send(reader tarReader, tValidator validator, tarFilePath, 
 	return nil
 }
 
-func constructFileMetadataReader(metadata data.Metadata, fileName string, hashWriter hash.Hash) (io.Reader, error) {
-	metadataMap := map[string]string{
+func constructFileMetadataReader(metadata data.Metadata, fileName, senderVersion string, hashWriter hash.Hash) (io.Reader, error) {
+	metadataMap := map[string]interface{}{
 		"filename":        fileName,
 		"fileContentType": TarMimeType,
 		"fileMd5Checksum": base64.StdEncoding.EncodeToString(hashWriter.Sum([]byte{})),
 		"collectedAt":     metadata.CollectedAt,
 		"envType":         metadata.EnvType,
 		"collectionId":    metadata.CollectionId,
+		"customMetadata": map[string]string{
+			"CollectorVersion": senderVersion,
+		},
 	}
 	metadataJson, err := json.Marshal(metadataMap)
 	if err != nil {
@@ -99,7 +103,7 @@ func constructFileMetadataReader(metadata data.Metadata, fileName string, hashWr
 	return bytes.NewReader(metadataJson), nil
 }
 
-func makeFileUploadRequest(filePath, apiToken, uploadURL string, metadata data.Metadata) (*http.Request, error) {
+func makeFileUploadRequest(filePath, apiToken, uploadURL, senderVersion string, metadata data.Metadata) (*http.Request, error) {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 
@@ -119,7 +123,7 @@ func makeFileUploadRequest(filePath, apiToken, uploadURL string, metadata data.M
 		return nil, err
 	}
 
-	metadataReader, err := constructFileMetadataReader(metadata, filepath.Base(filePath), hashWriter)
+	metadataReader, err := constructFileMetadataReader(metadata, filepath.Base(filePath), senderVersion, hashWriter)
 	if err != nil {
 		return nil, err
 	}

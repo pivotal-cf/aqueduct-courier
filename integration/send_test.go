@@ -40,7 +40,7 @@ var _ = Describe("Send", func() {
 		binaryPath, err = gexec.Build(
 			"github.com/pivotal-cf/aqueduct-courier",
 			"-ldflags",
-			fmt.Sprintf("-X github.com/pivotal-cf/aqueduct-courier/cmd.dataLoaderURL=%s", dataLoader.URL()),
+			fmt.Sprintf("-X github.com/pivotal-cf/aqueduct-courier/cmd.dataLoaderURL=%s -X github.com/pivotal-cf/aqueduct-courier/cmd.version=%s", dataLoader.URL(), testVersion),
 		)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -62,6 +62,7 @@ var _ = Describe("Send", func() {
 					"Authorization": []string{fmt.Sprintf("Token %s", validApiKey)},
 				}),
 				ghttp.RespondWith(http.StatusCreated, ""),
+				verifyVersion(),
 			))
 		})
 
@@ -131,4 +132,16 @@ func generateValidDataTarFile(destinationDir string) string {
 	Expect(writer.AddFile(metadataContents, data.MetadataFileName)).To(Succeed())
 
 	return tarFilePath
+}
+
+func verifyVersion() http.HandlerFunc {
+	return func(_ http.ResponseWriter, req *http.Request) {
+		metadataStr := req.FormValue("metadata")
+		var metadataMap map[string]interface{}
+		Expect(json.Unmarshal([]byte(metadataStr), &metadataMap)).To(Succeed())
+
+		Expect(metadataMap["customMetadata"]).To(Equal(map[string]interface{}{
+			"CollectorVersion": testVersion,
+		}))
+	}
 }
