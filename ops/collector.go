@@ -39,7 +39,7 @@ func NewCollector(c dataCollector, tw tarWriter) CollectExecutor {
 	return CollectExecutor{c: c, tw: tw}
 }
 
-func (ce CollectExecutor) Collect(envType string) error {
+func (ce CollectExecutor) Collect(envType, collectorVersion string) error {
 	defer ce.tw.Close()
 
 	omDatas, err := ce.c.Collect()
@@ -48,9 +48,10 @@ func (ce CollectExecutor) Collect(envType string) error {
 	}
 
 	metadata := data.Metadata{
-		EnvType:      envType,
-		CollectionId: uuid.NewV4().String(),
-		CollectedAt:  time.Now().UTC().Format(time.RFC3339),
+		CollectorVersion: collectorVersion,
+		EnvType:          envType,
+		CollectionId:     uuid.NewV4().String(),
+		CollectedAt:      time.Now().UTC().Format(time.RFC3339),
 	}
 
 	for _, omData := range omDatas {

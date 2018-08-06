@@ -313,6 +313,7 @@ func assertMetadataFileIsCorrect(contentDir, expectedEnvType string) {
 	var metadata data.Metadata
 	Expect(json.Unmarshal(content, &metadata)).To(Succeed())
 	Expect(metadata.EnvType).To(Equal(expectedEnvType))
+	Expect(metadata.CollectorVersion).To(Equal(testVersion))
 }
 
 func assertOutputDirEmpty(outputDirPath string) {

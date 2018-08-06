@@ -31,10 +31,11 @@ const (
 )
 
 type Metadata struct {
-	EnvType      string
-	CollectedAt  string
-	CollectionId string
-	FileDigests  []FileDigest
+	EnvType          string
+	CollectedAt      string
+	CollectionId     string
+	FileDigests      []FileDigest
+	CollectorVersion string
 }
 type FileDigest struct {
 	Name        string

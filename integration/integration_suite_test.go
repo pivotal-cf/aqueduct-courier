@@ -8,6 +8,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
+	"fmt"
 )
 
 func TestAqueductCollector(t *testing.T) {
@@ -16,11 +17,18 @@ func TestAqueductCollector(t *testing.T) {
 	RunSpecs(t, "Integration Suite")
 }
 
-var aqueductBinaryPath string
+var (
+	aqueductBinaryPath string
+	testVersion        = "0.0.1-test-version"
+)
 
 var _ = BeforeSuite(func() {
 	var err error
-	aqueductBinaryPath, err = gexec.Build("github.com/pivotal-cf/aqueduct-courier")
+	aqueductBinaryPath, err = gexec.Build(
+		"github.com/pivotal-cf/aqueduct-courier",
+		"-ldflags",
+		fmt.Sprintf("-X github.com/pivotal-cf/aqueduct-courier/cmd.version=%s", testVersion),
+	)
 	Expect(err).NotTo(HaveOccurred())
 })
 

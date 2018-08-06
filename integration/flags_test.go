@@ -29,7 +29,10 @@ var _ = Describe("Flags", func() {
 		})
 
 		It("prints 'dev' as the version when not compiled with a version value", func() {
-			command := exec.Command(aqueductBinaryPath, "--version")
+			binaryWithoutVersion, err := gexec.Build(
+				"github.com/pivotal-cf/aqueduct-courier",
+			)
+			command := exec.Command(binaryWithoutVersion, "--version")
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
