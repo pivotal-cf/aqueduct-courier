@@ -91,12 +91,12 @@ var _ = Describe("Sender", func() {
 				Expect(json.Unmarshal([]byte(metadataStr), &metadataMap)).To(Succeed())
 
 				Expect(metadataMap["filename"]).To(Equal(fileHeaders.Filename))
-				Expect(metadataMap["envType"]).To(Equal(metadata.EnvType))
 				Expect(metadataMap["collectedAt"]).To(Equal(metadata.CollectedAt))
-				Expect(metadataMap["collectionId"]).To(Equal(metadata.CollectionId))
 				Expect(metadataMap["fileContentType"]).To(Equal(TarMimeType))
 				Expect(metadataMap["customMetadata"]).To(Equal(map[string]interface{}{
 					"CollectorVersion": collectorVersion,
+					"EnvType":          metadata.EnvType,
+					"CollectionId":     metadata.CollectionId,
 				}))
 
 				md5Sum := md5.Sum([]byte(tarContent))
@@ -140,7 +140,7 @@ var _ = Describe("Sender", func() {
 	})
 
 	It("errors when the POST cannot be completed", func() {
-		err := sender.Send(tarReader, validator, tmpFile.Name(),"http://127.0.0.1:999999", "some-key", "")
+		err := sender.Send(tarReader, validator, tmpFile.Name(), "http://127.0.0.1:999999", "some-key", "")
 		Expect(err).To(MatchError(ContainSubstring(PostFailedMessage)))
 	})
 

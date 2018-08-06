@@ -140,8 +140,9 @@ func verifyVersion() http.HandlerFunc {
 		var metadataMap map[string]interface{}
 		Expect(json.Unmarshal([]byte(metadataStr), &metadataMap)).To(Succeed())
 
-		Expect(metadataMap["customMetadata"]).To(Equal(map[string]interface{}{
-			"CollectorVersion": testVersion,
-		}))
+		customMetadataMap, ok := metadataMap["customMetadata"].(map[string]interface{})
+		Expect(ok).To(BeTrue())
+
+		Expect(customMetadataMap["CollectorVersion"]).To(Equal(testVersion))
 	}
 }
