@@ -45,6 +45,7 @@ instance_groups:
       tsa:
         host: ((tsa_host))
         port: 2222
+        registration_mode: forward
         host_public_key: ((tsa_host_public_key))
         worker_key:
           private_key: ((worker_private_key))
