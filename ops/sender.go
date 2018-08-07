@@ -90,9 +90,9 @@ func constructFileMetadataReader(metadata data.Metadata, fileName, senderVersion
 		"fileMd5Checksum": base64.StdEncoding.EncodeToString(hashWriter.Sum([]byte{})),
 		"collectedAt":     metadata.CollectedAt,
 		"customMetadata": map[string]string{
-			"CollectorVersion": senderVersion,
-			"EnvType":          metadata.EnvType,
-			"CollectionId":     metadata.CollectionId,
+			"SenderVersion": senderVersion,
+			"EnvType":       metadata.EnvType,
+			"CollectionId":  metadata.CollectionId,
 		},
 	}
 	metadataJson, err := json.Marshal(metadataMap)

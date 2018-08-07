@@ -77,7 +77,7 @@ var _ = Describe("Sender", func() {
 	})
 
 	It("posts to the data loader with the file as content and the file metadata", func() {
-		collectorVersion := "best-collector-version"
+		senderVersion := "best-sender-version"
 		dataLoader.RouteToHandler(http.MethodPost, PostPath, ghttp.CombineHandlers(
 			func(w http.ResponseWriter, req *http.Request) {
 				f, fileHeaders, err := req.FormFile("data")
@@ -94,9 +94,9 @@ var _ = Describe("Sender", func() {
 				Expect(metadataMap["collectedAt"]).To(Equal(metadata.CollectedAt))
 				Expect(metadataMap["fileContentType"]).To(Equal(TarMimeType))
 				Expect(metadataMap["customMetadata"]).To(Equal(map[string]interface{}{
-					"CollectorVersion": collectorVersion,
-					"EnvType":          metadata.EnvType,
-					"CollectionId":     metadata.CollectionId,
+					"SenderVersion": senderVersion,
+					"EnvType":       metadata.EnvType,
+					"CollectionId":  metadata.CollectionId,
 				}))
 
 				md5Sum := md5.Sum([]byte(tarContent))
@@ -105,7 +105,7 @@ var _ = Describe("Sender", func() {
 			ghttp.RespondWith(http.StatusCreated, ""),
 		))
 
-		Expect(sender.Send(tarReader, validator, tmpFile.Name(), dataLoader.URL(), "some-key", collectorVersion)).To(Succeed(), "")
+		Expect(sender.Send(tarReader, validator, tmpFile.Name(), dataLoader.URL(), "some-key", senderVersion)).To(Succeed(), "")
 
 		reqs := dataLoader.ReceivedRequests()
 		Expect(len(reqs)).To(Equal(1))
