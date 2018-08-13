@@ -17,6 +17,12 @@ resources:
     bucket: {{courier-staging-builds-bucket}}
     json_key: {{courier-gcp-service-account-key}}
     regexp: aqueduct-cli-(.*).tgz
+- name: staging-linux-binary
+  type: gcs-resource
+  source:
+    bucket: {{courier-staging-builds-bucket}}
+    json_key: {{courier-gcp-service-account-key}}
+    versioned_file: insights-collector-linux-amd64
 - name: version
   type: semver
   source:
@@ -59,6 +65,9 @@ jobs:
   - put: staging-binaries
     params:
       file: aqueduct-binaries/aqueduct-cli-*.tgz
+  - put: staging-linux-binary
+    params:
+      file: linux-binary/*linux*
   - put: version
     params: {file: version/version}
 
@@ -69,10 +78,11 @@ jobs:
   - get: aqueduct-courier
     passed: [build-staging-binaries]
     trigger: true
-  - get: staging-binaries
+  - get: staging-linux-binary
+    passed: [build-staging-binaries]
   - task: collect-with-user-creds
     input_mapping:
-      binaries: staging-binaries
+      binary: staging-linux-binary
     file: aqueduct-courier/ci/tasks/collect.yml
     params:
       OPS_MANAGER_URL: {{courier-ops-manager-url}}
@@ -81,7 +91,7 @@ jobs:
       ENV_TYPE: development
   - task: collect-with-client-creds
     input_mapping:
-      binaries: staging-binaries
+      binary: staging-linux-binary
     output_mapping:
       collected-data: collected-data-with-client-creds
     file: aqueduct-courier/ci/tasks/collect.yml
@@ -92,7 +102,7 @@ jobs:
       ENV_TYPE: development
   - task: send
     input_mapping:
-      binaries: staging-binaries
+      binary: staging-linux-binary
     file: aqueduct-courier/ci/tasks/send.yml
     params:
       API_KEY: {{loader-api-key}}

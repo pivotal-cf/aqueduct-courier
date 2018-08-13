@@ -24,3 +24,5 @@ tar czvf "aqueduct-binaries/aqueduct-cli-${RAW_VERSION}.tgz" \
     "insights-collector-linux-$GOARCH" \
     "insights-collector-darwin-$GOARCH" \
     "insights-collector-windows-$GOARCH.exe"
+
+cp "insights-collector-linux-$GOARCH" "linux-binary/"

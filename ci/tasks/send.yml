@@ -8,7 +8,7 @@ image_resource:
     tag: xenial
 
 inputs:
-- name: binaries
+- name: binary
 - name: collected-data
 
 run:
@@ -20,9 +20,8 @@ run:
 
     set -xe
 
-    tar xvf binaries/*.tgz
-    ./insights-collector-linux-amd64 --version
-    ./insights-collector-linux-amd64 send --path ./collected-data/*.tar
+    ./binary/insights-collector-linux-amd64 --version
+    ./binary/insights-collector-linux-amd64 send --path ./collected-data/*.tar
 
 params:
   API_KEY:

@@ -8,7 +8,7 @@ image_resource:
     tag: xenial
 
 inputs:
-- name: binaries
+- name: binary
 
 outputs:
 - name: collected-data
@@ -22,9 +22,8 @@ run:
 
     set -xe
 
-    tar xvf binaries/*.tgz
-    ./insights-collector-linux-amd64 --version
-    ./insights-collector-linux-amd64 collect --output-dir ./collected-data --insecure-skip-tls-verify
+    ./binary/insights-collector-linux-amd64 --version
+    ./binary/insights-collector-linux-amd64 collect --output-dir ./collected-data --insecure-skip-tls-verify
 
 params:
   OPS_MANAGER_URL:
