@@ -35,6 +35,11 @@ resources:
   type: time
   source:
     interval: 24h
+- name: task-docker-image
+  type: docker-image
+  source:
+    repository: ubuntu
+    tag: xenial
 
 jobs:
 - name: courier-tests
@@ -80,7 +85,9 @@ jobs:
     trigger: true
   - get: staging-linux-binary
     passed: [build-staging-binaries]
+  - get: task-docker-image
   - task: collect-with-user-creds
+    image: task-docker-image
     input_mapping:
       binary: staging-linux-binary
     file: aqueduct-courier/ci/tasks/collect.yml
@@ -90,6 +97,7 @@ jobs:
       OPS_MANAGER_PASSWORD: {{courier-ops-manager-password}}
       ENV_TYPE: development
   - task: collect-with-client-creds
+    image: task-docker-image
     input_mapping:
       binary: staging-linux-binary
     output_mapping:
@@ -101,6 +109,7 @@ jobs:
       OPS_MANAGER_CLIENT_SECRET: {{courier-ops-manager-client-secret}}
       ENV_TYPE: development
   - task: send
+    image: task-docker-image
     input_mapping:
       binary: staging-linux-binary
     file: aqueduct-courier/ci/tasks/send.yml
