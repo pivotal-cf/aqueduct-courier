@@ -20,6 +20,7 @@ run:
 
     set -xe
 
+    chmod +x ./binary/insights-collector-linux-amd64
     ./binary/insights-collector-linux-amd64 --version
     ./binary/insights-collector-linux-amd64 send --path ./collected-data/*.tar
 
