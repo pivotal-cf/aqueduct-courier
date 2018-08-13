@@ -33,7 +33,7 @@ func init() {
 	sendCmd.Flags().String(DataTarFilePathFlag, "", "Tar archive containing data from 'collect' command")
 	viper.BindPFlag(DataTarFilePathFlag, sendCmd.Flag(DataTarFilePathFlag))
 
-	sendCmd.Flags().String(ApiKeyFlag, "", fmt.Sprintf("Insights Collector API Key used to authenticate with Pivotal [$%s]", ApiKeyKey))
+	sendCmd.Flags().String(ApiKeyFlag, "", fmt.Sprintf("Telemetry Collector API Key used to authenticate with Pivotal [$%s]", ApiKeyKey))
 	viper.BindPFlag(ApiKeyFlag, sendCmd.Flag(ApiKeyFlag))
 	viper.BindEnv(ApiKeyFlag, ApiKeyKey)
 

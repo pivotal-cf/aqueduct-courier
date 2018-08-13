@@ -22,7 +22,7 @@ resources:
   source:
     bucket: {{courier-staging-builds-bucket}}
     json_key: {{courier-gcp-service-account-key}}
-    versioned_file: insights-collector-linux-amd64
+    versioned_file: telemetry-collector-linux-amd64
 - name: version
   type: semver
   source:

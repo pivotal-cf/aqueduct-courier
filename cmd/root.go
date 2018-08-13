@@ -12,7 +12,7 @@ import (
 
 const (
 	RequiredConfigErrorFormat = "Missing required flags: %s"
-	toolName                  = "insights-collector"
+	toolName                  = "telemetry-collector"
 )
 
 var (
