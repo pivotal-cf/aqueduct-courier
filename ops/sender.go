@@ -33,6 +33,11 @@ const (
 
 type SendExecutor struct{}
 
+//go:generate counterfeiter . httpClient
+type httpClient interface {
+	Do(*http.Request) (*http.Response, error)
+}
+
 //go:generate counterfeiter . tarReader
 type tarReader interface {
 	ReadFile(string) ([]byte, error)
@@ -44,7 +49,7 @@ type validator interface {
 	Validate() error
 }
 
-func (s SendExecutor) Send(reader tarReader, tValidator validator, tarFilePath, dataLoaderURL, apiToken, senderVersion string) error {
+func (s SendExecutor) Send(client httpClient, reader tarReader, tValidator validator, tarFilePath, dataLoaderURL, apiToken, senderVersion string) error {
 	metadataContent, err := reader.ReadFile(data.MetadataFileName)
 	if err != nil {
 		return errors.Wrap(err, ReadMetadataFileError)
@@ -71,7 +76,7 @@ func (s SendExecutor) Send(reader tarReader, tValidator validator, tarFilePath, 
 		return errors.Wrap(err, RequestCreationFailureMessage)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return errors.Wrap(err, PostFailedMessage)
 	}

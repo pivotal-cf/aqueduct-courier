@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"net/http"
 )
 
 const (
@@ -58,7 +59,7 @@ func send(c *cobra.Command, _ []string) error {
 	tValidator := data.NewFileValidator(tarReader)
 
 	fmt.Printf("Sending %s to Pivotal at %s\n", viper.GetString(DataTarFilePathFlag), dataLoaderURL)
-	err = sender.Send(tarReader, tValidator, tarFile.Name(), dataLoaderURL, viper.GetString(ApiKeyFlag), version)
+	err = sender.Send(http.DefaultClient, tarReader, tValidator, tarFile.Name(), dataLoaderURL, viper.GetString(ApiKeyFlag), version)
 	if err != nil {
 		return errors.Wrap(err, SendFailureMessage)
 	}

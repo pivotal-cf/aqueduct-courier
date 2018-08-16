@@ -11,16 +11,16 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/ghttp"
 	. "github.com/pivotal-cf/aqueduct-courier/ops"
 	"github.com/pivotal-cf/aqueduct-courier/ops/opsfakes"
 	"github.com/pivotal-cf/aqueduct-utils/data"
 	"github.com/pkg/errors"
+	"strings"
 )
 
 var _ = Describe("Sender", func() {
 	var (
-		dataLoader *ghttp.Server
+		client     *opsfakes.FakeHttpClient
 		tarReader  *opsfakes.FakeTarReader
 		validator  *opsfakes.FakeValidator
 		metadata   data.Metadata
@@ -30,9 +30,9 @@ var _ = Describe("Sender", func() {
 	)
 
 	BeforeEach(func() {
-		dataLoader = ghttp.NewServer()
 		sender = SendExecutor{}
 
+		client = new(opsfakes.FakeHttpClient)
 		tarReader = new(opsfakes.FakeTarReader)
 		validator = new(opsfakes.FakeValidator)
 
@@ -69,92 +69,85 @@ var _ = Describe("Sender", func() {
 
 			return []byte{}, errors.New("unexpected file requested")
 		}
+		emptyBody := ioutil.NopCloser(strings.NewReader(""))
+		client.DoReturns(&http.Response{StatusCode: http.StatusCreated, Body: emptyBody}, nil)
 	})
 
 	AfterEach(func() {
-		dataLoader.Close()
 		Expect(os.RemoveAll(tmpFile.Name())).To(Succeed())
 	})
 
 	It("posts to the data loader with the file as content and the file metadata", func() {
 		senderVersion := "best-sender-version"
-		dataLoader.RouteToHandler(http.MethodPost, PostPath, ghttp.CombineHandlers(
-			func(w http.ResponseWriter, req *http.Request) {
-				f, fileHeaders, err := req.FormFile("data")
-				Expect(err).ToNot(HaveOccurred())
-				contents, err := ioutil.ReadAll(f)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(string(contents)).To(Equal(tarContent))
+		Expect(sender.Send(client, tarReader, validator, tmpFile.Name(), "http://example.com", "some-key", senderVersion)).To(Succeed(), "")
 
-				metadataStr := req.FormValue("metadata")
-				var metadataMap map[string]interface{}
-				Expect(json.Unmarshal([]byte(metadataStr), &metadataMap)).To(Succeed())
+		Expect(client.DoCallCount()).To(Equal(1))
+		req := client.DoArgsForCall(0)
+		Expect(req.URL.String()).To(Equal(fmt.Sprintf("http://example.com%s", PostPath)))
+		f, fileHeaders, err := req.FormFile("data")
+		Expect(err).ToNot(HaveOccurred())
+		contents, err := ioutil.ReadAll(f)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(string(contents)).To(Equal(tarContent))
 
-				Expect(metadataMap["filename"]).To(Equal(fileHeaders.Filename))
-				Expect(metadataMap["collectedAt"]).To(Equal(metadata.CollectedAt))
-				Expect(metadataMap["fileContentType"]).To(Equal(TarMimeType))
-				Expect(metadataMap["customMetadata"]).To(Equal(map[string]interface{}{
-					"SenderVersion": senderVersion,
-					"EnvType":       metadata.EnvType,
-					"CollectionId":  metadata.CollectionId,
-				}))
+		metadataStr := req.FormValue("metadata")
+		var metadataMap map[string]interface{}
+		Expect(json.Unmarshal([]byte(metadataStr), &metadataMap)).To(Succeed())
 
-				md5Sum := md5.Sum([]byte(tarContent))
-				Expect(metadataMap["fileMd5Checksum"]).To(Equal(base64.StdEncoding.EncodeToString(md5Sum[:])))
-			},
-			ghttp.RespondWith(http.StatusCreated, ""),
-		))
+		Expect(metadataMap["filename"]).To(Equal(fileHeaders.Filename))
+		Expect(metadataMap["collectedAt"]).To(Equal(metadata.CollectedAt))
+		Expect(metadataMap["fileContentType"]).To(Equal(TarMimeType))
+		Expect(metadataMap["customMetadata"]).To(Equal(map[string]interface{}{
+			"SenderVersion": senderVersion,
+			"EnvType":       metadata.EnvType,
+			"CollectionId":  metadata.CollectionId,
+		}))
 
-		Expect(sender.Send(tarReader, validator, tmpFile.Name(), dataLoader.URL(), "some-key", senderVersion)).To(Succeed(), "")
-
-		reqs := dataLoader.ReceivedRequests()
-		Expect(len(reqs)).To(Equal(1))
+		md5Sum := md5.Sum([]byte(tarContent))
+		Expect(metadataMap["fileMd5Checksum"]).To(Equal(base64.StdEncoding.EncodeToString(md5Sum[:])))
 	})
 
 	It("posts to the data loader with the correct API key in the header", func() {
-		dataLoader.RouteToHandler(http.MethodPost, PostPath, ghttp.CombineHandlers(
-			ghttp.VerifyHeader(http.Header{
-				"Authorization": []string{"Token some-key"},
-			}),
-			ghttp.RespondWith(http.StatusCreated, ""),
-		))
-		Expect(sender.Send(tarReader, validator, tmpFile.Name(), dataLoader.URL(), "some-key", "")).To(Succeed())
+		Expect(sender.Send(client, tarReader, validator, tmpFile.Name(), "http://example.com", "some-key", "")).To(Succeed())
+		req := client.DoArgsForCall(0)
+		Expect(req.Header.Get("Authorization")).To(Equal("Token some-key"))
 	})
 
 	It("errors when validation fails", func() {
 		validator.ValidateReturns(errors.New("totally invalid tar"))
-		err := sender.Send(tarReader, validator, "path/to/file", dataLoader.URL(), "some-key", "")
+		err := sender.Send(client, tarReader, validator, "path/to/file", "http://example.com", "some-key", "")
 		Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(FileValidationFailedMessageFormat, "path/to/file"))))
 	})
 
 	It("fails if the metadata file cannot be unmarshalled", func() {
 		tarReader.ReadFileReturns([]byte("some-bad-metadata"), nil)
 
-		err := sender.Send(tarReader, validator, tmpFile.Name(), dataLoader.URL(), "some-key", "")
+		err := sender.Send(client, tarReader, validator, tmpFile.Name(), "http://example.com", "some-key", "")
 		Expect(err).To(MatchError(ContainSubstring(InvalidMetadataFileError)))
 	})
 
 	It("fails if the request object cannot be created", func() {
-		err := sender.Send(tarReader, validator, tmpFile.Name(), "127.0.0.1:a", "some-key", "")
+		err := sender.Send(client, tarReader, validator, tmpFile.Name(), "127.0.0.1:a", "some-key", "")
 		Expect(err).To(MatchError(ContainSubstring(RequestCreationFailureMessage)))
 	})
 
 	It("errors when the POST cannot be completed", func() {
-		err := sender.Send(tarReader, validator, tmpFile.Name(), "http://127.0.0.1:999999", "some-key", "")
+		client.DoReturns(nil, errors.New("doing requests is hard"))
+		err := sender.Send(client, tarReader, validator, tmpFile.Name(), "http://example.com", "some-key", "")
+		Expect(err).To(MatchError(ContainSubstring("doing requests is hard")))
 		Expect(err).To(MatchError(ContainSubstring(PostFailedMessage)))
 	})
 
 	It("errors when the response code is not StatusCreated", func() {
-		dataLoader.AppendHandlers(
-			ghttp.RespondWith(http.StatusUnauthorized, ""),
-		)
+		emptyBody := ioutil.NopCloser(strings.NewReader(""))
+		client.DoReturns(&http.Response{StatusCode: http.StatusUnauthorized, Body: emptyBody}, nil)
 
-		err := sender.Send(tarReader, validator, tmpFile.Name(), dataLoader.URL(), "invalid-key", "")
+		err := sender.Send(client, tarReader, validator, tmpFile.Name(), "http://example.com", "invalid-key", "")
 		Expect(err).To(MatchError(fmt.Sprintf(UnexpectedResponseCodeFormat, http.StatusUnauthorized)))
 	})
 
 	It("when the tarFile does not exist", func() {
-		err := sender.Send(tarReader, validator, "path/to/not/the/tarFile", dataLoader.URL(), "some-key", "")
+		err := sender.Send(client, tarReader, validator, "path/to/not/the/tarFile", "http://example.com", "some-key", "")
 		Expect(err).To(MatchError(ContainSubstring(ReadDataFileError)))
 	})
 })
