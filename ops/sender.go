@@ -14,6 +14,7 @@ import (
 
 	"github.com/pivotal-cf/aqueduct-utils/data"
 	"github.com/pkg/errors"
+	"io/ioutil"
 )
 
 const (
@@ -23,10 +24,11 @@ const (
 
 	RequestCreationFailureMessage = "Failed make request object"
 	PostFailedMessage             = "Failed to do request"
-	UnexpectedResponseCodeFormat  = "Unexpected response code %d, request failed"
 	ReadMetadataFileError         = "Unable to read metadata file"
-	ReadDataFileError             = "Unable to read data file "
+	ReadDataFileError             = "Unable to read data file"
 	InvalidMetadataFileError      = "Metadata file is invalid"
+	UnauthorizedErrorMessage      = "User is not authorized to perform this action"
+	UnexpectedServerErrorFormat   = "There was an issue sending data. Please try again or contact your Pivotal field team if this error persists. Error Code %s"
 
 	FileValidationFailedMessageFormat = "File %s is invalid"
 )
@@ -82,10 +84,24 @@ func (s SendExecutor) Send(client httpClient, reader tarReader, tValidator valid
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusCreated {
-		return errors.Errorf(UnexpectedResponseCodeFormat, resp.StatusCode)
+	switch statusCode := resp.StatusCode; statusCode {
+	case http.StatusCreated:
+		return nil
+	case http.StatusUnauthorized:
+		return errors.New(UnauthorizedErrorMessage)
+	default:
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return errors.Errorf(UnexpectedServerErrorFormat, "unknown")
+		}
+
+		var errResp map[string]map[string]string
+		err = json.Unmarshal(body, &errResp)
+		if err != nil {
+			return errors.Errorf(UnexpectedServerErrorFormat, "unknown")
+		}
+		return errors.Errorf(UnexpectedServerErrorFormat, errResp["error"]["uuid"])
 	}
-	return nil
 }
 
 func constructFileMetadataReader(metadata data.Metadata, fileName, senderVersion string, hashWriter hash.Hash) (io.Reader, error) {

@@ -143,7 +143,28 @@ var _ = Describe("Sender", func() {
 		client.DoReturns(&http.Response{StatusCode: http.StatusUnauthorized, Body: emptyBody}, nil)
 
 		err := sender.Send(client, tarReader, validator, tmpFile.Name(), "http://example.com", "invalid-key", "")
-		Expect(err).To(MatchError(fmt.Sprintf(UnexpectedResponseCodeFormat, http.StatusUnauthorized)))
+		Expect(err).To(MatchError(UnauthorizedErrorMessage))
+	})
+
+	It("errors if the error response cannot be read", func() {
+		client.DoReturns(&http.Response{StatusCode: http.StatusExpectationFailed, Body: ioutil.NopCloser(&badReader{})}, nil)
+		err := sender.Send(client, tarReader, validator, tmpFile.Name(),"http://example.com", "invalid-key", "")
+		Expect(err).To(MatchError(fmt.Sprintf(UnexpectedServerErrorFormat, "unknown")))
+	})
+
+	It("errors if the error response cannot be read into the expected structure", func() {
+		badBody := ioutil.NopCloser(strings.NewReader(`{not json`))
+		client.DoReturns(&http.Response{StatusCode: http.StatusExpectationFailed, Body: badBody}, nil)
+		err := sender.Send(client, tarReader, validator, tmpFile.Name(),"http://example.com", "invalid-key", "")
+		Expect(err).To(MatchError(fmt.Sprintf(UnexpectedServerErrorFormat, "unknown")))
+	})
+
+	It("errors when the response code is not 201/401", func() {
+		emptyBody := ioutil.NopCloser(strings.NewReader(`{"error": {"uuid": "error-uuid"}}`))
+		client.DoReturns(&http.Response{StatusCode: http.StatusExpectationFailed, Body: emptyBody}, nil)
+
+		err := sender.Send(client, tarReader, validator, tmpFile.Name(), "http://example.com", "invalid-key", "")
+		Expect(err).To(MatchError(fmt.Sprintf(UnexpectedServerErrorFormat, "error-uuid")))
 	})
 
 	It("when the tarFile does not exist", func() {
@@ -151,3 +172,9 @@ var _ = Describe("Sender", func() {
 		Expect(err).To(MatchError(ContainSubstring(ReadDataFileError)))
 	})
 })
+
+type badReader struct {}
+
+func (r *badReader) Read(p []byte) (n int, err error) {
+	return 0, errors.New("reading is hard")
+}
