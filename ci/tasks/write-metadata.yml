@@ -22,7 +22,7 @@ run:
 
     set -xe
 
-    echo <<PIVNET_METADATA > metadata/metadata
+    cat << PIVNET_METADATA > metadata/metadata
     ---
     release:
       version: "$(cat version/version)"

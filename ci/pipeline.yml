@@ -3,6 +3,11 @@ resource_types:
     type: docker-image
     source:
       repository: frodenas/gcs-resource
+  - name: pivnet
+    type: docker-image
+    source:
+      repository: pivotalcf/pivnet-resource
+      tag: latest-final
 
 resources:
 - name: pivotal-telemetry-collector
@@ -210,6 +215,8 @@ jobs:
     passed: [test-collect-and-send-production]
   - get: production-binaries
     passed: [test-collect-and-send-production]
+  - get: version
+    passed: [build-production-binaries]
   - task: untar-binaries
     file: aqueduct-courier/ci/tasks/untar-binaries.yml
     input_mapping:
