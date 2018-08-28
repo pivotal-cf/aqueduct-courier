@@ -171,7 +171,7 @@ jobs:
   plan:
   - get: version
     passed: [build-production-binaries]
-    params: {bump: patch, pre: rc}
+    params: {bump: patch, pre: build}
     trigger: true
   - put: version
     params: {file: version/version}
@@ -224,7 +224,7 @@ jobs:
   serial_groups: [version]
   plan:
   - get: version
-    params: {bump: major, pre: rc}
+    params: {bump: major, pre: build}
   - put: version
     params: {file: version/version}
 
@@ -232,7 +232,7 @@ jobs:
   serial_groups: [version]
   plan:
   - get: version
-    params: {bump: minor, pre: rc}
+    params: {bump: minor, pre: build}
   - put: version
     params: {file: version/version}
 
@@ -240,6 +240,6 @@ jobs:
   serial_groups: [version]
   plan:
   - get: version
-    params: {bump: patch, pre: rc}
+    params: {bump: patch, pre: build}
   - put: version
     params: {file: version/version}
