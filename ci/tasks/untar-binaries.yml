@@ -1,0 +1,24 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: ubuntu
+    tag: xenial
+
+inputs:
+- name: binaries-tar
+
+outputs:
+- name: binaries
+
+run:
+  path: sh
+  args:
+  - -c
+  - |
+    #!/bin/bash
+
+    set -xe
+    tar -xvf binaries-tar/* -C binaries

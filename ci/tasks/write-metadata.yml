@@ -1,0 +1,32 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: ubuntu
+    tag: xenial
+
+inputs:
+- name: version
+
+outputs:
+- name: metadata
+
+run:
+  path: sh
+  args:
+  - -c
+  - |
+    #!/bin/bash
+
+    set -xe
+
+    echo <<PIVNET_METADATA > metadata/metadata
+    ---
+    release:
+      version: "$(cat version/version)"
+      eula_slug: "pivotal_software_eula"
+      availability: Selected User Groups Only
+      eccn: "EAR99"
+    PIVNET_METADATA

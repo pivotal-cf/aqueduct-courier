@@ -5,6 +5,15 @@ resource_types:
       repository: frodenas/gcs-resource
 
 resources:
+- name: pivotal-telemetry-collector
+  type: pivnet
+  source:
+    api_token: {{pivnet-api-token}}
+    product_slug: pivotal-telemetry-collector
+    release_type: Alpha Release
+    copy_metadata: true
+    access_key_id: {{pivnet-access-key-id}}
+    secret_access_key: {{pivnet-secret-access-key}}
 - name: aqueduct-courier
   type: git
   source:
@@ -21,6 +30,18 @@ resources:
   type: gcs-resource
   source:
     bucket: {{courier-staging-builds-bucket}}
+    json_key: {{courier-gcp-service-account-key}}
+    versioned_file: telemetry-collector-linux-amd64
+- name: production-binaries
+  type: gcs-resource
+  source:
+    bucket: {{courier-production-builds-bucket}}
+    json_key: {{courier-gcp-service-account-key}}
+    regexp: aqueduct-cli-(.*).tgz
+- name: production-linux-binary
+  type: gcs-resource
+  source:
+    bucket: {{courier-production-builds-bucket}}
     json_key: {{courier-gcp-service-account-key}}
     versioned_file: telemetry-collector-linux-amd64
 - name: version
@@ -57,6 +78,7 @@ jobs:
     file: aqueduct-courier/ci/tasks/courier-tests-windows.yml
 
 - name: build-staging-binaries
+  serial_groups: [version]
   plan:
   - get: aqueduct-courier
     passed: [courier-tests, windows-courier-tests]
@@ -78,6 +100,8 @@ jobs:
 
 - name: test-collect-and-send
   plan:
+  - get: version
+    passed: [build-staging-binaries]
   - get: collection-timer
     trigger: true
   - get: aqueduct-courier
@@ -115,3 +139,107 @@ jobs:
     file: aqueduct-courier/ci/tasks/send.yml
     params:
       API_KEY: {{loader-api-key}}
+
+- name: build-production-binaries
+  serial_groups: [version]
+  plan:
+  - get: aqueduct-courier
+    passed: [test-collect-and-send]
+  - get: version
+    params: {bump: final}
+    passed: [test-collect-and-send]
+  - put: aqueduct-courier
+    params:
+      repository: aqueduct-courier
+      tag: version/version
+      only_tag: true
+  - task: build-binaries
+    file: aqueduct-courier/ci/tasks/build-binaries.yml
+    params:
+      DATA_LOADER_URL: {{production-data-loader-url}}
+  - put: production-binaries
+    params:
+      file: aqueduct-binaries/aqueduct-cli-*.tgz
+  - put: production-linux-binary
+    params:
+      file: linux-binary/*linux*
+  - put: version
+    params: {file: version/version}
+
+- name: auto-patch
+  serial_groups: [version]
+  plan:
+  - get: version
+    passed: [build-production-binaries]
+    params: {bump: patch, pre: rc}
+    trigger: true
+  - put: version
+    params: {file: version/version}
+
+- name: test-collect-and-send-production
+  plan:
+  - get: aqueduct-courier
+    passed: [build-production-binaries]
+    trigger: true
+  - get: production-binaries
+    passed: [build-production-binaries]
+  - get: production-linux-binary
+    passed: [build-production-binaries]
+  - get: task-docker-image
+  - task: collect-with-user-creds
+    image: task-docker-image
+    input_mapping:
+      binary: production-linux-binary
+    file: aqueduct-courier/ci/tasks/collect.yml
+    params:
+      OPS_MANAGER_URL: {{courier-ops-manager-url}}
+      OPS_MANAGER_USERNAME: {{courier-ops-manager-username}}
+      OPS_MANAGER_PASSWORD: {{courier-ops-manager-password}}
+      ENV_TYPE: development
+  - task: send
+    image: task-docker-image
+    input_mapping:
+      binary: production-linux-binary
+    file: aqueduct-courier/ci/tasks/send.yml
+    params:
+      API_KEY: {{loader-api-key}}
+
+- name: release-to-pivnet
+  plan:
+  - get: production-binaries
+    passed: [test-collect-and-send-production]
+  - task: untar-binaries
+    file: aqueduct-courier/ci/tasks/untar-binaries.yml
+    input_mapping:
+      binaries-tar: production-binaries
+  - task: write-metadata
+    file: aqueduct-courier/ci/tasks/write-metadata.yml
+  - put: pivotal-telemetry-collector
+    params:
+      file_glob: binaries/*
+      s3_filepath_prefix: pivotal-telemetry-collector
+      metadata_file: metadata/metadata
+
+- name: major
+  serial_groups: [version]
+  plan:
+  - get: version
+    params: {bump: major, pre: rc}
+  - put: version
+    params: {file: version/version}
+
+- name: minor
+  serial_groups: [version]
+  plan:
+  - get: version
+    params: {bump: minor, pre: rc}
+  - put: version
+    params: {file: version/version}
+
+- name: patch
+  serial_groups: [version]
+  plan:
+  - get: version
+    params: {bump: patch, pre: rc}
+  - put: version
+    params: {file: version/version}
