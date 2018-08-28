@@ -21,4 +21,4 @@ run:
     #!/bin/bash
 
     set -xe
-    tar -xvf binaries-tar/* -C binaries
+    tar -xvf binaries-tar/*.tgz -C binaries

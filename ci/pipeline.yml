@@ -206,6 +206,8 @@ jobs:
 
 - name: release-to-pivnet
   plan:
+  - get: aqueduct-courier
+    passed: [test-collect-and-send-production]
   - get: production-binaries
     passed: [test-collect-and-send-production]
   - task: untar-binaries
