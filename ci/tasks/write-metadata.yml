@@ -28,6 +28,6 @@ run:
       version: "$(cat version/version)"
       eula_slug: "pivotal_software_eula"
       release_type: "Alpha Release"
-      availability: Selected User Groups Only
+      availability: Admins Only
       eccn: "EAR99"
     PIVNET_METADATA

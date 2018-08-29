@@ -226,7 +226,7 @@ jobs:
   - put: pivotal-telemetry-collector
     params:
       file_glob: binaries/*
-      s3_filepath_prefix: pivotal-telemetry-collector
+      s3_filepath_prefix: product-files/pivotal-telemetry-collector
       metadata_file: metadata/metadata
 
 - name: major
