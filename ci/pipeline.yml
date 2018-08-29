@@ -162,6 +162,7 @@ jobs:
     file: aqueduct-courier/ci/tasks/build-binaries.yml
     params:
       DATA_LOADER_URL: {{production-data-loader-url}}
+      ENSURE_HTTPS: true
   - put: production-binaries
     params:
       file: aqueduct-binaries/aqueduct-cli-*.tgz

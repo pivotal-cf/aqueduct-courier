@@ -2,6 +2,11 @@
 
 set -euo pipefail
 
+if [ ! -z "${ENSURE_HTTPS}" ] && [[ $DATA_LOADER_URL != *"https"* ]] ; then
+    echo "Data loader url must be https"
+    exit 1
+fi
+
 GOPATH=${PWD}/go
 GOARCH=amd64
 
