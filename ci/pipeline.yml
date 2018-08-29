@@ -214,6 +214,7 @@ jobs:
   plan:
   - get: aqueduct-courier
     passed: [test-collect-and-send-production]
+    trigger: true
   - get: production-binaries
     passed: [test-collect-and-send-production]
   - get: version
