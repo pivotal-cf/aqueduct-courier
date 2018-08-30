@@ -1,0 +1,30 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: ubuntu
+    tag: xenial
+
+inputs:
+- name: version
+- name: aqueduct-courier
+- name: binaries-tar
+
+outputs:
+- name: release-files
+
+run:
+  path: sh
+  args:
+  - -c
+  - |
+    #!/bin/bash
+
+    set -xe
+    tar -xvf binaries-tar/*.tgz -C release-files
+
+    VERSION=$(cat version/version)
+    cp aqueduct-courier/ci/tasks/collect.yml release-files/collect-$VERSION.yml
+    cp aqueduct-courier/ci/tasks/send.yml release-files/send-$VERSION.yml

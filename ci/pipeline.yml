@@ -220,14 +220,14 @@ jobs:
   - get: version
     passed: [build-production-binaries]
   - task: untar-binaries
-    file: aqueduct-courier/ci/tasks/untar-binaries.yml
+    file: aqueduct-courier/ci/tasks/prep-release-files.yml
     input_mapping:
       binaries-tar: production-binaries
   - task: write-metadata
     file: aqueduct-courier/ci/tasks/write-metadata.yml
   - put: pivotal-telemetry-collector
     params:
-      file_glob: binaries/*
+      file_glob: release-files/*
       s3_filepath_prefix: product-files/pivotal-telemetry-collector
       metadata_file: metadata/metadata
 
