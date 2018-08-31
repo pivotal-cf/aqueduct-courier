@@ -219,7 +219,7 @@ jobs:
     passed: [test-collect-and-send-production]
   - get: version
     passed: [build-production-binaries]
-  - task: untar-binaries
+  - task: prepare-release-files
     file: aqueduct-courier/ci/tasks/prep-release-files.yml
     input_mapping:
       binaries-tar: production-binaries
