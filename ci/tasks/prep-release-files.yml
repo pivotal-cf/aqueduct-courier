@@ -25,7 +25,6 @@ run:
     set -xe
 
     tar -xvf binaries-tar/*.tgz -C release-files
-    chmod +x release-files/*
 
     VERSION=$(cat version/version)
     cp aqueduct-courier/ci/tasks/collect.yml release-files/collect-$VERSION.yml
