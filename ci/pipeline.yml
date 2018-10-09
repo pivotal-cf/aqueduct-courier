@@ -208,7 +208,7 @@ jobs:
       binary: production-linux-binary
     file: aqueduct-courier/ci/tasks/send.yml
     params:
-      API_KEY: {{loader-api-key}}
+      API_KEY: {{production-loader-api-key}}
 
 - name: release-to-pivnet
   plan:
