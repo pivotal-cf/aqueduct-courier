@@ -125,6 +125,7 @@ jobs:
       OPS_MANAGER_USERNAME: {{courier-ops-manager-username}}
       OPS_MANAGER_PASSWORD: {{courier-ops-manager-password}}
       ENV_TYPE: development
+      INSECURE_SKIP_TLS_VERIFY: true
   - task: collect-with-client-creds
     image: task-docker-image
     input_mapping:
@@ -137,6 +138,7 @@ jobs:
       OPS_MANAGER_CLIENT_ID: {{courier-ops-manager-client-id}}
       OPS_MANAGER_CLIENT_SECRET: {{courier-ops-manager-client-secret}}
       ENV_TYPE: development
+      INSECURE_SKIP_TLS_VERIFY: true
   - task: send
     image: task-docker-image
     input_mapping:
@@ -202,6 +204,7 @@ jobs:
       OPS_MANAGER_USERNAME: {{courier-ops-manager-username}}
       OPS_MANAGER_PASSWORD: {{courier-ops-manager-password}}
       ENV_TYPE: development
+      INSECURE_SKIP_TLS_VERIFY: true
   - task: send
     image: task-docker-image
     input_mapping:

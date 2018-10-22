@@ -18,7 +18,9 @@ run:
 
     chmod +x ./binary/telemetry-collector-linux-amd64
     ./binary/telemetry-collector-linux-amd64 --version
-    ./binary/telemetry-collector-linux-amd64 collect --output-dir ./collected-data --insecure-skip-tls-verify
+
+    skip_tls_verify_arg=$([ -z "$INSECURE_SKIP_TLS_VERIFY" ] && echo "" || echo "--insecure-skip-tls-verify")
+    ./binary/telemetry-collector-linux-amd64 collect --output-dir ./collected-data "${skip_tls_verify_arg}"
 
 params:
   OPS_MANAGER_URL:
@@ -27,3 +29,4 @@ params:
   OPS_MANAGER_CLIENT_ID:
   OPS_MANAGER_CLIENT_SECRET:
   ENV_TYPE:
+  INSECURE_SKIP_TLS_VERIFY:
