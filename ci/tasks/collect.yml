@@ -19,7 +19,7 @@ run:
     chmod +x ./binary/telemetry-collector-linux-amd64
     ./binary/telemetry-collector-linux-amd64 --version
 
-    skip_tls_verify_arg=$([ "true" == "$INSECURE_SKIP_TLS_VERIFY" ] && echo "--insecure-skip-tls-verify")
+    skip_tls_verify_arg=$([ "true" = "$INSECURE_SKIP_TLS_VERIFY" ] && echo "--insecure-skip-tls-verify")
     ./binary/telemetry-collector-linux-amd64 collect --output-dir ./collected-data "${skip_tls_verify_arg}"
 
 params:
