@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 
 	"github.com/pivotal-cf/aqueduct-utils/data"
+	"github.com/pivotal-cf/aqueduct-utils/urd"
 	"github.com/pkg/errors"
 	"io/ioutil"
 )
@@ -105,18 +106,16 @@ func (s SendExecutor) Send(client httpClient, reader tarReader, tValidator valid
 }
 
 func constructFileMetadataReader(metadata data.Metadata, fileName, senderVersion string, hashWriter hash.Hash) (io.Reader, error) {
-	metadataMap := map[string]interface{}{
-		"filename":        fileName,
-		"fileContentType": TarMimeType,
-		"fileMd5Checksum": base64.StdEncoding.EncodeToString(hashWriter.Sum([]byte{})),
-		"collectedAt":     metadata.CollectedAt,
-		"customMetadata": map[string]string{
-			"SenderVersion": senderVersion,
-			"EnvType":       metadata.EnvType,
-			"CollectionId":  metadata.CollectionId,
+	urdMetadata := urd.Metadata{
+		Filename:        fileName,
+		FileContentType: TarMimeType,
+		FileMD5Checksum: base64.StdEncoding.EncodeToString(hashWriter.Sum([]byte{})),
+		CollectedAt:     metadata.CollectedAt,
+		CustomMetadata: map[string]interface{}{
+			"senderVersion": senderVersion,
 		},
 	}
-	metadataJson, err := json.Marshal(metadataMap)
+	metadataJson, err := json.Marshal(urdMetadata)
 	if err != nil {
 		return nil, err
 	}

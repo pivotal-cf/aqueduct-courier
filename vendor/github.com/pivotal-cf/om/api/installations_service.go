@@ -51,15 +51,38 @@ func (a Api) ListInstallations() ([]InstallationsServiceOutput, error) {
 	return responseStruct.Installations, nil
 }
 
-func (a Api) CreateInstallation(ignoreWarnings bool, deployProducts bool) (InstallationsServiceOutput, error) {
-	deployProductsVal := "none"
-	if deployProducts {
-		deployProductsVal = "all"
+func (a Api) CreateInstallation(ignoreWarnings bool, deployProducts bool, productNames []string) (InstallationsServiceOutput, error) {
+	var deployProductsVal interface{} = "all"
+	if !deployProducts {
+		deployProductsVal = "none"
+	} else if len(productNames) > 0 {
+		sp, err := a.ListStagedProducts()
+		if err != nil {
+			return InstallationsServiceOutput{}, fmt.Errorf("failed to list staged products: %v", err)
+		}
+		// convert list of product names to product GUIDs
+		var productGUIDs []string
+		for _, productName := range productNames {
+			var guid string
+			for _, stagedProduct := range sp.Products {
+				if productName == stagedProduct.GUID {
+					guid = stagedProduct.GUID
+					break
+				} else if productName == stagedProduct.Type {
+					guid = stagedProduct.GUID
+					break
+				}
+			}
+			if guid != "" {
+				productGUIDs = append(productGUIDs, guid)
+			}
+		}
+		deployProductsVal = productGUIDs
 	}
 
 	data, err := json.Marshal(&struct {
-		IgnoreWarnings string `json:"ignore_warnings"`
-		DeployProducts string `json:"deploy_products"`
+		IgnoreWarnings string      `json:"ignore_warnings"`
+		DeployProducts interface{} `json:"deploy_products"`
 	}{
 		IgnoreWarnings: fmt.Sprintf("%t", ignoreWarnings),
 		DeployProducts: deployProductsVal,
@@ -67,7 +90,6 @@ func (a Api) CreateInstallation(ignoreWarnings bool, deployProducts bool) (Insta
 	if err != nil {
 		return InstallationsServiceOutput{}, err
 	}
-
 	req, err := http.NewRequest("POST", "/api/v0/installations", bytes.NewReader(data))
 	if err != nil {
 		return InstallationsServiceOutput{}, err

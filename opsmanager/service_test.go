@@ -32,7 +32,7 @@ var _ = Describe("Service", func() {
 
 	Describe("DeployedProducts", func() {
 		It("returns deployed products content", func() {
-			body := strings.NewReader("deployed-products")
+			body := ioutil.NopCloser(strings.NewReader("deployed-products"))
 
 			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
@@ -76,7 +76,7 @@ var _ = Describe("Service", func() {
 		})
 
 		It("returns product resources content", func() {
-			body := strings.NewReader("product-resources")
+			body := ioutil.NopCloser(strings.NewReader("product-resources"))
 
 			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
@@ -185,7 +185,7 @@ var _ = Describe("Service", func() {
 			}
 			propertiesJson, err := json.Marshal(properties)
 			Expect(err).NotTo(HaveOccurred())
-			body := bytes.NewReader(propertiesJson)
+			body := ioutil.NopCloser(bytes.NewReader(propertiesJson))
 
 			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
@@ -212,7 +212,7 @@ var _ = Describe("Service", func() {
 			badReader := new(opsmanagerfakes.FakeReader)
 			badReader.ReadReturns(0, errors.New("Reading things is hard"))
 
-			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: badReader, StatusCode: http.StatusOK}, nil)
+			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: ioutil.NopCloser(badReader), StatusCode: http.StatusOK}, nil)
 
 			actual, err := service.ProductProperties(productGUID)
 			Expect(actual).To(BeNil())
@@ -223,7 +223,7 @@ var _ = Describe("Service", func() {
 		})
 
 		It("errors if the contents are not json", func() {
-			body := strings.NewReader(`you-thought-this-was-json`)
+			body := ioutil.NopCloser(strings.NewReader(`you-thought-this-was-json`))
 
 			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
@@ -258,7 +258,7 @@ var _ = Describe("Service", func() {
 
 	Describe("VmTypes", func() {
 		It("returns product resources content", func() {
-			body := strings.NewReader("vm-types")
+			body := ioutil.NopCloser(strings.NewReader("vm-types"))
 
 			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
@@ -294,7 +294,7 @@ var _ = Describe("Service", func() {
 
 	Describe("DiagnosticReport", func() {
 		It("returns product resources content", func() {
-			body := strings.NewReader("diagnostic-report")
+			body := ioutil.NopCloser(strings.NewReader("diagnostic-report"))
 
 			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
@@ -330,7 +330,7 @@ var _ = Describe("Service", func() {
 
 	Describe("Installations", func() {
 		It("removes user names from the installation content and returns the rest", func() {
-			body := strings.NewReader(`{"installations": [{"user_name": "foo", "other": 42}, {"user_name": "bar", "other": 24}]}`)
+			body := ioutil.NopCloser(strings.NewReader(`{"installations": [{"user_name": "foo", "other": 42}, {"user_name": "bar", "other": 24}]}`))
 
 			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
@@ -348,7 +348,7 @@ var _ = Describe("Service", func() {
 			badReader := new(opsmanagerfakes.FakeReader)
 			badReader.ReadReturns(0, errors.New("Reading things is hard"))
 
-			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: badReader, StatusCode: http.StatusOK}, nil)
+			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: ioutil.NopCloser(badReader), StatusCode: http.StatusOK}, nil)
 
 			actual, err := service.Installations()
 			Expect(actual).To(BeNil())
@@ -359,7 +359,7 @@ var _ = Describe("Service", func() {
 		})
 
 		It("errors if the contents are not json", func() {
-			body := strings.NewReader(`you-thought-this-was-json`)
+			body := ioutil.NopCloser(strings.NewReader(`you-thought-this-was-json`))
 
 			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 

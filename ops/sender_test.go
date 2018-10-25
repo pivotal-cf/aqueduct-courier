@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/pivotal-cf/aqueduct-utils/urd"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -91,20 +92,19 @@ var _ = Describe("Sender", func() {
 		Expect(string(contents)).To(Equal(tarContent))
 
 		metadataStr := req.FormValue("metadata")
-		var metadataMap map[string]interface{}
-		Expect(json.Unmarshal([]byte(metadataStr), &metadataMap)).To(Succeed())
-
-		Expect(metadataMap["filename"]).To(Equal(fileHeaders.Filename))
-		Expect(metadataMap["collectedAt"]).To(Equal(metadata.CollectedAt))
-		Expect(metadataMap["fileContentType"]).To(Equal(TarMimeType))
-		Expect(metadataMap["customMetadata"]).To(Equal(map[string]interface{}{
-			"SenderVersion": senderVersion,
-			"EnvType":       metadata.EnvType,
-			"CollectionId":  metadata.CollectionId,
-		}))
+		var urdMetadata urd.Metadata
+		Expect(json.Unmarshal([]byte(metadataStr), &urdMetadata)).To(Succeed())
 
 		md5Sum := md5.Sum([]byte(tarContent))
-		Expect(metadataMap["fileMd5Checksum"]).To(Equal(base64.StdEncoding.EncodeToString(md5Sum[:])))
+		Expect(urdMetadata).To(Equal(urd.Metadata{
+			Filename:        fileHeaders.Filename,
+			FileContentType: TarMimeType,
+			FileMD5Checksum: base64.StdEncoding.EncodeToString(md5Sum[:]),
+			CollectedAt:     metadata.CollectedAt,
+			CustomMetadata: map[string]interface{}{
+				"senderVersion": senderVersion,
+			},
+		}))
 	})
 
 	It("posts to the data loader with the correct API key in the header", func() {

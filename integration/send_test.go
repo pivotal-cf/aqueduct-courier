@@ -143,6 +143,6 @@ func verifyVersion() http.HandlerFunc {
 		customMetadataMap, ok := metadataMap["customMetadata"].(map[string]interface{})
 		Expect(ok).To(BeTrue())
 
-		Expect(customMetadataMap["SenderVersion"]).To(Equal(testVersion))
+		Expect(customMetadataMap["senderVersion"]).To(Equal(testVersion))
 	}
 }
