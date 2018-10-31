@@ -17,8 +17,6 @@ resources:
     product_slug: pivotal-telemetry-collector
     release_type: Alpha Release
     copy_metadata: true
-    access_key_id: {{pivnet-access-key-id}}
-    secret_access_key: {{pivnet-secret-access-key}}
 - name: aqueduct-courier
   type: git
   source:
@@ -231,7 +229,6 @@ jobs:
   - put: pivotal-telemetry-collector
     params:
       file_glob: release-files/*
-      s3_filepath_prefix: product-files/pivotal-telemetry-collector
       metadata_file: metadata/metadata
 
 - name: major
