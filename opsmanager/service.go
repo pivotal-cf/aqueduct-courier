@@ -19,6 +19,7 @@ const (
 	DeployedProductsPath        = "/api/v0/deployed/products"
 	VmTypesPath                 = "/api/v0/vm_types"
 	DiagnosticReportPath        = "/api/v0/diagnostic_report"
+	CertificatesPath            = "/api/v0/deployed/certificates"
 
 	ReadResponseBodyFailureFormat      = "Unable to read response from %s"
 	InvalidResponseErrorFormat         = "Invalid response format for request to %s"
@@ -76,6 +77,10 @@ func (s *Service) Installations() (io.Reader, error) {
 	}
 
 	return bytes.NewReader(redactedContent), nil
+}
+
+func (s *Service) Certificates() (io.Reader, error) {
+	return s.makeRequest(CertificatesPath)
 }
 
 func (s *Service) DeployedProducts() (io.Reader, error) {

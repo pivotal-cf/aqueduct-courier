@@ -112,6 +112,12 @@ var _ = Describe("DataCollector", func() {
 		assertOmServiceFailure(collectedData, err, data.OpsManagerProductType, data.InstallationsDataType, "Requesting things is hard")
 	})
 
+	It("returns an error when omService.Certificates errors", func() {
+		omService.CertificatesReturns(nil, errors.New("Requesting things is hard"))
+		collectedData, err := dataCollector.Collect()
+		assertOmServiceFailure(collectedData, err, data.OpsManagerProductType, data.CertificatesDataType, "Requesting things is hard")
+	})
+
 	It("succeeds", func() {
 		resourcesReaders := []io.Reader{
 			strings.NewReader("r1 data"),
@@ -125,6 +131,7 @@ var _ = Describe("DataCollector", func() {
 		diagnosticReportReader := strings.NewReader("diagnostic data")
 		deployedProductsReader := strings.NewReader("deployed products data")
 		installationsReader := strings.NewReader("installations data")
+		certificatesReader := strings.NewReader("certificates data")
 		directorProduct := api.DeployedProductOutput{Type: data.DirectorProductType, GUID: "p-bosh-always-first"}
 		deployedProducts := []api.DeployedProductOutput{
 			{Type: "best-product-1", GUID: "p1-guid"},
@@ -141,6 +148,7 @@ var _ = Describe("DataCollector", func() {
 		omService.DiagnosticReportReturns(diagnosticReportReader, nil)
 		omService.DeployedProductsReturns(deployedProductsReader, nil)
 		omService.InstallationsReturns(installationsReader, nil)
+		omService.CertificatesReturns(certificatesReader, nil)
 
 		collectedData, err := dataCollector.Collect()
 		Expect(err).ToNot(HaveOccurred())
@@ -185,6 +193,11 @@ var _ = Describe("DataCollector", func() {
 				data.OpsManagerProductType,
 				data.InstallationsDataType,
 			),
+			NewData(
+				certificatesReader,
+				data.OpsManagerProductType,
+				data.CertificatesDataType,
+			),
 		))
 	})
 
@@ -196,6 +209,7 @@ var _ = Describe("DataCollector", func() {
 			NewData(nil, data.OpsManagerProductType, data.VmTypesDataType),
 			NewData(nil, data.OpsManagerProductType, data.DiagnosticReportDataType),
 			NewData(nil, data.OpsManagerProductType, data.InstallationsDataType),
+			NewData(nil, data.OpsManagerProductType, data.CertificatesDataType),
 		))
 	})
 })

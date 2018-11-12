@@ -391,6 +391,45 @@ var _ = Describe("Service", func() {
 			)))
 		})
 	})
+
+	Describe("Certificates", func() {
+		It("returns deployed certificates content", func() {
+			body := ioutil.NopCloser(strings.NewReader(`{"certificates":[{"keys": "for-certs"}]}`))
+
+			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
+
+			actual, err := service.Certificates()
+			Expect(err).NotTo(HaveOccurred())
+			actualContent, err := ioutil.ReadAll(actual)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(actualContent)).To(Equal(`{"certificates":[{"keys": "for-certs"}]}`))
+			Expect(requestor.CurlCallCount()).To(Equal(1))
+			input := requestor.CurlArgsForCall(0)
+			Expect(input).To(Equal(api.RequestServiceCurlInput{Path: CertificatesPath, Method: http.MethodGet}))
+		})
+
+		It("returns an error when requestor errors", func() {
+			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusOK}, errors.New("Requesting things is hard"))
+
+			actual, err := service.Certificates()
+			Expect(actual).To(BeNil())
+			Expect(err).To(MatchError(ContainSubstring(
+				fmt.Sprintf(RequestFailureErrorFormat, http.MethodGet, CertificatesPath),
+			)))
+			Expect(err).To(MatchError(ContainSubstring("Requesting things is hard")))
+		})
+
+		It("returns an error when requestor returns a non 200 status code", func() {
+			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusBadGateway}, nil)
+
+			actual, err := service.Certificates()
+			Expect(actual).To(BeNil())
+			Expect(err).To(MatchError(fmt.Sprintf(
+				RequestUnexpectedStatusErrorFormat, http.MethodGet, CertificatesPath, http.StatusBadGateway,
+			)))
+		})
+
+	})
 })
 
 //go:generate counterfeiter . reader

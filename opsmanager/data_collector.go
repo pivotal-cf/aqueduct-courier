@@ -34,6 +34,7 @@ type OmService interface {
 	DiagnosticReport() (io.Reader, error)
 	DeployedProducts() (io.Reader, error)
 	Installations() (io.Reader, error)
+	Certificates() (io.Reader, error)
 }
 
 type dataRetriever func() (io.Reader, error)
@@ -99,6 +100,11 @@ func (dc DataCollector) Collect() ([]Data, error) {
 	}
 
 	d, err = appendRetrievedData(d, dc.omService.Installations, data.OpsManagerProductType, data.InstallationsDataType)
+	if err != nil {
+		return []Data{}, err
+	}
+
+	d, err = appendRetrievedData(d, dc.omService.Certificates, data.OpsManagerProductType, data.CertificatesDataType)
 	if err != nil {
 		return []Data{}, err
 	}
