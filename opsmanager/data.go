@@ -5,11 +5,6 @@ import (
 	"io"
 )
 
-const (
-	JSONDataType    = "application/json"
-	DefaultDataType = JSONDataType
-)
-
 type Data struct {
 	reader      io.Reader
 	productType string
@@ -29,7 +24,7 @@ func (d Data) Content() io.Reader {
 }
 
 func (d Data) MimeType() string {
-	return DefaultDataType
+	return "application/json"
 }
 
 func (d Data) Type() string {
