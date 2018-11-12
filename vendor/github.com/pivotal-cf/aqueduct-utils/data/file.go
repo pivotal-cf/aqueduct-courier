@@ -18,6 +18,7 @@ const (
 	DeployedProductsDataType = "deployed_products"
 	InstallationsDataType    = "installations"
 	PropertiesDataType       = "properties"
+	CertificatesDataType     = "certificates"
 
 	MetadataFileName = "metadata"
 

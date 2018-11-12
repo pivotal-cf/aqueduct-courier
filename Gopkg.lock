@@ -114,12 +114,12 @@
   version = "v0.0.3"
 
 [[projects]]
-  digest = "1:d6f988e7296cebe16d9c405b73bee34da871b382f7438c811279614a725239ae"
+  digest = "1:2e8ad5fda5ee3c1d638f28b9245b818e3d67e3c7cc9ac85c5ab88648acd6fc11"
   name = "github.com/mholt/archiver"
   packages = ["."]
   pruneopts = "UT"
-  revision = "de0d89e255e17c8d75a40122055763e743ab0593"
-  version = "v2.1"
+  revision = "edeadbb1a3884e1a487283bcb73e823333fd1a10"
+  version = "v3.0.0"
 
 [[projects]]
   digest = "1:53bc4cd4914cd7cd52139990d5170d6dc99067ae31c56530621b18b35fc30318"
@@ -210,7 +210,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:aa9d8b6d48f68e64382cb632e7b8c43becb9f6ebe3901d01e97a2390ef7faba9"
+  digest = "1:8bb1417cbd1b92ed477ac4cb7e4d2ad6126c4f6cb839709215c0044dafae3f95"
   name = "github.com/pivotal-cf/aqueduct-utils"
   packages = [
     "data",
@@ -218,10 +218,10 @@
     "urd",
   ]
   pruneopts = "UT"
-  revision = "d09aa05f870214d738bfc58839acdaaa84468870"
+  revision = "81e2426df87d4f89544a8bb373c0110d86b92899"
 
 [[projects]]
-  digest = "1:f22287807ccc7158c5ec402734dea7ba2ccd891472cbaaaca7de4190709a12e6"
+  digest = "1:d37697a41b37a9c41629cd24c8ad7e3b35c8fb56f9a6b228c7c4795dadf34f87"
   name = "github.com/pivotal-cf/om"
   packages = [
     "api",
@@ -229,8 +229,8 @@
     "progress",
   ]
   pruneopts = "UT"
-  revision = "7fcf10b990803c90917c21b831c589f77c2ef37c"
-  version = "0.42.0"
+  revision = "f77a9133441f9d7f80818bf13e6ab3f6fca45187"
+  version = "0.44.0"
 
 [[projects]]
   digest = "1:40e195917a951a8bf867cd05de2a46aaf1806c50cf92eebf4c16f78cd196f747"
@@ -260,12 +260,12 @@
   version = "v1.1.2"
 
 [[projects]]
-  digest = "1:516e71bed754268937f57d4ecb190e01958452336fa73dbac880894164e91c1f"
+  digest = "1:08d65904057412fc0270fc4812a1c90c594186819243160dc779a402d4b6d0bc"
   name = "github.com/spf13/cast"
   packages = ["."]
   pruneopts = "UT"
-  revision = "8965335b8c7107321228e3e3702cab9832751bac"
-  version = "v1.2.0"
+  revision = "8c9545af88b134710ab1cd196795e7f2388358d7"
+  version = "v1.3.0"
 
 [[projects]]
   digest = "1:645cabccbb4fa8aab25a956cbcbdf6a6845ca736b2c64e197ca7cbb9d210b939"
@@ -300,7 +300,7 @@
   version = "v1.2.1"
 
 [[projects]]
-  digest = "1:4aeb3860275fa1fd60cccfb5a6ef85da438bf17402e1e84412ade4d4b55066a0"
+  digest = "1:db345c377984d0907323c09a9b17f11d995a59649fd38f909727df358b5f9020"
   name = "github.com/ulikunitz/xz"
   packages = [
     ".",
@@ -309,8 +309,16 @@
     "lzma",
   ]
   pruneopts = "UT"
-  revision = "0c6b41e72360850ca4f98dc341fd999726ea007f"
-  version = "v0.5.4"
+  revision = "590df8077fbcb06ad62d7714da06c00e5dd2316d"
+  version = "v0.5.5"
+
+[[projects]]
+  branch = "master"
+  digest = "1:0dfba983988bcd90e6dd30b9bfdb9685ff530dbf61db3706e55372e975b1d8bc"
+  name = "github.com/xi2/xz"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "48954b6210f8d154cb5f8484d3a3e1f83489309e"
 
 [[projects]]
   branch = "master"
@@ -324,11 +332,11 @@
     "html/charset",
   ]
   pruneopts = "UT"
-  revision = "9b4f9f5ad5197c79fd623a3638e70d8b26cef344"
+  revision = "03003ca0c849e57b6ea29a4bab8d3cb6e4d568fe"
 
 [[projects]]
   branch = "master"
-  digest = "1:3f224b12f04060f6098b22819c35ace3b0d91c9c65850dedf3223ed095212351"
+  digest = "1:9f22f65688d4da7fa45384a0ea0da56ddcdcedcbf71cc63a367374c2e67a8fc5"
   name = "golang.org/x/oauth2"
   packages = [
     ".",
@@ -336,15 +344,15 @@
     "internal",
   ]
   pruneopts = "UT"
-  revision = "9dcd33a902f40452422c2367fefcb95b54f9f8f8"
+  revision = "f42d05182288abf10faef86d16c0d07b8d40ea2d"
 
 [[projects]]
   branch = "master"
-  digest = "1:008fb9f84ae9bf7994228b9c78810d44162071ec13caf28291677897dca819ee"
+  digest = "1:7ba061af4131fb44b30448572acd0d6fefbf63a61b97b7ef1dea0be5871c2742"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "UT"
-  revision = "d989b31c87461dc8ab2f1cac6792814e27fadea9"
+  revision = "66b7b1311ac80bbafcd2daeef9a5e6e2cd1e2399"
 
 [[projects]]
   digest = "1:4392fcf42d5cf0e3ff78c96b2acf8223d49e4fdc53eb77c99d2f8dfe4680e006"
@@ -376,7 +384,7 @@
   version = "v0.3.0"
 
 [[projects]]
-  digest = "1:6247f76e55a1e1a5c19a81e2d4b4dff6730461eeb5bbb0a16dd4a8ec8637ee93"
+  digest = "1:08206298775e5b462e6c0333f4471b44e63f1a70e42952b6ede4ecc9572281eb"
   name = "google.golang.org/appengine"
   packages = [
     "internal",
@@ -388,8 +396,8 @@
     "urlfetch",
   ]
   pruneopts = "UT"
-  revision = "ae0ab99deb4dc413a2b4bd6c8bdd0eb67f1e4d06"
-  version = "v1.2.0"
+  revision = "4a4468ece617fc8205e99368fa2200e9d1fad421"
+  version = "v1.3.0"
 
 [[projects]]
   digest = "1:50ec2f81389fbc7a1e496e1d1dc07adfe080fd15e015e9ba0e08ddaf1d4635ef"

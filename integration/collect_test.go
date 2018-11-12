@@ -327,7 +327,8 @@ func assertValidOutput(tarFilePath, filename, envType string) {
 	Expect(err).NotTo(HaveOccurred())
 	defer os.RemoveAll(tmpDir)
 
-	err = archiver.Tar.Open(tarFilePath, tmpDir)
+	tar := &archiver.Tar{}
+	err = tar.Unarchive(tarFilePath, tmpDir)
 	Expect(err).NotTo(HaveOccurred())
 
 	jsonFilePath := filepath.Join(tmpDir, filename)
