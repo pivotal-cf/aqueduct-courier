@@ -13,6 +13,11 @@ import (
 // Archiver is a type that can create an archive file
 // from a list of source file names.
 type Archiver interface {
+	// Archive adds all the files or folders in sources
+	// to an archive to be created at destination. Files
+	// are added to the root of the archive, and directories
+	// are walked and recursively added, preserving folder
+	// structure.
 	Archive(sources []string, destination string) error
 }
 
@@ -231,4 +236,24 @@ func folderNameFromFileName(filename string) string {
 		return base[:firstDot]
 	}
 	return base
+}
+
+// makeNameInArchive returns the filename for the file given by fpath to be used within
+// the archive. sourceInfo is the FileInfo obtained by calling os.Stat on source, and baseDir
+// is an optional base directory that becomes the root of the archive. fpath should be the
+// unaltered file path of the file given to a filepath.WalkFunc.
+func makeNameInArchive(sourceInfo os.FileInfo, source, baseDir, fpath string) (string, error) {
+	name := filepath.Base(fpath) // start with the file or dir name
+	if sourceInfo.IsDir() {
+		// preserve internal directory structure; that's the path components
+		// between the source directory's leaf and this file's leaf
+		dir, err := filepath.Rel(filepath.Dir(source), filepath.Dir(fpath))
+		if err != nil {
+			return "", err
+		}
+		// prepend the internal directory structure to the leaf name,
+		// and convert path separators to forward slashes as per spec
+		name = path.Join(filepath.ToSlash(dir), name)
+	}
+	return path.Join(baseDir, name), nil // prepend the base directory
 }

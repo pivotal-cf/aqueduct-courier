@@ -12,13 +12,14 @@ const (
 	OpsManagerProductType = "ops_manager"
 	DirectorProductType   = "p-bosh"
 
-	ResourcesDataType        = "resources"
-	VmTypesDataType          = "vm_types"
-	DiagnosticReportDataType = "diagnostic_report"
-	DeployedProductsDataType = "deployed_products"
-	InstallationsDataType    = "installations"
-	PropertiesDataType       = "properties"
-	CertificatesDataType     = "certificates"
+	ResourcesDataType              = "resources"
+	VmTypesDataType                = "vm_types"
+	DiagnosticReportDataType       = "diagnostic_report"
+	DeployedProductsDataType       = "deployed_products"
+	InstallationsDataType          = "installations"
+	PropertiesDataType             = "properties"
+	CertificatesDataType           = "certificates"
+	CertificateAuthoritiesDataType = "certificate_authorities"
 
 	MetadataFileName = "metadata"
 

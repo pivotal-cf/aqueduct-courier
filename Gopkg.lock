@@ -114,12 +114,12 @@
   version = "v0.0.3"
 
 [[projects]]
-  digest = "1:2e8ad5fda5ee3c1d638f28b9245b818e3d67e3c7cc9ac85c5ab88648acd6fc11"
+  digest = "1:0bd3b3c0bf45c00d9fb715aa994e35a207724a9d2c6b2da1dc42161488dfac89"
   name = "github.com/mholt/archiver"
   packages = ["."]
   pruneopts = "UT"
-  revision = "edeadbb1a3884e1a487283bcb73e823333fd1a10"
-  version = "v3.0.0"
+  revision = "298df7b5f54d0940dc376a7581ce9c47ecbb07b2"
+  version = "v3.0.1"
 
 [[projects]]
   digest = "1:53bc4cd4914cd7cd52139990d5170d6dc99067ae31c56530621b18b35fc30318"
@@ -210,7 +210,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:8bb1417cbd1b92ed477ac4cb7e4d2ad6126c4f6cb839709215c0044dafae3f95"
+  digest = "1:036cbcea570bc4d070b25a4d2e4aa249a1adbdc8fc5bf7a9a2c98ff6714f4527"
   name = "github.com/pivotal-cf/aqueduct-utils"
   packages = [
     "data",
@@ -218,7 +218,7 @@
     "urd",
   ]
   pruneopts = "UT"
-  revision = "81e2426df87d4f89544a8bb373c0110d86b92899"
+  revision = "440fb0e1a9ca45c20dc2f8920787c462262d3aa2"
 
 [[projects]]
   digest = "1:d37697a41b37a9c41629cd24c8ad7e3b35c8fb56f9a6b228c7c4795dadf34f87"
@@ -322,7 +322,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d0a0bdd2b64d981aa4e6a1ade90431d042cd7fa31b584e33d45e62cbfec43380"
+  digest = "1:302d2c4338fa5b4bfd2d495aef2622961d38e8be7d599446b3cfeb03c07d0c9c"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -332,7 +332,7 @@
     "html/charset",
   ]
   pruneopts = "UT"
-  revision = "03003ca0c849e57b6ea29a4bab8d3cb6e4d568fe"
+  revision = "88d92db4c548972d942ac2a3531a8a9a34c82ca6"
 
 [[projects]]
   branch = "master"
