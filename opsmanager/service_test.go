@@ -428,8 +428,72 @@ var _ = Describe("Service", func() {
 				RequestUnexpectedStatusErrorFormat, http.MethodGet, CertificatesPath, http.StatusBadGateway,
 			)))
 		})
-
 	})
+
+	Describe("CertificateAuthorities", func() {
+		It("returns deployed certificates content, removing the cert_pem key", func() {
+			body := ioutil.NopCloser(strings.NewReader(`{"certificate_authorities":[{"keys": "for-cert-authorities", "cert_pem": "some-pem"}]}`))
+
+			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
+
+			actual, err := service.CertificateAuthorities()
+			Expect(err).NotTo(HaveOccurred())
+			actualContent, err := ioutil.ReadAll(actual)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(actualContent)).To(Equal(`{"certificate_authorities":[{"keys":"for-cert-authorities"}]}`))
+			Expect(requestor.CurlCallCount()).To(Equal(1))
+			input := requestor.CurlArgsForCall(0)
+			Expect(input).To(Equal(api.RequestServiceCurlInput{Path: CertificateAuthoritiesPath, Method: http.MethodGet}))
+		})
+
+		It("errors if the contents cannot be read from the response", func() {
+			badReader := new(opsmanagerfakes.FakeReader)
+			badReader.ReadReturns(0, errors.New("Reading things is hard"))
+
+			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: ioutil.NopCloser(badReader), StatusCode: http.StatusOK}, nil)
+
+			actual, err := service.CertificateAuthorities()
+			Expect(actual).To(BeNil())
+			Expect(err).To(MatchError(ContainSubstring(
+				fmt.Sprintf(ReadResponseBodyFailureFormat, CertificateAuthoritiesPath),
+			)))
+			Expect(err).To(MatchError(ContainSubstring("Reading things is hard")))
+		})
+
+		It("errors if the contents are not json", func() {
+			body := ioutil.NopCloser(strings.NewReader(`you-thought-this-was-json`))
+
+			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
+
+			actual, err := service.CertificateAuthorities()
+			Expect(actual).To(BeNil())
+			Expect(err).To(MatchError(ContainSubstring(
+				fmt.Sprintf(InvalidResponseErrorFormat, CertificateAuthoritiesPath),
+			)))
+		})
+
+		It("returns an error when requestor errors", func() {
+			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusOK}, errors.New("Requesting things is hard"))
+
+			actual, err := service.CertificateAuthorities()
+			Expect(actual).To(BeNil())
+			Expect(err).To(MatchError(ContainSubstring(
+				fmt.Sprintf(RequestFailureErrorFormat, http.MethodGet, CertificateAuthoritiesPath),
+			)))
+			Expect(err).To(MatchError(ContainSubstring("Requesting things is hard")))
+		})
+
+		It("returns an error when requestor returns a non 200 status code", func() {
+			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusBadGateway}, nil)
+
+			actual, err := service.CertificateAuthorities()
+			Expect(actual).To(BeNil())
+			Expect(err).To(MatchError(fmt.Sprintf(
+				RequestUnexpectedStatusErrorFormat, http.MethodGet, CertificateAuthoritiesPath, http.StatusBadGateway,
+			)))
+		})
+	})
+
 })
 
 //go:generate counterfeiter . reader

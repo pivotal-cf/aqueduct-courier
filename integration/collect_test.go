@@ -64,6 +64,7 @@ var _ = Describe("Collect", func() {
 		opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/diagnostic_report", emptyObjectResponse)
 		opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/installations", emptyObjectResponse)
 		opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/deployed/certificates", emptyObjectResponse)
+		opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/certificate_authorities", emptyObjectResponse)
 
 		defaultEnvVars = map[string]string{
 			cmd.OpsManagerURLKey:      opsManagerServer.URL(),

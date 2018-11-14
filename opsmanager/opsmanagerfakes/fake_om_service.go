@@ -90,6 +90,17 @@ type FakeOmService struct {
 		result1 io.Reader
 		result2 error
 	}
+	CertificateAuthoritiesStub        func() (io.Reader, error)
+	certificateAuthoritiesMutex       sync.RWMutex
+	certificateAuthoritiesArgsForCall []struct{}
+	certificateAuthoritiesReturns     struct {
+		result1 io.Reader
+		result2 error
+	}
+	certificateAuthoritiesReturnsOnCall map[int]struct {
+		result1 io.Reader
+		result2 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -411,6 +422,49 @@ func (fake *FakeOmService) CertificatesReturnsOnCall(i int, result1 io.Reader, r
 	}{result1, result2}
 }
 
+func (fake *FakeOmService) CertificateAuthorities() (io.Reader, error) {
+	fake.certificateAuthoritiesMutex.Lock()
+	ret, specificReturn := fake.certificateAuthoritiesReturnsOnCall[len(fake.certificateAuthoritiesArgsForCall)]
+	fake.certificateAuthoritiesArgsForCall = append(fake.certificateAuthoritiesArgsForCall, struct{}{})
+	fake.recordInvocation("CertificateAuthorities", []interface{}{})
+	fake.certificateAuthoritiesMutex.Unlock()
+	if fake.CertificateAuthoritiesStub != nil {
+		return fake.CertificateAuthoritiesStub()
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.certificateAuthoritiesReturns.result1, fake.certificateAuthoritiesReturns.result2
+}
+
+func (fake *FakeOmService) CertificateAuthoritiesCallCount() int {
+	fake.certificateAuthoritiesMutex.RLock()
+	defer fake.certificateAuthoritiesMutex.RUnlock()
+	return len(fake.certificateAuthoritiesArgsForCall)
+}
+
+func (fake *FakeOmService) CertificateAuthoritiesReturns(result1 io.Reader, result2 error) {
+	fake.CertificateAuthoritiesStub = nil
+	fake.certificateAuthoritiesReturns = struct {
+		result1 io.Reader
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeOmService) CertificateAuthoritiesReturnsOnCall(i int, result1 io.Reader, result2 error) {
+	fake.CertificateAuthoritiesStub = nil
+	if fake.certificateAuthoritiesReturnsOnCall == nil {
+		fake.certificateAuthoritiesReturnsOnCall = make(map[int]struct {
+			result1 io.Reader
+			result2 error
+		})
+	}
+	fake.certificateAuthoritiesReturnsOnCall[i] = struct {
+		result1 io.Reader
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeOmService) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -428,6 +482,8 @@ func (fake *FakeOmService) Invocations() map[string][][]interface{} {
 	defer fake.installationsMutex.RUnlock()
 	fake.certificatesMutex.RLock()
 	defer fake.certificatesMutex.RUnlock()
+	fake.certificateAuthoritiesMutex.RLock()
+	defer fake.certificateAuthoritiesMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
