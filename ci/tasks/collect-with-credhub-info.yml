@@ -1,0 +1,36 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: platforminsightsteam/base-ci-image
+
+inputs:
+- name: binary
+
+run:
+  path: sh
+  args:
+  - -c
+  - |
+    #!/bin/bash
+
+    set -e
+
+    chmod +x ./binary/telemetry-collector-linux-amd64
+    ./binary/telemetry-collector-linux-amd64 --version
+
+    gcloud auth activate-service-account --key-file <(echo "$GCP_SERVICE_ACCOUNT_KEY")
+
+    gcloud compute scp binary/telemetry-collector-linux-amd64 "$GCP_INSTANCE_NAME":/tmp
+
+    command_string="cd /tmp && ./telemetry-collector-linux-amd64 collect --env-type development --with-credhub-info --url $OPS_MANAGER_URL --username $OPS_MANAGER_USERNAME --password $OPS_MANAGER_PASSWORD --insecure-skip-tls-verify"
+    gcloud compute ssh "$GCP_INSTANCE_NAME" --command "$command_string"
+
+params:
+  GCP_SERVICE_ACCOUNT_KEY:
+  GCP_INSTANCE_NAME:
+  OPS_MANAGER_URL:
+  OPS_MANAGER_USERNAME:
+  OPS_MANAGER_PASSWORD:
