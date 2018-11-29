@@ -494,6 +494,70 @@ var _ = Describe("Service", func() {
 		})
 	})
 
+	Describe("BoshCredentials", func() {
+		It("returns the bosh credentials content", func() {
+			body := ioutil.NopCloser(strings.NewReader(`{ "credential": "BOSH_CLIENT=best_client BOSH_CLIENT_SECRET=best_secret BOSH_CA_CERT=/cool/path BOSH_ENVIRONMENT=10.9.8.7 bosh "}`))
+			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
+
+			actual, err := service.BoshCredentials()
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(actual.ClientID).To(Equal("best_client"))
+			Expect(actual.ClientSecret).To(Equal("best_secret"))
+			Expect(actual.Host).To(Equal("10.9.8.7"))
+
+			Expect(requestor.CurlCallCount()).To(Equal(1))
+			input := requestor.CurlArgsForCall(0)
+			Expect(input).To(Equal(api.RequestServiceCurlInput{Path: BoshCredentialsPath, Method: http.MethodGet}))
+		})
+
+		It("errors if the contents cannot be read from the response", func() {
+			badReader := new(opsmanagerfakes.FakeReader)
+			badReader.ReadReturns(0, errors.New("Reading things is hard"))
+
+			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: ioutil.NopCloser(badReader), StatusCode: http.StatusOK}, nil)
+
+			actual, err := service.BoshCredentials()
+			Expect(actual).To(Equal(BoshCredential{}))
+			Expect(err).To(MatchError(ContainSubstring(
+				fmt.Sprintf(ReadResponseBodyFailureFormat, BoshCredentialsPath),
+			)))
+			Expect(err).To(MatchError(ContainSubstring("Reading things is hard")))
+		})
+
+		It("errors if the contents are not json", func() {
+			body := ioutil.NopCloser(strings.NewReader(`you-thought-this-was-json`))
+
+			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
+
+			actual, err := service.BoshCredentials()
+			Expect(actual).To(Equal(BoshCredential{}))
+			Expect(err).To(MatchError(ContainSubstring(
+				fmt.Sprintf(InvalidResponseErrorFormat, BoshCredentialsPath),
+			)))
+		})
+
+		It("returns an error when requestor errors", func() {
+			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusOK}, errors.New("Requesting things is hard"))
+
+			actual, err := service.BoshCredentials()
+			Expect(actual).To(Equal(BoshCredential{}))
+			Expect(err).To(MatchError(ContainSubstring(
+				fmt.Sprintf(RequestFailureErrorFormat, http.MethodGet, BoshCredentialsPath),
+			)))
+			Expect(err).To(MatchError(ContainSubstring("Requesting things is hard")))
+		})
+
+		It("returns an error when requestor returns a non 200 status code", func() {
+			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusBadGateway}, nil)
+
+			actual, err := service.BoshCredentials()
+			Expect(actual).To(Equal(BoshCredential{}))
+			Expect(err).To(MatchError(fmt.Sprintf(
+				RequestUnexpectedStatusErrorFormat, http.MethodGet, BoshCredentialsPath, http.StatusBadGateway,
+			)))
+		})
+	})
 })
 
 //go:generate counterfeiter . reader

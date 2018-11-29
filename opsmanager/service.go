@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/pivotal-cf/om/api"
 	"github.com/pkg/errors"
@@ -21,6 +22,7 @@ const (
 	DiagnosticReportPath        = "/api/v0/diagnostic_report"
 	CertificatesPath            = "/api/v0/deployed/certificates"
 	CertificateAuthoritiesPath  = "/api/v0/certificate_authorities"
+	BoshCredentialsPath         = "/api/v0/deployed/director/credentials/bosh_commandline_credentials"
 
 	ReadResponseBodyFailureFormat      = "Unable to read response from %s"
 	InvalidResponseErrorFormat         = "Invalid response format for request to %s"
@@ -30,6 +32,12 @@ const (
 
 type Service struct {
 	Requestor Requestor
+}
+
+type BoshCredential struct {
+	ClientID     string
+	ClientSecret string
+	Host         string
 }
 
 type certificateAuthorities struct {
@@ -158,6 +166,44 @@ func (s *Service) VmTypes() (io.Reader, error) {
 
 func (s *Service) DiagnosticReport() (io.Reader, error) {
 	return s.makeRequest(DiagnosticReportPath)
+}
+
+func (s *Service) BoshCredentials() (BoshCredential, error) {
+	output, err := s.makeRequest(BoshCredentialsPath)
+	if err != nil {
+		return BoshCredential{}, err
+	}
+
+	credBytes, err := ioutil.ReadAll(output)
+	if err != nil {
+		return BoshCredential{}, errors.Wrapf(err, ReadResponseBodyFailureFormat, BoshCredentialsPath)
+	}
+
+	var credentialMap map[string]string
+	err = json.Unmarshal(credBytes, &credentialMap)
+	if err != nil {
+		return BoshCredential{}, errors.Errorf(InvalidResponseErrorFormat, BoshCredentialsPath)
+	}
+
+	credString := credentialMap["credential"]
+	credStringParts := strings.Split(credString, " ")
+
+	bCred := BoshCredential{}
+	for _, part := range credStringParts {
+		if strings.Contains(part, "=") {
+			keyValueParts := strings.Split(part, "=")
+			switch keyValueParts[0]{
+			case "BOSH_CLIENT":
+				bCred.ClientID = keyValueParts[1]
+			case "BOSH_CLIENT_SECRET":
+				bCred.ClientSecret = keyValueParts[1]
+			case "BOSH_ENVIRONMENT":
+				bCred.Host = keyValueParts[1]
+			}
+		}
+	}
+
+	return bCred, nil
 }
 
 func (s *Service) makeRequest(path string) (io.Reader, error) {

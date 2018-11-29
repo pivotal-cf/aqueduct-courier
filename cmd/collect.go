@@ -1,7 +1,10 @@
 package cmd
 
 import (
+	ogCredhub "code.cloudfoundry.org/credhub-cli/credhub"
+	"code.cloudfoundry.org/credhub-cli/credhub/auth"
 	"fmt"
+	"github.com/pivotal-cf/aqueduct-courier/credhub"
 	"os"
 	"path/filepath"
 	"strings"
@@ -32,6 +35,7 @@ const (
 	OpsManagerClientIdFlag     = "client-id"
 	OpsManagerClientSecretFlag = "client-secret"
 	OpsManagerTimeoutFlag      = "ops-manager-timeout"
+	CollectFromCredhubFlag     = "with-credhub-info"
 	EnvTypeFlag                = "env-type"
 	OutputPathFlag             = "output-dir"
 	SkipTlsVerifyFlag          = "insecure-skip-tls-verify"
@@ -42,6 +46,7 @@ const (
 	EnvTypeProduction    = "production"
 
 	OutputFilePrefix                = "FoundationDetails_"
+	CredhubClientError              = "Failed creating credhub client"
 	InvalidEnvTypeFailureFormat     = "Invalid env-type %s. See help for the list of valid types."
 	InvalidAuthConfigurationMessage = "Invalid auth configuration. Requires username/password or client/secret to be set."
 )
@@ -89,6 +94,9 @@ func init() {
 	collectCmd.Flags().Bool(SkipTlsVerifyFlag, false, "Skip TLS validation on http requests to Operations Manager")
 	viper.BindPFlag(SkipTlsVerifyFlag, collectCmd.Flag(SkipTlsVerifyFlag))
 
+	collectCmd.Flags().Bool(CollectFromCredhubFlag, false, "Collect certificate expiry info from CredHub")
+	viper.BindPFlag(CollectFromCredhubFlag, collectCmd.Flag(CollectFromCredhubFlag))
+
 	collectCmd.Flags().BoolP("help", "h", false, "Help for collect")
 	rootCmd.AddCommand(collectCmd)
 }
@@ -124,11 +132,16 @@ func collect(c *cobra.Command, _ []string) error {
 		Requestor: apiService,
 	}
 
-	collector := opsmanager.NewDataCollector(
+	omCollector := opsmanager.NewDataCollector(
 		omService,
 		apiService,
 		apiService,
 	)
+
+	credhubCollector, err := makeCredhubCollector(omService, viper.GetBool(CollectFromCredhubFlag))
+	if err != nil {
+		return err
+	}
 
 	tarFilePath := filepath.Join(
 		viper.GetString(OutputPathFlag),
@@ -139,7 +152,7 @@ func collect(c *cobra.Command, _ []string) error {
 		return err
 	}
 
-	ce := ops.NewCollector(collector, tarWriter)
+	ce := ops.NewCollector(omCollector, credhubCollector, tarWriter)
 
 	fmt.Printf("Collecting data from Operations Manager at %s\n", viper.GetString(OpsManagerURLFlag))
 	err = ce.Collect(envType, version)
@@ -172,4 +185,35 @@ func validateAndNormalizeEnvType() (string, error) {
 		}
 	}
 	return "", errors.Errorf(InvalidEnvTypeFailureFormat, envType)
+}
+
+func makeCredhubCollector(omService *opsmanager.Service, credhubCollectionEnabled bool) (credhubDataCollector, error) {
+	if credhubCollectionEnabled {
+		chCreds, err := omService.BoshCredentials()
+		if err != nil {
+			return nil, err
+		}
+		requestor, err := ogCredhub.New(
+			"https://"+chCreds.Host+":8844",
+			ogCredhub.SkipTLSValidation(true),
+			ogCredhub.Auth(auth.UaaClientCredentials(chCreds.ClientID, chCreds.ClientSecret)),
+		)
+		if err != nil {
+			return nil, errors.Wrap(err, CredhubClientError)
+		}
+		credhubService := credhub.NewCredhubService(requestor)
+		return credhub.NewDataCollector(credhubService), nil
+	} else {
+		return noOpCredhubCollector{}, nil
+	}
+}
+
+type credhubDataCollector interface {
+	Collect() (credhub.Data, error)
+}
+
+type noOpCredhubCollector struct{}
+
+func (n noOpCredhubCollector) Collect() (credhub.Data, error) {
+	return credhub.Data{}, nil
 }

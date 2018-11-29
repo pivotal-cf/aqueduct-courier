@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -210,6 +211,117 @@ var _ = Describe("Collect", func() {
 		})
 	})
 
+	Context("when credhub collection is enabled", func() {
+		var credhubServer *ghttp.Server
+
+		BeforeEach(func() {
+			credhubServer = ghttp.NewUnstartedServer()
+			listener, err := net.Listen("tcp", "127.0.0.1:8844")
+			Expect(err).NotTo(HaveOccurred())
+			credhubServer.HTTPTestServer.Listener = listener
+			credhubServer.HTTPTestServer.StartTLS()
+			credhubServer.RouteToHandler(http.MethodGet, "/info", func(w http.ResponseWriter, req *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.Write([]byte(`{ "auth-server": {"url": "https://127.0.0.1:8844"}}`))
+			})
+
+			credhubServer.RouteToHandler(http.MethodPost, "/oauth/token", func(w http.ResponseWriter, req *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.Write([]byte(`{
+					"access_token": "some-credhub-token",
+					"token_type": "bearer",
+					"expires_in": 3600
+					}`))
+			})
+			credhubServer.RouteToHandler(http.MethodGet, "/api/v1/certificates", func(w http.ResponseWriter, req *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.Write([]byte(`{}`))
+			})
+
+			boshCredentialsResponse := func(w http.ResponseWriter, req *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.Write([]byte(`{ "credential": "BOSH_CLIENT=best_client BOSH_CLIENT_SECRET=best_secret BOSH_CA_CERT=/cool/path BOSH_ENVIRONMENT=127.0.0.1 bosh "}`))
+			}
+			opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/deployed/director/credentials/bosh_commandline_credentials", boshCredentialsResponse)
+		})
+
+		AfterEach(func() {
+			credhubServer.Close()
+		})
+
+		It("collects information from credhub as well as ops manager with flag configuration", func() {
+			flagValues := map[string]string{
+				cmd.OpsManagerURLFlag:          opsManagerServer.URL(),
+				cmd.OpsManagerClientIdFlag:     "some-client-id",
+				cmd.OpsManagerClientSecretFlag: "some-client-secret",
+				cmd.EnvTypeFlag:                "Development",
+				cmd.SkipTlsVerifyFlag:          "true",
+				cmd.CollectFromCredhubFlag:     "true",
+				cmd.OutputPathFlag:             outputDirPath,
+			}
+			command := exec.Command(aqueductBinaryPath, "collect")
+			for k, v := range flagValues {
+				command.Args = append(command.Args, fmt.Sprintf("--%s=%s", k, v))
+			}
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+			tarFilePath := validatedTarFilePath(outputDirPath)
+			assertValidOutput(tarFilePath, "p-bosh_certificates", "development")
+			assertLogging(session, tarFilePath, flagValues[cmd.OpsManagerURLFlag])
+		})
+
+		It("errors if fetching credentials for credhub auth fails", func() {
+			opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/deployed/director/credentials/bosh_commandline_credentials", func(w http.ResponseWriter, req *http.Request) {
+				w.WriteHeader(500)
+			})
+			flagValues := map[string]string{
+				cmd.OpsManagerURLFlag:          opsManagerServer.URL(),
+				cmd.OpsManagerClientIdFlag:     "some-client-id",
+				cmd.OpsManagerClientSecretFlag: "some-client-secret",
+				cmd.EnvTypeFlag:                "Development",
+				cmd.SkipTlsVerifyFlag:          "true",
+				cmd.CollectFromCredhubFlag:     "true",
+				cmd.OutputPathFlag:             outputDirPath,
+			}
+			command := exec.Command(aqueductBinaryPath, "collect")
+			for k, v := range flagValues {
+				command.Args = append(command.Args, fmt.Sprintf("--%s=%s", k, v))
+			}
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(1))
+			Expect(session.Err).To(gbytes.Say("unexpected status"))
+			Expect(session.Err).NotTo(gbytes.Say("Usage:"))
+			assertOutputDirEmpty(outputDirPath)
+		})
+
+		It("errors if creating the credhub client fails", func() {
+			credhubServer.RouteToHandler(http.MethodGet, "/info", func(w http.ResponseWriter, req *http.Request) {
+				w.WriteHeader(500)
+			})
+			flagValues := map[string]string{
+				cmd.OpsManagerURLFlag:          opsManagerServer.URL(),
+				cmd.OpsManagerClientIdFlag:     "some-client-id",
+				cmd.OpsManagerClientSecretFlag: "some-client-secret",
+				cmd.EnvTypeFlag:                "Development",
+				cmd.SkipTlsVerifyFlag:          "true",
+				cmd.CollectFromCredhubFlag:     "true",
+				cmd.OutputPathFlag:             outputDirPath,
+			}
+			command := exec.Command(aqueductBinaryPath, "collect")
+			for k, v := range flagValues {
+				command.Args = append(command.Args, fmt.Sprintf("--%s=%s", k, v))
+			}
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(1))
+			Expect(session.Err).To(gbytes.Say(cmd.CredhubClientError))
+			Expect(session.Err).NotTo(gbytes.Say("Usage:"))
+			assertOutputDirEmpty(outputDirPath)
+		})
+	})
+
 	DescribeTable(
 		"succeeds with valid env type configuration",
 		func(envType string) {
@@ -285,7 +397,7 @@ var _ = Describe("Collect", func() {
 		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(session).Should(gexec.Exit(1))
-		Expect(session.Err).To(gbytes.Say(ops.CollectFailureMessage))
+		Expect(session.Err).To(gbytes.Say(ops.OpsManagerCollectFailureMessage))
 		Expect(session.Err).NotTo(gbytes.Say("Usage:"))
 		assertOutputDirEmpty(outputDirPath)
 	})

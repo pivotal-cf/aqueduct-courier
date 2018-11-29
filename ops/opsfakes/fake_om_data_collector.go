@@ -7,7 +7,7 @@ import (
 	"github.com/pivotal-cf/aqueduct-courier/opsmanager"
 )
 
-type FakeDataCollector struct {
+type FakeOmDataCollector struct {
 	CollectStub        func() ([]opsmanager.Data, error)
 	collectMutex       sync.RWMutex
 	collectArgsForCall []struct{}
@@ -23,7 +23,7 @@ type FakeDataCollector struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeDataCollector) Collect() ([]opsmanager.Data, error) {
+func (fake *FakeOmDataCollector) Collect() ([]opsmanager.Data, error) {
 	fake.collectMutex.Lock()
 	ret, specificReturn := fake.collectReturnsOnCall[len(fake.collectArgsForCall)]
 	fake.collectArgsForCall = append(fake.collectArgsForCall, struct{}{})
@@ -38,13 +38,13 @@ func (fake *FakeDataCollector) Collect() ([]opsmanager.Data, error) {
 	return fake.collectReturns.result1, fake.collectReturns.result2
 }
 
-func (fake *FakeDataCollector) CollectCallCount() int {
+func (fake *FakeOmDataCollector) CollectCallCount() int {
 	fake.collectMutex.RLock()
 	defer fake.collectMutex.RUnlock()
 	return len(fake.collectArgsForCall)
 }
 
-func (fake *FakeDataCollector) CollectReturns(result1 []opsmanager.Data, result2 error) {
+func (fake *FakeOmDataCollector) CollectReturns(result1 []opsmanager.Data, result2 error) {
 	fake.CollectStub = nil
 	fake.collectReturns = struct {
 		result1 []opsmanager.Data
@@ -52,7 +52,7 @@ func (fake *FakeDataCollector) CollectReturns(result1 []opsmanager.Data, result2
 	}{result1, result2}
 }
 
-func (fake *FakeDataCollector) CollectReturnsOnCall(i int, result1 []opsmanager.Data, result2 error) {
+func (fake *FakeOmDataCollector) CollectReturnsOnCall(i int, result1 []opsmanager.Data, result2 error) {
 	fake.CollectStub = nil
 	if fake.collectReturnsOnCall == nil {
 		fake.collectReturnsOnCall = make(map[int]struct {
@@ -66,7 +66,7 @@ func (fake *FakeDataCollector) CollectReturnsOnCall(i int, result1 []opsmanager.
 	}{result1, result2}
 }
 
-func (fake *FakeDataCollector) Invocations() map[string][][]interface{} {
+func (fake *FakeOmDataCollector) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.collectMutex.RLock()
@@ -78,7 +78,7 @@ func (fake *FakeDataCollector) Invocations() map[string][][]interface{} {
 	return copiedInvocations
 }
 
-func (fake *FakeDataCollector) recordInvocation(key string, args []interface{}) {
+func (fake *FakeOmDataCollector) recordInvocation(key string, args []interface{}) {
 	fake.invocationsMutex.Lock()
 	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
