@@ -101,6 +101,28 @@ jobs:
   - put: version
     params: {file: version/version}
 
+- name: test-collect-credhub-info
+  plan:
+  - get: version
+    passed: [build-staging-binaries]
+  - get: aqueduct-courier
+    passed: [build-staging-binaries]
+    trigger: true
+  - get: staging-linux-binary
+    passed: [build-staging-binaries]
+  - task: collect-credhub-info
+    file: aqueduct-courier/ci/tasks/collect-with-credhub-info.yml
+    input_mapping:
+      binary: staging-linux-binary
+    params:
+      GCP_SERVICE_ACCOUNT_KEY: {{courier-gcp-service-account-key}}
+      GCP_PROJECT_ID: {{courier-gcp-project-id}}
+      GCP_INSTANCE_NAME: {{courier-opsman-gcp-instance-name}}
+      GCP_ZONE: {{courier-gcp-zone}}
+      OPS_MANAGER_URL: {{courier-ops-manager-url}}
+      OPS_MANAGER_USERNAME: {{courier-ops-manager-username}}
+      OPS_MANAGER_PASSWORD: {{courier-ops-manager-password}}
+
 - name: test-collect-and-send
   plan:
   - get: version
@@ -149,10 +171,10 @@ jobs:
   serial_groups: [version]
   plan:
   - get: aqueduct-courier
-    passed: [test-collect-and-send]
+    passed: [test-collect-and-send, test-collect-credhub-info]
   - get: version
     params: {bump: final}
-    passed: [test-collect-and-send]
+    passed: [test-collect-and-send, test-collect-credhub-info]
   - put: aqueduct-courier
     params:
       repository: aqueduct-courier
