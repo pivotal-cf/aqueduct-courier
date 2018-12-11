@@ -72,6 +72,7 @@ func (s *Service) Certificates() (io.Reader, error) {
 			"name":       certMap["name"],
 			"not_before": cert.NotBefore.Format(time.RFC3339),
 			"not_after":  cert.NotAfter.Format(time.RFC3339),
+			"issuer":     cert.Issuer.String(),
 		})
 	}
 

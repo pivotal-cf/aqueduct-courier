@@ -28,11 +28,11 @@ var _ = Describe("Service", func() {
 	It("returns the parsed certificate information from credhub", func() {
 		expectedNotBefore1 := time.Now().UTC()
 		expectedNotAfter1 := expectedNotBefore1.Add(1234 * time.Second)
-		cert1 := makeCert(expectedNotBefore1, expectedNotAfter1)
+		cert1 := makeCert(expectedNotBefore1, expectedNotAfter1, "org1-name")
 
 		expectedNotBefore2 := time.Now().Add(99 * time.Second).UTC()
 		expectedNotAfter2 := expectedNotBefore2.Add(1234 * time.Second)
-		cert2 := makeCert(expectedNotBefore2, expectedNotAfter2)
+		cert2 := makeCert(expectedNotBefore2, expectedNotAfter2, "org2-name")
 
 		certListResponse := makeCertListResponse("cert1-name-path", "cert2-name-path")
 
@@ -85,8 +85,18 @@ var _ = Describe("Service", func() {
 		var credhubCertificates map[string][]map[string]string
 		Expect(json.Unmarshal(certContent, &credhubCertificates)).To(Succeed())
 		Expect(credhubCertificates["credhub_certificates"]).To(Equal([]map[string]string{
-			{"name": "cert1-name-path", "not_before": expectedNotBefore1.Format(time.RFC3339), "not_after": expectedNotAfter1.Format(time.RFC3339)},
-			{"name": "cert2-name-path", "not_before": expectedNotBefore2.Format(time.RFC3339), "not_after": expectedNotAfter2.Format(time.RFC3339)},
+			{
+				"name":       "cert1-name-path",
+				"not_before": expectedNotBefore1.Format(time.RFC3339),
+				"not_after":  expectedNotAfter1.Format(time.RFC3339),
+				"issuer":     "O=org1-name,C=Melchizedek",
+			},
+			{
+				"name":       "cert2-name-path",
+				"not_before": expectedNotBefore2.Format(time.RFC3339),
+				"not_after":  expectedNotAfter2.Format(time.RFC3339),
+				"issuer":     "O=org2-name,C=Melchizedek",
+			},
 		}))
 	})
 
@@ -250,7 +260,7 @@ var _ = Describe("Service", func() {
 		Expect(pem.Encode(buffer, &pem.Block{Type: "CERTIFICATE", Bytes: []byte("invalid-cert-content")})).To(Succeed())
 
 		parsedDataResponseStruct := map[string][]map[string]map[string]string{
-			"data": {{"value": { "certificate": string(buffer.Bytes())}}},
+			"data": {{"value": {"certificate": string(buffer.Bytes())}}},
 		}
 		parsedDataResponse, err := json.Marshal(parsedDataResponseStruct)
 		Expect(err).NotTo(HaveOccurred())
@@ -295,15 +305,16 @@ func (r *badReader) Read(b []byte) (n int, err error) {
 	return 0, errors.New("Reading is hard")
 }
 
-func makeCert(notBefore, notAfter time.Time) string {
+func makeCert(notBefore, notAfter time.Time, issuingOrg string) string {
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	Expect(err).NotTo(HaveOccurred())
 
-	template := x509.Certificate{
-		SerialNumber: big.NewInt(1),
+	issuerCert := x509.Certificate{
+		SerialNumber: big.NewInt(42),
 		Subject: pkix.Name{
-			Organization: []string{"Acme Co"},
-		},
+				Country:      []string{"Melchizedek"},
+				Organization: []string{issuingOrg},
+			},
 		NotBefore: notBefore,
 		NotAfter:  notAfter,
 
@@ -313,7 +324,25 @@ func makeCert(notBefore, notAfter time.Time) string {
 		IPAddresses:           []net.IP{net.ParseIP("127.0.0.1")},
 	}
 
-	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &privateKey.PublicKey, privateKey)
+	template := x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		Subject: pkix.Name{
+			Organization: []string{"Acme Co"},
+		},
+		NotBefore: notBefore,
+		NotAfter:  notAfter,
+		Issuer: pkix.Name{
+			Country:      []string{"Melchizedek"},
+			Organization: []string{issuingOrg},
+		},
+
+		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		BasicConstraintsValid: true,
+		IPAddresses:           []net.IP{net.ParseIP("127.0.0.1")},
+	}
+
+	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &issuerCert, &privateKey.PublicKey, privateKey)
 	Expect(err).NotTo(HaveOccurred())
 
 	certOut := bytes.NewBuffer([]byte{})
