@@ -1,14 +1,15 @@
 package cmd
 
 import (
-	ogCredhub "code.cloudfoundry.org/credhub-cli/credhub"
-	"code.cloudfoundry.org/credhub-cli/credhub/auth"
 	"fmt"
-	"github.com/pivotal-cf/aqueduct-courier/credhub"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	ogCredhub "code.cloudfoundry.org/credhub-cli/credhub"
+	"code.cloudfoundry.org/credhub-cli/credhub/auth"
+	"github.com/pivotal-cf/aqueduct-courier/credhub"
 
 	"github.com/pivotal-cf/aqueduct-courier/ops"
 	"github.com/pivotal-cf/aqueduct-courier/opsmanager"
@@ -79,7 +80,7 @@ func init() {
 	viper.BindPFlag(OpsManagerClientSecretFlag, collectCmd.Flag(OpsManagerClientSecretFlag))
 	viper.BindEnv(OpsManagerClientSecretFlag, OpsManagerClientSecretKey)
 
-	collectCmd.Flags().Int(OpsManagerTimeoutFlag, 30, "Timeout (in seconds) for Operations Manager HTTP requests")
+	collectCmd.Flags().Int(OpsManagerTimeoutFlag, 30, fmt.Sprintf("Timeout (in seconds) for Operations Manager HTTP requests [$%s]", OpsManagerTimeoutKey))
 	viper.BindPFlag(OpsManagerTimeoutFlag, collectCmd.Flag(OpsManagerTimeoutFlag))
 	viper.BindEnv(OpsManagerTimeoutFlag, OpsManagerTimeoutKey)
 
