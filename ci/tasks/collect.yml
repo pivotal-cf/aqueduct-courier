@@ -23,7 +23,11 @@ run:
       skip_tls_verify_arg="--insecure-skip-tls-verify"
     fi
 
-    ./binary/telemetry-collector-linux-amd64 collect --output-dir ./collected-data "${skip_tls_verify_arg}"
+    if [ "true" = "$WITH_CREDHUB_INFO" ]; then
+      with_credhub_info_arg="--with-credhub-info"
+    fi
+
+    ./binary/telemetry-collector-linux-amd64 collect --output-dir ./collected-data "${skip_tls_verify_arg}" "${with_credhub_info_arg}"
 
 params:
   OPS_MANAGER_URL:
@@ -34,3 +38,4 @@ params:
   OPS_MANAGER_TIMEOUT:
   ENV_TYPE:
   INSECURE_SKIP_TLS_VERIFY:
+  WITH_CREDHUB_INFO:
