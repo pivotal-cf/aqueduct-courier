@@ -30,6 +30,7 @@ const (
 	OpsManagerTimeoutKey       = "OPS_MANAGER_TIMEOUT"
 	EnvTypeKey                 = "ENV_TYPE"
 	OutputPathKey              = "OUTPUT_DIR"
+	WithCredhubInfoKey         = "WITH_CREDHUB_INFO"
 	OpsManagerURLFlag          = "url"
 	OpsManagerUsernameFlag     = "username"
 	OpsManagerPasswordFlag     = "password"
@@ -95,8 +96,9 @@ func init() {
 	collectCmd.Flags().Bool(SkipTlsVerifyFlag, false, "Skip TLS validation on http requests to Operations Manager")
 	viper.BindPFlag(SkipTlsVerifyFlag, collectCmd.Flag(SkipTlsVerifyFlag))
 
-	collectCmd.Flags().Bool(CollectFromCredhubFlag, false, "Collect certificate expiry info from CredHub")
+	collectCmd.Flags().Bool(CollectFromCredhubFlag, false, fmt.Sprintf("Collect certificate expiry info from CredHub [$%s]", WithCredhubInfoKey))
 	viper.BindPFlag(CollectFromCredhubFlag, collectCmd.Flag(CollectFromCredhubFlag))
+	viper.BindEnv(CollectFromCredhubFlag, WithCredhubInfoKey)
 
 	collectCmd.Flags().BoolP("help", "h", false, "Help for collect")
 	rootCmd.AddCommand(collectCmd)

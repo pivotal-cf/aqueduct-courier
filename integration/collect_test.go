@@ -271,6 +271,18 @@ var _ = Describe("Collect", func() {
 			assertLogging(session, tarFilePath, flagValues[cmd.OpsManagerURLFlag])
 		})
 
+		It("collects information from credhub as well as ops manager with env variable configuration", func() {
+			defaultEnvVars[cmd.OpsManagerURLKey] = opsManagerServer.URL()
+			defaultEnvVars[cmd.WithCredhubInfoKey] = "true"
+			command := buildDefaultCommand(defaultEnvVars)
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+			tarFilePath := validatedTarFilePath(outputDirPath)
+			assertValidOutput(tarFilePath, "p-bosh_certificates", "development")
+			assertLogging(session, tarFilePath, defaultEnvVars[cmd.OpsManagerURLKey])
+		})
+
 		It("errors if fetching credentials for credhub auth fails", func() {
 			opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/deployed/director/credentials/bosh_commandline_credentials", func(w http.ResponseWriter, req *http.Request) {
 				w.WriteHeader(500)
