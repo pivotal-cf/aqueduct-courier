@@ -2,9 +2,8 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"net/http"
+
+	"github.com/pkg/errors"
 )
 
 type certResponse struct {
@@ -12,30 +11,15 @@ type certResponse struct {
 }
 
 func (a Api) GetSecurityRootCACertificate() (string, error) {
-	request, err := http.NewRequest("GET", "/api/v0/security/root_ca_certificate", nil)
+	resp, err := a.sendAPIRequest("GET", "/api/v0/security/root_ca_certificate", nil)
 	if err != nil {
-		return "", fmt.Errorf("failed constructing request: %s", err)
-	}
-
-	resp, err := a.client.Do(request)
-	if err != nil {
-		return "", fmt.Errorf("failed to submit request: %s", err)
+		return "", errors.Wrap(err, "failed to submit request")
 	}
 	defer resp.Body.Close()
 
-	if err = validateStatusOK(resp); err != nil {
-		return "", err
-	}
-
-	output, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-
 	var certResponse certResponse
-	err = json.Unmarshal(output, &certResponse)
-	if err != nil {
-		return "", fmt.Errorf("failed to unmarshal response: %s", err)
+	if err := json.NewDecoder(resp.Body).Decode(&certResponse); err != nil {
+		return "", errors.Wrap(err, "failed to unmarshal response")
 	}
 
 	return certResponse.Cert, nil

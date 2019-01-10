@@ -60,14 +60,23 @@ type Zip struct {
 	ridx int
 }
 
+// CheckExt ensures the file extension matches the format.
+func (*Zip) CheckExt(filename string) error {
+	if !strings.HasSuffix(filename, ".zip") {
+		return fmt.Errorf("filename must have a .zip extension")
+	}
+	return nil
+}
+
 // Archive creates a .zip file at destination containing
 // the files listed in sources. The destination must end
 // with ".zip". File paths can be those of regular files
 // or directories. Regular files are stored at the 'root'
 // of the archive, and directories are recursively added.
 func (z *Zip) Archive(sources []string, destination string) error {
-	if !strings.HasSuffix(destination, ".zip") {
-		return fmt.Errorf("output filename must have .zip extension")
+	err := z.CheckExt(destination)
+	if err != nil {
+		return fmt.Errorf("checking extension: %v", err)
 	}
 	if !z.OverwriteExisting && fileExists(destination) {
 		return fmt.Errorf("file already exists: %s", destination)
@@ -281,9 +290,6 @@ func (z *Zip) Write(f File) error {
 	if f.FileInfo.Name() == "" {
 		return fmt.Errorf("missing file name")
 	}
-	if f.ReadCloser == nil {
-		return fmt.Errorf("%s: no way to read file contents", f.Name())
-	}
 
 	header, err := zip.FileInfoHeader(f)
 	if err != nil {
@@ -312,6 +318,9 @@ func (z *Zip) Write(f File) error {
 	}
 
 	if header.Mode().IsRegular() {
+		if f.ReadCloser == nil {
+			return fmt.Errorf("%s: no way to read file contents", f.Name())
+		}
 		_, err := io.Copy(writer, f)
 		if err != nil {
 			return fmt.Errorf("%s: copying contents: %v", f.Name(), err)
@@ -482,7 +491,7 @@ func (z *Zip) Extract(source, target, destination string) error {
 
 // Match returns true if the format of file matches this
 // type's format. It should not affect reader position.
-func (*Zip) Match(file *os.File) (bool, error) {
+func (*Zip) Match(file io.ReadSeeker) (bool, error) {
 	currentPos, err := file.Seek(0, io.SeekCurrent)
 	if err != nil {
 		return false, err
@@ -502,6 +511,15 @@ func (*Zip) Match(file *os.File) (bool, error) {
 
 func (z *Zip) String() string { return "zip" }
 
+// NewZip returns a new, default instance ready to be customized and used.
+func NewZip() *Zip {
+	return &Zip{
+		CompressionLevel:     flate.DefaultCompression,
+		MkdirAll:             true,
+		SelectiveCompression: true,
+	}
+}
+
 // Compile-time checks to ensure type implements desired interfaces.
 var (
 	_ = Reader(new(Zip))
@@ -511,6 +529,7 @@ var (
 	_ = Walker(new(Zip))
 	_ = Extractor(new(Zip))
 	_ = Matcher(new(Zip))
+	_ = ExtensionChecker(new(Zip))
 )
 
 // compressedFormats is a (non-exhaustive) set of lowercased
@@ -552,9 +571,5 @@ var compressedFormats = map[string]struct{}{
 	".zipx": {},
 }
 
-// DefaultZip is a convenient archiver ready to use.
-var DefaultZip = &Zip{
-	CompressionLevel:     flate.DefaultCompression,
-	MkdirAll:             true,
-	SelectiveCompression: true,
-}
+// DefaultZip is a default instance that is conveniently ready to use.
+var DefaultZip = NewZip()

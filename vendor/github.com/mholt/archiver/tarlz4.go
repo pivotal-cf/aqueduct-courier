@@ -20,15 +20,25 @@ type TarLz4 struct {
 	CompressionLevel int
 }
 
+// CheckExt ensures the file extension matches the format.
+func (*TarLz4) CheckExt(filename string) error {
+	if !strings.HasSuffix(filename, ".tar.lz4") &&
+		!strings.HasSuffix(filename, ".tlz4") {
+
+		return fmt.Errorf("filename must have a .tar.lz4 or .tlz4 extension")
+	}
+	return nil
+}
+
 // Archive creates a compressed tar file at destination
 // containing the files listed in sources. The destination
 // must end with ".tar.lz4" or ".tlz4". File paths can be
 // those of regular files or directories; directories will
 // be recursively added.
 func (tlz4 *TarLz4) Archive(sources []string, destination string) error {
-	if !strings.HasSuffix(destination, ".tar.lz4") &&
-		!strings.HasSuffix(destination, ".tlz4") {
-		return fmt.Errorf("output filename must have .tar.lz4 or .tlz4 extension")
+	err := tlz4.CheckExt(destination)
+	if err != nil {
+		return fmt.Errorf("output %s", err.Error())
 	}
 	tlz4.wrapWriter()
 	return tlz4.Tar.Archive(sources, destination)
@@ -90,6 +100,14 @@ func (tlz4 *TarLz4) wrapReader() {
 
 func (tlz4 *TarLz4) String() string { return "tar.lz4" }
 
+// NewTarLz4 returns a new, default instance ready to be customized and used.
+func NewTarLz4() *TarLz4 {
+	return &TarLz4{
+		CompressionLevel: 9, // https://github.com/lz4/lz4/blob/1b819bfd633ae285df2dfe1b0589e1ec064f2873/lib/lz4hc.h#L48
+		Tar:              NewTar(),
+	}
+}
+
 // Compile-time checks to ensure type implements desired interfaces.
 var (
 	_ = Reader(new(TarLz4))
@@ -101,7 +119,4 @@ var (
 )
 
 // DefaultTarLz4 is a convenient archiver ready to use.
-var DefaultTarLz4 = &TarLz4{
-	CompressionLevel: 9, // https://github.com/lz4/lz4/blob/1b819bfd633ae285df2dfe1b0589e1ec064f2873/lib/lz4hc.h#L48
-	Tar:              DefaultTar,
-}
+var DefaultTarLz4 = NewTarLz4()

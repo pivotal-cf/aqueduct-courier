@@ -3,10 +3,9 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 
-	yaml "gopkg.in/yaml.v2"
+	"github.com/pkg/errors"
+	"gopkg.in/yaml.v2"
 )
 
 type DeployedProductOutput struct {
@@ -15,65 +14,31 @@ type DeployedProductOutput struct {
 }
 
 func (a Api) GetDeployedProductManifest(guid string) (string, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("/api/v0/deployed/products/%s/manifest", guid), nil)
+	resp, err := a.sendAPIRequest("GET", fmt.Sprintf("/api/v0/deployed/products/%s/manifest", guid), nil)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "could not make api request to staged products manifest endpoint")
 	}
-
-	resp, err := a.client.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("could not make api request to staged products manifest endpoint: %s", err)
-	}
-
-	if err = validateStatusOK(resp); err != nil {
-		return "", err
-	}
-
 	defer resp.Body.Close()
+
 	var contents interface{}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-
-	if err = yaml.Unmarshal(body, &contents); err != nil {
-		return "", fmt.Errorf("could not parse json: %s", err)
+	if err := yaml.NewDecoder(resp.Body).Decode(&contents); err != nil {
+		return "", errors.Wrap(err, "could not parse json")
 	}
 
 	manifest, err := yaml.Marshal(contents)
-	if err != nil {
-		return "", err // this should never happen, all valid json can be marshalled
-	}
-
-	return string(manifest), nil
+	return string(manifest), err
 }
 
 func (a Api) ListDeployedProducts() ([]DeployedProductOutput, error) {
-	req, err := http.NewRequest("GET", "/api/v0/deployed/products", nil)
+	resp, err := a.sendAPIRequest("GET", "/api/v0/deployed/products", nil)
 	if err != nil {
-		return []DeployedProductOutput{}, err
-	}
-
-	resp, err := a.client.Do(req)
-	if err != nil {
-		return []DeployedProductOutput{}, fmt.Errorf("could not make api request to deployed products endpoint: %s", err)
+		return []DeployedProductOutput{}, errors.Wrap(err, "could not make api request to deployed products endpoint")
 	}
 	defer resp.Body.Close()
 
-	if err = validateStatusOK(resp); err != nil {
-		return []DeployedProductOutput{}, err
-	}
-
-	respBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return []DeployedProductOutput{}, err
-	}
-
 	var deployedProducts []DeployedProductOutput
-	err = json.Unmarshal(respBody, &deployedProducts)
-	if err != nil {
-		return []DeployedProductOutput{}, fmt.Errorf("could not unmarshal deployed products response: %s", err)
+	if err := json.NewDecoder(resp.Body).Decode(&deployedProducts); err != nil {
+		return []DeployedProductOutput{}, errors.Wrap(err, "could not unmarshal deployed products response")
 	}
 
 	return deployedProducts, nil

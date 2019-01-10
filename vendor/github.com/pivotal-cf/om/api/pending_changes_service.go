@@ -2,9 +2,8 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"net/http"
+
+	"github.com/pkg/errors"
 )
 
 const pendingChangesEndpoint = "/api/v0/staged/pending_changes"
@@ -13,37 +12,29 @@ type PendingChangesOutput struct {
 	ChangeList []ProductChange `json:"product_changes"`
 }
 
+type CompletenessChecks struct {
+	ConfigurationComplete       bool `json:"configuration_complete"`
+	StemcellPresent             bool `json:"stemcell_present"`
+	ConfigurablePropertiesValid bool `json:"configurable_properties_valid"`
+}
+
 type ProductChange struct {
-	Product string   `json:"guid"`
-	Errands []Errand `json:"errands"`
-	Action  string   `json:"action"`
+	GUID               string              `json:"guid"`
+	Action             string              `json:"action"`
+	Errands            []Errand            `json:"errands"`
+	CompletenessChecks *CompletenessChecks `json:"completeness_checks,omitempty"`
 }
 
 func (a Api) ListStagedPendingChanges() (PendingChangesOutput, error) {
-	pcReq, err := http.NewRequest("GET", pendingChangesEndpoint, nil)
+	resp, err := a.sendAPIRequest("GET", pendingChangesEndpoint, nil)
 	if err != nil {
-		return PendingChangesOutput{}, err
-	}
-
-	resp, err := a.client.Do(pcReq)
-	if err != nil {
-		return PendingChangesOutput{}, fmt.Errorf("could not make api request to pending_changes endpoint: %s", err)
+		return PendingChangesOutput{}, errors.Wrap(err, "failed to submit request")
 	}
 	defer resp.Body.Close()
 
-	if err = validateStatusOK(resp); err != nil {
-		return PendingChangesOutput{}, err
-	}
-
-	respBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return PendingChangesOutput{}, err
-	}
-
 	var pendingChanges PendingChangesOutput
-	err = json.Unmarshal(respBody, &pendingChanges)
-	if err != nil {
-		return PendingChangesOutput{}, fmt.Errorf("could not unmarshal pending_changes response: %s", err)
+	if err := json.NewDecoder(resp.Body).Decode(&pendingChanges); err != nil {
+		return PendingChangesOutput{}, errors.Wrap(err, "could not unmarshal pending_changes response")
 	}
 
 	return pendingChanges, nil

@@ -1,34 +1,42 @@
 package api
 
 import (
-	"fmt"
-	"io"
-	"net/http"
+	"encoding/json"
+
+	"github.com/pkg/errors"
 )
 
-type StemcellUploadInput struct {
-	ContentLength int64
-	Stemcell      io.Reader
-	ContentType   string
+type ProductStemcells struct {
+	Products []ProductStemcell `json:"products"`
 }
 
-type StemcellUploadOutput struct{}
+type ProductStemcell struct {
+	GUID                    string   `json:"guid,omitempty"`
+	ProductName             string   `json:"identifier,omitempty"`
+	StagedForDeletion       bool     `json:"is_staged_for_deletion,omitempty"`
+	StagedStemcellVersion   string   `json:"staged_stemcell_version,omitempty"`
+	RequiredStemcellVersion string   `json:"required_stemcell_version,omitempty"`
+	AvailableVersions       []string `json:"available_stemcell_versions,omitempty"`
+}
 
-func (a Api) UploadStemcell(input StemcellUploadInput) (StemcellUploadOutput, error) {
-	req, err := http.NewRequest("POST", "/api/v0/stemcells", input.Stemcell)
+func (a Api) ListStemcells() (ProductStemcells, error) {
+	resp, err := a.sendAPIRequest("GET", "/api/v0/stemcell_assignments", nil)
 	if err != nil {
-		return StemcellUploadOutput{}, err
+		return ProductStemcells{}, errors.Wrap(err, "could not make api request to list stemcells")
 	}
-
-	req.Header.Set("Content-Type", input.ContentType)
-	req.ContentLength = input.ContentLength
-
-	resp, err := a.progressClient.Do(req)
-	if err != nil {
-		return StemcellUploadOutput{}, fmt.Errorf("could not make api request to stemcells endpoint: %s", err)
-	}
-
 	defer resp.Body.Close()
 
-	return StemcellUploadOutput{}, validateStatusOK(resp)
+	var productStemcells ProductStemcells
+	err = json.NewDecoder(resp.Body).Decode(&productStemcells)
+	return productStemcells, err
+}
+
+func (a Api) AssignStemcell(input ProductStemcells) error {
+	jsonData, err := json.Marshal(&input)
+	if err != nil {
+		return errors.Wrap(err, "could not marshal json")
+	}
+
+	_, err = a.sendAPIRequest("PATCH", "/api/v0/stemcell_assignments", jsonData)
+	return err
 }

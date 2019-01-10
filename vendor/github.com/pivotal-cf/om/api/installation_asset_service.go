@@ -1,12 +1,13 @@
 package api
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
+
+	"github.com/pkg/errors"
 )
 
 type ImportInstallationInput struct {
@@ -17,30 +18,20 @@ type ImportInstallationInput struct {
 }
 
 func (a Api) DownloadInstallationAssetCollection(outputFile string, pollingInterval int) error {
-	req, err := http.NewRequest("GET", "/api/v0/installation_asset_collection", nil)
+	resp, err := a.sendProgressAPIRequest("GET", "/api/v0/installation_asset_collection", nil)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "could not make api request to installation_asset_collection endpoint")
 	}
-
-	resp, err := a.progressClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("could not make api request to installation_asset_collection endpoint: %s", err)
-	}
-
-	if err = validateStatusOK(resp); err != nil {
-		return fmt.Errorf("request failed: unexpected response")
-	}
-
 	defer resp.Body.Close()
 
 	outputFileHandle, err := os.Create(outputFile)
 	if err != nil {
-		return fmt.Errorf("cannot create output file: %s", err)
+		return errors.Wrap(err, "cannot create output file")
 	}
 
 	bytesWritten, err := io.Copy(outputFileHandle, resp.Body)
 	if err != nil {
-		return fmt.Errorf("cannot write output file: %s", err)
+		return errors.Wrap(err, "cannot write output file")
 	}
 
 	if bytesWritten != resp.ContentLength {
@@ -61,7 +52,7 @@ func (a Api) UploadInstallationAssetCollection(input ImportInstallationInput) er
 
 	resp, err := a.unauthedProgressClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("could not make api request to installation_asset_collection endpoint: %s", err)
+		return errors.Wrap(err, "could not make api request to installation_asset_collection endpoint")
 	}
 
 	defer resp.Body.Close()
@@ -74,26 +65,14 @@ func (a Api) UploadInstallationAssetCollection(input ImportInstallationInput) er
 }
 
 func (a Api) DeleteInstallationAssetCollection() (InstallationsServiceOutput, error) {
-	req, err := http.NewRequest("DELETE", "/api/v0/installation_asset_collection", bytes.NewBuffer([]byte(`{"errands": {}}`)))
+	resp, err := a.sendAPIRequest("DELETE", "/api/v0/installation_asset_collection", []byte(`{"errands": {}}`))
 	if err != nil {
-		return InstallationsServiceOutput{}, err
+		if resp.StatusCode == http.StatusGone {
+			return InstallationsServiceOutput{}, nil
+		}
+		return InstallationsServiceOutput{}, errors.Wrap(err, "could not make api request to installation_asset_collection endpoint")
 	}
-
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := a.client.Do(req)
-	if err != nil {
-		return InstallationsServiceOutput{}, fmt.Errorf("could not make api request to installation_asset_collection endpoint: %s", err)
-	}
-
 	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusGone {
-		return InstallationsServiceOutput{}, nil
-	}
-
-	if err = validateStatusOK(resp); err != nil {
-		return InstallationsServiceOutput{}, err
-	}
 
 	var installation struct {
 		Install struct {
@@ -103,7 +82,7 @@ func (a Api) DeleteInstallationAssetCollection() (InstallationsServiceOutput, er
 
 	err = json.NewDecoder(resp.Body).Decode(&installation)
 	if err != nil {
-		return InstallationsServiceOutput{}, fmt.Errorf("could not read response from installation_asset_collection endpoint: %s", err)
+		return InstallationsServiceOutput{}, errors.Wrap(err, "could not read response from installation_asset_collection endpoint")
 	}
 
 	return InstallationsServiceOutput{ID: installation.Install.ID}, nil

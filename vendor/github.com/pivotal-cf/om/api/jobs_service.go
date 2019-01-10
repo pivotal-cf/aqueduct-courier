@@ -1,17 +1,16 @@
 package api
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
+
+	"github.com/pkg/errors"
 )
 
 // TODO: add omitempty everywhere
 type JobProperties struct {
 	Instances              interface{}  `json:"instances" yaml:"instances"`
-	PersistentDisk         *Disk        `json:"persistent_disk,omitempty" yaml:"persistent_disk,omitempty":`
+	PersistentDisk         *Disk        `json:"persistent_disk,omitempty" yaml:"persistent_disk,omitempty"`
 	InstanceType           InstanceType `json:"instance_type" yaml:"instance_type"`
 	InternetConnected      *bool        `json:"internet_connected,omitempty" yaml:"internet_connected,omitempty"`
 	LBNames                []string     `json:"elb_names" yaml:"elb_names,omitempty"`
@@ -42,21 +41,11 @@ type Job struct {
 }
 
 func (a Api) ListStagedProductJobs(productGUID string) (map[string]string, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("/api/v0/staged/products/%s/jobs", productGUID), nil)
+	resp, err := a.sendAPIRequest("GET", fmt.Sprintf("/api/v0/staged/products/%s/jobs", productGUID), nil)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "could not make api request to jobs endpoint")
 	}
-
-	resp, err := a.client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("could not make api request to jobs endpoint: %s", err)
-	}
-
 	defer resp.Body.Close()
-
-	if err = validateStatusOK(resp); err != nil {
-		return nil, err
-	}
 
 	var jobsOutput struct {
 		Jobs []Job
@@ -64,7 +53,7 @@ func (a Api) ListStagedProductJobs(productGUID string) (map[string]string, error
 
 	err = json.NewDecoder(resp.Body).Decode(&jobsOutput)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode jobs json response: %s", err)
+		return nil, errors.Wrap(err, "failed to decode jobs json response")
 	}
 
 	jobGUIDMap := make(map[string]string)
@@ -76,30 +65,14 @@ func (a Api) ListStagedProductJobs(productGUID string) (map[string]string, error
 }
 
 func (a Api) GetStagedProductJobResourceConfig(productGUID, jobGUID string) (JobProperties, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("/api/v0/staged/products/%s/jobs/%s/resource_config", productGUID, jobGUID), nil)
+	resp, err := a.sendAPIRequest("GET", fmt.Sprintf("/api/v0/staged/products/%s/jobs/%s/resource_config", productGUID, jobGUID), nil)
 	if err != nil {
-		return JobProperties{}, err
+		return JobProperties{}, errors.Wrap(err, "could not make api request to resource_config endpoint")
 	}
-
-	resp, err := a.client.Do(req)
-	if err != nil {
-		return JobProperties{}, fmt.Errorf("could not make api request to resource_config endpoint: %s", err)
-	}
-
 	defer resp.Body.Close()
 
-	if err = validateStatusOK(resp); err != nil {
-		return JobProperties{}, err
-	}
-
-	content, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return JobProperties{}, err
-	}
-
 	var existingConfig JobProperties
-	err = json.Unmarshal(content, &existingConfig)
-	if err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&existingConfig); err != nil {
 		return JobProperties{}, err
 	}
 
@@ -107,28 +80,14 @@ func (a Api) GetStagedProductJobResourceConfig(productGUID, jobGUID string) (Job
 }
 
 func (a Api) UpdateStagedProductJobResourceConfig(productGUID, jobGUID string, jobProperties JobProperties) error {
-	bodyBytes := bytes.NewBuffer([]byte{})
-	err := json.NewEncoder(bodyBytes).Encode(jobProperties)
+	jsonPayload, err := json.Marshal(jobProperties)
 	if err != nil {
 		return err
 	}
 
-	req, err := http.NewRequest("PUT", fmt.Sprintf("/api/v0/staged/products/%s/jobs/%s/resource_config", productGUID, jobGUID), bodyBytes)
+	_, err = a.sendAPIRequest("PUT", fmt.Sprintf("/api/v0/staged/products/%s/jobs/%s/resource_config", productGUID, jobGUID), jsonPayload)
 	if err != nil {
-		return err
-	}
-
-	req.Header.Add("Content-Type", "application/json")
-
-	resp, err := a.client.Do(req)
-	if err != nil {
-		return fmt.Errorf("could not make api request to jobs resource_config endpoint: %s", err)
-	}
-
-	defer resp.Body.Close()
-
-	if err = validateStatusOK(resp); err != nil {
-		return err
+		return errors.Wrap(err, "could not make api request to jobs resource_config endpoint")
 	}
 
 	return nil

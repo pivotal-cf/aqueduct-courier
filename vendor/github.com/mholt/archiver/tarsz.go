@@ -15,15 +15,24 @@ type TarSz struct {
 	*Tar
 }
 
+// CheckExt ensures the file extension matches the format.
+func (*TarSz) CheckExt(filename string) error {
+	if !strings.HasSuffix(filename, ".tar.sz") &&
+		!strings.HasSuffix(filename, ".tsz") {
+		return fmt.Errorf("filename must have a .tar.sz or .tsz extension")
+	}
+	return nil
+}
+
 // Archive creates a compressed tar file at destination
 // containing the files listed in sources. The destination
 // must end with ".tar.sz" or ".tsz". File paths can be
 // those of regular files or directories; directories will
 // be recursively added.
 func (tsz *TarSz) Archive(sources []string, destination string) error {
-	if !strings.HasSuffix(destination, ".tar.sz") &&
-		!strings.HasSuffix(destination, ".tsz") {
-		return fmt.Errorf("output filename must have .tar.sz or .tsz extension")
+	err := tsz.CheckExt(destination)
+	if err != nil {
+		return fmt.Errorf("output %s", err.Error())
 	}
 	tsz.wrapWriter()
 	return tsz.Tar.Archive(sources, destination)
@@ -84,6 +93,13 @@ func (tsz *TarSz) wrapReader() {
 
 func (tsz *TarSz) String() string { return "tar.sz" }
 
+// NewTarSz returns a new, default instance ready to be customized and used.
+func NewTarSz() *TarSz {
+	return &TarSz{
+		Tar: NewTar(),
+	}
+}
+
 // Compile-time checks to ensure type implements desired interfaces.
 var (
 	_ = Reader(new(TarSz))
@@ -95,6 +111,4 @@ var (
 )
 
 // DefaultTarSz is a convenient archiver ready to use.
-var DefaultTarSz = &TarSz{
-	Tar: DefaultTar,
-}
+var DefaultTarSz = NewTarSz()

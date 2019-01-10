@@ -2,9 +2,9 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"net/http"
+
+	"github.com/pkg/errors"
 )
 
 type DiagnosticProduct struct {
@@ -27,30 +27,14 @@ func (du DiagnosticReportUnavailable) Error() string {
 }
 
 func (a Api) GetDiagnosticReport() (DiagnosticReport, error) {
-	req, err := http.NewRequest("GET", "/api/v0/diagnostic_report", nil)
+	resp, err := a.sendAPIRequest("GET", "/api/v0/diagnostic_report", nil)
 	if err != nil {
-		return DiagnosticReport{}, err
+		if resp.StatusCode == http.StatusInternalServerError {
+			return DiagnosticReport{}, DiagnosticReportUnavailable{}
+		}
+		return DiagnosticReport{}, errors.Wrap(err, "could not make api request to diagnostic_report endpoint")
 	}
-
-	resp, err := a.client.Do(req)
-	if err != nil {
-		return DiagnosticReport{}, fmt.Errorf("could not make api request to diagnostic_report endpoint: %s", err)
-	}
-
 	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusInternalServerError {
-		return DiagnosticReport{}, DiagnosticReportUnavailable{}
-	}
-
-	if err = validateStatusOK(resp); err != nil {
-		return DiagnosticReport{}, err
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return DiagnosticReport{}, err
-	}
 
 	var apiResponse *struct {
 		DiagnosticReport
@@ -59,11 +43,8 @@ func (a Api) GetDiagnosticReport() (DiagnosticReport, error) {
 			DeployedProducts []DiagnosticProduct `json:"deployed"`
 		} `json:"added_products"`
 	}
-
-	err = json.Unmarshal(body, &apiResponse)
-
-	if err != nil {
-		return DiagnosticReport{}, fmt.Errorf("invalid json received from server: %s", err)
+	if err := json.NewDecoder(resp.Body).Decode(&apiResponse); err != nil {
+		return DiagnosticReport{}, errors.Wrap(err, "invalid json received from server")
 	}
 
 	return DiagnosticReport{

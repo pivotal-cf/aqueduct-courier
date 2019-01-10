@@ -13,6 +13,7 @@ type Metadata struct {
 	Filename          string                 `json:"filename"`
 	CustomerID        string                 `json:"customerId"`
 	CatalogedAt       time.Time              `json:"catalogedAt"`
+	ReceivedAt        string                 `json:"receivedAt"`
 	CustomMetadata    map[string]interface{} `json:"customMetadata"`
 }
 

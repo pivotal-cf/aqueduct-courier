@@ -1,7 +1,7 @@
 archiver [![archiver GoDoc](https://img.shields.io/badge/reference-godoc-blue.svg?style=flat-square)](https://godoc.org/github.com/mholt/archiver) [![Linux Build Status](https://img.shields.io/travis/mholt/archiver.svg?style=flat-square&label=linux+build)](https://travis-ci.org/mholt/archiver) [![Windows Build Status](https://img.shields.io/appveyor/ci/mholt/archiver.svg?style=flat-square&label=windows+build)](https://ci.appveyor.com/project/mholt/archiver)
 ========
 
-Introducing **Archiver 3.0** - a cross-platform, multi-format archive utility and Go library. A powerful and flexible library meets an elegant CLI in this generic replacement for several of platform-specific, format-specific archive utilities.
+Introducing **Archiver 3.1** - a cross-platform, multi-format archive utility and Go library. A powerful and flexible library meets an elegant CLI in this generic replacement for several of platform-specific, format-specific archive utilities.
 
 ## Features
 
@@ -45,7 +45,7 @@ Files are put into the root of the archive; directories are recursively added, p
 - bzip2
 - gzip
 - lz4
-- snappy
+- snappy (sz)
 - xz
 
 
@@ -92,7 +92,7 @@ drwxr-xr-x  matt    staff   0       2018-09-19 15:47:18 -0600 MDT   dist/
 -rw-r--r--  matt    staff   6148    2017-08-07 18:34:22 -0600 MDT   dist/.DS_Store
 -rw-r--r--  matt    staff   22481   2018-09-19 15:47:18 -0600 MDT   dist/CHANGES.txt
 -rw-r--r--  matt    staff   17189   2018-09-19 15:47:18 -0600 MDT   dist/EULA.txt
--rw-r--r--  matt    staff   25261   2016-03-07 16:32:00 -0700 MST	dist/LICENSES.txt
+-rw-r--r--  matt    staff   25261   2016-03-07 16:32:00 -0700 MST   dist/LICENSES.txt
 -rw-r--r--  matt    staff   1017    2018-09-19 15:47:18 -0600 MDT   dist/README.txt
 -rw-r--r--  matt    staff   288     2016-03-21 11:52:38 -0600 MDT   dist/gitcookie.sh.enc
 ...
@@ -142,7 +142,17 @@ import "github.com/mholt/archiver"
 
 [See the package's GoDoc](https://godoc.org/github.com/mholt/archiver) for full API documentation.
 
-For example, creating an archive:
+For example, creating or unpacking an archive file:
+
+```go
+err := archiver.Archive([]string{"testdata", "other/file.txt"}, "test.zip")
+// ...
+err = archiver.Unarchive("test.tar.gz", "test")
+```
+
+The archive format is determined by file extension. (There are [several functions in this package](https://godoc.org/github.com/mholt/archiver) which perform a task by inferring the format from file extension or file header, including `Archive()`, `Unarchive()`, `CompressFile()`, and `DecompressFile()`.)
+
+To configure the archiver used or perform, create an instance of the format's type:
 
 ```go
 z := archiver.Zip{
@@ -178,20 +188,40 @@ if err != nil {
 }
 defer z.Close()
 
-for _, f := range files {
-	// ... open file and get the name for it within the archive ...
-	err = z.Write(File{
+for _, fname := range filenames {
+	info, err := os.Stat(fname)
+	if err != nil {
+		return err
+	}
+	
+	// get file's name for the inside of the archive
+	internalName, err := archiver.NameInArchive(info, fname, fname)
+	if err != nil {
+		return err
+	}
+
+	// open the file
+	file, err := os.Open(f)
+	if err != nil {
+		return err
+	}
+
+	// write it to the archive
+	err = z.Write(archiver.File{
 		FileInfo: archiver.FileInfo{
-			FileInfo:   f.FileInfo(),
-			CustomName: nameInArchive,
+			FileInfo:   info,
+			CustomName: internalName,
 		},
-		ReadCloser: f,
+		ReadCloser: file,
 	})
+	file.Close()
 	if err != nil {
 		return err
 	}
 }
 ```
+
+The `archiver.File` type allows you to use actual files with archives, or to mimic files when you only have streams.
 
 There's a lot more that can be done, too. [See the GoDoc](https://godoc.org/github.com/mholt/archiver) for full API documentation.
 

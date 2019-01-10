@@ -9,11 +9,15 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"os"
 	"time"
 
+	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 )
+
+const TOKEN_ATTEMPT_COUNT = 3
 
 type OAuthClient struct {
 	oauthConfig   *oauth2.Config
@@ -105,7 +109,7 @@ func (oc OAuthClient) Do(request *http.Request) (*http.Response, error) {
 	if oc.oauthConfigCC.ClientID != "" {
 		client = oc.oauthConfigCC.Client(oc.context)
 	} else {
-		token, err := retrieveTokenWithRetry(oc.oauthConfig, oc.context, oc.username, oc.password, oc.timeout)
+		token, err := retrieveTokenWithRetry(oc.oauthConfig, oc.context, oc.username, oc.password)
 		if err != nil {
 			return nil, err
 		}
@@ -130,27 +134,37 @@ func (oc OAuthClient) Do(request *http.Request) (*http.Response, error) {
 	return client.Do(request)
 }
 
-func retrieveTokenWithRetry(config *oauth2.Config, ctx context.Context, username, password string, timeout time.Duration) (*oauth2.Token, error) {
-	currTime := time.Now()
-	expiryTime := currTime.Add(timeout)
-retry:
-	token, err := config.PasswordCredentialsToken(ctx, username, password)
-	if time.Now().Before(expiryTime) && canRetry(err) {
-		goto retry
+func retrieveTokenWithRetry(config *oauth2.Config, ctx context.Context, username, password string) (*oauth2.Token, error) {
+	var token *oauth2.Token
+	var err error
+
+	for i := 0; i < TOKEN_ATTEMPT_COUNT; i++ {
+		if i != 0 {
+			fmt.Fprintf(os.Stderr, "\nRetrying, attempt %d out of %d...\n", i+1, TOKEN_ATTEMPT_COUNT)
+		}
+		token, err = config.PasswordCredentialsToken(ctx, username, password)
+		if !CanRetry(err) {
+			break
+		}
+
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "token could not be retrieved from target url: %s.\n", err)
+		} else {
+			break
+		}
 	}
 
 	if err != nil {
 		return nil, fmt.Errorf("token could not be retrieved from target url: %s", err)
 	}
-
-	return token, err
+	return token, nil
 }
 
 func httpResponseWithRetry(client *http.Client, request *http.Request) (*http.Response, error) {
 retry:
 	resp, err := client.Do(request)
 	if client.Timeout == 0 {
-		if canRetry(err) {
+		if CanRetry(err) {
 			goto retry
 		}
 	}
@@ -162,12 +176,15 @@ retry:
 	return resp, nil
 }
 
-func canRetry(err error) bool {
+func CanRetry(err error) bool {
 	if err != nil {
-		if ne, ok := err.(net.Error); ok {
-			if ne.Temporary() {
-				return true
-			}
+		err = errors.Cause(err)
+		if IsTemporary(err) {
+			return true
+		}
+
+		if ue, ok := err.(*url.Error); ok {
+			err = ue.Err
 		}
 
 		if err == io.EOF {

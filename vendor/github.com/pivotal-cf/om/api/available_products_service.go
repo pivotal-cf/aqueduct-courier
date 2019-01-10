@@ -3,12 +3,12 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 const availableProductsEndpoint = "/api/v0/available_products"
@@ -50,7 +50,7 @@ func (a Api) UploadAvailableProduct(input UploadAvailableProductInput) (UploadAv
 
 	resp, err := a.progressClient.Do(req)
 	if err != nil {
-		return UploadAvailableProductOutput{}, fmt.Errorf("could not make api request to available_products endpoint: %s", err)
+		return UploadAvailableProductOutput{}, errors.Wrap(err, "could not make api request to available_products endpoint")
 	}
 
 	defer resp.Body.Close()
@@ -63,30 +63,15 @@ func (a Api) UploadAvailableProduct(input UploadAvailableProductInput) (UploadAv
 }
 
 func (a Api) ListAvailableProducts() (AvailableProductsOutput, error) {
-	avReq, err := http.NewRequest("GET", availableProductsEndpoint, nil)
+	resp, err := a.sendAPIRequest("GET", availableProductsEndpoint, nil)
 	if err != nil {
-		return AvailableProductsOutput{}, err
-	}
-
-	resp, err := a.client.Do(avReq)
-	if err != nil {
-		return AvailableProductsOutput{}, fmt.Errorf("could not make api request to available_products endpoint: %s", err)
+		return AvailableProductsOutput{}, errors.Wrap(err, "could not make api request to available_products endpoint")
 	}
 	defer resp.Body.Close()
 
-	if err = validateStatusOK(resp); err != nil {
-		return AvailableProductsOutput{}, err
-	}
-
-	respBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return AvailableProductsOutput{}, err
-	}
-
 	var availableProducts []ProductInfo
-	err = json.Unmarshal(respBody, &availableProducts)
-	if err != nil {
-		return AvailableProductsOutput{}, fmt.Errorf("could not unmarshal available_products response: %s", err)
+	if err := json.NewDecoder(resp.Body).Decode(&availableProducts); err != nil {
+		return AvailableProductsOutput{}, errors.Wrap(err, "could not unmarshal available_products response")
 	}
 
 	return AvailableProductsOutput{ProductsList: availableProducts}, nil
@@ -105,7 +90,7 @@ func (a Api) DeleteAvailableProducts(input DeleteAvailableProductsInput) error {
 
 	resp, err := a.client.Do(req)
 	if err != nil {
-		return fmt.Errorf("could not make api request to available_products endpoint: %s", err)
+		return errors.Wrap(err, "could not make api request to available_products endpoint")
 	}
 
 	defer resp.Body.Close()

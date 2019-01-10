@@ -1,11 +1,11 @@
 package api
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/http"
+
+	"github.com/pkg/errors"
 )
 
 type VMExtensionResponse struct {
@@ -24,27 +24,15 @@ type CreateVMExtension struct {
 
 func (a Api) CreateStagedVMExtension(input CreateVMExtension) error {
 	jsonData, err := json.Marshal(&input)
-
 	if err != nil {
-		return fmt.Errorf("could not marshal json: %s", err)
+		return errors.Wrap(err, "could not marshal json")
 	}
 
-	verb := "PUT"
-	endpoint := fmt.Sprintf("/api/v0/staged/vm_extensions/%s", input.Name)
-	req, err := http.NewRequest(verb, endpoint, bytes.NewReader(jsonData))
+	resp, err := a.sendAPIRequest("PUT", fmt.Sprintf("/api/v0/staged/vm_extensions/%s", input.Name), jsonData)
 	if err != nil {
-		return fmt.Errorf("could not create api request %s %s: %s", verb, endpoint, err.Error())
-	}
-	req.Header.Add("Content-Type", "application/json")
-
-	resp, err := a.client.Do(req)
-	if err != nil {
-		return fmt.Errorf("could not send api request to %s %s: %s", verb, endpoint, err.Error())
-	}
-
-	if err = validateStatusOK(resp); err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	return nil
 }
@@ -54,7 +42,6 @@ func (a Api) ListStagedVMExtensions() ([]VMExtension, error) {
 	if err != nil {
 		return nil, err // un-tested
 	}
-
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
@@ -63,17 +50,13 @@ func (a Api) ListStagedVMExtensions() ([]VMExtension, error) {
 	}
 	var vmExtensions VMExtensionResponse
 	if err = json.Unmarshal(body, &vmExtensions); err != nil {
-		return nil, fmt.Errorf("could not parse json: %s", err)
+		return nil, errors.Wrap(err, "could not parse json")
 	}
 
 	return vmExtensions.VMExtensions, nil
 }
 
 func (a Api) DeleteVMExtension(name string) error {
-	endpoint := fmt.Sprintf("/api/v0/staged/vm_extensions/%s", name)
-	_, err := a.sendAPIRequest("DELETE", endpoint, nil)
-	if err != nil {
-		return err
-	}
-	return nil
+	_, err := a.sendAPIRequest("DELETE", fmt.Sprintf("/api/v0/staged/vm_extensions/%s", name), nil)
+	return err
 }

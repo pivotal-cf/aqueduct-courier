@@ -53,13 +53,22 @@ type Tar struct {
 	cleanupWrapFn func()
 }
 
+// CheckExt ensures the file extension matches the format.
+func (*Tar) CheckExt(filename string) error {
+	if !strings.HasSuffix(filename, ".tar") {
+		return fmt.Errorf("filename must have a .tar extension")
+	}
+	return nil
+}
+
 // Archive creates a tarball file at destination containing
 // the files listed in sources. The destination must end with
 // ".tar". File paths can be those of regular files or
 // directories; directories will be recursively added.
 func (t *Tar) Archive(sources []string, destination string) error {
-	if t.writerWrapFn == nil && !strings.HasSuffix(destination, ".tar") {
-		return fmt.Errorf("output filename must have .tar extension")
+	err := t.CheckExt(destination)
+	if t.writerWrapFn == nil && err != nil {
+		return fmt.Errorf("checking extension: %v", err)
 	}
 	if !t.OverwriteExisting && fileExists(destination) {
 		return fmt.Errorf("file already exists: %s", destination)
@@ -328,9 +337,7 @@ func (t *Tar) Write(f File) error {
 	if f.FileInfo.Name() == "" {
 		return fmt.Errorf("missing file name")
 	}
-	if f.ReadCloser == nil {
-		return fmt.Errorf("%s: no way to read file contents", f.Name())
-	}
+
 	hdr, err := tar.FileInfoHeader(f, f.Name())
 	if err != nil {
 		return fmt.Errorf("%s: making header: %v", f.Name(), err)
@@ -346,6 +353,9 @@ func (t *Tar) Write(f File) error {
 	}
 
 	if hdr.Typeflag == tar.TypeReg {
+		if f.ReadCloser == nil {
+			return fmt.Errorf("%s: no way to read file contents", f.Name())
+		}
 		_, err := io.Copy(t.tw, f)
 		if err != nil {
 			return fmt.Errorf("%s: copying contents: %v", f.Name(), err)
@@ -514,7 +524,7 @@ func (t *Tar) Extract(source, target, destination string) error {
 
 // Match returns true if the format of file matches this
 // type's format. It should not affect reader position.
-func (*Tar) Match(file *os.File) (bool, error) {
+func (*Tar) Match(file io.ReadSeeker) (bool, error) {
 	currentPos, err := file.Seek(0, io.SeekCurrent)
 	if err != nil {
 		return false, err
@@ -570,6 +580,13 @@ func hasTarHeader(buf []byte) bool {
 
 func (t *Tar) String() string { return "tar" }
 
+// NewTar returns a new, default instance ready to be customized and used.
+func NewTar() *Tar {
+	return &Tar{
+		MkdirAll: true,
+	}
+}
+
 const tarBlockSize = 512
 
 // Compile-time checks to ensure type implements desired interfaces.
@@ -581,9 +598,8 @@ var (
 	_ = Walker(new(Tar))
 	_ = Extractor(new(Tar))
 	_ = Matcher(new(Tar))
+	_ = ExtensionChecker(new(Rar))
 )
 
-// DefaultTar is a convenient archiver ready to use.
-var DefaultTar = &Tar{
-	MkdirAll: true,
-}
+// DefaultTar is a default instance that is conveniently ready to use.
+var DefaultTar = NewTar()

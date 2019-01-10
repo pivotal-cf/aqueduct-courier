@@ -1,11 +1,11 @@
 package api
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 const (
@@ -24,28 +24,18 @@ type InstallationsServiceOutput struct {
 }
 
 func (a Api) ListInstallations() ([]InstallationsServiceOutput, error) {
-	req, err := http.NewRequest("GET", "/api/v0/installations", nil)
+	resp, err := a.sendAPIRequest("GET", "/api/v0/installations", nil)
 	if err != nil {
-		return []InstallationsServiceOutput{}, err
+		return []InstallationsServiceOutput{}, errors.Wrap(err, "could not make api request to installations endpoint")
 	}
-
-	resp, err := a.client.Do(req)
-	if err != nil {
-		return []InstallationsServiceOutput{}, fmt.Errorf("could not make api request to installations endpoint: %s", err)
-	}
-
 	defer resp.Body.Close()
-
-	if err = validateStatusOK(resp); err != nil {
-		return []InstallationsServiceOutput{}, err
-	}
 
 	var responseStruct struct {
 		Installations []InstallationsServiceOutput
 	}
 	err = json.NewDecoder(resp.Body).Decode(&responseStruct)
 	if err != nil {
-		return []InstallationsServiceOutput{}, fmt.Errorf("failed to decode response: %s", err)
+		return []InstallationsServiceOutput{}, errors.Wrap(err, "failed to decode response")
 	}
 
 	return responseStruct.Installations, nil
@@ -58,7 +48,7 @@ func (a Api) CreateInstallation(ignoreWarnings bool, deployProducts bool, produc
 	} else if len(productNames) > 0 {
 		sp, err := a.ListStagedProducts()
 		if err != nil {
-			return InstallationsServiceOutput{}, fmt.Errorf("failed to list staged products: %v", err)
+			return InstallationsServiceOutput{}, errors.Wrap(err, "failed to list staged products")
 		}
 		// convert list of product names to product GUIDs
 		var productGUIDs []string
@@ -90,23 +80,12 @@ func (a Api) CreateInstallation(ignoreWarnings bool, deployProducts bool, produc
 	if err != nil {
 		return InstallationsServiceOutput{}, err
 	}
-	req, err := http.NewRequest("POST", "/api/v0/installations", bytes.NewReader(data))
+
+	resp, err := a.sendAPIRequest("POST", "/api/v0/installations", data)
 	if err != nil {
-		return InstallationsServiceOutput{}, err
+		return InstallationsServiceOutput{}, errors.Wrap(err, "could not make api request to installations endpoint")
 	}
-
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := a.client.Do(req)
-	if err != nil {
-		return InstallationsServiceOutput{}, fmt.Errorf("could not make api request to installations endpoint: %s", err)
-	}
-
 	defer resp.Body.Close()
-
-	if err = validateStatusOK(resp); err != nil {
-		return InstallationsServiceOutput{}, err
-	}
 
 	var installation struct {
 		Install struct {
@@ -115,67 +94,43 @@ func (a Api) CreateInstallation(ignoreWarnings bool, deployProducts bool, produc
 	}
 	err = json.NewDecoder(resp.Body).Decode(&installation)
 	if err != nil {
-		return InstallationsServiceOutput{}, fmt.Errorf("failed to decode response: %s", err)
+		return InstallationsServiceOutput{}, errors.Wrap(err, "failed to decode response")
 	}
 
 	return InstallationsServiceOutput{ID: installation.Install.ID}, nil
 }
 
 func (a Api) GetInstallation(id int) (InstallationsServiceOutput, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("/api/v0/installations/%d", id), nil)
+	resp, err := a.sendAPIRequest("GET", fmt.Sprintf("/api/v0/installations/%d", id), nil)
 	if err != nil {
-		return InstallationsServiceOutput{}, err
+		return InstallationsServiceOutput{}, errors.Wrap(err, "could not make api request to installations status endpoint")
 	}
-
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := a.client.Do(req)
-	if err != nil {
-		return InstallationsServiceOutput{}, fmt.Errorf("could not make api request to installations status endpoint: %s", err)
-	}
-
 	defer resp.Body.Close()
-
-	if err = validateStatusOK(resp); err != nil {
-		return InstallationsServiceOutput{}, err
-	}
 
 	var output struct {
 		Status string
 	}
 	err = json.NewDecoder(resp.Body).Decode(&output)
 	if err != nil {
-		return InstallationsServiceOutput{}, fmt.Errorf("failed to decode response: %s", err)
+		return InstallationsServiceOutput{}, errors.Wrap(err, "failed to decode response")
 	}
 
 	return InstallationsServiceOutput{Status: output.Status}, nil
 }
 
 func (a Api) GetInstallationLogs(id int) (InstallationsServiceOutput, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("/api/v0/installations/%d/logs", id), nil)
+	resp, err := a.sendAPIRequest("GET", fmt.Sprintf("/api/v0/installations/%d/logs", id), nil)
 	if err != nil {
-		return InstallationsServiceOutput{}, err
+		return InstallationsServiceOutput{}, errors.Wrap(err, "could not make api request to installations logs endpoint")
 	}
-
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := a.client.Do(req)
-	if err != nil {
-		return InstallationsServiceOutput{}, fmt.Errorf("could not make api request to installations logs endpoint: %s", err)
-	}
-
 	defer resp.Body.Close()
-
-	if err = validateStatusOK(resp); err != nil {
-		return InstallationsServiceOutput{}, err
-	}
 
 	var output struct {
 		Logs string
 	}
 	err = json.NewDecoder(resp.Body).Decode(&output)
 	if err != nil {
-		return InstallationsServiceOutput{}, fmt.Errorf("failed to decode response: %s", err)
+		return InstallationsServiceOutput{}, errors.Wrap(err, "failed to decode response")
 	}
 
 	return InstallationsServiceOutput{Logs: output.Logs}, nil
