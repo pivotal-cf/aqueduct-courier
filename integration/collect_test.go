@@ -247,7 +247,6 @@ var _ = Describe("Collect", func() {
 
 		AfterEach(func() {
 			credhubServer.Close()
-			time.Sleep(1 * time.Second)
 		})
 
 		It("collects information from credhub as well as ops manager with flag configuration", func() {
