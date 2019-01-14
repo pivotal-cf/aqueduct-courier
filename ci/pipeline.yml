@@ -298,11 +298,14 @@ jobs:
   - get: prod-collection-timer
     trigger: true
   - get: aqueduct-courier
+  - get: task-docker-image
   - task: strip-collector-version
+    image: task-docker-image
     file: aqueduct-courier/ci/tasks/strip-collector-version.yml
     input_mapping:
       binary-with-version: pivotal-telemetry-collector
   - task: collect
+    image: task-docker-image
     file: aqueduct-courier/ci/tasks/collect.yml
     params:
       OPS_MANAGER_URL: {{courier-ops-manager-url}}
@@ -311,6 +314,7 @@ jobs:
       ENV_TYPE: development
       INSECURE_SKIP_TLS_VERIFY: true
   - task: send
+    image: task-docker-image
     file: aqueduct-courier/ci/tasks/send.yml
     params:
       API_KEY: {{production-loader-api-key}}
