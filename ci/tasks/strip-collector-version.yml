@@ -1,0 +1,28 @@
+---
+platform: linux
+
+inputs:
+- name: binary-with-version
+
+outputs:
+- name: binary
+
+run:
+  path: sh
+  args:
+  - -c
+  - |
+    #!/bin/bash
+
+    set -xe
+
+    for fileName in $(find ./binary-with-version -name "telemetry-collector-linux-amd64*"); do
+      if [ ! -z "$BIN_NAME" ]; then
+        echo "More than one binary file matching pattern found"
+        exit 1
+      fi
+
+      BIN_NAME=fileName
+    done
+
+    cp "$BIN_NAME" ./binary/telemetry-collector-linux-amd64
