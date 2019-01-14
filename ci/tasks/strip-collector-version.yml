@@ -22,7 +22,7 @@ run:
         exit 1
       fi
 
-      BIN_NAME=fileName
+      BIN_NAME=$fileName
     done
 
     cp "$BIN_NAME" ./binary/telemetry-collector-linux-amd64

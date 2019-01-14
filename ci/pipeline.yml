@@ -301,7 +301,7 @@ jobs:
   - task: strip-collector-version
     file: aqueduct-courier/ci/tasks/strip-collector-version.yml
     input_mapping:
-      binary: pivotal-telemetry-collector
+      binary-with-version: pivotal-telemetry-collector
   - task: collect
     file: aqueduct-courier/ci/tasks/collect.yml
     params:
