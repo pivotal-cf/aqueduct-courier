@@ -20,7 +20,7 @@ import (
 	"github.com/onsi/gomega/gexec"
 	"github.com/onsi/gomega/ghttp"
 	"github.com/pivotal-cf/aqueduct-courier/cmd"
-	"github.com/pivotal-cf/aqueduct-courier/ops"
+	"github.com/pivotal-cf/aqueduct-courier/operations"
 	"github.com/pivotal-cf/aqueduct-utils/data"
 	"github.com/pivotal-cf/aqueduct-utils/file"
 )
@@ -409,7 +409,7 @@ var _ = Describe("Collect", func() {
 		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(session).Should(gexec.Exit(1))
-		Expect(session.Err).To(gbytes.Say(ops.OpsManagerCollectFailureMessage))
+		Expect(session.Err).To(gbytes.Say(operations.OpsManagerCollectFailureMessage))
 		Expect(session.Err).NotTo(gbytes.Say("Usage:"))
 		assertOutputDirEmpty(outputDirPath)
 	})

@@ -1,29 +1,31 @@
-package ops_test
+package operations_test
 
 import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/pivotal-cf/aqueduct-utils/urd"
 	"io/ioutil"
 	"net/http"
 	"os"
 
+	"github.com/pivotal-cf/aqueduct-utils/urd"
+
+	"strings"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/pivotal-cf/aqueduct-courier/ops"
-	"github.com/pivotal-cf/aqueduct-courier/ops/opsfakes"
+	. "github.com/pivotal-cf/aqueduct-courier/operations"
+	"github.com/pivotal-cf/aqueduct-courier/operations/operationsfakes"
 	"github.com/pivotal-cf/aqueduct-utils/data"
 	"github.com/pkg/errors"
-	"strings"
 )
 
 var _ = Describe("Sender", func() {
 	var (
-		client     *opsfakes.FakeHttpClient
-		tarReader  *opsfakes.FakeTarReader
-		validator  *opsfakes.FakeValidator
+		client     *operationsfakes.FakeHttpClient
+		tarReader  *operationsfakes.FakeTarReader
+		validator  *operationsfakes.FakeValidator
 		metadata   data.Metadata
 		tmpFile    *os.File
 		tarContent string
@@ -33,9 +35,9 @@ var _ = Describe("Sender", func() {
 	BeforeEach(func() {
 		sender = SendExecutor{}
 
-		client = new(opsfakes.FakeHttpClient)
-		tarReader = new(opsfakes.FakeTarReader)
-		validator = new(opsfakes.FakeValidator)
+		client = new(operationsfakes.FakeHttpClient)
+		tarReader = new(operationsfakes.FakeTarReader)
+		validator = new(operationsfakes.FakeValidator)
 
 		metadata = data.Metadata{
 			CollectedAt:  "collected-at",
@@ -148,14 +150,14 @@ var _ = Describe("Sender", func() {
 
 	It("errors if the error response cannot be read", func() {
 		client.DoReturns(&http.Response{StatusCode: http.StatusExpectationFailed, Body: ioutil.NopCloser(&badReader{})}, nil)
-		err := sender.Send(client, tarReader, validator, tmpFile.Name(),"http://example.com", "invalid-key", "")
+		err := sender.Send(client, tarReader, validator, tmpFile.Name(), "http://example.com", "invalid-key", "")
 		Expect(err).To(MatchError(fmt.Sprintf(UnexpectedServerErrorFormat, "unknown")))
 	})
 
 	It("errors if the error response cannot be read into the expected structure", func() {
 		badBody := ioutil.NopCloser(strings.NewReader(`{not json`))
 		client.DoReturns(&http.Response{StatusCode: http.StatusExpectationFailed, Body: badBody}, nil)
-		err := sender.Send(client, tarReader, validator, tmpFile.Name(),"http://example.com", "invalid-key", "")
+		err := sender.Send(client, tarReader, validator, tmpFile.Name(), "http://example.com", "invalid-key", "")
 		Expect(err).To(MatchError(fmt.Sprintf(UnexpectedServerErrorFormat, "unknown")))
 	})
 
@@ -173,7 +175,7 @@ var _ = Describe("Sender", func() {
 	})
 })
 
-type badReader struct {}
+type badReader struct{}
 
 func (r *badReader) Read(p []byte) (n int, err error) {
 	return 0, errors.New("reading is hard")

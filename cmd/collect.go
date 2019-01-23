@@ -11,7 +11,7 @@ import (
 	"code.cloudfoundry.org/credhub-cli/credhub/auth"
 	"github.com/pivotal-cf/aqueduct-courier/credhub"
 
-	"github.com/pivotal-cf/aqueduct-courier/ops"
+	"github.com/pivotal-cf/aqueduct-courier/operations"
 	"github.com/pivotal-cf/aqueduct-courier/opsmanager"
 	"github.com/pivotal-cf/aqueduct-utils/file"
 	"github.com/pivotal-cf/om/api"
@@ -155,7 +155,7 @@ func collect(c *cobra.Command, _ []string) error {
 		return err
 	}
 
-	ce := ops.NewCollector(omCollector, credhubCollector, tarWriter)
+	ce := operations.NewCollector(omCollector, credhubCollector, tarWriter)
 
 	fmt.Printf("Collecting data from Operations Manager at %s\n", viper.GetString(OpsManagerURLFlag))
 	err = ce.Collect(envType, version)

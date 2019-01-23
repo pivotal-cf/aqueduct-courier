@@ -1,18 +1,19 @@
-package ops
+package operations
 
 import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/json"
-	"github.com/pivotal-cf/aqueduct-courier/credhub"
 	"io"
 	"io/ioutil"
 	"time"
 
+	"github.com/pivotal-cf/aqueduct-courier/credhub"
+
 	"github.com/pivotal-cf/aqueduct-courier/opsmanager"
 	"github.com/pivotal-cf/aqueduct-utils/data"
 	"github.com/pkg/errors"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
 const (

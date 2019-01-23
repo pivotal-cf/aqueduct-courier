@@ -1,37 +1,38 @@
-package ops_test
+package operations_test
 
 import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"github.com/pivotal-cf/aqueduct-courier/credhub"
 	"io"
 	"strings"
 	"time"
 
-	. "github.com/pivotal-cf/aqueduct-courier/ops"
+	"github.com/pivotal-cf/aqueduct-courier/credhub"
+
+	. "github.com/pivotal-cf/aqueduct-courier/operations"
 	"github.com/pivotal-cf/aqueduct-utils/data"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-cf/aqueduct-courier/ops/opsfakes"
+	"github.com/pivotal-cf/aqueduct-courier/operations/operationsfakes"
 	"github.com/pivotal-cf/aqueduct-courier/opsmanager"
 )
 
 var _ = Describe("Collector", func() {
 	var (
-		omDataCollector      *opsfakes.FakeOmDataCollector
-		credhubDataCollector *opsfakes.FakeCredhubDataCollector
-		tarWriter            *opsfakes.FakeTarWriter
+		omDataCollector      *operationsfakes.FakeOmDataCollector
+		credhubDataCollector *operationsfakes.FakeCredhubDataCollector
+		tarWriter            *operationsfakes.FakeTarWriter
 		collector            CollectExecutor
 	)
 
 	BeforeEach(func() {
-		omDataCollector = new(opsfakes.FakeOmDataCollector)
-		credhubDataCollector = new(opsfakes.FakeCredhubDataCollector)
-		tarWriter = new(opsfakes.FakeTarWriter)
+		omDataCollector = new(operationsfakes.FakeOmDataCollector)
+		credhubDataCollector = new(operationsfakes.FakeCredhubDataCollector)
+		tarWriter = new(operationsfakes.FakeTarWriter)
 
 		collector = NewCollector(omDataCollector, credhubDataCollector, tarWriter)
 	})
@@ -111,7 +112,7 @@ var _ = Describe("Collector", func() {
 	})
 
 	It("returns an error when reading the ops manager data content fails", func() {
-		failingReader := new(opsfakes.FakeReader)
+		failingReader := new(operationsfakes.FakeReader)
 		failingReader.ReadReturns(0, errors.New("reading is hard"))
 		failingData := opsmanager.NewData(failingReader, "d1", "best-kind")
 		omDataCollector.CollectReturns([]opsmanager.Data{failingData}, nil)
@@ -123,7 +124,7 @@ var _ = Describe("Collector", func() {
 	})
 
 	It("returns an error when reading the credhub data content fails", func() {
-		failingReader := new(opsfakes.FakeReader)
+		failingReader := new(operationsfakes.FakeReader)
 		failingReader.ReadReturns(0, errors.New("reading is hard"))
 		failingData := credhub.NewData(failingReader)
 		credhubDataCollector.CollectReturns(failingData, nil)

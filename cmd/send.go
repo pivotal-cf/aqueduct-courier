@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/pivotal-cf/aqueduct-courier/ops"
+	"net/http"
+
+	"github.com/pivotal-cf/aqueduct-courier/operations"
 	"github.com/pivotal-cf/aqueduct-utils/data"
 	"github.com/pivotal-cf/aqueduct-utils/file"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"net/http"
 )
 
 const (
@@ -49,7 +50,7 @@ func send(c *cobra.Command, _ []string) error {
 	}
 	c.SilenceUsage = true
 
-	sender := ops.SendExecutor{}
+	sender := operations.SendExecutor{}
 	tarFile, err := os.Open(viper.GetString(DataTarFilePathFlag))
 	if err != nil {
 		panic(err)

@@ -1,4 +1,4 @@
-package ops_test
+package operations_test
 
 import (
 	. "github.com/onsi/ginkgo"

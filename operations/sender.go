@@ -1,4 +1,4 @@
-package ops
+package operations
 
 import (
 	"bytes"
@@ -12,10 +12,11 @@ import (
 	"os"
 	"path/filepath"
 
+	"io/ioutil"
+
 	"github.com/pivotal-cf/aqueduct-utils/data"
 	"github.com/pivotal-cf/aqueduct-utils/urd"
 	"github.com/pkg/errors"
-	"io/ioutil"
 )
 
 const (

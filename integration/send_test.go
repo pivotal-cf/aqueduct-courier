@@ -20,7 +20,7 @@ import (
 	"github.com/onsi/gomega/gexec"
 	"github.com/onsi/gomega/ghttp"
 	"github.com/pivotal-cf/aqueduct-courier/cmd"
-	"github.com/pivotal-cf/aqueduct-courier/ops"
+	"github.com/pivotal-cf/aqueduct-courier/operations"
 	"github.com/pivotal-cf/aqueduct-utils/file"
 )
 
@@ -57,7 +57,7 @@ var _ = Describe("Send", func() {
 
 	Context("success", func() {
 		BeforeEach(func() {
-			dataLoader.RouteToHandler(http.MethodPost, ops.PostPath, ghttp.CombineHandlers(
+			dataLoader.RouteToHandler(http.MethodPost, operations.PostPath, ghttp.CombineHandlers(
 				ghttp.VerifyHeader(http.Header{
 					"Authorization": []string{fmt.Sprintf("Token %s", validApiKey)},
 				}),
@@ -89,7 +89,7 @@ var _ = Describe("Send", func() {
 	})
 
 	It("exits non-zero when sending to pivotal fails", func() {
-		dataLoader.RouteToHandler(http.MethodPost, ops.PostPath, ghttp.RespondWith(http.StatusUnauthorized, ""))
+		dataLoader.RouteToHandler(http.MethodPost, operations.PostPath, ghttp.RespondWith(http.StatusUnauthorized, ""))
 
 		command := exec.Command(binaryPath, "send", "--path="+sourceDataTarFilePath, "--api-key=incorrect-key")
 		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
