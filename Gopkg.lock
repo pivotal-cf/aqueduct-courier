@@ -513,6 +513,8 @@
     "github.com/satori/go.uuid",
     "github.com/spf13/cobra",
     "github.com/spf13/viper",
+    "golang.org/x/oauth2",
+    "golang.org/x/oauth2/clientcredentials",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

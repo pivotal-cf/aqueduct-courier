@@ -7,50 +7,68 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pivotal-cf/aqueduct-courier/network"
+
+	"github.com/pivotal-cf/aqueduct-courier/usage"
+
 	ogCredhub "code.cloudfoundry.org/credhub-cli/credhub"
 	"code.cloudfoundry.org/credhub-cli/credhub/auth"
+	"github.com/pivotal-cf/aqueduct-courier/cf"
 	"github.com/pivotal-cf/aqueduct-courier/credhub"
 
 	"github.com/pivotal-cf/aqueduct-courier/operations"
 	"github.com/pivotal-cf/aqueduct-courier/opsmanager"
 	"github.com/pivotal-cf/aqueduct-utils/file"
 	"github.com/pivotal-cf/om/api"
-	"github.com/pivotal-cf/om/network"
+	omNetwork "github.com/pivotal-cf/om/network"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 const (
-	OpsManagerURLKey           = "OPS_MANAGER_URL"
-	OpsManagerUsernameKey      = "OPS_MANAGER_USERNAME"
-	OpsManagerPasswordKey      = "OPS_MANAGER_PASSWORD"
-	OpsManagerClientIdKey      = "OPS_MANAGER_CLIENT_ID"
-	OpsManagerClientSecretKey  = "OPS_MANAGER_CLIENT_SECRET"
-	OpsManagerTimeoutKey       = "OPS_MANAGER_TIMEOUT"
-	EnvTypeKey                 = "ENV_TYPE"
-	OutputPathKey              = "OUTPUT_DIR"
-	WithCredhubInfoKey         = "WITH_CREDHUB_INFO"
-	OpsManagerURLFlag          = "url"
-	OpsManagerUsernameFlag     = "username"
-	OpsManagerPasswordFlag     = "password"
-	OpsManagerClientIdFlag     = "client-id"
-	OpsManagerClientSecretFlag = "client-secret"
-	OpsManagerTimeoutFlag      = "ops-manager-timeout"
-	CollectFromCredhubFlag     = "with-credhub-info"
-	EnvTypeFlag                = "env-type"
-	OutputPathFlag             = "output-dir"
-	SkipTlsVerifyFlag          = "insecure-skip-tls-verify"
+	OpsManagerURLKey             = "OPS_MANAGER_URL"
+	OpsManagerUsernameKey        = "OPS_MANAGER_USERNAME"
+	OpsManagerPasswordKey        = "OPS_MANAGER_PASSWORD"
+	OpsManagerClientIdKey        = "OPS_MANAGER_CLIENT_ID"
+	OpsManagerClientSecretKey    = "OPS_MANAGER_CLIENT_SECRET"
+	OpsManagerTimeoutKey         = "OPS_MANAGER_TIMEOUT"
+	EnvTypeKey                   = "ENV_TYPE"
+	OutputPathKey                = "OUTPUT_DIR"
+	WithCredhubInfoKey           = "WITH_CREDHUB_INFO"
+	UsageServiceURLKey           = "USAGE_SERVICE_URL"
+	UsageServiceClientIDKey      = "USAGE_SERVICE_CLIENT_ID"
+	UsageServiceClientSecretKey  = "USAGE_SERVICE_CLIENT_SECRET"
+	CfApiURLKey                  = "CF_API_URL"
+	UsageServiceSkipTlsVerifyKey = "USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY"
+
+	OpsManagerURLFlag             = "url"
+	OpsManagerUsernameFlag        = "username"
+	OpsManagerPasswordFlag        = "password"
+	OpsManagerClientIdFlag        = "client-id"
+	OpsManagerClientSecretFlag    = "client-secret"
+	OpsManagerTimeoutFlag         = "ops-manager-timeout"
+	CollectFromCredhubFlag        = "with-credhub-info"
+	EnvTypeFlag                   = "env-type"
+	OutputPathFlag                = "output-dir"
+	SkipTlsVerifyFlag             = "insecure-skip-tls-verify"
+	UsageServiceURLFlag           = "usage-service-url"
+	UsageServiceClientIDFlag      = "usage-service-client-id"
+	UsageServiceClientSecretFlag  = "usage-service-client-secret"
+	CfApiURLFlag                  = "cf-api-url"
+	UsageServiceSkipTlsVerifyFlag = "usage-service-insecure-skip-tls-verify"
 
 	EnvTypeDevelopment   = "development"
 	EnvTypeQA            = "qa"
 	EnvTypePreProduction = "pre-production"
 	EnvTypeProduction    = "production"
 
-	OutputFilePrefix                = "FoundationDetails_"
-	CredhubClientError              = "Failed creating credhub client"
-	InvalidEnvTypeFailureFormat     = "Invalid env-type %s. See help for the list of valid types."
-	InvalidAuthConfigurationMessage = "Invalid auth configuration. Requires username/password or client/secret to be set."
+	OutputFilePrefix                 = "FoundationDetails_"
+	CredhubClientError               = "Failed creating credhub client"
+	InvalidEnvTypeFailureFormat      = "Invalid env-type %s. See help for the list of valid types."
+	InvalidAuthConfigurationMessage  = "Invalid auth configuration. Requires username/password or client/secret to be set."
+	InvalidUsageConfigurationMessage = "Not all usage service configurations provided."
+	UsageServiceError                = "Failed getting Usage Service data"
 )
 
 var collectCmd = &cobra.Command{
@@ -100,6 +118,26 @@ func init() {
 	viper.BindPFlag(CollectFromCredhubFlag, collectCmd.Flag(CollectFromCredhubFlag))
 	viper.BindEnv(CollectFromCredhubFlag, WithCredhubInfoKey)
 
+	collectCmd.Flags().String(CfApiURLFlag, "", fmt.Sprintf("URL of the CF API used for UAA authentication in order to access the Usage Service [$%s]", CfApiURLFlag))
+	viper.BindPFlag(CfApiURLFlag, collectCmd.Flag(CfApiURLFlag))
+	viper.BindEnv(CfApiURLFlag, CfApiURLKey)
+
+	collectCmd.Flags().String(UsageServiceURLFlag, "", fmt.Sprintf("URL of the Usage Service [$%s]", UsageServiceURLKey))
+	viper.BindPFlag(UsageServiceURLFlag, collectCmd.Flag(UsageServiceURLFlag))
+	viper.BindEnv(UsageServiceURLFlag, UsageServiceURLKey)
+
+	collectCmd.Flags().String(UsageServiceClientIDFlag, "", fmt.Sprintf("Usage Service client id [$%s]", UsageServiceClientIDKey))
+	viper.BindPFlag(UsageServiceClientIDFlag, collectCmd.Flag(UsageServiceClientIDFlag))
+	viper.BindEnv(UsageServiceClientIDFlag, UsageServiceClientIDKey)
+
+	collectCmd.Flags().String(UsageServiceClientSecretFlag, "", fmt.Sprintf("Usage Service client secret [$%s]", UsageServiceClientSecretKey))
+	viper.BindPFlag(UsageServiceClientSecretFlag, collectCmd.Flag(UsageServiceClientSecretFlag))
+	viper.BindEnv(UsageServiceClientSecretFlag, UsageServiceClientSecretKey)
+
+	collectCmd.Flags().Bool(UsageServiceSkipTlsVerifyFlag, false, fmt.Sprintf("Skip TLS validation for Usage Service components [$%s]", UsageServiceSkipTlsVerifyKey))
+	viper.BindPFlag(UsageServiceSkipTlsVerifyFlag, collectCmd.Flag(UsageServiceSkipTlsVerifyFlag))
+	viper.BindEnv(UsageServiceSkipTlsVerifyFlag, UsageServiceSkipTlsVerifyKey)
+
 	collectCmd.Flags().BoolP("help", "h", false, "Help for collect")
 	rootCmd.AddCommand(collectCmd)
 }
@@ -118,7 +156,7 @@ func collect(c *cobra.Command, _ []string) error {
 
 	c.SilenceUsage = true
 
-	authedClient, _ := network.NewOAuthClient(
+	authedClient, _ := omNetwork.NewOAuthClient(
 		viper.GetString(OpsManagerURLFlag),
 		viper.GetString(OpsManagerUsernameFlag),
 		viper.GetString(OpsManagerPasswordFlag),
@@ -141,6 +179,28 @@ func collect(c *cobra.Command, _ []string) error {
 		apiService,
 	)
 
+	if anyUsageServiceConfigsProvided() {
+		err := validateUsageServiceConfig()
+		if err != nil {
+			return err
+		}
+
+		client := network.NewClient(viper.GetBool(UsageServiceSkipTlsVerifyFlag))
+		cfApiClient := cf.NewClient(viper.GetString(CfApiURLFlag), client)
+		usageService := usage.NewCollector(
+			cfApiClient,
+			client,
+			viper.GetString(UsageServiceURLFlag),
+			viper.GetString(UsageServiceClientIDFlag),
+			viper.GetString(UsageServiceClientSecretFlag),
+		)
+
+		fmt.Printf("Collecting data from Usage Service at %s\n", viper.GetString(UsageServiceURLFlag))
+		err = usageService.Collect()
+		if err != nil {
+			return errors.Wrap(err, UsageServiceError)
+		}
+	}
 	credhubCollector, err := makeCredhubCollector(omService, viper.GetBool(CollectFromCredhubFlag))
 	if err != nil {
 		return err
@@ -166,6 +226,24 @@ func collect(c *cobra.Command, _ []string) error {
 
 	fmt.Printf("Wrote output to %s\n", tarFilePath)
 	fmt.Println("Success!")
+	return nil
+}
+
+func anyUsageServiceConfigsProvided() bool {
+	return viper.GetString(CfApiURLFlag) != "" ||
+		viper.GetString(UsageServiceURLFlag) != "" ||
+		viper.GetString(UsageServiceClientIDFlag) != "" ||
+		viper.GetString(UsageServiceClientSecretFlag) != ""
+}
+
+func validateUsageServiceConfig() error {
+	if viper.GetString(CfApiURLFlag) == "" ||
+		viper.GetString(UsageServiceURLFlag) == "" ||
+		viper.GetString(UsageServiceClientIDFlag) == "" ||
+		viper.GetString(UsageServiceClientSecretFlag) == "" {
+
+		return errors.New(InvalidUsageConfigurationMessage)
+	}
 	return nil
 }
 

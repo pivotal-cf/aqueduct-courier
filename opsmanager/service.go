@@ -192,7 +192,7 @@ func (s *Service) BoshCredentials() (BoshCredential, error) {
 	for _, part := range credStringParts {
 		if strings.Contains(part, "=") {
 			keyValueParts := strings.Split(part, "=")
-			switch keyValueParts[0]{
+			switch keyValueParts[0] {
 			case "BOSH_CLIENT":
 				bCred.ClientID = keyValueParts[1]
 			case "BOSH_CLIENT_SECRET":

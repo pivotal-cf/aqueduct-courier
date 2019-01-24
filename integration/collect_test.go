@@ -1,6 +1,7 @@
 package integration
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -11,6 +12,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/pivotal-cf/aqueduct-courier/usage"
 
 	"github.com/mholt/archiver"
 	. "github.com/onsi/ginkgo"
@@ -41,7 +44,7 @@ var _ = Describe("Collect", func() {
 		outputDirPath, err = ioutil.TempDir("", "")
 		Expect(err).NotTo(HaveOccurred())
 
-		opsManagerServer = ghttp.NewServer()
+		opsManagerServer = ghttp.NewTLSServer()
 		opsManagerServer.RouteToHandler(http.MethodPost, "/uaa/oauth/token", func(w http.ResponseWriter, req *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 
@@ -81,7 +84,7 @@ var _ = Describe("Collect", func() {
 		Expect(os.RemoveAll(outputDirPath)).To(Succeed())
 	})
 
-	Context("user/password authentication", func() {
+	Context("with ops manager user/password authentication", func() {
 		It("succeeds with env variable configuration", func() {
 			command := buildDefaultCommand(defaultEnvVars)
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
@@ -115,7 +118,7 @@ var _ = Describe("Collect", func() {
 		})
 	})
 
-	Context("client/secret authentication", func() {
+	Context("with ops manager client/secret authentication", func() {
 		It("succeeds with env variable configuration", func() {
 			delete(defaultEnvVars, cmd.OpsManagerUsernameKey)
 			delete(defaultEnvVars, cmd.OpsManagerPasswordKey)
@@ -208,6 +211,148 @@ var _ = Describe("Collect", func() {
 			Eventually(session.Err).Should(gbytes.Say("Timeout exceeded"))
 			Expect(session.Err).NotTo(gbytes.Say("Usage:"))
 			assertOutputDirEmpty(outputDirPath)
+		})
+	})
+
+	Context("with usage service client/secret authentication", func() {
+		var (
+			usageService *ghttp.Server
+			cfService    *ghttp.Server
+			uaaService   *ghttp.Server
+		)
+		BeforeEach(func() {
+			uaaService = ghttp.NewTLSServer()
+			uaaService.RouteToHandler(http.MethodPost, "/oauth/token", func(w http.ResponseWriter, req *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				credentialBytes := []byte("best-usage-service-client-id:best-usage-service-client-secret")
+
+				base64credentials := base64.StdEncoding.EncodeToString(credentialBytes)
+				Expect(req.Header.Get("authorization")).To(Equal("Basic " + base64credentials))
+
+				w.Write([]byte(`{
+					"access_token": "some-uaa-token",
+					"token_type": "bearer",
+					"expires_in": 3600
+				}`))
+			})
+
+			cfService = ghttp.NewTLSServer()
+			cfService.RouteToHandler(http.MethodGet, "/v2/info", func(w http.ResponseWriter, req *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.Write([]byte(`{ "token_endpoint": "` + uaaService.URL() + `" }`))
+			})
+
+			usageService = ghttp.NewTLSServer()
+			usageService.RouteToHandler(http.MethodGet, "/system_report/app_usages", func(w http.ResponseWriter, req *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
+			})
+		})
+
+		AfterEach(func() {
+			usageService.Close()
+			cfService.Close()
+			uaaService.Close()
+		})
+
+		It("succeeds with env variable configuration", func() {
+			defaultEnvVars[cmd.CfApiURLKey] = cfService.URL()
+			defaultEnvVars[cmd.UsageServiceURLKey] = usageService.URL()
+			defaultEnvVars[cmd.UsageServiceClientIDKey] = "best-usage-service-client-id"
+			defaultEnvVars[cmd.UsageServiceClientSecretKey] = "best-usage-service-client-secret"
+			defaultEnvVars[cmd.UsageServiceSkipTlsVerifyKey] = "true"
+			command := buildDefaultCommand(defaultEnvVars)
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+		})
+
+		It("succeeds with flag configuration", func() {
+			flagValues := map[string]string{
+				cmd.OpsManagerTimeoutFlag:         "1",
+				cmd.OpsManagerURLFlag:             opsManagerServer.URL(),
+				cmd.OpsManagerClientIdFlag:        "whatever",
+				cmd.OpsManagerClientSecretFlag:    "whatever",
+				cmd.SkipTlsVerifyFlag:             "true",
+				cmd.EnvTypeFlag:                   "Development",
+				cmd.OutputPathFlag:                outputDirPath,
+				cmd.CfApiURLFlag:                  cfService.URL(),
+				cmd.UsageServiceURLFlag:           usageService.URL(),
+				cmd.UsageServiceClientIDFlag:      "best-usage-service-client-id",
+				cmd.UsageServiceClientSecretFlag:  "best-usage-service-client-secret",
+				cmd.UsageServiceSkipTlsVerifyFlag: "true",
+			}
+			command := exec.Command(aqueductBinaryPath, "collect")
+			for k, v := range flagValues {
+				command.Args = append(command.Args, fmt.Sprintf("--%s=%s", k, v))
+			}
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+
+			Expect(len(cfService.ReceivedRequests())).To(Equal(1))
+			Expect(len(uaaService.ReceivedRequests())).To(Equal(1))
+			Expect(len(usageService.ReceivedRequests())).To(Equal(1))
+			Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Collecting data from Usage Service at %s\n", usageService.URL())))
+
+		})
+
+		DescribeTable(
+			"returns an error when one but not all Usage Service required configs are provided",
+			func(configName, configValue string) {
+				flagValues := map[string]string{
+					cmd.OpsManagerTimeoutFlag:      "1",
+					cmd.OpsManagerURLFlag:          opsManagerServer.URL(),
+					cmd.OpsManagerClientIdFlag:     "whatever",
+					cmd.OpsManagerClientSecretFlag: "whatever",
+					cmd.EnvTypeFlag:                "Development",
+					cmd.OutputPathFlag:             outputDirPath,
+				}
+				flagValues[configName] = configValue
+				command := exec.Command(aqueductBinaryPath, "collect")
+				for k, v := range flagValues {
+					command.Args = append(command.Args, fmt.Sprintf("--%s=%s", k, v))
+				}
+				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+				Eventually(session).Should(gexec.Exit(1))
+				Eventually(session.Err).Should(gbytes.Say(cmd.InvalidUsageConfigurationMessage))
+				assertOutputDirEmpty(outputDirPath)
+			},
+			Entry(cmd.CfApiURLFlag, cmd.CfApiURLFlag, "http://doesnt.matter.com/"),
+			Entry(cmd.UsageServiceURLFlag, cmd.UsageServiceURLFlag, "http://also.doesnt.matter.com/"),
+			Entry(cmd.UsageServiceClientIDFlag, cmd.UsageServiceClientIDFlag, "best-usage-service-client-id"),
+			Entry(cmd.UsageServiceClientSecretFlag, cmd.UsageServiceClientSecretFlag, "best-usage-service-client-secret"),
+		)
+
+		It("returns an error when usage service collection fails", func() {
+			usageService.RouteToHandler(http.MethodGet, "/system_report/app_usages", func(w http.ResponseWriter, req *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+			})
+
+			flagValues := map[string]string{
+				cmd.OpsManagerTimeoutFlag:         "1",
+				cmd.OpsManagerURLFlag:             opsManagerServer.URL(),
+				cmd.OpsManagerClientIdFlag:        "whatever",
+				cmd.OpsManagerClientSecretFlag:    "whatever",
+				cmd.SkipTlsVerifyFlag:             "true",
+				cmd.EnvTypeFlag:                   "Development",
+				cmd.OutputPathFlag:                outputDirPath,
+				cmd.CfApiURLFlag:                  cfService.URL(),
+				cmd.UsageServiceURLFlag:           usageService.URL(),
+				cmd.UsageServiceClientIDFlag:      "best-usage-service-client-id",
+				cmd.UsageServiceClientSecretFlag:  "best-usage-service-client-secret",
+				cmd.UsageServiceSkipTlsVerifyFlag: "true",
+			}
+			command := exec.Command(aqueductBinaryPath, "collect")
+			for k, v := range flagValues {
+				command.Args = append(command.Args, fmt.Sprintf("--%s=%s", k, v))
+			}
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(1))
+			Eventually(session.Err).Should(gbytes.Say(cmd.UsageServiceError))
+			Eventually(session.Err).Should(gbytes.Say(fmt.Sprintf(usage.UsageServiceUnexpectedResponseStatusErrorFormat, http.StatusInternalServerError)))
 		})
 	})
 
