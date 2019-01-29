@@ -118,7 +118,7 @@ func init() {
 	viper.BindPFlag(CollectFromCredhubFlag, collectCmd.Flag(CollectFromCredhubFlag))
 	viper.BindEnv(CollectFromCredhubFlag, WithCredhubInfoKey)
 
-	collectCmd.Flags().String(CfApiURLFlag, "", fmt.Sprintf("URL of the CF API used for UAA authentication in order to access the Usage Service [$%s]", CfApiURLFlag))
+	collectCmd.Flags().String(CfApiURLFlag, "", fmt.Sprintf("URL of the CF API used for UAA authentication in order to access the Usage Service [$%s]", CfApiURLKey))
 	viper.BindPFlag(CfApiURLFlag, collectCmd.Flag(CfApiURLFlag))
 	viper.BindEnv(CfApiURLFlag, CfApiURLKey)
 
