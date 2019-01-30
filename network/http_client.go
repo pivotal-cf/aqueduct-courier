@@ -14,10 +14,10 @@ func NewClient(skipTLSVerification bool) *http.Client {
 			TLSClientConfig: &tls.Config{
 				InsecureSkipVerify: skipTLSVerification,
 			},
-			Dial: (&net.Dialer{
+			DialContext: (&net.Dialer{
 				Timeout:   5 * time.Second,
 				KeepAlive: 30 * time.Second,
-			}).Dial,
+			}).DialContext,
 		},
 	}
 }
