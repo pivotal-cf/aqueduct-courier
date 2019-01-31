@@ -23,21 +23,19 @@ import (
 
 var _ = Describe("Collector", func() {
 	var (
-		omDataCollector      *operationsfakes.FakeOmDataCollector
-		credhubDataCollector *operationsfakes.FakeCredhubDataCollector
-		tarWriter            *operationsfakes.FakeTarWriter
-		collector            CollectExecutor
+		omDataCollector *operationsfakes.FakeOmDataCollector
+		tarWriter       *operationsfakes.FakeTarWriter
+		collector       CollectExecutor
 	)
 
 	BeforeEach(func() {
 		omDataCollector = new(operationsfakes.FakeOmDataCollector)
-		credhubDataCollector = new(operationsfakes.FakeCredhubDataCollector)
 		tarWriter = new(operationsfakes.FakeTarWriter)
 
-		collector = NewCollector(omDataCollector, credhubDataCollector, tarWriter)
+		collector = NewCollector(omDataCollector, nil, tarWriter)
 	})
 
-	It("collects data and writes it", func() {
+	It("collects opsmanager data and writes it", func() {
 		expectedD1Contents := "d1-content"
 		md5SumD1 := md5.Sum([]byte(expectedD1Contents))
 		d1ContentMd5 := base64.StdEncoding.EncodeToString(md5SumD1[:])
@@ -49,29 +47,21 @@ var _ = Describe("Collector", func() {
 		dataToWrite := []opsmanager.Data{d1, d2}
 		omDataCollector.CollectReturns(dataToWrite, nil)
 
-		expectedCHContents := "ch-content"
-		md5SumCH := md5.Sum([]byte(expectedCHContents))
-		chContentMd5 := base64.StdEncoding.EncodeToString(md5SumCH[:])
-		chData := credhub.NewData(strings.NewReader(expectedCHContents))
-		credhubDataCollector.CollectReturns(chData, nil)
-
 		collectorVersion := "0.0.1-version"
 		envType := "most-production"
+
 		err := collector.Collect(envType, collectorVersion)
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(tarWriter.AddFileCallCount()).To(Equal(4))
+		Expect(tarWriter.AddFileCallCount()).To(Equal(3))
 
 		d1Contents, d1Name := tarWriter.AddFileArgsForCall(0)
 		d2Contents, d2Name := tarWriter.AddFileArgsForCall(1)
-		chContents, chName := tarWriter.AddFileArgsForCall(2)
-		metadataContents, metadataName := tarWriter.AddFileArgsForCall(3)
+		metadataContents, metadataName := tarWriter.AddFileArgsForCall(2)
 		Expect(string(d1Contents)).To(Equal(expectedD1Contents))
 		Expect(d1Name).To(Equal(d1.Name()))
 		Expect(string(d2Contents)).To(Equal(expectedD2Contents))
 		Expect(d2Name).To(Equal(d2.Name()))
-		Expect(string(chContents)).To(Equal(expectedCHContents))
-		Expect(chName).To(Equal(chData.Name()))
 
 		Expect(metadataName).To(Equal(data.MetadataFileName))
 		var metadata data.Metadata
@@ -81,7 +71,6 @@ var _ = Describe("Collector", func() {
 		Expect(metadata.FileDigests).To(ConsistOf(
 			data.FileDigest{Name: d1.Name(), MimeType: d1.MimeType(), MD5Checksum: d1ContentMd5, ProductType: d1.Type(), DataType: d1.DataType()},
 			data.FileDigest{Name: d2.Name(), MimeType: d2.MimeType(), MD5Checksum: d2ContentMd5, ProductType: d2.Type(), DataType: d2.DataType()},
-			data.FileDigest{Name: chData.Name(), MimeType: chData.MimeType(), MD5Checksum: chContentMd5, ProductType: chData.Type(), DataType: chData.DataType()},
 		))
 		_, err = uuid.FromString(metadata.CollectionId)
 		Expect(err).NotTo(HaveOccurred())
@@ -102,32 +91,11 @@ var _ = Describe("Collector", func() {
 		Expect(err).To(MatchError(ContainSubstring("collecting is hard")))
 	})
 
-	It("returns an error when the credhub collection errors", func() {
-		credhubDataCollector.CollectReturns(credhub.Data{}, errors.New("collecting is hard"))
-
-		err := collector.Collect("", "")
-		Expect(tarWriter.CloseCallCount()).To(Equal(1))
-		Expect(err).To(MatchError(ContainSubstring(CredhubCollectFailureMessage)))
-		Expect(err).To(MatchError(ContainSubstring("collecting is hard")))
-	})
-
 	It("returns an error when reading the ops manager data content fails", func() {
 		failingReader := new(operationsfakes.FakeReader)
 		failingReader.ReadReturns(0, errors.New("reading is hard"))
 		failingData := opsmanager.NewData(failingReader, "d1", "best-kind")
 		omDataCollector.CollectReturns([]opsmanager.Data{failingData}, nil)
-
-		err := collector.Collect("", "")
-		Expect(tarWriter.CloseCallCount()).To(Equal(1))
-		Expect(err).To(MatchError(ContainSubstring(ContentReadingFailureMessage)))
-		Expect(err).To(MatchError(ContainSubstring("reading is hard")))
-	})
-
-	It("returns an error when reading the credhub data content fails", func() {
-		failingReader := new(operationsfakes.FakeReader)
-		failingReader.ReadReturns(0, errors.New("reading is hard"))
-		failingData := credhub.NewData(failingReader)
-		credhubDataCollector.CollectReturns(failingData, nil)
 
 		err := collector.Collect("", "")
 		Expect(tarWriter.CloseCallCount()).To(Equal(1))
@@ -146,17 +114,6 @@ var _ = Describe("Collector", func() {
 		Expect(err).To(MatchError(ContainSubstring("tarring is hard")))
 	})
 
-	It("returns an error when adding credhub data to the tar file fails", func() {
-		data := credhub.NewData(strings.NewReader(""))
-		credhubDataCollector.CollectReturns(data, nil)
-		tarWriter.AddFileReturnsOnCall(0, errors.New("tarring is hard"))
-
-		err := collector.Collect("", "")
-		Expect(tarWriter.CloseCallCount()).To(Equal(1))
-		Expect(err).To(MatchError(ContainSubstring(DataWriteFailureMessage)))
-		Expect(err).To(MatchError(ContainSubstring("tarring is hard")))
-	})
-
 	It("returns an error when adding the metadata to the tar file fails", func() {
 		tarWriter.AddFileReturns(errors.New("tarring is hard"))
 
@@ -164,6 +121,90 @@ var _ = Describe("Collector", func() {
 		Expect(tarWriter.CloseCallCount()).To(Equal(1))
 		Expect(err).To(MatchError(ContainSubstring(DataWriteFailureMessage)))
 		Expect(err).To(MatchError(ContainSubstring("tarring is hard")))
+	})
+
+	Describe("credhub collection", func() {
+		var (
+			collectorWithCredhub CollectExecutor
+			credhubDataCollector *operationsfakes.FakeCredhubDataCollector
+		)
+
+		BeforeEach(func() {
+			credhubDataCollector = new(operationsfakes.FakeCredhubDataCollector)
+			collectorWithCredhub = NewCollector(omDataCollector, credhubDataCollector, tarWriter)
+		})
+
+		It("collects credhub data and writes it", func() {
+			expectedD1Contents := "d1-content"
+			md5SumD1 := md5.Sum([]byte(expectedD1Contents))
+			d1ContentMd5 := base64.StdEncoding.EncodeToString(md5SumD1[:])
+			d1 := opsmanager.NewData(strings.NewReader(expectedD1Contents), "d1", "best-kind")
+			dataToWrite := []opsmanager.Data{d1}
+			omDataCollector.CollectReturns(dataToWrite, nil)
+
+			expectedCHContents := "ch-content"
+			md5SumCH := md5.Sum([]byte(expectedCHContents))
+			chContentMd5 := base64.StdEncoding.EncodeToString(md5SumCH[:])
+			chData := credhub.NewData(strings.NewReader(expectedCHContents))
+			credhubDataCollector.CollectReturns(chData, nil)
+
+			collectorVersion := "0.0.1-version"
+			envType := "most-production"
+
+			err := collectorWithCredhub.Collect(envType, collectorVersion)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(tarWriter.AddFileCallCount()).To(Equal(3))
+
+			chContents, chName := tarWriter.AddFileArgsForCall(1)
+			metadataContents, metadataName := tarWriter.AddFileArgsForCall(2)
+			Expect(string(chContents)).To(Equal(expectedCHContents))
+			Expect(chName).To(Equal(chData.Name()))
+
+			Expect(metadataName).To(Equal(data.MetadataFileName))
+			var metadata data.Metadata
+			Expect(json.Unmarshal(metadataContents, &metadata)).To(Succeed())
+			Expect(metadata.CollectorVersion).To(Equal(collectorVersion))
+			Expect(metadata.EnvType).To(Equal(envType))
+			Expect(metadata.FileDigests).To(ConsistOf(
+				data.FileDigest{Name: d1.Name(), MimeType: d1.MimeType(), MD5Checksum: d1ContentMd5, ProductType: d1.Type(), DataType: d1.DataType()},
+				data.FileDigest{Name: chData.Name(), MimeType: chData.MimeType(), MD5Checksum: chContentMd5, ProductType: chData.Type(), DataType: chData.DataType()},
+			))
+
+			Expect(tarWriter.CloseCallCount()).To(Equal(1))
+		})
+
+		It("returns an error when the credhub collection errors", func() {
+			credhubDataCollector.CollectReturns(credhub.Data{}, errors.New("collecting is hard"))
+
+			err := collectorWithCredhub.Collect("", "")
+			Expect(tarWriter.CloseCallCount()).To(Equal(1))
+			Expect(err).To(MatchError(ContainSubstring(CredhubCollectFailureMessage)))
+			Expect(err).To(MatchError(ContainSubstring("collecting is hard")))
+		})
+
+		It("returns an error when reading the credhub data content fails", func() {
+			failingReader := new(operationsfakes.FakeReader)
+			failingReader.ReadReturns(0, errors.New("reading is hard"))
+			failingData := credhub.NewData(failingReader)
+			credhubDataCollector.CollectReturns(failingData, nil)
+
+			err := collectorWithCredhub.Collect("", "")
+			Expect(tarWriter.CloseCallCount()).To(Equal(1))
+			Expect(err).To(MatchError(ContainSubstring(ContentReadingFailureMessage)))
+			Expect(err).To(MatchError(ContainSubstring("reading is hard")))
+		})
+
+		It("returns an error when adding credhub data to the tar file fails", func() {
+			data := credhub.NewData(strings.NewReader(""))
+			credhubDataCollector.CollectReturns(data, nil)
+			tarWriter.AddFileReturnsOnCall(0, errors.New("tarring is hard"))
+
+			err := collectorWithCredhub.Collect("", "")
+			Expect(tarWriter.CloseCallCount()).To(Equal(1))
+			Expect(err).To(MatchError(ContainSubstring(DataWriteFailureMessage)))
+			Expect(err).To(MatchError(ContainSubstring("tarring is hard")))
+		})
 	})
 })
 

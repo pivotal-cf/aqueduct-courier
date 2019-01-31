@@ -79,12 +79,12 @@ func (ce CollectExecutor) Collect(envType, collectorVersion string) error {
 		}
 	}
 
-	chData, err := ce.chDC.Collect()
-	if err != nil {
-		return errors.Wrap(err, CredhubCollectFailureMessage)
-	}
+	if ce.chDC != nil {
+		chData, err := ce.chDC.Collect()
+		if err != nil {
+			return errors.Wrap(err, CredhubCollectFailureMessage)
+		}
 
-	if (chData != credhub.Data{}) {
 		err = ce.addData(chData, &metadata)
 		if err != nil {
 			return err

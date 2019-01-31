@@ -285,16 +285,10 @@ func makeCredhubCollector(omService *opsmanager.Service, credhubCollectionEnable
 		credhubService := credhub.NewCredhubService(requestor)
 		return credhub.NewDataCollector(credhubService), nil
 	} else {
-		return noOpCredhubCollector{}, nil
+		return nil, nil
 	}
 }
 
 type credhubDataCollector interface {
 	Collect() (credhub.Data, error)
-}
-
-type noOpCredhubCollector struct{}
-
-func (n noOpCredhubCollector) Collect() (credhub.Data, error) {
-	return credhub.Data{}, nil
 }
