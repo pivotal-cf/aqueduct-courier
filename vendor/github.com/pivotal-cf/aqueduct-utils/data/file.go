@@ -20,6 +20,10 @@ const (
 	PropertiesDataType             = "properties"
 	CertificatesDataType           = "certificates"
 	CertificateAuthoritiesDataType = "certificate_authorities"
+	AppUsageDataType               = "app_usage"
+
+	OpsManagerCollectorDataSetId  = "opsmanager"
+	ConsumptionCollectorDataSetId = "consumption"
 
 	MetadataFileName = "metadata"
 

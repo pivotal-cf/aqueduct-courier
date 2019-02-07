@@ -2,7 +2,7 @@
 
 
 [[projects]]
-  digest = "1:89730dbcb9d8d4e806e1abf3daa90bd1ea486cba721a531abb64887eeafdcfb6"
+  digest = "1:4aced3c64145cd25a6aa423bee9650c7a5ec4202cd91a8a77ab8ee4e37af6993"
   name = "code.cloudfoundry.org/credhub-cli"
   packages = [
     "credhub",
@@ -16,16 +16,8 @@
     "errors",
   ]
   pruneopts = "UT"
-  revision = "bfbb05b8c9539c80929b2d14a453c33b7f6f466b"
-  version = "2.2.0"
-
-[[projects]]
-  digest = "1:2fc3d482b7a75c656f8c746bfadbd63bdd91a828209d42425b4f90dad165120c"
-  name = "code.cloudfoundry.org/lager"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "b152b7147a2a0154109a5194fcc7f4a933283abb"
-  version = "v2.0.0"
+  revision = "c165e469eaa892c155e9f6df623dd032ea640c2e"
+  version = "2.2.1"
 
 [[projects]]
   branch = "master"
@@ -239,30 +231,29 @@
   version = "v1.2.0"
 
 [[projects]]
-  digest = "1:e39a5ee8fcbec487f8fc68863ef95f2b025e0739b0e4aa55558a2b4cf8f0ecf0"
+  digest = "1:c7a5e79396b6eb570159df7a1d487ce5775bf43b7907976fbef6de544ea160ad"
   name = "github.com/pierrec/lz4"
   packages = [
     ".",
     "internal/xxh32",
   ]
   pruneopts = "UT"
-  revision = "635575b42742856941dbc767b44905bb9ba083f6"
-  version = "v2.0.7"
+  revision = "473cd7ce01a1113208073166464b98819526150e"
+  version = "v2.0.8"
 
 [[projects]]
   branch = "master"
-  digest = "1:3583175cc5dce9dc2cb281b95fc1d962134c60caf39047dec9528df04ca23546"
+  digest = "1:3954a4de72c38833290fae537a27fc4329859b98198550f9312c307ecc503d43"
   name = "github.com/pivotal-cf/aqueduct-utils"
   packages = [
     "data",
     "file",
-    "urd",
   ]
   pruneopts = "UT"
-  revision = "f2efd8ad0ce45e750b09589f069d106946573e10"
+  revision = "624cf97fa8af97f3edc60a0f9612b8d11e63e4f2"
 
 [[projects]]
-  digest = "1:e8a1fb925513fa85d7f11402826799059d5d6850b848f9d252f094b4bf3511cd"
+  digest = "1:f3ca82bd5cae7cce4b34002b851bf6cbd52ee35477f586a564aa6d5cbf596e26"
   name = "github.com/pivotal-cf/om"
   packages = [
     "api",
@@ -270,8 +261,8 @@
     "progress",
   ]
   pruneopts = "UT"
-  revision = "ada0d4a4790f4882cb15ae2160d3894e1f970a81"
-  version = "0.49.0"
+  revision = "28580d6b226f74d23d671f1141d47c2ae552f256"
+  version = "0.51.0"
 
 [[projects]]
   digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
@@ -290,15 +281,15 @@
   version = "v1.2.0"
 
 [[projects]]
-  digest = "1:d707dbc1330c0ed177d4642d6ae102d5e2c847ebd0eb84562d0dc4f024531cfc"
+  digest = "1:3e39bafd6c2f4bf3c76c3bfd16a2e09e016510ad5db90dc02b88e2f565d6d595"
   name = "github.com/spf13/afero"
   packages = [
     ".",
     "mem",
   ]
   pruneopts = "UT"
-  revision = "a5d6946387efe7d64d09dcba68cdd523dc1273a3"
-  version = "v1.2.0"
+  revision = "f4711e4db9e9a1d3887343acb72b2bbfc2f686f5"
+  version = "v1.2.1"
 
 [[projects]]
   digest = "1:08d65904057412fc0270fc4812a1c90c594186819243160dc779a402d4b6d0bc"
@@ -375,11 +366,11 @@
     "ssh",
   ]
   pruneopts = "UT"
-  revision = "ff983b9c42bc9fbf91556e191cc8efb585c16908"
+  revision = "b8fe1690c61389d7d2a8074a507d1d40c5d30448"
 
 [[projects]]
   branch = "master"
-  digest = "1:825c9002eed279327b1e6fd44b8e50209c279ea83ce7bd42e24db3f2e2086c94"
+  digest = "1:327e6655a726632ae218d237060866841c81114a0f79e3499e8be8163bf22dd4"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -391,11 +382,11 @@
     "proxy",
   ]
   pruneopts = "UT"
-  revision = "915654e7eabcea33ae277abbecf52f0d8b7a9fdc"
+  revision = "65e2d4e15006aab9813ff8769e768bbf4bb667a0"
 
 [[projects]]
   branch = "master"
-  digest = "1:3eb5d7a593b0e4203c5b213ed7cfc799f57cbded7cdfee9550b4daa777c1c875"
+  digest = "1:27b7d9c947baf5e456b4a461b3fc4fa94dcd95b72e3c136b9f9933484d252d0f"
   name = "golang.org/x/oauth2"
   packages = [
     ".",
@@ -403,15 +394,15 @@
     "internal",
   ]
   pruneopts = "UT"
-  revision = "fd3eaa146cbb5c89ce187c275fb79bd3a36a5ffc"
+  revision = "99b60b757ec124ebb7d6b7e97f153b19c10ce163"
 
 [[projects]]
   branch = "master"
-  digest = "1:91137b48dc3eb34409f731b49f63a5ebf73218168a065e1a93af24eb5b2f99e8"
+  digest = "1:969c44c96e9866e912a16e282a362cf045b64202107424983fe8abc3373d1eab"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "UT"
-  revision = "48ac38b7c8cbedd50b1613c0fccacfc7d88dfcdf"
+  revision = "41f3e6584952bb034a481797859f6ab34b6803bd"
 
 [[projects]]
   digest = "1:4392fcf42d5cf0e3ff78c96b2acf8223d49e4fdc53eb77c99d2f8dfe4680e006"
@@ -506,7 +497,6 @@
     "github.com/onsi/gomega/ghttp",
     "github.com/pivotal-cf/aqueduct-utils/data",
     "github.com/pivotal-cf/aqueduct-utils/file",
-    "github.com/pivotal-cf/aqueduct-utils/urd",
     "github.com/pivotal-cf/om/api",
     "github.com/pivotal-cf/om/network",
     "github.com/pkg/errors",
