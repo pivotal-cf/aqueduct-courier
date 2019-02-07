@@ -6,19 +6,23 @@ import (
 	"encoding/json"
 	"io"
 	"io/ioutil"
+	"path/filepath"
 	"time"
+
+	"github.com/pivotal-cf/aqueduct-courier/consumption"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/pivotal-cf/aqueduct-courier/credhub"
 
 	"github.com/pivotal-cf/aqueduct-courier/opsmanager"
 	"github.com/pivotal-cf/aqueduct-utils/data"
 	"github.com/pkg/errors"
-	uuid "github.com/satori/go.uuid"
 )
 
 const (
 	OpsManagerCollectFailureMessage = "Failed collecting from Operations Manager"
 	CredhubCollectFailureMessage    = "Failed collecting from Credhub"
+	UsageCollectFailureMessage      = "Failed collecting from Usage Service"
 	DataWriteFailureMessage         = "Failed writing data"
 	ContentReadingFailureMessage    = "Failed to read content"
 )
@@ -33,6 +37,11 @@ type credhubDataCollector interface {
 	Collect() (credhub.Data, error)
 }
 
+//go:generate counterfeiter . consumptionDataCollector
+type consumptionDataCollector interface {
+	Collect() (consumption.Data, error)
+}
+
 //go:generate counterfeiter . tarWriter
 type tarWriter interface {
 	AddFile([]byte, string) error
@@ -40,9 +49,10 @@ type tarWriter interface {
 }
 
 type CollectExecutor struct {
-	omDC omDataCollector
-	chDC credhubDataCollector
-	tw   tarWriter
+	opsmanagerDC  omDataCollector
+	credhubDC     credhubDataCollector
+	consumptionDC consumptionDataCollector
+	tarWriter     tarWriter
 }
 
 type collectedData interface {
@@ -53,74 +63,102 @@ type collectedData interface {
 	Content() io.Reader
 }
 
-func NewCollector(omDC omDataCollector, chDC credhubDataCollector, tw tarWriter) CollectExecutor {
-	return CollectExecutor{omDC: omDC, chDC: chDC, tw: tw}
+func NewCollector(opsmanagerDC omDataCollector, credhubDC credhubDataCollector, consumptionDC consumptionDataCollector, tarWriter tarWriter) CollectExecutor {
+	return CollectExecutor{opsmanagerDC: opsmanagerDC, credhubDC: credhubDC, consumptionDC: consumptionDC, tarWriter: tarWriter}
 }
 
 func (ce CollectExecutor) Collect(envType, collectorVersion string) error {
-	defer ce.tw.Close()
+	defer ce.tarWriter.Close()
 
-	omDatas, err := ce.omDC.Collect()
-	if err != nil {
-		return errors.Wrap(err, OpsManagerCollectFailureMessage)
-	}
-
-	metadata := data.Metadata{
+	opsManagerMetadata := data.Metadata{
 		CollectorVersion: collectorVersion,
 		EnvType:          envType,
 		CollectionId:     uuid.NewV4().String(),
 		CollectedAt:      time.Now().UTC().Format(time.RFC3339),
 	}
 
+	usageMetadata := data.Metadata{
+		CollectorVersion: collectorVersion,
+		EnvType:          envType,
+		CollectionId:     opsManagerMetadata.CollectionId,
+		CollectedAt:      opsManagerMetadata.CollectedAt,
+	}
+
+	omDatas, err := ce.opsmanagerDC.Collect()
+	if err != nil {
+		return errors.Wrap(err, OpsManagerCollectFailureMessage)
+	}
+
 	for _, omData := range omDatas {
-		err = ce.addData(omData, &metadata)
+		err = ce.addData(omData, &opsManagerMetadata, data.OpsManagerCollectorDataSetId)
 		if err != nil {
 			return err
 		}
 	}
 
-	if ce.chDC != nil {
-		chData, err := ce.chDC.Collect()
+	if ce.credhubDC != nil {
+		chData, err := ce.credhubDC.Collect()
 		if err != nil {
 			return errors.Wrap(err, CredhubCollectFailureMessage)
 		}
 
-		err = ce.addData(chData, &metadata)
+		err = ce.addData(chData, &opsManagerMetadata, data.OpsManagerCollectorDataSetId)
 		if err != nil {
 			return err
 		}
 	}
 
-	metadataContents, err := json.Marshal(metadata)
+	metadataContents, err := json.Marshal(opsManagerMetadata)
 	if err != nil {
 		return err
 	}
-
-	err = ce.tw.AddFile(metadataContents, data.MetadataFileName)
+	err = ce.tarWriter.AddFile(metadataContents, filepath.Join(data.OpsManagerCollectorDataSetId, data.MetadataFileName))
 	if err != nil {
 		return errors.Wrap(err, DataWriteFailureMessage)
+	}
+
+	if ce.consumptionDC != nil {
+		usageData, err := ce.consumptionDC.Collect()
+		if err != nil {
+			return errors.Wrap(err, UsageCollectFailureMessage)
+		}
+
+		err = ce.addData(usageData, &usageMetadata, data.ConsumptionCollectorDataSetId)
+		if err != nil {
+			return err
+		}
+
+		usageMetadataContents, err := json.Marshal(usageMetadata)
+		if err != nil {
+			return err
+		}
+
+		err = ce.tarWriter.AddFile(usageMetadataContents, filepath.Join(data.ConsumptionCollectorDataSetId, data.MetadataFileName))
+		if err != nil {
+			return errors.Wrap(err, DataWriteFailureMessage)
+		}
 	}
 
 	return nil
 }
 
-func (ce CollectExecutor) addData(cData collectedData, metadata *data.Metadata) error {
-	dataContents, err := ioutil.ReadAll(cData.Content())
+func (ce CollectExecutor) addData(collectedData collectedData, metadata *data.Metadata, dataSetType string) error {
+	dataContents, err := ioutil.ReadAll(collectedData.Content())
 	if err != nil {
 		return errors.Wrap(err, ContentReadingFailureMessage)
 	}
 
-	err = ce.tw.AddFile(dataContents, cData.Name())
+	err = ce.tarWriter.AddFile(dataContents, filepath.Join(dataSetType, collectedData.Name()))
 	if err != nil {
 		return errors.Wrap(err, DataWriteFailureMessage)
 	}
 
 	md5Sum := md5.Sum([]byte(dataContents))
 	metadata.FileDigests = append(metadata.FileDigests, data.FileDigest{
-		Name:        cData.Name(),
-		MimeType:    cData.MimeType(),
-		ProductType: cData.Type(),
-		DataType:    cData.DataType(),
+		Name:        collectedData.Name(),
+		MimeType:    collectedData.MimeType(),
+		ProductType: collectedData.Type(),
+		DataType:    collectedData.DataType(),
 		MD5Checksum: base64.StdEncoding.EncodeToString(md5Sum[:]),
 	})
 	return nil

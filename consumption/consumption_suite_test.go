@@ -1,4 +1,4 @@
-package usage_test
+package consumption_test
 
 import (
 	"testing"
@@ -9,5 +9,5 @@ import (
 
 func TestUsage(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Usage Suite")
+	RunSpecs(t, "Consumption Suite")
 }

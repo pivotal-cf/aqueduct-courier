@@ -13,8 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pivotal-cf/aqueduct-courier/usage"
-
 	"github.com/mholt/archiver"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -92,7 +90,7 @@ var _ = Describe("Collect", func() {
 			Eventually(session).Should(gexec.Exit(0))
 
 			tarFilePath := validatedTarFilePath(outputDirPath)
-			assertValidOutput(tarFilePath, "ops_manager_vm_types", "development")
+			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
 			assertLogging(session, tarFilePath, defaultEnvVars[cmd.OpsManagerURLKey])
 		})
 
@@ -113,7 +111,7 @@ var _ = Describe("Collect", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
 			tarFilePath := validatedTarFilePath(outputDirPath)
-			assertValidOutput(tarFilePath, "ops_manager_vm_types", "development")
+			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
 			assertLogging(session, tarFilePath, flagValues[cmd.OpsManagerURLFlag])
 		})
 	})
@@ -130,7 +128,7 @@ var _ = Describe("Collect", func() {
 			Eventually(session).Should(gexec.Exit(0))
 
 			tarFilePath := validatedTarFilePath(outputDirPath)
-			assertValidOutput(tarFilePath, "ops_manager_vm_types", "development")
+			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
 			assertLogging(session, tarFilePath, defaultEnvVars[cmd.OpsManagerURLKey])
 		})
 
@@ -151,7 +149,7 @@ var _ = Describe("Collect", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
 			tarFilePath := validatedTarFilePath(outputDirPath)
-			assertValidOutput(tarFilePath, "ops_manager_vm_types", "development")
+			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
 			assertLogging(session, tarFilePath, flagValues[cmd.OpsManagerURLFlag])
 		})
 	})
@@ -245,6 +243,12 @@ var _ = Describe("Collect", func() {
 			usageService = ghttp.NewTLSServer()
 			usageService.RouteToHandler(http.MethodGet, "/system_report/app_usages", func(w http.ResponseWriter, req *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
+				w.Write([]byte(`{
+						"month": 4,
+						"year": 2019,
+						"average_app_instances": 20,
+						"maximum_app_instances": 40
+					}`))
 				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
 			})
 		})
@@ -265,6 +269,11 @@ var _ = Describe("Collect", func() {
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
+
+			tarFilePath := validatedTarFilePath(outputDirPath)
+			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
+			assertValidOutput(tarFilePath, data.ConsumptionCollectorDataSetId, "app_usage", "development")
+			Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Collecting data from Usage Service at %s\n", usageService.URL())))
 		})
 
 		It("succeeds with flag configuration", func() {
@@ -290,11 +299,10 @@ var _ = Describe("Collect", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
 
-			Expect(len(cfService.ReceivedRequests())).To(Equal(1))
-			Expect(len(uaaService.ReceivedRequests())).To(Equal(1))
-			Expect(len(usageService.ReceivedRequests())).To(Equal(1))
+			tarFilePath := validatedTarFilePath(outputDirPath)
+			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
+			assertValidOutput(tarFilePath, data.ConsumptionCollectorDataSetId, "app_usage", "development")
 			Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Collecting data from Usage Service at %s\n", usageService.URL())))
-
 		})
 
 		DescribeTable(
@@ -324,36 +332,6 @@ var _ = Describe("Collect", func() {
 			Entry(cmd.UsageServiceClientIDFlag, cmd.UsageServiceClientIDFlag, "best-usage-service-client-id"),
 			Entry(cmd.UsageServiceClientSecretFlag, cmd.UsageServiceClientSecretFlag, "best-usage-service-client-secret"),
 		)
-
-		It("returns an error when usage service collection fails", func() {
-			usageService.RouteToHandler(http.MethodGet, "/system_report/app_usages", func(w http.ResponseWriter, req *http.Request) {
-				w.WriteHeader(http.StatusInternalServerError)
-			})
-
-			flagValues := map[string]string{
-				cmd.OpsManagerTimeoutFlag:         "1",
-				cmd.OpsManagerURLFlag:             opsManagerServer.URL(),
-				cmd.OpsManagerClientIdFlag:        "whatever",
-				cmd.OpsManagerClientSecretFlag:    "whatever",
-				cmd.SkipTlsVerifyFlag:             "true",
-				cmd.EnvTypeFlag:                   "Development",
-				cmd.OutputPathFlag:                outputDirPath,
-				cmd.CfApiURLFlag:                  cfService.URL(),
-				cmd.UsageServiceURLFlag:           usageService.URL(),
-				cmd.UsageServiceClientIDFlag:      "best-usage-service-client-id",
-				cmd.UsageServiceClientSecretFlag:  "best-usage-service-client-secret",
-				cmd.UsageServiceSkipTlsVerifyFlag: "true",
-			}
-			command := exec.Command(aqueductBinaryPath, "collect")
-			for k, v := range flagValues {
-				command.Args = append(command.Args, fmt.Sprintf("--%s=%s", k, v))
-			}
-			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-			Expect(err).NotTo(HaveOccurred())
-			Eventually(session).Should(gexec.Exit(1))
-			Eventually(session.Err).Should(gbytes.Say(cmd.UsageServiceError))
-			Eventually(session.Err).Should(gbytes.Say(fmt.Sprintf(usage.UsageServiceUnexpectedResponseStatusErrorFormat, http.StatusInternalServerError)))
-		})
 	})
 
 	Context("when credhub collection is enabled", func() {
@@ -412,7 +390,7 @@ var _ = Describe("Collect", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
 			tarFilePath := validatedTarFilePath(outputDirPath)
-			assertValidOutput(tarFilePath, "p-bosh_certificates", "development")
+			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "p-bosh_certificates", "development")
 			assertLogging(session, tarFilePath, flagValues[cmd.OpsManagerURLFlag])
 		})
 
@@ -424,7 +402,7 @@ var _ = Describe("Collect", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
 			tarFilePath := validatedTarFilePath(outputDirPath)
-			assertValidOutput(tarFilePath, "p-bosh_certificates", "development")
+			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "p-bosh_certificates", "development")
 			assertLogging(session, tarFilePath, defaultEnvVars[cmd.OpsManagerURLKey])
 		})
 
@@ -578,8 +556,8 @@ func validatedTarFilePath(outputDirPath string) string {
 	return filepath.Join(outputDirPath, fileInfos[0].Name())
 }
 
-func assertMetadataFileIsCorrect(contentDir, expectedEnvType string) {
-	content, err := ioutil.ReadFile(filepath.Join(contentDir, data.MetadataFileName))
+func assertMetadataFileIsCorrect(contentDir, expectedEnvType, dataSetType string) {
+	content, err := ioutil.ReadFile(filepath.Join(contentDir, dataSetType, data.MetadataFileName))
 	Expect(err).NotTo(HaveOccurred(), "Expected metadata file to exist but did not")
 	var metadata data.Metadata
 	Expect(json.Unmarshal(content, &metadata)).To(Succeed())
@@ -593,7 +571,7 @@ func assertOutputDirEmpty(outputDirPath string) {
 	Expect(len(fileInfos)).To(Equal(0), fmt.Sprintf("Expected output dir %s to be empty", outputDirPath))
 }
 
-func assertValidOutput(tarFilePath, filename, envType string) {
+func assertValidOutput(tarFilePath, dataSetType, filename, envType string) {
 	tmpDir, err := ioutil.TempDir("", "")
 	Expect(err).NotTo(HaveOccurred())
 	defer os.RemoveAll(tmpDir)
@@ -602,12 +580,13 @@ func assertValidOutput(tarFilePath, filename, envType string) {
 	err = tar.Unarchive(tarFilePath, tmpDir)
 	Expect(err).NotTo(HaveOccurred())
 
-	jsonFilePath := filepath.Join(tmpDir, filename)
+	jsonFilePath := filepath.Join(tmpDir, dataSetType, filename)
+
 	Expect(jsonFilePath).To(BeAnExistingFile())
 	content, err := ioutil.ReadFile(jsonFilePath)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(json.Valid(content)).To(BeTrue(), fmt.Sprintf("Expected file %s to contain valid json", jsonFilePath))
-	assertMetadataFileIsCorrect(tmpDir, envType)
+	assertMetadataFileIsCorrect(tmpDir, envType, dataSetType)
 }
 
 func assertLogging(session *gexec.Session, tarFilePath, url string) {

@@ -57,12 +57,22 @@ var _ = Describe("Send", func() {
 
 	Context("success", func() {
 		BeforeEach(func() {
+
+			srcDataTarFile, err := os.Open(sourceDataTarFilePath)
+			Expect(err).NotTo(HaveOccurred())
+			defer srcDataTarFile.Close()
+
+			srcContentBytes, err := ioutil.ReadAll(srcDataTarFile)
+			Expect(err).NotTo(HaveOccurred())
+
 			dataLoader.RouteToHandler(http.MethodPost, operations.PostPath, ghttp.CombineHandlers(
 				ghttp.VerifyHeader(http.Header{
 					"Authorization": []string{fmt.Sprintf("Token %s", validApiKey)},
+					"Content-Type":  []string{operations.TarMimeType},
+					operations.HTTPSenderVersionRequestHeader: []string{testVersion},
 				}),
+				ghttp.VerifyBody(srcContentBytes),
 				ghttp.RespondWith(http.StatusCreated, ""),
-				verifyVersion(),
 			))
 		})
 
@@ -117,32 +127,25 @@ func generateValidDataTarFile(destinationDir string) string {
 	Expect(err).NotTo(HaveOccurred())
 	defer writer.Close()
 
-	Expect(writer.AddFile([]byte{}, "file1")).To(Succeed())
-	Expect(writer.AddFile([]byte{}, "file2")).To(Succeed())
+	Expect(writer.AddFile([]byte{}, filepath.Join("some-data-set-name1", "file1"))).To(Succeed())
+	Expect(writer.AddFile([]byte{}, filepath.Join("some-data-set-name2", "file1"))).To(Succeed())
 	sum := md5.Sum([]byte{})
 	emptyFileChecksum := base64.StdEncoding.EncodeToString(sum[:])
 
 	var metadata data.Metadata
 	metadata.FileDigests = []data.FileDigest{
 		{Name: "file1", MD5Checksum: emptyFileChecksum},
-		{Name: "file2", MD5Checksum: emptyFileChecksum},
 	}
 	metadataContents, err := json.Marshal(metadata)
 	Expect(err).NotTo(HaveOccurred())
-	Expect(writer.AddFile(metadataContents, data.MetadataFileName)).To(Succeed())
+	Expect(writer.AddFile(metadataContents, filepath.Join("some-data-set-name1", data.MetadataFileName))).To(Succeed())
+
+	metadata.FileDigests = []data.FileDigest{
+		{Name: "file2", MD5Checksum: emptyFileChecksum},
+	}
+	metadataContents, err = json.Marshal(metadata)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(writer.AddFile(metadataContents, filepath.Join("some-data-set-name1", data.MetadataFileName))).To(Succeed())
 
 	return tarFilePath
-}
-
-func verifyVersion() http.HandlerFunc {
-	return func(_ http.ResponseWriter, req *http.Request) {
-		metadataStr := req.FormValue("metadata")
-		var metadataMap map[string]interface{}
-		Expect(json.Unmarshal([]byte(metadataStr), &metadataMap)).To(Succeed())
-
-		customMetadataMap, ok := metadataMap["customMetadata"].(map[string]interface{})
-		Expect(ok).To(BeTrue())
-
-		Expect(customMetadataMap["senderVersion"]).To(Equal(testVersion))
-	}
 }

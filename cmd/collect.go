@@ -9,7 +9,7 @@ import (
 
 	"github.com/pivotal-cf/aqueduct-courier/network"
 
-	"github.com/pivotal-cf/aqueduct-courier/usage"
+	"github.com/pivotal-cf/aqueduct-courier/consumption"
 
 	ogCredhub "code.cloudfoundry.org/credhub-cli/credhub"
 	"code.cloudfoundry.org/credhub-cli/credhub/auth"
@@ -68,7 +68,6 @@ const (
 	InvalidEnvTypeFailureFormat      = "Invalid env-type %s. See help for the list of valid types."
 	InvalidAuthConfigurationMessage  = "Invalid auth configuration. Requires username/password or client/secret to be set."
 	InvalidUsageConfigurationMessage = "Not all usage service configurations provided."
-	UsageServiceError                = "Failed getting Usage Service data"
 )
 
 var collectCmd = &cobra.Command{
@@ -179,28 +178,11 @@ func collect(c *cobra.Command, _ []string) error {
 		apiService,
 	)
 
-	if anyUsageServiceConfigsProvided() {
-		err := validateUsageServiceConfig()
-		if err != nil {
-			return err
-		}
-
-		client := network.NewClient(viper.GetBool(UsageServiceSkipTlsVerifyFlag))
-		cfApiClient := cf.NewClient(viper.GetString(CfApiURLFlag), client)
-		usageService := usage.NewCollector(
-			cfApiClient,
-			client,
-			viper.GetString(UsageServiceURLFlag),
-			viper.GetString(UsageServiceClientIDFlag),
-			viper.GetString(UsageServiceClientSecretFlag),
-		)
-
-		fmt.Printf("Collecting data from Usage Service at %s\n", viper.GetString(UsageServiceURLFlag))
-		err = usageService.Collect()
-		if err != nil {
-			return errors.Wrap(err, UsageServiceError)
-		}
+	consumptionCollector, err := makeConsumptionCollector()
+	if err != nil {
+		return err
 	}
+
 	credhubCollector, err := makeCredhubCollector(omService, viper.GetBool(CollectFromCredhubFlag))
 	if err != nil {
 		return err
@@ -215,7 +197,7 @@ func collect(c *cobra.Command, _ []string) error {
 		return err
 	}
 
-	ce := operations.NewCollector(omCollector, credhubCollector, tarWriter)
+	ce := operations.NewCollector(omCollector, credhubCollector, consumptionCollector, tarWriter)
 
 	fmt.Printf("Collecting data from Operations Manager at %s\n", viper.GetString(OpsManagerURLFlag))
 	err = ce.Collect(envType, version)
@@ -268,6 +250,29 @@ func validateAndNormalizeEnvType() (string, error) {
 	return "", errors.Errorf(InvalidEnvTypeFailureFormat, envType)
 }
 
+func makeConsumptionCollector() (consumptionDataCollector, error) {
+	if anyUsageServiceConfigsProvided() {
+		err := validateUsageServiceConfig()
+		if err != nil {
+			return nil, err
+		}
+
+		client := network.NewClient(viper.GetBool(UsageServiceSkipTlsVerifyFlag))
+		cfApiClient := cf.NewClient(viper.GetString(CfApiURLFlag), client)
+		consumptionCollector := consumption.NewCollector(
+			cfApiClient,
+			client,
+			viper.GetString(UsageServiceURLFlag),
+			viper.GetString(UsageServiceClientIDFlag),
+			viper.GetString(UsageServiceClientSecretFlag),
+		)
+
+		fmt.Printf("Collecting data from Usage Service at %s\n", viper.GetString(UsageServiceURLFlag))
+		return consumptionCollector, nil
+	}
+	return nil, nil
+}
+
 func makeCredhubCollector(omService *opsmanager.Service, credhubCollectionEnabled bool) (credhubDataCollector, error) {
 	if credhubCollectionEnabled {
 		chCreds, err := omService.BoshCredentials()
@@ -291,4 +296,8 @@ func makeCredhubCollector(omService *opsmanager.Service, credhubCollectionEnable
 
 type credhubDataCollector interface {
 	Collect() (credhub.Data, error)
+}
+
+type consumptionDataCollector interface {
+	Collect() (consumption.Data, error)
 }

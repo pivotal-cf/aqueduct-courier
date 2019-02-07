@@ -1,10 +1,12 @@
-package usage
+package consumption
 
 import (
 	"net/http"
 	"net/url"
 	"path"
 	"time"
+
+	"github.com/pivotal-cf/aqueduct-utils/data"
 
 	"github.com/pivotal-cf/aqueduct-courier/cf"
 
@@ -46,15 +48,15 @@ func NewCollector(cfClient cfApiClient, httpClient httpClient, usageServiceURL, 
 	}
 }
 
-func (c *Collector) Collect() error {
+func (c *Collector) Collect() (Data, error) {
 	usageURL, err := url.Parse(c.usageServiceURL)
 	if err != nil {
-		return errors.Wrapf(err, UsageServiceURLParsingError)
+		return Data{}, errors.Wrapf(err, UsageServiceURLParsingError)
 	}
 
 	uaaURL, err := c.cfApiClient.GetUAAURL()
 	if err != nil {
-		return errors.Wrap(err, GetUAAURLError)
+		return Data{}, errors.Wrap(err, GetUAAURLError)
 	}
 
 	authedClient := cf.NewOAuthClient(
@@ -69,16 +71,16 @@ func (c *Collector) Collect() error {
 
 	req, err := http.NewRequest(http.MethodGet, usageURL.String(), nil)
 	if err != nil {
-		return errors.Wrap(err, CreateUsageServiceHTTPRequestError)
+		return Data{}, errors.Wrap(err, CreateUsageServiceHTTPRequestError)
 	}
 
 	resp, err := authedClient.Do(req)
 	if err != nil {
-		return errors.Wrap(err, UsageServiceRequestError)
+		return Data{}, errors.Wrap(err, UsageServiceRequestError)
 	}
 	if resp.StatusCode != http.StatusOK {
-		return errors.Errorf(UsageServiceUnexpectedResponseStatusErrorFormat, resp.StatusCode)
+		return Data{}, errors.Errorf(UsageServiceUnexpectedResponseStatusErrorFormat, resp.StatusCode)
 	}
 
-	return err
+	return NewData(resp.Body, data.AppUsageDataType), nil
 }
