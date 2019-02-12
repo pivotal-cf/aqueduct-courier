@@ -68,6 +68,7 @@ const (
 	InvalidEnvTypeFailureFormat      = "Invalid env-type %s. See help for the list of valid types."
 	InvalidAuthConfigurationMessage  = "Invalid auth configuration. Requires username/password or client/secret to be set."
 	InvalidUsageConfigurationMessage = "Not all usage service configurations provided."
+	CreateTarFileFailureFormat       = "Could not create tar file %s"
 )
 
 var collectCmd = &cobra.Command{
@@ -192,10 +193,13 @@ func collect(c *cobra.Command, _ []string) error {
 		viper.GetString(OutputPathFlag),
 		fmt.Sprintf("%s%d.tar", OutputFilePrefix, time.Now().UTC().Unix()),
 	)
-	tarWriter, err := file.NewTarWriter(tarFilePath)
+	tarFile, err := os.Create(tarFilePath)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, CreateTarFileFailureFormat, tarFilePath)
 	}
+	defer tarFile.Close()
+
+	tarWriter := file.NewTarWriter(tarFile)
 
 	ce := operations.NewCollector(omCollector, credhubCollector, consumptionCollector, tarWriter)
 

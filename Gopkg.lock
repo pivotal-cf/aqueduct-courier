@@ -243,14 +243,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:3954a4de72c38833290fae537a27fc4329859b98198550f9312c307ecc503d43"
+  digest = "1:487603ac11616923866af23ad4474222f7a6ba52f9ac0cfe8e5620c75710517d"
   name = "github.com/pivotal-cf/aqueduct-utils"
   packages = [
     "data",
     "file",
   ]
   pruneopts = "UT"
-  revision = "624cf97fa8af97f3edc60a0f9612b8d11e63e4f2"
+  revision = "4c4bfa27f56abd9f34e6350630a33d0a63069793"
 
 [[projects]]
   digest = "1:f3ca82bd5cae7cce4b34002b851bf6cbd52ee35477f586a564aa6d5cbf596e26"
@@ -354,7 +354,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:082c538aa8ca5e086d5d20ec16417e7fca237de2c4146485e02aa09989d0ff38"
+  digest = "1:2608ff66924719c2f7a7203a7a56aa0e9c379fb6b1e1afa5a771b5722a3341a1"
   name = "golang.org/x/crypto"
   packages = [
     "curve25519",
@@ -366,7 +366,7 @@
     "ssh",
   ]
   pruneopts = "UT"
-  revision = "b8fe1690c61389d7d2a8074a507d1d40c5d30448"
+  revision = "74369b46fc6756741c016591724fd1cb8e26845f"
 
 [[projects]]
   branch = "master"
@@ -386,7 +386,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:27b7d9c947baf5e456b4a461b3fc4fa94dcd95b72e3c136b9f9933484d252d0f"
+  digest = "1:5d7e2a74eac34d558b64bb66772bc8f1a6e113aebf4fd4f5a972958e9e996e4d"
   name = "golang.org/x/oauth2"
   packages = [
     ".",
@@ -394,15 +394,15 @@
     "internal",
   ]
   pruneopts = "UT"
-  revision = "99b60b757ec124ebb7d6b7e97f153b19c10ce163"
+  revision = "5f6b76b7c9ddc07924f32b15de8f03ceec72d74b"
 
 [[projects]]
   branch = "master"
-  digest = "1:969c44c96e9866e912a16e282a362cf045b64202107424983fe8abc3373d1eab"
+  digest = "1:8b466798e96432c23185ca32826702885299f94eb644c9a8dedb79771dff383a"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "UT"
-  revision = "41f3e6584952bb034a481797859f6ab34b6803bd"
+  revision = "3b5209105503162ded1863c307ac66fec31120dd"
 
 [[projects]]
   digest = "1:4392fcf42d5cf0e3ff78c96b2acf8223d49e4fdc53eb77c99d2f8dfe4680e006"

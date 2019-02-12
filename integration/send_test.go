@@ -122,9 +122,11 @@ var _ = Describe("Send", func() {
 
 func generateValidDataTarFile(destinationDir string) string {
 	tarFilePath := filepath.Join(destinationDir, "some-foundation-data")
-
-	writer, err := file.NewTarWriter(tarFilePath)
+	tarFile, err := os.Create(tarFilePath)
 	Expect(err).NotTo(HaveOccurred())
+	defer tarFile.Close()
+
+	writer := file.NewTarWriter(tarFile)
 	defer writer.Close()
 
 	Expect(writer.AddFile([]byte{}, filepath.Join("some-data-set-name1", "file1"))).To(Succeed())

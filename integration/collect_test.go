@@ -23,7 +23,6 @@ import (
 	"github.com/pivotal-cf/aqueduct-courier/cmd"
 	"github.com/pivotal-cf/aqueduct-courier/operations"
 	"github.com/pivotal-cf/aqueduct-utils/data"
-	"github.com/pivotal-cf/aqueduct-utils/file"
 )
 
 const (
@@ -521,11 +520,9 @@ var _ = Describe("Collect", func() {
 
 	It("fails if data collection from Operations Manager fails", func() {
 		failingServer := ghttp.NewServer()
-		failingServer.AppendHandlers(
-			func(w http.ResponseWriter, req *http.Request) {
-				w.WriteHeader(500)
-			},
-		)
+		failingServer.RouteToHandler(http.MethodPost, "/uaa/oauth/token", func(w http.ResponseWriter, req *http.Request) {
+			w.WriteHeader(500)
+		})
 		defer failingServer.Close()
 		defaultEnvVars[cmd.OpsManagerURLKey] = failingServer.URL()
 		command := buildDefaultCommand(defaultEnvVars)
@@ -543,7 +540,7 @@ var _ = Describe("Collect", func() {
 		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(session).Should(gexec.Exit(1))
-		Expect(session.Err).To(gbytes.Say(fmt.Sprintf(file.CreateTarFileFailureFormat, "")))
+		Expect(session.Err).To(gbytes.Say(fmt.Sprintf(cmd.CreateTarFileFailureFormat, "")))
 		Expect(session.Err).NotTo(gbytes.Say("Usage:"))
 	})
 })
