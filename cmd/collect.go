@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/pivotal-cf/aqueduct-courier/network"
 
 	"github.com/pivotal-cf/aqueduct-courier/consumption"
@@ -201,7 +203,7 @@ func collect(c *cobra.Command, _ []string) error {
 
 	tarWriter := file.NewTarWriter(tarFile)
 
-	ce := operations.NewCollector(omCollector, credhubCollector, consumptionCollector, tarWriter)
+	ce := operations.NewCollector(omCollector, credhubCollector, consumptionCollector, tarWriter, uuid.DefaultGenerator)
 
 	fmt.Printf("Collecting data from Operations Manager at %s\n", viper.GetString(OpsManagerURLFlag))
 	err = ce.Collect(envType, version)

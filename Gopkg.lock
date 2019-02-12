@@ -66,6 +66,14 @@
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:bed9d72d596f94e65fff37f4d6c01398074a6bb1c3f3ceff963516bd01db6ff5"
+  name = "github.com/gofrs/uuid"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "6b08a5c5172ba18946672b49749cde22873dd7c2"
+  version = "v3.2.0"
+
+[[projects]]
   digest = "1:97df918963298c287643883209a2c3f642e6593379f97ab400c2a2e219ab647d"
   name = "github.com/golang/protobuf"
   packages = ["proto"]
@@ -271,14 +279,6 @@
   pruneopts = "UT"
   revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
   version = "v0.8.1"
-
-[[projects]]
-  digest = "1:274f67cb6fed9588ea2521ecdac05a6d62a8c51c074c1fccc6a49a40ba80e925"
-  name = "github.com/satori/go.uuid"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "f58768cc1a7a7e77a3bd49e98cdd21419399b6a3"
-  version = "v1.2.0"
 
 [[projects]]
   digest = "1:3e39bafd6c2f4bf3c76c3bfd16a2e09e016510ad5db90dc02b88e2f565d6d595"
@@ -488,6 +488,7 @@
   input-imports = [
     "code.cloudfoundry.org/credhub-cli/credhub",
     "code.cloudfoundry.org/credhub-cli/credhub/auth",
+    "github.com/gofrs/uuid",
     "github.com/mholt/archiver",
     "github.com/onsi/ginkgo",
     "github.com/onsi/ginkgo/extensions/table",
@@ -500,7 +501,6 @@
     "github.com/pivotal-cf/om/api",
     "github.com/pivotal-cf/om/network",
     "github.com/pkg/errors",
-    "github.com/satori/go.uuid",
     "github.com/spf13/cobra",
     "github.com/spf13/viper",
     "golang.org/x/oauth2",

@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/pivotal-cf/aqueduct-courier/consumption"
-	uuid "github.com/satori/go.uuid"
 
 	"github.com/pivotal-cf/aqueduct-courier/credhub"
 
@@ -25,6 +25,7 @@ const (
 	UsageCollectFailureMessage      = "Failed collecting from Usage Service"
 	DataWriteFailureMessage         = "Failed writing data"
 	ContentReadingFailureMessage    = "Failed to read content"
+	UUIDGenerationErrorMessage      = "unable to generate UUID"
 )
 
 //go:generate counterfeiter . omDataCollector
@@ -48,11 +49,9 @@ type tarWriter interface {
 	Close() error
 }
 
-type CollectExecutor struct {
-	opsmanagerDC  omDataCollector
-	credhubDC     credhubDataCollector
-	consumptionDC consumptionDataCollector
-	tarWriter     tarWriter
+//go:generate counterfeiter . uuidProvider
+type uuidProvider interface {
+	NewV4() (uuid.UUID, error)
 }
 
 type collectedData interface {
@@ -63,17 +62,30 @@ type collectedData interface {
 	Content() io.Reader
 }
 
-func NewCollector(opsmanagerDC omDataCollector, credhubDC credhubDataCollector, consumptionDC consumptionDataCollector, tarWriter tarWriter) CollectExecutor {
-	return CollectExecutor{opsmanagerDC: opsmanagerDC, credhubDC: credhubDC, consumptionDC: consumptionDC, tarWriter: tarWriter}
+type CollectExecutor struct {
+	opsmanagerDC  omDataCollector
+	credhubDC     credhubDataCollector
+	consumptionDC consumptionDataCollector
+	tarWriter     tarWriter
+	uuidProvider  uuidProvider
+}
+
+func NewCollector(opsmanagerDC omDataCollector, credhubDC credhubDataCollector, consumptionDC consumptionDataCollector, tarWriter tarWriter, uuidProvider uuidProvider) CollectExecutor {
+	return CollectExecutor{opsmanagerDC: opsmanagerDC, credhubDC: credhubDC, consumptionDC: consumptionDC, tarWriter: tarWriter, uuidProvider: uuidProvider}
 }
 
 func (ce CollectExecutor) Collect(envType, collectorVersion string) error {
 	defer ce.tarWriter.Close()
 
+	collectionID, err := ce.uuidProvider.NewV4()
+	if err != nil {
+		return errors.Wrap(err, UUIDGenerationErrorMessage)
+	}
+
 	opsManagerMetadata := data.Metadata{
 		CollectorVersion: collectorVersion,
 		EnvType:          envType,
-		CollectionId:     uuid.NewV4().String(),
+		CollectionId:     collectionID.String(),
 		CollectedAt:      time.Now().UTC().Format(time.RFC3339),
 	}
 

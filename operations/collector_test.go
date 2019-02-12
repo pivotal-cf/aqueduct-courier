@@ -11,12 +11,13 @@ import (
 	"time"
 
 	"github.com/pivotal-cf/aqueduct-courier/consumption"
+	"github.com/pivotal-cf/aqueduct-courier/operations"
 
 	"github.com/pivotal-cf/aqueduct-courier/credhub"
 
+	"github.com/gofrs/uuid"
 	. "github.com/pivotal-cf/aqueduct-courier/operations"
 	"github.com/pivotal-cf/aqueduct-utils/data"
-	uuid "github.com/satori/go.uuid"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -28,14 +29,20 @@ var _ = Describe("Collector", func() {
 	var (
 		omDataCollector *operationsfakes.FakeOmDataCollector
 		tarWriter       *operationsfakes.FakeTarWriter
+		uuidProvider    *operationsfakes.FakeUuidProvider
+		uuidString      = "cf736154-6fd5-47f4-8ca9-1b4a6fe451ad"
 		collector       CollectExecutor
 	)
 
 	BeforeEach(func() {
 		omDataCollector = new(operationsfakes.FakeOmDataCollector)
 		tarWriter = new(operationsfakes.FakeTarWriter)
+		uuidProvider = new(operationsfakes.FakeUuidProvider)
+		uuidProvider.NewV4Stub = func() (uuid.UUID, error) {
+			return uuid.FromString(uuidString)
+		}
 
-		collector = NewCollector(omDataCollector, nil, nil, tarWriter)
+		collector = NewCollector(omDataCollector, nil, nil, tarWriter, uuidProvider)
 	})
 
 	It("collects opsmanager data and writes it", func() {
@@ -80,8 +87,7 @@ var _ = Describe("Collector", func() {
 			data.FileDigest{Name: d1.Name(), MimeType: d1.MimeType(), MD5Checksum: d1ContentMd5, ProductType: d1.Type(), DataType: d1.DataType()},
 			data.FileDigest{Name: d2.Name(), MimeType: d2.MimeType(), MD5Checksum: d2ContentMd5, ProductType: d2.Type(), DataType: d2.DataType()},
 		))
-		_, err = uuid.FromString(metadata.CollectionId)
-		Expect(err).NotTo(HaveOccurred())
+		Expect(metadata.CollectionId).To(Equal(uuidString))
 		collectedAtTime, err := time.Parse(time.RFC3339, metadata.CollectedAt)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(collectedAtTime.Location()).To(Equal(time.UTC))
@@ -135,6 +141,14 @@ var _ = Describe("Collector", func() {
 		Expect(err).To(MatchError(ContainSubstring("tarring is hard")))
 	})
 
+	It("returns an error when a UUID cannot be generated", func() {
+		uuidProvider.NewV4Returns(uuid.UUID{}, errors.New("generating a UUID is hard"))
+
+		err := collector.Collect("", "")
+		Expect(err).To(MatchError(ContainSubstring(operations.UUIDGenerationErrorMessage)))
+		Expect(err).To(MatchError(ContainSubstring("generating a UUID is hard")))
+	})
+
 	Describe("credhub collection", func() {
 		var (
 			collectorWithCredhub CollectExecutor
@@ -143,7 +157,7 @@ var _ = Describe("Collector", func() {
 
 		BeforeEach(func() {
 			credhubDataCollector = new(operationsfakes.FakeCredhubDataCollector)
-			collectorWithCredhub = NewCollector(omDataCollector, credhubDataCollector, nil, tarWriter)
+			collectorWithCredhub = NewCollector(omDataCollector, credhubDataCollector, nil, tarWriter, uuidProvider)
 		})
 
 		It("collects credhub data and writes it", func() {
@@ -236,7 +250,7 @@ var _ = Describe("Collector", func() {
 
 		BeforeEach(func() {
 			consumptionDataCollector = new(operationsfakes.FakeConsumptionDataCollector)
-			collectorWithConsumption = NewCollector(omDataCollector, nil, consumptionDataCollector, tarWriter)
+			collectorWithConsumption = NewCollector(omDataCollector, nil, consumptionDataCollector, tarWriter, uuidProvider)
 		})
 
 		It("collects consumption data and writes it", func() {
