@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pivotal-cf/om/api"
+
 	"github.com/gofrs/uuid"
 
 	"github.com/pivotal-cf/aqueduct-courier/network"
@@ -21,7 +23,6 @@ import (
 	"github.com/pivotal-cf/aqueduct-courier/operations"
 	"github.com/pivotal-cf/aqueduct-courier/opsmanager"
 	"github.com/pivotal-cf/aqueduct-utils/file"
-	"github.com/pivotal-cf/om/api"
 	omNetwork "github.com/pivotal-cf/om/network"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -158,39 +159,6 @@ func collect(c *cobra.Command, _ []string) error {
 
 	c.SilenceUsage = true
 
-	authedClient, _ := omNetwork.NewOAuthClient(
-		viper.GetString(OpsManagerURLFlag),
-		viper.GetString(OpsManagerUsernameFlag),
-		viper.GetString(OpsManagerPasswordFlag),
-		viper.GetString(OpsManagerClientIdFlag),
-		viper.GetString(OpsManagerClientSecretFlag),
-		viper.GetBool(SkipTlsVerifyFlag),
-		false,
-		time.Duration(viper.GetInt(OpsManagerTimeoutFlag))*time.Second,
-		5*time.Second,
-	)
-
-	apiService := api.New(api.ApiInput{Client: authedClient})
-	omService := &opsmanager.Service{
-		Requestor: apiService,
-	}
-
-	omCollector := opsmanager.NewDataCollector(
-		omService,
-		apiService,
-		apiService,
-	)
-
-	consumptionCollector, err := makeConsumptionCollector()
-	if err != nil {
-		return err
-	}
-
-	credhubCollector, err := makeCredhubCollector(omService, viper.GetBool(CollectFromCredhubFlag))
-	if err != nil {
-		return err
-	}
-
 	tarFilePath := filepath.Join(
 		viper.GetString(OutputPathFlag),
 		fmt.Sprintf("%s%d.tar", OutputFilePrefix, time.Now().UTC().Unix()),
@@ -203,10 +171,14 @@ func collect(c *cobra.Command, _ []string) error {
 
 	tarWriter := file.NewTarWriter(tarFile)
 
-	ce := operations.NewCollector(omCollector, credhubCollector, consumptionCollector, tarWriter, uuid.DefaultGenerator)
+	collectExecutor, err := makeCollector(tarWriter)
+	if err != nil {
+		os.Remove(tarFilePath)
+		return err
+	}
 
 	fmt.Printf("Collecting data from Operations Manager at %s\n", viper.GetString(OpsManagerURLFlag))
-	err = ce.Collect(envType, version)
+	err = collectExecutor.Collect(envType, version)
 	if err != nil {
 		os.Remove(tarFilePath)
 		return err
@@ -298,6 +270,43 @@ func makeCredhubCollector(omService *opsmanager.Service, credhubCollectionEnable
 	} else {
 		return nil, nil
 	}
+}
+
+func makeCollector(tarWriter *file.TarWriter) (operations.CollectExecutor, error) {
+	authedClient, _ := omNetwork.NewOAuthClient(
+		viper.GetString(OpsManagerURLFlag),
+		viper.GetString(OpsManagerUsernameFlag),
+		viper.GetString(OpsManagerPasswordFlag),
+		viper.GetString(OpsManagerClientIdFlag),
+		viper.GetString(OpsManagerClientSecretFlag),
+		viper.GetBool(SkipTlsVerifyFlag),
+		false,
+		time.Duration(viper.GetInt(OpsManagerTimeoutFlag))*time.Second,
+		5*time.Second,
+	)
+
+	apiService := api.New(api.ApiInput{Client: authedClient})
+	omService := &opsmanager.Service{
+		Requestor: apiService,
+	}
+
+	omCollector := opsmanager.NewDataCollector(
+		omService,
+		apiService,
+		apiService,
+	)
+
+	consumptionCollector, err := makeConsumptionCollector()
+	if err != nil {
+		return operations.CollectExecutor{}, err
+	}
+
+	credhubCollector, err := makeCredhubCollector(omService, viper.GetBool(CollectFromCredhubFlag))
+	if err != nil {
+		return operations.CollectExecutor{}, err
+	}
+
+	return operations.NewCollector(omCollector, credhubCollector, consumptionCollector, tarWriter, uuid.DefaultGenerator), nil
 }
 
 type credhubDataCollector interface {
