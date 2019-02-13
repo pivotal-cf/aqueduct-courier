@@ -13,13 +13,13 @@ type DataCollector struct {
 	credhubService CredhubService
 }
 
-func NewDataCollector(cs CredhubService) DataCollector {
-	return DataCollector{
+func NewDataCollector(cs CredhubService) *DataCollector {
+	return &DataCollector{
 		credhubService: cs,
 	}
 }
 
-func (dc DataCollector) Collect() (Data, error) {
+func (dc *DataCollector) Collect() (Data, error) {
 	certReader, err := dc.credhubService.Certificates()
 	if err != nil {
 		return Data{}, err

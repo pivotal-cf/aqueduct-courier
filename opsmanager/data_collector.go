@@ -46,15 +46,15 @@ type DataCollector struct {
 	deployProductsService DeployedProductsLister
 }
 
-func NewDataCollector(oms OmService, pcs PendingChangesLister, dps DeployedProductsLister) DataCollector {
-	return DataCollector{
+func NewDataCollector(oms OmService, pcs PendingChangesLister, dps DeployedProductsLister) *DataCollector {
+	return &DataCollector{
 		omService:             oms,
 		pendingChangesService: pcs,
 		deployProductsService: dps,
 	}
 }
 
-func (dc DataCollector) Collect() ([]Data, error) {
+func (dc *DataCollector) Collect() ([]Data, error) {
 	pc, err := dc.pendingChangesService.ListStagedPendingChanges()
 	if err != nil {
 		return []Data{}, errors.Wrap(err, PendingChangesFailedMessage)

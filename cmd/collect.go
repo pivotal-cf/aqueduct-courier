@@ -272,7 +272,7 @@ func makeCredhubCollector(omService *opsmanager.Service, credhubCollectionEnable
 	}
 }
 
-func makeCollector(tarWriter *file.TarWriter) (operations.CollectExecutor, error) {
+func makeCollector(tarWriter *file.TarWriter) (*operations.CollectExecutor, error) {
 	authedClient, _ := omNetwork.NewOAuthClient(
 		viper.GetString(OpsManagerURLFlag),
 		viper.GetString(OpsManagerUsernameFlag),
@@ -298,12 +298,12 @@ func makeCollector(tarWriter *file.TarWriter) (operations.CollectExecutor, error
 
 	consumptionCollector, err := makeConsumptionCollector()
 	if err != nil {
-		return operations.CollectExecutor{}, err
+		return nil, err
 	}
 
 	credhubCollector, err := makeCredhubCollector(omService, viper.GetBool(CollectFromCredhubFlag))
 	if err != nil {
-		return operations.CollectExecutor{}, err
+		return nil, err
 	}
 
 	return operations.NewCollector(omCollector, credhubCollector, consumptionCollector, tarWriter, uuid.DefaultGenerator), nil

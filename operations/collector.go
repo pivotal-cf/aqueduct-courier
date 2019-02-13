@@ -70,11 +70,11 @@ type CollectExecutor struct {
 	uuidProvider  uuidProvider
 }
 
-func NewCollector(opsmanagerDC omDataCollector, credhubDC credhubDataCollector, consumptionDC consumptionDataCollector, tarWriter tarWriter, uuidProvider uuidProvider) CollectExecutor {
-	return CollectExecutor{opsmanagerDC: opsmanagerDC, credhubDC: credhubDC, consumptionDC: consumptionDC, tarWriter: tarWriter, uuidProvider: uuidProvider}
+func NewCollector(opsmanagerDC omDataCollector, credhubDC credhubDataCollector, consumptionDC consumptionDataCollector, tarWriter tarWriter, uuidProvider uuidProvider) *CollectExecutor {
+	return &CollectExecutor{opsmanagerDC: opsmanagerDC, credhubDC: credhubDC, consumptionDC: consumptionDC, tarWriter: tarWriter, uuidProvider: uuidProvider}
 }
 
-func (ce CollectExecutor) Collect(envType, collectorVersion string) error {
+func (ce *CollectExecutor) Collect(envType, collectorVersion string) error {
 	defer ce.tarWriter.Close()
 
 	collectionID, err := ce.uuidProvider.NewV4()
@@ -154,7 +154,7 @@ func (ce CollectExecutor) Collect(envType, collectorVersion string) error {
 	return nil
 }
 
-func (ce CollectExecutor) addData(collectedData collectedData, metadata *data.Metadata, dataSetType string) error {
+func (ce *CollectExecutor) addData(collectedData collectedData, metadata *data.Metadata, dataSetType string) error {
 	dataContents, err := ioutil.ReadAll(collectedData.Content())
 	if err != nil {
 		return errors.Wrap(err, ContentReadingFailureMessage)

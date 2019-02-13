@@ -31,7 +31,7 @@ var _ = Describe("Collector", func() {
 		tarWriter       *operationsfakes.FakeTarWriter
 		uuidProvider    *operationsfakes.FakeUuidProvider
 		uuidString      = "cf736154-6fd5-47f4-8ca9-1b4a6fe451ad"
-		collector       CollectExecutor
+		collector       *CollectExecutor
 	)
 
 	BeforeEach(func() {
@@ -151,7 +151,7 @@ var _ = Describe("Collector", func() {
 
 	Describe("credhub collection", func() {
 		var (
-			collectorWithCredhub CollectExecutor
+			collectorWithCredhub *CollectExecutor
 			credhubDataCollector *operationsfakes.FakeCredhubDataCollector
 		)
 
@@ -244,7 +244,7 @@ var _ = Describe("Collector", func() {
 
 	Describe("consumption collection", func() {
 		var (
-			collectorWithConsumption CollectExecutor
+			collectorWithConsumption *CollectExecutor
 			consumptionDataCollector *operationsfakes.FakeConsumptionDataCollector
 		)
 
