@@ -173,6 +173,7 @@ func collect(c *cobra.Command, _ []string) error {
 
 	collectExecutor, err := makeCollector(tarWriter)
 	if err != nil {
+		tarFile.Close()
 		os.Remove(tarFilePath)
 		return err
 	}
@@ -180,6 +181,7 @@ func collect(c *cobra.Command, _ []string) error {
 	fmt.Printf("Collecting data from Operations Manager at %s\n", viper.GetString(OpsManagerURLFlag))
 	err = collectExecutor.Collect(envType, version)
 	if err != nil {
+		tarFile.Close()
 		os.Remove(tarFilePath)
 		return err
 	}
