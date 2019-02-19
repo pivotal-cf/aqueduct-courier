@@ -83,11 +83,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4a0c6bb4805508a6287675fac876be2ac1182539ca8a32468d8128882e9d5009"
+  digest = "1:e4f5819333ac698d294fe04dbf640f84719658d5c7ce195b10060cc37292ce79"
   name = "github.com/golang/snappy"
   packages = ["."]
   pruneopts = "UT"
-  revision = "2e65f85255dbc3072edf28d6b5b8efc472979f5a"
+  revision = "2a8bb927dd31d8daada140a5d09578521ce5c36a"
 
 [[projects]]
   digest = "1:950caca7dfcf796419232ba996c9c3539d09f26af27ba848c4508e604c13efbb"
@@ -251,17 +251,17 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:487603ac11616923866af23ad4474222f7a6ba52f9ac0cfe8e5620c75710517d"
+  digest = "1:f2bcf7fc561f9423a175c77e0425225028ee10f67a6387442457db838d80ca9c"
   name = "github.com/pivotal-cf/aqueduct-utils"
   packages = [
     "data",
     "file",
   ]
   pruneopts = "UT"
-  revision = "4c4bfa27f56abd9f34e6350630a33d0a63069793"
+  revision = "01cac8ff9a3544833bd6cd200b1bc8e478543b5f"
 
 [[projects]]
-  digest = "1:f3ca82bd5cae7cce4b34002b851bf6cbd52ee35477f586a564aa6d5cbf596e26"
+  digest = "1:87f27e4019b90ae41fcadbd4c02c7ff2c39b3ced77645b1c36ef233863efb760"
   name = "github.com/pivotal-cf/om"
   packages = [
     "api",
@@ -269,8 +269,8 @@
     "progress",
   ]
   pruneopts = "UT"
-  revision = "28580d6b226f74d23d671f1141d47c2ae552f256"
-  version = "0.51.0"
+  revision = "838725d235b46a47e80a2d9cd8aae1b076e0af97"
+  version = "0.53.0"
 
 [[projects]]
   digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
@@ -366,11 +366,11 @@
     "ssh",
   ]
   pruneopts = "UT"
-  revision = "74369b46fc6756741c016591724fd1cb8e26845f"
+  revision = "a4c6cb3142f211c99e4bf4cd769535b29a9b616f"
 
 [[projects]]
   branch = "master"
-  digest = "1:327e6655a726632ae218d237060866841c81114a0f79e3499e8be8163bf22dd4"
+  digest = "1:f646aa909be9067dc588a9e24dd52392e848a0da5424c0cfa9f00d9ed3b68cf9"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -382,11 +382,11 @@
     "proxy",
   ]
   pruneopts = "UT"
-  revision = "65e2d4e15006aab9813ff8769e768bbf4bb667a0"
+  revision = "3a22650c66bd7f4fb6d1e8072ffd7b75c8a27898"
 
 [[projects]]
   branch = "master"
-  digest = "1:5d7e2a74eac34d558b64bb66772bc8f1a6e113aebf4fd4f5a972958e9e996e4d"
+  digest = "1:d970381c0f85a22bee92b4d585ba4ae3c8399cf6796a241449a20fd33762a16b"
   name = "golang.org/x/oauth2"
   packages = [
     ".",
@@ -394,15 +394,15 @@
     "internal",
   ]
   pruneopts = "UT"
-  revision = "5f6b76b7c9ddc07924f32b15de8f03ceec72d74b"
+  revision = "4b83411ed2b36bd4e3302e9b1d3c973fb1ba24db"
 
 [[projects]]
   branch = "master"
-  digest = "1:8b466798e96432c23185ca32826702885299f94eb644c9a8dedb79771dff383a"
+  digest = "1:8207c052fb873f83c61a5aa16f6add5feb9881eda2112b56f69fd3b9e7f55c3f"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "UT"
-  revision = "3b5209105503162ded1863c307ac66fec31120dd"
+  revision = "153ac476189d567564fda94622d7a8c0fb338f6b"
 
 [[projects]]
   digest = "1:4392fcf42d5cf0e3ff78c96b2acf8223d49e4fdc53eb77c99d2f8dfe4680e006"

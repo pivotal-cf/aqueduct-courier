@@ -21,6 +21,7 @@ const (
 	CertificatesDataType           = "certificates"
 	CertificateAuthoritiesDataType = "certificate_authorities"
 	AppUsageDataType               = "app_usage"
+	ServiceUsageDataType           = "service_usage"
 
 	OpsManagerCollectorDataSetId  = "opsmanager"
 	ConsumptionCollectorDataSetId = "consumption"
