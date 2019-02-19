@@ -4,6 +4,8 @@ import (
 	"encoding/base64"
 	"io/ioutil"
 
+	"github.com/pivotal-cf/aqueduct-utils/data"
+
 	"github.com/pkg/errors"
 
 	"fmt"
@@ -47,6 +49,11 @@ var _ = Describe("Collector", func() {
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte(`successful app usage content`))
 		})
+		usageService.RouteToHandler(http.MethodGet, "/system_report/service_usages", func(w http.ResponseWriter, req *http.Request) {
+			Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`successful service usage content`))
+		})
 		cfApiClient = &consumptionfakes.FakeCfApiClient{}
 		cfApiClient.GetUAAURLReturns(uaaService.URL(), nil)
 
@@ -62,11 +69,19 @@ var _ = Describe("Collector", func() {
 		It("accesses the usage service with an OAuth client configured appropriately, with the endpoint discovered from the CfApiClient", func() {
 			usageData, err := collector.Collect()
 			Expect(err).ToNot(HaveOccurred())
-			usageContent, err := ioutil.ReadAll(usageData.Content())
+			Expect(len(usageData)).To(Equal(2))
+
+			appUsageContent, err := ioutil.ReadAll(usageData[0].Content())
+			Expect(err).ToNot(HaveOccurred())
+			serviceUsageContent, err := ioutil.ReadAll(usageData[1].Content())
 			Expect(err).ToNot(HaveOccurred())
 
-			Expect(len(usageService.ReceivedRequests())).To(Equal(1))
-			Expect(usageContent).To(Equal([]byte("successful app usage content")))
+			Expect(usageData[0].DataType()).To(Equal(data.AppUsageDataType))
+			Expect(usageData[1].DataType()).To(Equal(data.ServiceUsageDataType))
+
+			Expect(len(usageService.ReceivedRequests())).To(Equal(2))
+			Expect(appUsageContent).To(Equal([]byte("successful app usage content")))
+			Expect(serviceUsageContent).To(Equal([]byte("successful service usage content")))
 		})
 
 		It("returns an error if the usage service URL is invalid", func() {
@@ -85,7 +100,7 @@ var _ = Describe("Collector", func() {
 			Expect(err).To(MatchError(ContainSubstring("getting UAA URL is hard")))
 		})
 
-		It("returns an error when the request to the usage service endpoint fails", func() {
+		It("returns an error when the request to the app usage service endpoint fails", func() {
 			usageService.RouteToHandler(http.MethodGet, "/system_report/app_usages", func(w http.ResponseWriter, req *http.Request) {
 				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
 				w.WriteHeader(http.StatusMovedPermanently)
@@ -96,14 +111,35 @@ var _ = Describe("Collector", func() {
 			Expect(err).To(MatchError(ContainSubstring(UsageServiceRequestError)))
 		})
 
-		It("returns an error when the request receives an unsuccessful response", func() {
+		It("returns an error when the request to the app usage endpoint receives an unsuccessful response", func() {
 			usageService.RouteToHandler(http.MethodGet, "/system_report/app_usages", func(w http.ResponseWriter, req *http.Request) {
 				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
 				w.WriteHeader(http.StatusInternalServerError)
 			})
 			_, err := collector.Collect()
 
-			Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(UsageServiceUnexpectedResponseStatusErrorFormat, 500))))
+			Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(UsageServiceUnexpectedResponseStatusErrorFormat, 500, AppUsagesReportName))))
+		})
+
+		It("returns an error when the request to the service usage service endpoint fails", func() {
+			usageService.RouteToHandler(http.MethodGet, "/system_report/service_usages", func(w http.ResponseWriter, req *http.Request) {
+				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
+				w.WriteHeader(http.StatusMovedPermanently)
+			})
+			_, err := collector.Collect()
+
+			Expect(err).To(MatchError(ContainSubstring("301 response missing Location header")))
+			Expect(err).To(MatchError(ContainSubstring(UsageServiceRequestError)))
+		})
+
+		It("returns an error when the request to the service usage endpoint receives an unsuccessful response", func() {
+			usageService.RouteToHandler(http.MethodGet, "/system_report/service_usages", func(w http.ResponseWriter, req *http.Request) {
+				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
+				w.WriteHeader(http.StatusInternalServerError)
+			})
+			_, err := collector.Collect()
+
+			Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(UsageServiceUnexpectedResponseStatusErrorFormat, 500, ServiceUsagesReportName))))
 		})
 
 	})

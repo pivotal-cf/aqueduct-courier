@@ -81,6 +81,46 @@ var _ = Describe("Collect", func() {
 		Expect(os.RemoveAll(outputDirPath)).To(Succeed())
 	})
 
+	DescribeTable(
+		"succeeds with valid env type configuration",
+		func(envType string) {
+			command := buildDefaultCommand(defaultEnvVars)
+			command.Env = append(command.Env, fmt.Sprintf("%s=%s", cmd.EnvTypeKey, envType))
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+		},
+		Entry(cmd.EnvTypeDevelopment, cmd.EnvTypeDevelopment),
+		Entry(cmd.EnvTypeQA, cmd.EnvTypeQA),
+		Entry(cmd.EnvTypePreProduction, cmd.EnvTypePreProduction),
+		Entry(cmd.EnvTypeProduction, cmd.EnvTypeProduction),
+	)
+
+	DescribeTable(
+		"fails when there is no pair of auth credentials",
+		func(keysToRemove ...string) {
+			command := exec.Command(aqueductBinaryPath, "collect")
+			for _, key := range keysToRemove {
+				delete(defaultEnvVars, key)
+			}
+			for k, v := range defaultEnvVars {
+				command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))
+			}
+
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).ToNot(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(1))
+			Eventually(session.Err).Should(gbytes.Say(cmd.InvalidAuthConfigurationMessage))
+			Expect(session.Err).To(gbytes.Say("Usage:"))
+			assertOutputDirEmpty(outputDirPath)
+		},
+		Entry("none provided", cmd.OpsManagerUsernameKey, cmd.OpsManagerPasswordKey, cmd.OpsManagerClientIdKey, cmd.OpsManagerClientSecretKey),
+		Entry("missing username and client id", cmd.OpsManagerUsernameKey, cmd.OpsManagerClientIdKey),
+		Entry("missing username and client secret", cmd.OpsManagerUsernameKey, cmd.OpsManagerClientSecretKey),
+		Entry("missing password and client id", cmd.OpsManagerPasswordKey, cmd.OpsManagerClientIdKey),
+		Entry("missing password and client secret", cmd.OpsManagerPasswordKey, cmd.OpsManagerClientSecretKey),
+	)
+
 	Context("with ops manager user/password authentication", func() {
 		It("succeeds with env variable configuration", func() {
 			command := buildDefaultCommand(defaultEnvVars)
@@ -242,12 +282,12 @@ var _ = Describe("Collect", func() {
 			usageService = ghttp.NewTLSServer()
 			usageService.RouteToHandler(http.MethodGet, "/system_report/app_usages", func(w http.ResponseWriter, req *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.Write([]byte(`{
-						"month": 4,
-						"year": 2019,
-						"average_app_instances": 20,
-						"maximum_app_instances": 40
-					}`))
+				w.Write([]byte(`{}`))
+				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
+			})
+			usageService.RouteToHandler(http.MethodGet, "/system_report/service_usages", func(w http.ResponseWriter, req *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.Write([]byte(`{}`))
 				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
 			})
 		})
@@ -272,7 +312,6 @@ var _ = Describe("Collect", func() {
 			tarFilePath := validatedTarFilePath(outputDirPath)
 			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
 			assertValidOutput(tarFilePath, data.ConsumptionCollectorDataSetId, "app_usage", "development")
-			Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Collecting data from Usage Service at %s\n", usageService.URL())))
 		})
 
 		It("succeeds with flag configuration", func() {
@@ -301,7 +340,6 @@ var _ = Describe("Collect", func() {
 			tarFilePath := validatedTarFilePath(outputDirPath)
 			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
 			assertValidOutput(tarFilePath, data.ConsumptionCollectorDataSetId, "app_usage", "development")
-			Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Collecting data from Usage Service at %s\n", usageService.URL())))
 		})
 
 		DescribeTable(
@@ -456,22 +494,7 @@ var _ = Describe("Collect", func() {
 		})
 	})
 
-	DescribeTable(
-		"succeeds with valid env type configuration",
-		func(envType string) {
-			command := buildDefaultCommand(defaultEnvVars)
-			command.Env = append(command.Env, fmt.Sprintf("%s=%s", cmd.EnvTypeKey, envType))
-			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-			Expect(err).NotTo(HaveOccurred())
-			Eventually(session).Should(gexec.Exit(0))
-		},
-		Entry(cmd.EnvTypeDevelopment, cmd.EnvTypeDevelopment),
-		Entry(cmd.EnvTypeQA, cmd.EnvTypeQA),
-		Entry(cmd.EnvTypePreProduction, cmd.EnvTypePreProduction),
-		Entry(cmd.EnvTypeProduction, cmd.EnvTypeProduction),
-	)
-
-	It("fails with the correct error message when required variables are not set", func() {
+	It("fails if the required variables are not set", func() {
 		command := exec.Command(aqueductBinaryPath, "collect")
 		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Expect(err).ToNot(HaveOccurred())
@@ -481,31 +504,6 @@ var _ = Describe("Collect", func() {
 		Expect(session.Err).To(gbytes.Say("Usage:"))
 		assertOutputDirEmpty(outputDirPath)
 	})
-
-	DescribeTable(
-		"fails when there is no pair of auth credentials",
-		func(keysToRemove ...string) {
-			command := exec.Command(aqueductBinaryPath, "collect")
-			for _, key := range keysToRemove {
-				delete(defaultEnvVars, key)
-			}
-			for k, v := range defaultEnvVars {
-				command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))
-			}
-
-			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-			Expect(err).ToNot(HaveOccurred())
-			Eventually(session).Should(gexec.Exit(1))
-			Eventually(session.Err).Should(gbytes.Say(cmd.InvalidAuthConfigurationMessage))
-			Expect(session.Err).To(gbytes.Say("Usage:"))
-			assertOutputDirEmpty(outputDirPath)
-		},
-		Entry("none provided", cmd.OpsManagerUsernameKey, cmd.OpsManagerPasswordKey, cmd.OpsManagerClientIdKey, cmd.OpsManagerClientSecretKey),
-		Entry("missing username and client id", cmd.OpsManagerUsernameKey, cmd.OpsManagerClientIdKey),
-		Entry("missing username and client secret", cmd.OpsManagerUsernameKey, cmd.OpsManagerClientSecretKey),
-		Entry("missing password and client id", cmd.OpsManagerPasswordKey, cmd.OpsManagerClientIdKey),
-		Entry("missing password and client secret", cmd.OpsManagerPasswordKey, cmd.OpsManagerClientSecretKey),
-	)
 
 	It("fails if the passed in env type is invalid", func() {
 		command := buildDefaultCommand(defaultEnvVars)

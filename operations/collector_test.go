@@ -259,11 +259,17 @@ var _ = Describe("Collector", func() {
 			dataToWrite := []opsmanager.Data{d1}
 			omDataCollector.CollectReturns(dataToWrite, nil)
 
-			expectedConsumptionContents := "consumption-content"
-			md5SumCH := md5.Sum([]byte(expectedConsumptionContents))
-			chContentMd5 := base64.StdEncoding.EncodeToString(md5SumCH[:])
-			consumptionData := consumption.NewData(strings.NewReader(expectedConsumptionContents), "app-instances")
-			consumptionDataCollector.CollectReturns(consumptionData, nil)
+			expectedAppUsageConsumptionContents := "consumption-app-usage-content"
+			md5sum := md5.Sum([]byte(expectedAppUsageConsumptionContents))
+			appUsageContentMd5 := base64.StdEncoding.EncodeToString(md5sum[:])
+			appUsageConsumptionData := consumption.NewData(strings.NewReader(expectedAppUsageConsumptionContents), "app-instances")
+
+			expectedServiceUsageConsumptionContents := "consumption-service-usage-content"
+			md5sum = md5.Sum([]byte(expectedServiceUsageConsumptionContents))
+			serviceUsageContentMd5 := base64.StdEncoding.EncodeToString(md5sum[:])
+			serviceUsageConsumptionData := consumption.NewData(strings.NewReader(expectedServiceUsageConsumptionContents), "service-instances")
+
+			consumptionDataCollector.CollectReturns([]consumption.Data{appUsageConsumptionData, serviceUsageConsumptionData}, nil)
 
 			collectorVersion := "0.0.1-version"
 			envType := "most-production"
@@ -271,15 +277,20 @@ var _ = Describe("Collector", func() {
 			err := collectorWithConsumption.Collect(envType, collectorVersion)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(tarWriter.AddFileCallCount()).To(Equal(4))
+			Expect(tarWriter.AddFileCallCount()).To(Equal(5))
 
-			expectedConsumptionDataPath := filepath.Join(data.ConsumptionCollectorDataSetId, consumptionData.Name())
-			consumptionContents, consumptionDataPath := tarWriter.AddFileArgsForCall(2)
-			Expect(string(consumptionContents)).To(Equal(expectedConsumptionContents))
-			Expect(consumptionDataPath).To(Equal(expectedConsumptionDataPath))
+			expectedAppUsageConsumptionDataPath := filepath.Join(data.ConsumptionCollectorDataSetId, appUsageConsumptionData.Name())
+			appUsageConsumptionContents, appUsageConsumptionDataPath := tarWriter.AddFileArgsForCall(2)
+			Expect(string(appUsageConsumptionContents)).To(Equal(expectedAppUsageConsumptionContents))
+			Expect(appUsageConsumptionDataPath).To(Equal(expectedAppUsageConsumptionDataPath))
+
+			expectedServiceUsageConsumptionDataPath := filepath.Join(data.ConsumptionCollectorDataSetId, serviceUsageConsumptionData.Name())
+			serviceUsageConsumptionContents, serviceConsumptionDataPath := tarWriter.AddFileArgsForCall(3)
+			Expect(string(serviceUsageConsumptionContents)).To(Equal(expectedServiceUsageConsumptionContents))
+			Expect(serviceConsumptionDataPath).To(Equal(expectedServiceUsageConsumptionDataPath))
 
 			expectedMetadataPath := filepath.Join(data.ConsumptionCollectorDataSetId, data.MetadataFileName)
-			metadataContents, metadataPath := tarWriter.AddFileArgsForCall(3)
+			metadataContents, metadataPath := tarWriter.AddFileArgsForCall(4)
 			Expect(metadataPath).To(Equal(expectedMetadataPath))
 
 			var metadata data.Metadata
@@ -287,14 +298,15 @@ var _ = Describe("Collector", func() {
 			Expect(metadata.CollectorVersion).To(Equal(collectorVersion))
 			Expect(metadata.EnvType).To(Equal(envType))
 			Expect(metadata.FileDigests).To(ConsistOf(
-				data.FileDigest{Name: consumptionData.Name(), MimeType: consumptionData.MimeType(), MD5Checksum: chContentMd5, ProductType: consumptionData.Type(), DataType: consumptionData.DataType()},
+				data.FileDigest{Name: appUsageConsumptionData.Name(), MimeType: appUsageConsumptionData.MimeType(), MD5Checksum: appUsageContentMd5, ProductType: appUsageConsumptionData.Type(), DataType: appUsageConsumptionData.DataType()},
+				data.FileDigest{Name: serviceUsageConsumptionData.Name(), MimeType: serviceUsageConsumptionData.MimeType(), MD5Checksum: serviceUsageContentMd5, ProductType: serviceUsageConsumptionData.Type(), DataType: serviceUsageConsumptionData.DataType()},
 			))
 
 			Expect(tarWriter.CloseCallCount()).To(Equal(1))
 		})
 
 		It("returns an error when the consumption collection errors", func() {
-			consumptionDataCollector.CollectReturns(consumption.Data{}, errors.New("collecting is hard"))
+			consumptionDataCollector.CollectReturns([]consumption.Data{}, errors.New("collecting is hard"))
 
 			err := collectorWithConsumption.Collect("", "")
 			Expect(tarWriter.CloseCallCount()).To(Equal(1))
@@ -306,7 +318,7 @@ var _ = Describe("Collector", func() {
 			failingReader := new(operationsfakes.FakeReader)
 			failingReader.ReadReturns(0, errors.New("reading is hard"))
 			failingData := consumption.NewData(failingReader, "app-instances")
-			consumptionDataCollector.CollectReturns(failingData, nil)
+			consumptionDataCollector.CollectReturns([]consumption.Data{failingData}, nil)
 
 			err := collectorWithConsumption.Collect("", "")
 			Expect(tarWriter.CloseCallCount()).To(Equal(1))
@@ -316,7 +328,7 @@ var _ = Describe("Collector", func() {
 
 		It("returns an error when adding consumption data to the tar file fails", func() {
 			usageData := consumption.NewData(strings.NewReader(""), "app-instances")
-			consumptionDataCollector.CollectReturns(usageData, nil)
+			consumptionDataCollector.CollectReturns([]consumption.Data{usageData}, nil)
 			tarWriter.AddFileStub = func(content []byte, filePath string) error {
 				if filePath == filepath.Join(data.ConsumptionCollectorDataSetId, usageData.Name()) {
 					return errors.New("tarring is hard")
@@ -331,7 +343,7 @@ var _ = Describe("Collector", func() {
 		})
 
 		It("returns an error when adding the metadata to the tar file fails", func() {
-			consumptionDataCollector.CollectReturns(consumption.NewData(strings.NewReader(""), "app-instance"), nil)
+			consumptionDataCollector.CollectReturns([]consumption.Data{consumption.NewData(strings.NewReader(""), "app-instance")}, nil)
 			tarWriter.AddFileStub = func(contents []byte, filePath string) error {
 				if filePath == filepath.Join(data.ConsumptionCollectorDataSetId, data.MetadataFileName) {
 					return errors.New("tarring is hard")

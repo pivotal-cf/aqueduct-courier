@@ -1,6 +1,7 @@
 package consumption
 
 import (
+	"io"
 	"net/http"
 	"net/url"
 	"path"
@@ -18,7 +19,11 @@ const (
 	GetUAAURLError                                  = "error getting UAA URL"
 	CreateUsageServiceHTTPRequestError              = "error creating HTTP request to usage service endpoint"
 	UsageServiceRequestError                        = "error accessing usage service"
-	UsageServiceUnexpectedResponseStatusErrorFormat = "unexpected status in usage service response: %d"
+	UsageServiceUnexpectedResponseStatusErrorFormat = "unexpected status %d when accessing usage service: %s"
+
+	AppUsagesReportName     = "app_usages"
+	ServiceUsagesReportName = "service_usages"
+	SystemReportPathPrefix  = "system_report"
 )
 
 //go:generate counterfeiter . cfApiClient
@@ -48,15 +53,15 @@ func NewCollector(cfClient cfApiClient, httpClient httpClient, usageServiceURL, 
 	}
 }
 
-func (c *Collector) Collect() (Data, error) {
+func (c *Collector) Collect() ([]Data, error) {
 	usageURL, err := url.Parse(c.usageServiceURL)
 	if err != nil {
-		return Data{}, errors.Wrapf(err, UsageServiceURLParsingError)
+		return []Data{}, errors.Wrapf(err, UsageServiceURLParsingError)
 	}
 
 	uaaURL, err := c.cfApiClient.GetUAAURL()
 	if err != nil {
-		return Data{}, errors.Wrap(err, GetUAAURLError)
+		return []Data{}, errors.Wrap(err, GetUAAURLError)
 	}
 
 	authedClient := cf.NewOAuthClient(
@@ -67,20 +72,33 @@ func (c *Collector) Collect() (Data, error) {
 		c.httpClient,
 	)
 
-	usageURL.Path = path.Join(usageURL.Path, "system_report", "app_usages")
-
-	req, err := http.NewRequest(http.MethodGet, usageURL.String(), nil)
+	appUsageBody, err := getSystemReportBody(AppUsagesReportName, *usageURL, authedClient)
 	if err != nil {
-		return Data{}, errors.Wrap(err, CreateUsageServiceHTTPRequestError)
+		return []Data{}, err
 	}
 
-	resp, err := authedClient.Do(req)
+	serviceUsageBody, err := getSystemReportBody(ServiceUsagesReportName, *usageURL, authedClient)
 	if err != nil {
-		return Data{}, errors.Wrap(err, UsageServiceRequestError)
+		return []Data{}, err
+	}
+
+	return []Data{NewData(appUsageBody, data.AppUsageDataType), NewData(serviceUsageBody, data.ServiceUsageDataType)}, nil
+}
+
+func getSystemReportBody(reportName string, baseURL url.URL, client httpClient) (io.Reader, error) {
+	baseURL.Path = path.Join(SystemReportPathPrefix, reportName)
+
+	req, err := http.NewRequest(http.MethodGet, baseURL.String(), nil)
+	if err != nil {
+		return nil, errors.Wrap(err, CreateUsageServiceHTTPRequestError)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, UsageServiceRequestError)
 	}
 	if resp.StatusCode != http.StatusOK {
-		return Data{}, errors.Errorf(UsageServiceUnexpectedResponseStatusErrorFormat, resp.StatusCode)
+		return nil, errors.Errorf(UsageServiceUnexpectedResponseStatusErrorFormat, resp.StatusCode, reportName)
 	}
-
-	return NewData(resp.Body, data.AppUsageDataType), nil
+	return resp.Body, nil
 }

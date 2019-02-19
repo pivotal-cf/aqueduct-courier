@@ -247,7 +247,6 @@ func makeConsumptionCollector() (consumptionDataCollector, error) {
 			viper.GetString(UsageServiceClientSecretFlag),
 		)
 
-		fmt.Printf("Collecting data from Usage Service at %s\n", viper.GetString(UsageServiceURLFlag))
 		return consumptionCollector, nil
 	}
 	return nil, nil
@@ -316,5 +315,5 @@ type credhubDataCollector interface {
 }
 
 type consumptionDataCollector interface {
-	Collect() (consumption.Data, error)
+	Collect() ([]consumption.Data, error)
 }

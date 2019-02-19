@@ -40,7 +40,7 @@ type credhubDataCollector interface {
 
 //go:generate counterfeiter . consumptionDataCollector
 type consumptionDataCollector interface {
-	Collect() (consumption.Data, error)
+	Collect() ([]consumption.Data, error)
 }
 
 //go:generate counterfeiter . tarWriter
@@ -135,11 +135,12 @@ func (ce *CollectExecutor) Collect(envType, collectorVersion string) error {
 			return errors.Wrap(err, UsageCollectFailureMessage)
 		}
 
-		err = ce.addData(usageData, &usageMetadata, data.ConsumptionCollectorDataSetId)
-		if err != nil {
-			return err
+		for _, consumptionData := range usageData {
+			err = ce.addData(consumptionData, &usageMetadata, data.ConsumptionCollectorDataSetId)
+			if err != nil {
+				return err
+			}
 		}
-
 		usageMetadataContents, err := json.Marshal(usageMetadata)
 		if err != nil {
 			return err

@@ -8,23 +8,23 @@ import (
 )
 
 type FakeConsumptionDataCollector struct {
-	CollectStub        func() (consumption.Data, error)
+	CollectStub        func() ([]consumption.Data, error)
 	collectMutex       sync.RWMutex
 	collectArgsForCall []struct {
 	}
 	collectReturns struct {
-		result1 consumption.Data
+		result1 []consumption.Data
 		result2 error
 	}
 	collectReturnsOnCall map[int]struct {
-		result1 consumption.Data
+		result1 []consumption.Data
 		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeConsumptionDataCollector) Collect() (consumption.Data, error) {
+func (fake *FakeConsumptionDataCollector) Collect() ([]consumption.Data, error) {
 	fake.collectMutex.Lock()
 	ret, specificReturn := fake.collectReturnsOnCall[len(fake.collectArgsForCall)]
 	fake.collectArgsForCall = append(fake.collectArgsForCall, struct {
@@ -47,34 +47,34 @@ func (fake *FakeConsumptionDataCollector) CollectCallCount() int {
 	return len(fake.collectArgsForCall)
 }
 
-func (fake *FakeConsumptionDataCollector) CollectCalls(stub func() (consumption.Data, error)) {
+func (fake *FakeConsumptionDataCollector) CollectCalls(stub func() ([]consumption.Data, error)) {
 	fake.collectMutex.Lock()
 	defer fake.collectMutex.Unlock()
 	fake.CollectStub = stub
 }
 
-func (fake *FakeConsumptionDataCollector) CollectReturns(result1 consumption.Data, result2 error) {
+func (fake *FakeConsumptionDataCollector) CollectReturns(result1 []consumption.Data, result2 error) {
 	fake.collectMutex.Lock()
 	defer fake.collectMutex.Unlock()
 	fake.CollectStub = nil
 	fake.collectReturns = struct {
-		result1 consumption.Data
+		result1 []consumption.Data
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeConsumptionDataCollector) CollectReturnsOnCall(i int, result1 consumption.Data, result2 error) {
+func (fake *FakeConsumptionDataCollector) CollectReturnsOnCall(i int, result1 []consumption.Data, result2 error) {
 	fake.collectMutex.Lock()
 	defer fake.collectMutex.Unlock()
 	fake.CollectStub = nil
 	if fake.collectReturnsOnCall == nil {
 		fake.collectReturnsOnCall = make(map[int]struct {
-			result1 consumption.Data
+			result1 []consumption.Data
 			result2 error
 		})
 	}
 	fake.collectReturnsOnCall[i] = struct {
-		result1 consumption.Data
+		result1 []consumption.Data
 		result2 error
 	}{result1, result2}
 }
