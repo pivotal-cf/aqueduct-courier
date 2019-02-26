@@ -23,6 +23,7 @@ const (
 
 	AppUsagesReportName     = "app_usages"
 	ServiceUsagesReportName = "service_usages"
+	TaskUsagesReportName    = "task_usages"
 	SystemReportPathPrefix  = "system_report"
 )
 
@@ -82,7 +83,16 @@ func (c *Collector) Collect() ([]Data, error) {
 		return []Data{}, err
 	}
 
-	return []Data{NewData(appUsageBody, data.AppUsageDataType), NewData(serviceUsageBody, data.ServiceUsageDataType)}, nil
+	taskUsageBody, err := getSystemReportBody(TaskUsagesReportName, *usageURL, authedClient)
+	if err != nil {
+		return []Data{}, err
+	}
+
+	return []Data{
+		NewData(appUsageBody, data.AppUsageDataType),
+		NewData(serviceUsageBody, data.ServiceUsageDataType),
+		NewData(taskUsageBody, data.TaskUsageDataType),
+	}, nil
 }
 
 func getSystemReportBody(reportName string, baseURL url.URL, client httpClient) (io.Reader, error) {

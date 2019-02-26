@@ -290,6 +290,11 @@ var _ = Describe("Collect", func() {
 				w.Write([]byte(`{}`))
 				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
 			})
+			usageService.RouteToHandler(http.MethodGet, "/system_report/task_usages", func(w http.ResponseWriter, req *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.Write([]byte(`{}`))
+				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
+			})
 		})
 
 		AfterEach(func() {

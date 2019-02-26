@@ -54,6 +54,11 @@ var _ = Describe("Collector", func() {
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte(`successful service usage content`))
 		})
+		usageService.RouteToHandler(http.MethodGet, "/system_report/task_usages", func(w http.ResponseWriter, req *http.Request) {
+			Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`successful task usage content`))
+		})
 		cfApiClient = &consumptionfakes.FakeCfApiClient{}
 		cfApiClient.GetUAAURLReturns(uaaService.URL(), nil)
 
@@ -69,19 +74,23 @@ var _ = Describe("Collector", func() {
 		It("accesses the usage service with an OAuth client configured appropriately, with the endpoint discovered from the CfApiClient", func() {
 			usageData, err := collector.Collect()
 			Expect(err).ToNot(HaveOccurred())
-			Expect(len(usageData)).To(Equal(2))
+			Expect(len(usageData)).To(Equal(3))
 
 			appUsageContent, err := ioutil.ReadAll(usageData[0].Content())
 			Expect(err).ToNot(HaveOccurred())
 			serviceUsageContent, err := ioutil.ReadAll(usageData[1].Content())
 			Expect(err).ToNot(HaveOccurred())
+			taskUsageContent, err := ioutil.ReadAll(usageData[2].Content())
+			Expect(err).ToNot(HaveOccurred())
 
 			Expect(usageData[0].DataType()).To(Equal(data.AppUsageDataType))
 			Expect(usageData[1].DataType()).To(Equal(data.ServiceUsageDataType))
+			Expect(usageData[2].DataType()).To(Equal(data.TaskUsageDataType))
 
-			Expect(len(usageService.ReceivedRequests())).To(Equal(2))
+			Expect(len(usageService.ReceivedRequests())).To(Equal(3))
 			Expect(appUsageContent).To(Equal([]byte("successful app usage content")))
 			Expect(serviceUsageContent).To(Equal([]byte("successful service usage content")))
+			Expect(taskUsageContent).To(Equal([]byte("successful task usage content")))
 		})
 
 		It("returns an error if the usage service URL is invalid", func() {
@@ -142,5 +151,25 @@ var _ = Describe("Collector", func() {
 			Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(UsageServiceUnexpectedResponseStatusErrorFormat, 500, ServiceUsagesReportName))))
 		})
 
+		It("returns an error when the request to the task usage task endpoint fails", func() {
+			usageService.RouteToHandler(http.MethodGet, "/system_report/task_usages", func(w http.ResponseWriter, req *http.Request) {
+				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
+				w.WriteHeader(http.StatusMovedPermanently)
+			})
+			_, err := collector.Collect()
+
+			Expect(err).To(MatchError(ContainSubstring("301 response missing Location header")))
+			Expect(err).To(MatchError(ContainSubstring(UsageServiceRequestError)))
+		})
+
+		It("returns an error when the request to the task usage endpoint receives an unsuccessful response", func() {
+			usageService.RouteToHandler(http.MethodGet, "/system_report/task_usages", func(w http.ResponseWriter, req *http.Request) {
+				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
+				w.WriteHeader(http.StatusInternalServerError)
+			})
+			_, err := collector.Collect()
+
+			Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(UsageServiceUnexpectedResponseStatusErrorFormat, 500, TaskUsagesReportName))))
+		})
 	})
 })
