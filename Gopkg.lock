@@ -74,20 +74,20 @@
   version = "v3.2.0"
 
 [[projects]]
-  digest = "1:97df918963298c287643883209a2c3f642e6593379f97ab400c2a2e219ab647d"
+  digest = "1:318f1c959a8a740366fce4b1e1eb2fd914036b4af58fbd0a003349b305f118ad"
   name = "github.com/golang/protobuf"
   packages = ["proto"]
   pruneopts = "UT"
-  revision = "aa810b61a9c79d51363740d207bb46cf8e620ed5"
-  version = "v1.2.0"
+  revision = "c823c79ea1570fb5ff454033735a8e68575d1d0f"
+  version = "v1.3.0"
 
 [[projects]]
-  branch = "master"
   digest = "1:e4f5819333ac698d294fe04dbf640f84719658d5c7ce195b10060cc37292ce79"
   name = "github.com/golang/snappy"
   packages = ["."]
   pruneopts = "UT"
   revision = "2a8bb927dd31d8daada140a5d09578521ce5c36a"
+  version = "v0.0.1"
 
 [[projects]]
   digest = "1:950caca7dfcf796419232ba996c9c3539d09f26af27ba848c4508e604c13efbb"
@@ -239,26 +239,26 @@
   version = "v1.2.0"
 
 [[projects]]
-  digest = "1:c7a5e79396b6eb570159df7a1d487ce5775bf43b7907976fbef6de544ea160ad"
+  digest = "1:d4c88b5ad20151a96c1e5a55547a944b6af623aa315f69ee0d172b00f95d27fb"
   name = "github.com/pierrec/lz4"
   packages = [
     ".",
     "internal/xxh32",
   ]
   pruneopts = "UT"
-  revision = "473cd7ce01a1113208073166464b98819526150e"
-  version = "v2.0.8"
+  revision = "062282ea0dcff40c9fb8525789eef9644b1fbd6e"
+  version = "v2.1.0"
 
 [[projects]]
   branch = "master"
-  digest = "1:f2bcf7fc561f9423a175c77e0425225028ee10f67a6387442457db838d80ca9c"
+  digest = "1:28f84d45074773f8150286b665d040034706607831a19866f08ec947bdce91e1"
   name = "github.com/pivotal-cf/aqueduct-utils"
   packages = [
     "data",
     "file",
   ]
   pruneopts = "UT"
-  revision = "01cac8ff9a3544833bd6cd200b1bc8e478543b5f"
+  revision = "71a3e9de499234dcac76190fd48664379a7291cc"
 
 [[projects]]
   digest = "1:87f27e4019b90ae41fcadbd4c02c7ff2c39b3ced77645b1c36ef233863efb760"
@@ -332,7 +332,7 @@
   version = "v1.3.1"
 
 [[projects]]
-  digest = "1:db345c377984d0907323c09a9b17f11d995a59649fd38f909727df358b5f9020"
+  digest = "1:2643d81498e38e44bdcf480be199cac55f29e97403b0342d962824bfe9960722"
   name = "github.com/ulikunitz/xz"
   packages = [
     ".",
@@ -341,8 +341,8 @@
     "lzma",
   ]
   pruneopts = "UT"
-  revision = "590df8077fbcb06ad62d7714da06c00e5dd2316d"
-  version = "v0.5.5"
+  revision = "6f934d456d51e742b4eeab20d925a827ef22320a"
+  version = "v0.5.6"
 
 [[projects]]
   branch = "master"
@@ -366,7 +366,7 @@
     "ssh",
   ]
   pruneopts = "UT"
-  revision = "a4c6cb3142f211c99e4bf4cd769535b29a9b616f"
+  revision = "7f87c0fbb88b590338857bcb720678c2583d4dea"
 
 [[projects]]
   branch = "master"
@@ -382,11 +382,11 @@
     "proxy",
   ]
   pruneopts = "UT"
-  revision = "3a22650c66bd7f4fb6d1e8072ffd7b75c8a27898"
+  revision = "66a96c8a540e84140eaf74e38bb3a0a2ff5e5c53"
 
 [[projects]]
   branch = "master"
-  digest = "1:d970381c0f85a22bee92b4d585ba4ae3c8399cf6796a241449a20fd33762a16b"
+  digest = "1:13e1dd706312f7b3ae1ed16a9e251e7b56240a9e09db24de6a4f24bf57968676"
   name = "golang.org/x/oauth2"
   packages = [
     ".",
@@ -394,15 +394,15 @@
     "internal",
   ]
   pruneopts = "UT"
-  revision = "4b83411ed2b36bd4e3302e9b1d3c973fb1ba24db"
+  revision = "e64efc72b421e893cbf63f17ba2221e7d6d0b0f3"
 
 [[projects]]
   branch = "master"
-  digest = "1:8207c052fb873f83c61a5aa16f6add5feb9881eda2112b56f69fd3b9e7f55c3f"
+  digest = "1:d0e9a312c4610a508569ab25e54d34600b1a96d19b1866ece104ffdf1c1b9d2c"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "UT"
-  revision = "153ac476189d567564fda94622d7a8c0fb338f6b"
+  revision = "cc5685c2db1239775905f3911f0067c0fa74762f"
 
 [[projects]]
   digest = "1:4392fcf42d5cf0e3ff78c96b2acf8223d49e4fdc53eb77c99d2f8dfe4680e006"
