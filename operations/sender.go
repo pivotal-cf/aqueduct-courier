@@ -20,7 +20,7 @@ const (
 	PostFailedMessage             = "Failed to do request"
 	ReadDataFileError             = "Unable to read data file"
 	UnauthorizedErrorMessage      = "User is not authorized to perform this action"
-	UnexpectedServerErrorFormat   = "There was an issue sending data. Please try again or contact your Pivotal field team if this error persists. Error Code %s"
+	UnexpectedServerErrorFormat   = "There was an issue sending data. Please try again or contact your Pivotal field team if this error persists. Error ID %s"
 )
 
 type SendExecutor struct{}
