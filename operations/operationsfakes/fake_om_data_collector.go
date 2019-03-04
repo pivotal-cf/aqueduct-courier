@@ -8,23 +8,25 @@ import (
 )
 
 type FakeOmDataCollector struct {
-	CollectStub        func() ([]opsmanager.Data, error)
+	CollectStub        func() ([]opsmanager.Data, string, error)
 	collectMutex       sync.RWMutex
 	collectArgsForCall []struct {
 	}
 	collectReturns struct {
 		result1 []opsmanager.Data
-		result2 error
+		result2 string
+		result3 error
 	}
 	collectReturnsOnCall map[int]struct {
 		result1 []opsmanager.Data
-		result2 error
+		result2 string
+		result3 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeOmDataCollector) Collect() ([]opsmanager.Data, error) {
+func (fake *FakeOmDataCollector) Collect() ([]opsmanager.Data, string, error) {
 	fake.collectMutex.Lock()
 	ret, specificReturn := fake.collectReturnsOnCall[len(fake.collectArgsForCall)]
 	fake.collectArgsForCall = append(fake.collectArgsForCall, struct {
@@ -35,10 +37,10 @@ func (fake *FakeOmDataCollector) Collect() ([]opsmanager.Data, error) {
 		return fake.CollectStub()
 	}
 	if specificReturn {
-		return ret.result1, ret.result2
+		return ret.result1, ret.result2, ret.result3
 	}
 	fakeReturns := fake.collectReturns
-	return fakeReturns.result1, fakeReturns.result2
+	return fakeReturns.result1, fakeReturns.result2, fakeReturns.result3
 }
 
 func (fake *FakeOmDataCollector) CollectCallCount() int {
@@ -47,36 +49,39 @@ func (fake *FakeOmDataCollector) CollectCallCount() int {
 	return len(fake.collectArgsForCall)
 }
 
-func (fake *FakeOmDataCollector) CollectCalls(stub func() ([]opsmanager.Data, error)) {
+func (fake *FakeOmDataCollector) CollectCalls(stub func() ([]opsmanager.Data, string, error)) {
 	fake.collectMutex.Lock()
 	defer fake.collectMutex.Unlock()
 	fake.CollectStub = stub
 }
 
-func (fake *FakeOmDataCollector) CollectReturns(result1 []opsmanager.Data, result2 error) {
+func (fake *FakeOmDataCollector) CollectReturns(result1 []opsmanager.Data, result2 string, result3 error) {
 	fake.collectMutex.Lock()
 	defer fake.collectMutex.Unlock()
 	fake.CollectStub = nil
 	fake.collectReturns = struct {
 		result1 []opsmanager.Data
-		result2 error
-	}{result1, result2}
+		result2 string
+		result3 error
+	}{result1, result2, result3}
 }
 
-func (fake *FakeOmDataCollector) CollectReturnsOnCall(i int, result1 []opsmanager.Data, result2 error) {
+func (fake *FakeOmDataCollector) CollectReturnsOnCall(i int, result1 []opsmanager.Data, result2 string, result3 error) {
 	fake.collectMutex.Lock()
 	defer fake.collectMutex.Unlock()
 	fake.CollectStub = nil
 	if fake.collectReturnsOnCall == nil {
 		fake.collectReturnsOnCall = make(map[int]struct {
 			result1 []opsmanager.Data
-			result2 error
+			result2 string
+			result3 error
 		})
 	}
 	fake.collectReturnsOnCall[i] = struct {
 		result1 []opsmanager.Data
-		result2 error
-	}{result1, result2}
+		result2 string
+		result3 error
+	}{result1, result2, result3}
 }
 
 func (fake *FakeOmDataCollector) Invocations() map[string][][]interface{} {

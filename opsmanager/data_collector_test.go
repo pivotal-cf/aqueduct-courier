@@ -39,16 +39,18 @@ var _ = Describe("DataCollector", func() {
 		}
 		pendingChangesLister.ListStagedPendingChangesReturns(nonEmptyPendingChanges, nil)
 
-		data, err := dataCollector.Collect()
+		data, foundationId, err := dataCollector.Collect()
 		Expect(data).To(BeEmpty())
+		Expect(foundationId).To(BeEmpty())
 		Expect(err).To(MatchError(PendingChangesExistsMessage))
 	})
 
 	It("returns an error if listing pending changes errors", func() {
 		pendingChangesLister.ListStagedPendingChangesReturns(api.PendingChangesOutput{}, errors.New("Listing things is hard"))
 
-		data, err := dataCollector.Collect()
+		data, foundationId, err := dataCollector.Collect()
 		Expect(data).To(BeEmpty())
+		Expect(foundationId).To(BeEmpty())
 		Expect(err).To(MatchError(ContainSubstring(PendingChangesFailedMessage)))
 		Expect(err).To(MatchError(ContainSubstring("Listing things is hard")))
 	})
@@ -56,8 +58,9 @@ var _ = Describe("DataCollector", func() {
 	It("returns an error if listing deployed products errors", func() {
 		deployedProductsLister.ListDeployedProductsReturns([]api.DeployedProductOutput{}, errors.New("Listing things is hard"))
 
-		data, err := dataCollector.Collect()
+		data, foundationId, err := dataCollector.Collect()
 		Expect(data).To(BeEmpty())
+		Expect(foundationId).To(BeEmpty())
 		Expect(err).To(MatchError(ContainSubstring(DeployedProductsFailedMessage)))
 		Expect(err).To(MatchError(ContainSubstring("Listing things is hard")))
 	})
@@ -71,8 +74,8 @@ var _ = Describe("DataCollector", func() {
 			nil,
 		)
 		omService.ProductResourcesReturns(nil, errors.New("Requesting things is hard"))
-		collectedData, err := dataCollector.Collect()
-		assertOmServiceFailure(collectedData, err, "best-product-1", data.ResourcesDataType, "Requesting things is hard")
+		collectedData, foundationId, err := dataCollector.Collect()
+		assertOmServiceFailure(collectedData, foundationId, err, "best-product-1", data.ResourcesDataType, "Requesting things is hard")
 	})
 
 	It("returns an error when omService.ProductProperties errors", func() {
@@ -84,44 +87,44 @@ var _ = Describe("DataCollector", func() {
 			nil,
 		)
 		omService.ProductPropertiesReturns(nil, errors.New("Requesting things is hard"))
-		collectedData, err := dataCollector.Collect()
-		assertOmServiceFailure(collectedData, err, "best-product-1", data.PropertiesDataType, "Requesting things is hard")
+		collectedData, foundationId, err := dataCollector.Collect()
+		assertOmServiceFailure(collectedData, foundationId, err, "best-product-1", data.PropertiesDataType, "Requesting things is hard")
 	})
 
 	It("returns an error when omService.VmTypes errors", func() {
 		omService.VmTypesReturns(nil, errors.New("Requesting things is hard"))
-		collectedData, err := dataCollector.Collect()
-		assertOmServiceFailure(collectedData, err, data.OpsManagerProductType, data.VmTypesDataType, "Requesting things is hard")
+		collectedData, foundationId, err := dataCollector.Collect()
+		assertOmServiceFailure(collectedData, foundationId, err, data.OpsManagerProductType, data.VmTypesDataType, "Requesting things is hard")
 	})
 
 	It("returns an error when omService.DiagnosticReport errors", func() {
 		omService.DiagnosticReportReturns(nil, errors.New("Requesting things is hard"))
-		collectedData, err := dataCollector.Collect()
-		assertOmServiceFailure(collectedData, err, data.OpsManagerProductType, data.DiagnosticReportDataType, "Requesting things is hard")
+		collectedData, foundationId, err := dataCollector.Collect()
+		assertOmServiceFailure(collectedData, foundationId, err, data.OpsManagerProductType, data.DiagnosticReportDataType, "Requesting things is hard")
 	})
 
 	It("returns an error when omService.DeployedProducts errors", func() {
 		omService.DeployedProductsReturns(nil, errors.New("Requesting things is hard"))
-		collectedData, err := dataCollector.Collect()
-		assertOmServiceFailure(collectedData, err, data.OpsManagerProductType, data.DeployedProductsDataType, "Requesting things is hard")
+		collectedData, foundationId, err := dataCollector.Collect()
+		assertOmServiceFailure(collectedData, foundationId, err, data.OpsManagerProductType, data.DeployedProductsDataType, "Requesting things is hard")
 	})
 
 	It("returns an error when omService.Installations errors", func() {
 		omService.InstallationsReturns(nil, errors.New("Requesting things is hard"))
-		collectedData, err := dataCollector.Collect()
-		assertOmServiceFailure(collectedData, err, data.OpsManagerProductType, data.InstallationsDataType, "Requesting things is hard")
+		collectedData, foundationId, err := dataCollector.Collect()
+		assertOmServiceFailure(collectedData, foundationId, err, data.OpsManagerProductType, data.InstallationsDataType, "Requesting things is hard")
 	})
 
 	It("returns an error when omService.Certificates errors", func() {
 		omService.CertificatesReturns(nil, errors.New("Requesting things is hard"))
-		collectedData, err := dataCollector.Collect()
-		assertOmServiceFailure(collectedData, err, data.OpsManagerProductType, data.CertificatesDataType, "Requesting things is hard")
+		collectedData, foundationId, err := dataCollector.Collect()
+		assertOmServiceFailure(collectedData, foundationId, err, data.OpsManagerProductType, data.CertificatesDataType, "Requesting things is hard")
 	})
 
 	It("returns an error when omService.CertificateAuthorities errors", func() {
 		omService.CertificateAuthoritiesReturns(nil, errors.New("Requesting things is hard"))
-		collectedData, err := dataCollector.Collect()
-		assertOmServiceFailure(collectedData, err, data.OpsManagerProductType, data.CertificateAuthoritiesDataType, "Requesting things is hard")
+		collectedData, foundationId, err := dataCollector.Collect()
+		assertOmServiceFailure(collectedData, foundationId, err, data.OpsManagerProductType, data.CertificateAuthoritiesDataType, "Requesting things is hard")
 	})
 
 	It("succeeds", func() {
@@ -158,8 +161,9 @@ var _ = Describe("DataCollector", func() {
 		omService.CertificatesReturns(certificatesReader, nil)
 		omService.CertificateAuthoritiesReturns(certificateAuthoritiesReader, nil)
 
-		collectedData, err := dataCollector.Collect()
+		collectedData, foundationId, err := dataCollector.Collect()
 		Expect(err).ToNot(HaveOccurred())
+		Expect(foundationId).To(Equal("p-bosh-always-first"))
 		Expect(collectedData).To(ConsistOf(
 			NewData(
 				deployedProductsReader,
@@ -215,8 +219,9 @@ var _ = Describe("DataCollector", func() {
 	})
 
 	It("succeeds if there are no deployed products", func() {
-		collectedData, err := dataCollector.Collect()
+		collectedData, foundationId, err := dataCollector.Collect()
 		Expect(err).ToNot(HaveOccurred())
+		Expect(foundationId).To(Equal(""))
 		Expect(collectedData).To(ConsistOf(
 			NewData(nil, data.OpsManagerProductType, data.DeployedProductsDataType),
 			NewData(nil, data.OpsManagerProductType, data.VmTypesDataType),
@@ -228,8 +233,9 @@ var _ = Describe("DataCollector", func() {
 	})
 })
 
-func assertOmServiceFailure(d []Data, err error, productType, dataType, causeErrorMessage string) {
+func assertOmServiceFailure(d []Data, foundationId string, err error, productType, dataType, causeErrorMessage string) {
 	Expect(d).To(BeEmpty())
+	Expect(foundationId).To(BeEmpty())
 	Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(RequestorFailureErrorFormat, productType, dataType))))
 	Expect(err).To(MatchError(ContainSubstring(causeErrorMessage)))
 }

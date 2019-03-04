@@ -55,7 +55,8 @@ var _ = Describe("Collector", func() {
 		d1 := opsmanager.NewData(strings.NewReader(expectedD1Contents), "d1", "best-kind")
 		d2 := opsmanager.NewData(strings.NewReader(expectedD2Contents), "d2", "better-kind")
 		dataToWrite := []opsmanager.Data{d1, d2}
-		omDataCollector.CollectReturns(dataToWrite, nil)
+		foundationId := "p-bosh-guid-of-some-sort"
+		omDataCollector.CollectReturns(dataToWrite, foundationId, nil)
 
 		collectorVersion := "0.0.1-version"
 		envType := "most-production"
@@ -87,6 +88,7 @@ var _ = Describe("Collector", func() {
 			data.FileDigest{Name: d1.Name(), MimeType: d1.MimeType(), MD5Checksum: d1ContentMd5, ProductType: d1.Type(), DataType: d1.DataType()},
 			data.FileDigest{Name: d2.Name(), MimeType: d2.MimeType(), MD5Checksum: d2ContentMd5, ProductType: d2.Type(), DataType: d2.DataType()},
 		))
+		Expect(metadata.FoundationId).To(Equal(foundationId))
 		Expect(metadata.CollectionId).To(Equal(uuidString))
 		collectedAtTime, err := time.Parse(time.RFC3339, metadata.CollectedAt)
 		Expect(err).NotTo(HaveOccurred())
@@ -97,7 +99,7 @@ var _ = Describe("Collector", func() {
 	})
 
 	It("returns an error when the ops manager collection errors", func() {
-		omDataCollector.CollectReturns([]opsmanager.Data{}, errors.New("collecting is hard"))
+		omDataCollector.CollectReturns([]opsmanager.Data{}, "", errors.New("collecting is hard"))
 
 		err := collector.Collect("", "")
 		Expect(tarWriter.CloseCallCount()).To(Equal(1))
@@ -109,7 +111,7 @@ var _ = Describe("Collector", func() {
 		failingReader := new(operationsfakes.FakeReader)
 		failingReader.ReadReturns(0, errors.New("reading is hard"))
 		failingData := opsmanager.NewData(failingReader, "d1", "best-kind")
-		omDataCollector.CollectReturns([]opsmanager.Data{failingData}, nil)
+		omDataCollector.CollectReturns([]opsmanager.Data{failingData}, "", nil)
 
 		err := collector.Collect("", "")
 		Expect(tarWriter.CloseCallCount()).To(Equal(1))
@@ -119,7 +121,7 @@ var _ = Describe("Collector", func() {
 
 	It("returns an error when adding ops manager data to the tar file fails", func() {
 		data := opsmanager.NewData(strings.NewReader(""), "d1", "best-kind")
-		omDataCollector.CollectReturns([]opsmanager.Data{data}, nil)
+		omDataCollector.CollectReturns([]opsmanager.Data{data}, "", nil)
 		tarWriter.AddFileReturnsOnCall(0, errors.New("tarring is hard"))
 
 		err := collector.Collect("", "")
@@ -166,7 +168,7 @@ var _ = Describe("Collector", func() {
 			d1ContentMd5 := base64.StdEncoding.EncodeToString(md5SumD1[:])
 			d1 := opsmanager.NewData(strings.NewReader(expectedD1Contents), "d1", "best-kind")
 			dataToWrite := []opsmanager.Data{d1}
-			omDataCollector.CollectReturns(dataToWrite, nil)
+			omDataCollector.CollectReturns(dataToWrite, "", nil)
 
 			expectedCHContents := "ch-content"
 			md5SumCH := md5.Sum([]byte(expectedCHContents))
@@ -257,7 +259,8 @@ var _ = Describe("Collector", func() {
 			expectedD1Contents := "d1-content"
 			d1 := opsmanager.NewData(strings.NewReader(expectedD1Contents), "d1", "best-kind")
 			dataToWrite := []opsmanager.Data{d1}
-			omDataCollector.CollectReturns(dataToWrite, nil)
+			foundationId := "p-bosh-guid-of-some-sort"
+			omDataCollector.CollectReturns(dataToWrite, foundationId, nil)
 
 			expectedAppUsageConsumptionContents := "consumption-app-usage-content"
 			md5sum := md5.Sum([]byte(expectedAppUsageConsumptionContents))
@@ -296,6 +299,8 @@ var _ = Describe("Collector", func() {
 			var metadata data.Metadata
 			Expect(json.Unmarshal(metadataContents, &metadata)).To(Succeed())
 			Expect(metadata.CollectorVersion).To(Equal(collectorVersion))
+			Expect(metadata.CollectionId).To(Equal(uuidString))
+			Expect(metadata.FoundationId).To(Equal(foundationId))
 			Expect(metadata.EnvType).To(Equal(envType))
 			Expect(metadata.FileDigests).To(ConsistOf(
 				data.FileDigest{Name: appUsageConsumptionData.Name(), MimeType: appUsageConsumptionData.MimeType(), MD5Checksum: appUsageContentMd5, ProductType: appUsageConsumptionData.Type(), DataType: appUsageConsumptionData.DataType()},

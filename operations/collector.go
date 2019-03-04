@@ -30,7 +30,7 @@ const (
 
 //go:generate counterfeiter . omDataCollector
 type omDataCollector interface {
-	Collect() ([]opsmanager.Data, error)
+	Collect() ([]opsmanager.Data, string, error)
 }
 
 //go:generate counterfeiter . credhubDataCollector
@@ -82,10 +82,16 @@ func (ce *CollectExecutor) Collect(envType, collectorVersion string) error {
 		return errors.Wrap(err, UUIDGenerationErrorMessage)
 	}
 
+	omDatas, foundationId, err := ce.opsmanagerDC.Collect()
+	if err != nil {
+		return errors.Wrap(err, OpsManagerCollectFailureMessage)
+	}
+
 	opsManagerMetadata := data.Metadata{
 		CollectorVersion: collectorVersion,
 		EnvType:          envType,
 		CollectionId:     collectionID.String(),
+		FoundationId:     foundationId,
 		CollectedAt:      time.Now().UTC().Format(time.RFC3339),
 	}
 
@@ -93,12 +99,8 @@ func (ce *CollectExecutor) Collect(envType, collectorVersion string) error {
 		CollectorVersion: collectorVersion,
 		EnvType:          envType,
 		CollectionId:     opsManagerMetadata.CollectionId,
+		FoundationId:     foundationId,
 		CollectedAt:      opsManagerMetadata.CollectedAt,
-	}
-
-	omDatas, err := ce.opsmanagerDC.Collect()
-	if err != nil {
-		return errors.Wrap(err, OpsManagerCollectFailureMessage)
 	}
 
 	for _, omData := range omDatas {

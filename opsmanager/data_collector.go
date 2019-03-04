@@ -54,68 +54,71 @@ func NewDataCollector(oms OmService, pcs PendingChangesLister, dps DeployedProdu
 	}
 }
 
-func (dc *DataCollector) Collect() ([]Data, error) {
+func (dc *DataCollector) Collect() ([]Data, string, error) {
+	var foundationId string
 	pc, err := dc.pendingChangesService.ListStagedPendingChanges()
 	if err != nil {
-		return []Data{}, errors.Wrap(err, PendingChangesFailedMessage)
+		return []Data{}, "", errors.Wrap(err, PendingChangesFailedMessage)
 	}
 
 	if hasPendingChanges(pc.ChangeList) {
-		return []Data{}, errors.New(PendingChangesExistsMessage)
+		return []Data{}, "", errors.New(PendingChangesExistsMessage)
 	}
 
 	pl, err := dc.deployProductsService.ListDeployedProducts()
 	if err != nil {
-		return []Data{}, errors.Wrap(err, DeployedProductsFailedMessage)
+		return []Data{}, "", errors.Wrap(err, DeployedProductsFailedMessage)
 	}
 
 	var d []Data
 
 	d, err = appendRetrievedData(d, dc.omService.DeployedProducts, data.OpsManagerProductType, data.DeployedProductsDataType)
 	if err != nil {
-		return []Data{}, err
+		return []Data{}, "", err
 	}
 
 	for _, product := range pl {
 		if product.Type != data.DirectorProductType {
 			d, err = appendRetrievedData(d, dc.productResourcesCaller(product.GUID), product.Type, data.ResourcesDataType)
 			if err != nil {
-				return []Data{}, err
+				return []Data{}, "", err
 			}
 
 			d, err = appendRetrievedData(d, dc.productPropertiesCaller(product.GUID), product.Type, data.PropertiesDataType)
 			if err != nil {
-				return []Data{}, err
+				return []Data{}, "", err
 			}
+		} else {
+			foundationId = product.GUID
 		}
 	}
 
 	d, err = appendRetrievedData(d, dc.omService.VmTypes, data.OpsManagerProductType, data.VmTypesDataType)
 	if err != nil {
-		return []Data{}, err
+		return []Data{}, "", err
 	}
 
 	d, err = appendRetrievedData(d, dc.omService.DiagnosticReport, data.OpsManagerProductType, data.DiagnosticReportDataType)
 	if err != nil {
-		return []Data{}, err
+		return []Data{}, "", err
 	}
 
 	d, err = appendRetrievedData(d, dc.omService.Installations, data.OpsManagerProductType, data.InstallationsDataType)
 	if err != nil {
-		return []Data{}, err
+		return []Data{}, "", err
 	}
 
 	d, err = appendRetrievedData(d, dc.omService.Certificates, data.OpsManagerProductType, data.CertificatesDataType)
 	if err != nil {
-		return []Data{}, err
+		return []Data{}, "", err
 	}
 
 	d, err = appendRetrievedData(d, dc.omService.CertificateAuthorities, data.OpsManagerProductType, data.CertificateAuthoritiesDataType)
 	if err != nil {
-		return []Data{}, err
+		return []Data{}, "", err
 	}
 
-	return d, nil
+	return d, foundationId, nil
 }
 
 func (dc DataCollector) productResourcesCaller(guid string) dataRetriever {
