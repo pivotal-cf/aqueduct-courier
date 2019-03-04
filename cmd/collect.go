@@ -76,8 +76,8 @@ const (
 
 var collectCmd = &cobra.Command{
 	Use:   "collect",
-	Short: "Collects information from Operations Manager",
-	Long:  `Collects information from Operations Manager and outputs the content to the configured directory`,
+	Short: "Collects information from a PCF foundation",
+	Long:  "Collects information from Operations Manager and outputs the content to the configured directory.\nOptionally collects information from Usage Service and/or Credhub.",
 	RunE:  collect,
 }
 
