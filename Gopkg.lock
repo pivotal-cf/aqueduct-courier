@@ -251,14 +251,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:28f84d45074773f8150286b665d040034706607831a19866f08ec947bdce91e1"
+  digest = "1:7f8b56b2d511c43b02a8c59480d24e7ee6206b57a8924adcd513b2392d3311fd"
   name = "github.com/pivotal-cf/aqueduct-utils"
   packages = [
     "data",
     "file",
   ]
   pruneopts = "UT"
-  revision = "71a3e9de499234dcac76190fd48664379a7291cc"
+  revision = "ba60b9a1600a56422f93e04af405907066da323e"
 
 [[projects]]
   digest = "1:87f27e4019b90ae41fcadbd4c02c7ff2c39b3ced77645b1c36ef233863efb760"
@@ -308,12 +308,12 @@
   version = "v0.0.3"
 
 [[projects]]
-  digest = "1:68ea4e23713989dc20b1bded5d9da2c5f9be14ff9885beef481848edd18c26cb"
+  digest = "1:1b753ec16506f5864d26a28b43703c58831255059644351bbcb019b843950900"
   name = "github.com/spf13/jwalterweatherman"
   packages = ["."]
   pruneopts = "UT"
-  revision = "4a4406e478ca629068e7768fc33f3f044173c0a6"
-  version = "v1.0.0"
+  revision = "94f6ae3ed3bceceafa716478c5fbf8d29ca601a1"
+  version = "v1.1.0"
 
 [[projects]]
   digest = "1:c1b1102241e7f645bc8e0c22ae352e8f0dc6484b6cb4d132fa9f24174e0119e2"
@@ -354,7 +354,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:2608ff66924719c2f7a7203a7a56aa0e9c379fb6b1e1afa5a771b5722a3341a1"
+  digest = "1:b5a6fb71fcb583bf7a77f4fef4fcd613c7882bb63d69286ff0b85efda830f493"
   name = "golang.org/x/crypto"
   packages = [
     "curve25519",
@@ -366,7 +366,7 @@
     "ssh",
   ]
   pruneopts = "UT"
-  revision = "7f87c0fbb88b590338857bcb720678c2583d4dea"
+  revision = "8dd112bcdc25174059e45e07517d9fc663123347"
 
 [[projects]]
   branch = "master"
@@ -382,7 +382,7 @@
     "proxy",
   ]
   pruneopts = "UT"
-  revision = "66a96c8a540e84140eaf74e38bb3a0a2ff5e5c53"
+  revision = "16b79f2e4e95ea23b2bf9903c9809ff7b013ce85"
 
 [[projects]]
   branch = "master"
@@ -398,11 +398,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d0e9a312c4610a508569ab25e54d34600b1a96d19b1866ece104ffdf1c1b9d2c"
+  digest = "1:27466d85b880c670fca9f18ee19336ee3a59784e414d866ff0671656e0de03b9"
   name = "golang.org/x/sys"
-  packages = ["unix"]
+  packages = [
+    "cpu",
+    "unix",
+  ]
   pruneopts = "UT"
-  revision = "cc5685c2db1239775905f3911f0067c0fa74762f"
+  revision = "c2f5717e611cf8e89a852a41081355194d80c943"
 
 [[projects]]
   digest = "1:4392fcf42d5cf0e3ff78c96b2acf8223d49e4fdc53eb77c99d2f8dfe4680e006"
@@ -450,12 +453,12 @@
   version = "v1.4.0"
 
 [[projects]]
-  digest = "1:94cad6e2359d57da6652e689189c5b6ef19f99db6304d2c41de54f6632e15143"
+  digest = "1:d219400f09c151f0ada918bab650ef46f7ebdb1ff4fea923fdcb839481ec7ec1"
   name = "gopkg.in/cheggaaa/pb.v1"
   packages = ["."]
   pruneopts = "UT"
-  revision = "1cc5bbe20449079337944d56292c7383510c534c"
-  version = "v1.0.27"
+  revision = "f907f6f5dd81f77c2bbc1cde92e4c5a04720cb11"
+  version = "v1.0.28"
 
 [[projects]]
   digest = "1:abeb38ade3f32a92943e5be54f55ed6d6e3b6602761d74b4aab4c9dd45c18abd"

@@ -42,6 +42,7 @@ type Metadata struct {
 	EnvType          string
 	CollectedAt      string
 	CollectionId     string
+	FoundationId     string
 	FileDigests      []FileDigest
 	CollectorVersion string
 }
