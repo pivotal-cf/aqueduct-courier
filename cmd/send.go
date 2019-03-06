@@ -14,6 +14,7 @@ import (
 
 const (
 	DataTarFilePathFlag = "path"
+	DataTarFilePathKey  = "DATA_TAR_FILE_PATH"
 	ApiKeyFlag          = "api-key"
 	ApiKeyKey           = "API_KEY"
 
@@ -30,12 +31,8 @@ var sendCmd = &cobra.Command{
 }
 
 func init() {
-	sendCmd.Flags().String(DataTarFilePathFlag, "", "Tar archive containing data from 'collect' command")
-	viper.BindPFlag(DataTarFilePathFlag, sendCmd.Flag(DataTarFilePathFlag))
-
-	sendCmd.Flags().String(ApiKeyFlag, "", fmt.Sprintf("Telemetry Collector API Key used to authenticate with Pivotal [$%s]", ApiKeyKey))
-	viper.BindPFlag(ApiKeyFlag, sendCmd.Flag(ApiKeyFlag))
-	viper.BindEnv(ApiKeyFlag, ApiKeyKey)
+	bindFlagAndEnvVar(sendCmd, DataTarFilePathFlag, "", "Tar archive containing data from 'collect' command", DataTarFilePathKey)
+	bindFlagAndEnvVar(sendCmd, ApiKeyFlag, "", fmt.Sprintf("Telemetry Collector API Key used to authenticate with Pivotal [$%s]", ApiKeyKey), ApiKeyKey)
 
 	sendCmd.Flags().BoolP("help", "h", false, "Help for send")
 	rootCmd.AddCommand(sendCmd)

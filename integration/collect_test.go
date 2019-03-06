@@ -123,6 +123,7 @@ var _ = Describe("Collect", func() {
 
 	Context("with ops manager user/password authentication", func() {
 		It("succeeds with env variable configuration", func() {
+			defaultEnvVars[cmd.SkipTlsVerifyKey] = "true"
 			command := buildDefaultCommand(defaultEnvVars)
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
@@ -161,6 +162,7 @@ var _ = Describe("Collect", func() {
 			delete(defaultEnvVars, cmd.OpsManagerPasswordKey)
 			defaultEnvVars[cmd.OpsManagerClientIdKey] = "some-client-id"
 			defaultEnvVars[cmd.OpsManagerClientSecretKey] = "some-client-secret"
+			defaultEnvVars[cmd.SkipTlsVerifyKey] = "true"
 			command := buildDefaultCommand(defaultEnvVars)
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())

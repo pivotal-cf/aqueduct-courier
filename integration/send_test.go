@@ -86,9 +86,9 @@ var _ = Describe("Send", func() {
 			Expect(session.Out).To(gbytes.Say("Success!\n"))
 		})
 
-		It("sends data to the configured endpoint with api key as an env variable", func() {
-			command := exec.Command(binaryPath, "send", "--path="+sourceDataTarFilePath)
-			command.Env = append(os.Environ(), fmt.Sprintf("%s=%s", cmd.ApiKeyKey, validApiKey))
+		It("sends data to the configured endpoint with api key and path as env variables", func() {
+			command := exec.Command(binaryPath, "send")
+			command.Env = append(os.Environ(), fmt.Sprintf("%s=%s", cmd.ApiKeyKey, validApiKey), fmt.Sprintf("%s=%s", cmd.DataTarFilePathKey, sourceDataTarFilePath))
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))

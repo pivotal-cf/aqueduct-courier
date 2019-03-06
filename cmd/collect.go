@@ -38,6 +38,7 @@ const (
 	OpsManagerTimeoutKey         = "OPS_MANAGER_TIMEOUT"
 	EnvTypeKey                   = "ENV_TYPE"
 	OutputPathKey                = "OUTPUT_DIR"
+	SkipTlsVerifyKey             = "INSECURE_SKIP_TLS_VERIFY"
 	WithCredhubInfoKey           = "WITH_CREDHUB_INFO"
 	UsageServiceURLKey           = "USAGE_SERVICE_URL"
 	UsageServiceClientIDKey      = "USAGE_SERVICE_CLIENT_ID"
@@ -82,64 +83,21 @@ var collectCmd = &cobra.Command{
 }
 
 func init() {
-	collectCmd.Flags().String(OpsManagerURLFlag, "", fmt.Sprintf("URL of Operations Manager to collect from [$%s]", OpsManagerURLKey))
-	viper.BindPFlag(OpsManagerURLFlag, collectCmd.Flag(OpsManagerURLFlag))
-	viper.BindEnv(OpsManagerURLFlag, OpsManagerURLKey)
-
-	collectCmd.Flags().String(OpsManagerUsernameFlag, "", fmt.Sprintf("Operations Manager username [$%s]\nNote: not required if using client/secret authentication", OpsManagerUsernameKey))
-	viper.BindPFlag(OpsManagerUsernameFlag, collectCmd.Flag(OpsManagerUsernameFlag))
-	viper.BindEnv(OpsManagerUsernameFlag, OpsManagerUsernameKey)
-
-	collectCmd.Flags().String(OpsManagerPasswordFlag, "", fmt.Sprintf("Operations Manager password [$%s]\nNote: not required if using client/secret authentication", OpsManagerPasswordKey))
-	viper.BindPFlag(OpsManagerPasswordFlag, collectCmd.Flag(OpsManagerPasswordFlag))
-	viper.BindEnv(OpsManagerPasswordFlag, OpsManagerPasswordKey)
-
-	collectCmd.Flags().String(OpsManagerClientIdFlag, "", fmt.Sprintf("Operations Manager client id [$%s]\nNote: not required if using username/password authentication", OpsManagerClientIdKey))
-	viper.BindPFlag(OpsManagerClientIdFlag, collectCmd.Flag(OpsManagerClientIdFlag))
-	viper.BindEnv(OpsManagerClientIdFlag, OpsManagerClientIdKey)
-
-	collectCmd.Flags().String(OpsManagerClientSecretFlag, "", fmt.Sprintf("Operations Manager client secret [$%s]\nNote: not required if using username/password authentication", OpsManagerClientSecretKey))
-	viper.BindPFlag(OpsManagerClientSecretFlag, collectCmd.Flag(OpsManagerClientSecretFlag))
-	viper.BindEnv(OpsManagerClientSecretFlag, OpsManagerClientSecretKey)
-
-	collectCmd.Flags().Int(OpsManagerTimeoutFlag, 30, fmt.Sprintf("Timeout (in seconds) for Operations Manager HTTP requests [$%s]", OpsManagerTimeoutKey))
-	viper.BindPFlag(OpsManagerTimeoutFlag, collectCmd.Flag(OpsManagerTimeoutFlag))
-	viper.BindEnv(OpsManagerTimeoutFlag, OpsManagerTimeoutKey)
-
-	collectCmd.Flags().String(EnvTypeFlag, "", fmt.Sprintf("Describe the type of environment you're collecting from [$%s]\nValid options: %s, %s, %s, %s", EnvTypeKey, EnvTypeDevelopment, EnvTypeQA, EnvTypePreProduction, EnvTypeProduction))
-	viper.BindPFlag(EnvTypeFlag, collectCmd.Flag(EnvTypeFlag))
-	viper.BindEnv(EnvTypeFlag, EnvTypeKey)
-
-	collectCmd.Flags().String(OutputPathFlag, "", fmt.Sprintf("Local directory to write data [$%s]", OutputPathKey))
-	viper.BindPFlag(OutputPathFlag, collectCmd.Flag(OutputPathFlag))
-	viper.BindEnv(OutputPathFlag, OutputPathKey)
-
-	collectCmd.Flags().Bool(SkipTlsVerifyFlag, false, "Skip TLS validation on http requests to Operations Manager")
-	viper.BindPFlag(SkipTlsVerifyFlag, collectCmd.Flag(SkipTlsVerifyFlag))
-
-	collectCmd.Flags().Bool(CollectFromCredhubFlag, false, fmt.Sprintf("Collect certificate expiry info from CredHub [$%s]", WithCredhubInfoKey))
-	viper.BindPFlag(CollectFromCredhubFlag, collectCmd.Flag(CollectFromCredhubFlag))
-	viper.BindEnv(CollectFromCredhubFlag, WithCredhubInfoKey)
-
-	collectCmd.Flags().String(CfApiURLFlag, "", fmt.Sprintf("URL of the CF API used for UAA authentication in order to access the Usage Service [$%s]", CfApiURLKey))
-	viper.BindPFlag(CfApiURLFlag, collectCmd.Flag(CfApiURLFlag))
-	viper.BindEnv(CfApiURLFlag, CfApiURLKey)
-
-	collectCmd.Flags().String(UsageServiceURLFlag, "", fmt.Sprintf("URL of the Usage Service [$%s]", UsageServiceURLKey))
-	viper.BindPFlag(UsageServiceURLFlag, collectCmd.Flag(UsageServiceURLFlag))
-	viper.BindEnv(UsageServiceURLFlag, UsageServiceURLKey)
-
-	collectCmd.Flags().String(UsageServiceClientIDFlag, "", fmt.Sprintf("Usage Service client id [$%s]", UsageServiceClientIDKey))
-	viper.BindPFlag(UsageServiceClientIDFlag, collectCmd.Flag(UsageServiceClientIDFlag))
-	viper.BindEnv(UsageServiceClientIDFlag, UsageServiceClientIDKey)
-
-	collectCmd.Flags().String(UsageServiceClientSecretFlag, "", fmt.Sprintf("Usage Service client secret [$%s]", UsageServiceClientSecretKey))
-	viper.BindPFlag(UsageServiceClientSecretFlag, collectCmd.Flag(UsageServiceClientSecretFlag))
-	viper.BindEnv(UsageServiceClientSecretFlag, UsageServiceClientSecretKey)
-
-	collectCmd.Flags().Bool(UsageServiceSkipTlsVerifyFlag, false, fmt.Sprintf("Skip TLS validation for Usage Service components [$%s]", UsageServiceSkipTlsVerifyKey))
-	viper.BindPFlag(UsageServiceSkipTlsVerifyFlag, collectCmd.Flag(UsageServiceSkipTlsVerifyFlag))
-	viper.BindEnv(UsageServiceSkipTlsVerifyFlag, UsageServiceSkipTlsVerifyKey)
+	bindFlagAndEnvVar(collectCmd, OpsManagerURLFlag, "", fmt.Sprintf("URL of Operations Manager to collect from [$%s]", OpsManagerURLKey), OpsManagerURLKey)
+	bindFlagAndEnvVar(collectCmd, OpsManagerUsernameFlag, "", fmt.Sprintf("Operations Manager username [$%s]\nNote: not required if using client/secret authentication", OpsManagerUsernameKey), OpsManagerUsernameKey)
+	bindFlagAndEnvVar(collectCmd, OpsManagerPasswordFlag, "", fmt.Sprintf("Operations Manager password [$%s]\nNote: not required if using client/secret authentication", OpsManagerPasswordKey), OpsManagerPasswordKey)
+	bindFlagAndEnvVar(collectCmd, OpsManagerClientIdFlag, "", fmt.Sprintf("Operations Manager client id [$%s]\nNote: not required if using username/password authentication", OpsManagerClientIdKey), OpsManagerClientIdKey)
+	bindFlagAndEnvVar(collectCmd, OpsManagerClientSecretFlag, "", fmt.Sprintf("Operations Manager client secret [$%s]\nNote: not required if using username/password authentication", OpsManagerClientSecretKey), OpsManagerClientSecretKey)
+	bindFlagAndEnvVar(collectCmd, OpsManagerTimeoutFlag, 30, fmt.Sprintf("Timeout (in seconds) for Operations Manager HTTP requests [$%s]", OpsManagerTimeoutKey), OpsManagerTimeoutKey)
+	bindFlagAndEnvVar(collectCmd, EnvTypeFlag, "", fmt.Sprintf("Describe the type of environment you're collecting from [$%s]\nValid options: %s, %s, %s, %s", EnvTypeKey, EnvTypeDevelopment, EnvTypeQA, EnvTypePreProduction, EnvTypeProduction), EnvTypeKey)
+	bindFlagAndEnvVar(collectCmd, OutputPathFlag, "", fmt.Sprintf("Local directory to write data [$%s]", OutputPathKey), OutputPathKey)
+	bindFlagAndEnvVar(collectCmd, SkipTlsVerifyFlag, false, fmt.Sprintf("Skip TLS validation on http requests to Operations Manager [$%s]", SkipTlsVerifyKey), SkipTlsVerifyKey)
+	bindFlagAndEnvVar(collectCmd, CollectFromCredhubFlag, false, fmt.Sprintf("Collect certificate expiry info from CredHub [$%s]", WithCredhubInfoKey), WithCredhubInfoKey)
+	bindFlagAndEnvVar(collectCmd, CfApiURLFlag, "", fmt.Sprintf("URL of the CF API used for UAA authentication in order to access the Usage Service [$%s]", CfApiURLKey), CfApiURLKey)
+	bindFlagAndEnvVar(collectCmd, UsageServiceURLFlag, "", fmt.Sprintf("URL of the Usage Service [$%s]", UsageServiceURLKey), UsageServiceURLKey)
+	bindFlagAndEnvVar(collectCmd, UsageServiceClientIDFlag, "", fmt.Sprintf("Usage Service client id [$%s]", UsageServiceClientIDKey), UsageServiceClientIDKey)
+	bindFlagAndEnvVar(collectCmd, UsageServiceClientSecretFlag, "", fmt.Sprintf("Usage Service client secret [$%s]", UsageServiceClientSecretKey), UsageServiceClientSecretKey)
+	bindFlagAndEnvVar(collectCmd, UsageServiceSkipTlsVerifyFlag, false, fmt.Sprintf("Skip TLS validation for Usage Service components [$%s]", UsageServiceSkipTlsVerifyKey), UsageServiceSkipTlsVerifyKey)
 
 	collectCmd.Flags().BoolP("help", "h", false, "Help for collect")
 	rootCmd.AddCommand(collectCmd)
@@ -230,6 +188,10 @@ func validateAndNormalizeEnvType() (string, error) {
 	return "", errors.Errorf(InvalidEnvTypeFailureFormat, envType)
 }
 
+type consumptionDataCollector interface {
+	Collect() ([]consumption.Data, error)
+}
+
 func makeConsumptionCollector() (consumptionDataCollector, error) {
 	if anyUsageServiceConfigsProvided() {
 		err := validateUsageServiceConfig()
@@ -250,6 +212,10 @@ func makeConsumptionCollector() (consumptionDataCollector, error) {
 		return consumptionCollector, nil
 	}
 	return nil, nil
+}
+
+type credhubDataCollector interface {
+	Collect() (credhub.Data, error)
 }
 
 func makeCredhubCollector(omService *opsmanager.Service, credhubCollectionEnabled bool) (credhubDataCollector, error) {
@@ -308,12 +274,4 @@ func makeCollector(tarWriter *file.TarWriter) (*operations.CollectExecutor, erro
 	}
 
 	return operations.NewCollector(omCollector, credhubCollector, consumptionCollector, tarWriter, uuid.DefaultGenerator), nil
-}
-
-type credhubDataCollector interface {
-	Collect() (credhub.Data, error)
-}
-
-type consumptionDataCollector interface {
-	Collect() ([]consumption.Data, error)
 }

@@ -47,3 +47,16 @@ func verifyRequiredConfig(keys ...string) error {
 
 	return nil
 }
+
+func bindFlagAndEnvVar(cmd *cobra.Command, flagName string, defaultValue interface{}, usageText, flagKey string) {
+	switch val := defaultValue.(type) {
+	case string:
+		cmd.Flags().String(flagName, val, usageText)
+	case int:
+		cmd.Flags().Int(flagName, val, usageText)
+	case bool:
+		cmd.Flags().Bool(flagName, val, usageText)
+	}
+	viper.BindPFlag(flagName, cmd.Flag(flagName))
+	viper.BindEnv(flagName, flagKey)
+}
