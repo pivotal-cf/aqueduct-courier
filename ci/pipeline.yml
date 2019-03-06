@@ -1,15 +1,15 @@
 resource_types:
   - name: gcs-resource
-    type: docker-image
+    type: registry-image
     source:
       repository: frodenas/gcs-resource
   - name: pivnet
-    type: docker-image
+    type: registry-image
     source:
       repository: pivotalcf/pivnet-resource
       tag: latest-final
   - name: slack-notification
-    type: docker-image
+    type: registry-image
     source:
       repository: cfcommunity/slack-notification-resource
       tag: latest
@@ -69,7 +69,7 @@ resources:
   source:
     interval: 10m
 - name: task-docker-image
-  type: docker-image
+  type: registry-image
   source:
     repository: ubuntu
     tag: xenial
