@@ -148,7 +148,7 @@ jobs:
   - get: staging-linux-binary
     passed: [build-staging-binaries]
   - get: task-docker-image
-  - task: collect-with-user-creds
+  - task: collect-with-opsmanager-user-creds
     image: task-docker-image
     input_mapping:
       binary: staging-linux-binary
@@ -164,7 +164,7 @@ jobs:
       USAGE_SERVICE_CLIENT_ID: {{courier-usage-service-client-id}}
       USAGE_SERVICE_CLIENT_SECRET: {{courier-usage-service-client-secret}}
       USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
-  - task: collect-with-client-creds
+  - task: collect-with-opsmanager-client-creds
     image: task-docker-image
     input_mapping:
       binary: staging-linux-binary
@@ -177,6 +177,11 @@ jobs:
       OPS_MANAGER_CLIENT_SECRET: {{courier-ops-manager-client-secret}}
       ENV_TYPE: development
       INSECURE_SKIP_TLS_VERIFY: true
+      CF_API_URL: {{courier-cf-api-url}}
+      USAGE_SERVICE_URL: {{courier-usage-service-url}}
+      USAGE_SERVICE_CLIENT_ID: {{courier-usage-service-client-id}}
+      USAGE_SERVICE_CLIENT_SECRET: {{courier-usage-service-client-secret}}
+      USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
   - task: send
     image: task-docker-image
     input_mapping:
@@ -232,7 +237,7 @@ jobs:
   - get: production-linux-binary
     passed: [build-production-binaries]
   - get: task-docker-image
-  - task: collect-with-user-creds
+  - task: collect-with-opsmanager-user-creds
     image: task-docker-image
     input_mapping:
       binary: production-linux-binary
@@ -243,6 +248,11 @@ jobs:
       OPS_MANAGER_PASSWORD: {{courier-ops-manager-password}}
       ENV_TYPE: development
       INSECURE_SKIP_TLS_VERIFY: true
+      CF_API_URL: {{courier-cf-api-url}}
+      USAGE_SERVICE_URL: {{courier-usage-service-url}}
+      USAGE_SERVICE_CLIENT_ID: {{courier-usage-service-client-id}}
+      USAGE_SERVICE_CLIENT_SECRET: {{courier-usage-service-client-secret}}
+      USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
   - task: send
     image: task-docker-image
     input_mapping:
