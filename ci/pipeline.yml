@@ -63,7 +63,7 @@ resources:
 - name: collection-timer
   type: time
   source:
-    interval: 24h
+    interval: 1h
 - name: prod-collection-timer
   type: time
   source:
