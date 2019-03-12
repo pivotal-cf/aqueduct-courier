@@ -19,7 +19,7 @@ run:
     chmod +x ./binary/telemetry-collector-linux-amd64
     ./binary/telemetry-collector-linux-amd64 --version
 
-    ./binary/telemetry-collector-linux-amd64 collect --output-dir ./collected-data"
+    ./binary/telemetry-collector-linux-amd64 collect --output-dir ./collected-data
 
 params:
   OPS_MANAGER_URL:
