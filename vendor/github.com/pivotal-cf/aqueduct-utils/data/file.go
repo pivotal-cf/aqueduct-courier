@@ -24,8 +24,8 @@ const (
 	ServiceUsageDataType           = "service_usage"
 	TaskUsageDataType              = "task_usage"
 
-	OpsManagerCollectorDataSetId  = "opsmanager"
-	ConsumptionCollectorDataSetId = "consumption"
+	OpsManagerCollectorDataSetId   = "opsmanager"
+	UsageServiceCollectorDataSetId = "usage_service"
 
 	MetadataFileName = "metadata"
 

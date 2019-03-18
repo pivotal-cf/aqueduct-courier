@@ -318,7 +318,7 @@ var _ = Describe("Collect", func() {
 
 			tarFilePath := validatedTarFilePath(outputDirPath)
 			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
-			assertValidOutput(tarFilePath, data.ConsumptionCollectorDataSetId, "app_usage", "development")
+			assertValidOutput(tarFilePath, data.UsageServiceCollectorDataSetId, "app_usage", "development")
 		})
 
 		It("succeeds with flag configuration", func() {
@@ -346,7 +346,7 @@ var _ = Describe("Collect", func() {
 
 			tarFilePath := validatedTarFilePath(outputDirPath)
 			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
-			assertValidOutput(tarFilePath, data.ConsumptionCollectorDataSetId, "app_usage", "development")
+			assertValidOutput(tarFilePath, data.UsageServiceCollectorDataSetId, "app_usage", "development")
 		})
 
 		DescribeTable(

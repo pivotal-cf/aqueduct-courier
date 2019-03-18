@@ -282,17 +282,17 @@ var _ = Describe("Collector", func() {
 
 			Expect(tarWriter.AddFileCallCount()).To(Equal(5))
 
-			expectedAppUsageConsumptionDataPath := filepath.Join(data.ConsumptionCollectorDataSetId, appUsageConsumptionData.Name())
+			expectedAppUsageConsumptionDataPath := filepath.Join(data.UsageServiceCollectorDataSetId, appUsageConsumptionData.Name())
 			appUsageConsumptionContents, appUsageConsumptionDataPath := tarWriter.AddFileArgsForCall(2)
 			Expect(string(appUsageConsumptionContents)).To(Equal(expectedAppUsageConsumptionContents))
 			Expect(appUsageConsumptionDataPath).To(Equal(expectedAppUsageConsumptionDataPath))
 
-			expectedServiceUsageConsumptionDataPath := filepath.Join(data.ConsumptionCollectorDataSetId, serviceUsageConsumptionData.Name())
+			expectedServiceUsageConsumptionDataPath := filepath.Join(data.UsageServiceCollectorDataSetId, serviceUsageConsumptionData.Name())
 			serviceUsageConsumptionContents, serviceConsumptionDataPath := tarWriter.AddFileArgsForCall(3)
 			Expect(string(serviceUsageConsumptionContents)).To(Equal(expectedServiceUsageConsumptionContents))
 			Expect(serviceConsumptionDataPath).To(Equal(expectedServiceUsageConsumptionDataPath))
 
-			expectedMetadataPath := filepath.Join(data.ConsumptionCollectorDataSetId, data.MetadataFileName)
+			expectedMetadataPath := filepath.Join(data.UsageServiceCollectorDataSetId, data.MetadataFileName)
 			metadataContents, metadataPath := tarWriter.AddFileArgsForCall(4)
 			Expect(metadataPath).To(Equal(expectedMetadataPath))
 
@@ -335,7 +335,7 @@ var _ = Describe("Collector", func() {
 			usageData := consumption.NewData(strings.NewReader(""), "app-instances")
 			consumptionDataCollector.CollectReturns([]consumption.Data{usageData}, nil)
 			tarWriter.AddFileStub = func(content []byte, filePath string) error {
-				if filePath == filepath.Join(data.ConsumptionCollectorDataSetId, usageData.Name()) {
+				if filePath == filepath.Join(data.UsageServiceCollectorDataSetId, usageData.Name()) {
 					return errors.New("tarring is hard")
 				}
 				return nil
@@ -350,7 +350,7 @@ var _ = Describe("Collector", func() {
 		It("returns an error when adding the metadata to the tar file fails", func() {
 			consumptionDataCollector.CollectReturns([]consumption.Data{consumption.NewData(strings.NewReader(""), "app-instance")}, nil)
 			tarWriter.AddFileStub = func(contents []byte, filePath string) error {
-				if filePath == filepath.Join(data.ConsumptionCollectorDataSetId, data.MetadataFileName) {
+				if filePath == filepath.Join(data.UsageServiceCollectorDataSetId, data.MetadataFileName) {
 					return errors.New("tarring is hard")
 				}
 				return nil

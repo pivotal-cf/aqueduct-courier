@@ -138,7 +138,7 @@ func (ce *CollectExecutor) Collect(envType, collectorVersion string) error {
 		}
 
 		for _, consumptionData := range usageData {
-			err = ce.addData(consumptionData, &usageMetadata, data.ConsumptionCollectorDataSetId)
+			err = ce.addData(consumptionData, &usageMetadata, data.UsageServiceCollectorDataSetId)
 			if err != nil {
 				return err
 			}
@@ -148,7 +148,7 @@ func (ce *CollectExecutor) Collect(envType, collectorVersion string) error {
 			return err
 		}
 
-		err = ce.tarWriter.AddFile(usageMetadataContents, filepath.Join(data.ConsumptionCollectorDataSetId, data.MetadataFileName))
+		err = ce.tarWriter.AddFile(usageMetadataContents, filepath.Join(data.UsageServiceCollectorDataSetId, data.MetadataFileName))
 		if err != nil {
 			return errors.Wrap(err, DataWriteFailureMessage)
 		}

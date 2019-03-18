@@ -2,7 +2,7 @@
 
 
 [[projects]]
-  digest = "1:4aced3c64145cd25a6aa423bee9650c7a5ec4202cd91a8a77ab8ee4e37af6993"
+  digest = "1:483e48e37b5ebbdf1a3cc3cbc84234bdaa8540797852a088cb6a48d16c02a72b"
   name = "code.cloudfoundry.org/credhub-cli"
   packages = [
     "credhub",
@@ -16,8 +16,8 @@
     "errors",
   ]
   pruneopts = "UT"
-  revision = "c165e469eaa892c155e9f6df623dd032ea640c2e"
-  version = "2.2.1"
+  revision = "381313dc41bae002d594fc91682cb67210ab2d48"
+  version = "2.3.0"
 
 [[projects]]
   branch = "master"
@@ -35,8 +35,7 @@
   revision = "3c6b4eec9c2d16c1dac4c42bdb5f755ba09daff8"
 
 [[projects]]
-  branch = "master"
-  digest = "1:988cfde37f089c50ba1ac8a1032c3f81d2ac0359e1872093b946a30139665eb6"
+  digest = "1:d052bda13fd17bd8cf52ccae57b0a03ffeea80cffc2cffc62741235fa34f92cf"
   name = "github.com/dsnet/compress"
   packages = [
     ".",
@@ -47,7 +46,8 @@
     "internal/prefix",
   ]
   pruneopts = "UT"
-  revision = "cc9eb1d7ad760af14e8f918698f745e80377af4f"
+  revision = "da652975a8eea9fa0735aba8056747a751db0bd3"
+  version = "v0.0.1"
 
 [[projects]]
   digest = "1:abeb38ade3f32a92943e5be54f55ed6d6e3b6602761d74b4aab4c9dd45c18abd"
@@ -78,8 +78,8 @@
   name = "github.com/golang/protobuf"
   packages = ["proto"]
   pruneopts = "UT"
-  revision = "c823c79ea1570fb5ff454033735a8e68575d1d0f"
-  version = "v1.3.0"
+  revision = "b5d812f8a3706043e23a9cd5babf2e5423744d30"
+  version = "v1.3.1"
 
 [[projects]]
   digest = "1:e4f5819333ac698d294fe04dbf640f84719658d5c7ce195b10060cc37292ce79"
@@ -179,7 +179,7 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:9dd8858ae7fa91d2477ec05605b000d3c1ad65e3a1e36f9bf8f97a170c05ea05"
+  digest = "1:b013cb97ec8147b033199dfc5360d410130e1fc5d74dd6f08c4d777fe49b5c37"
   name = "github.com/onsi/ginkgo"
   packages = [
     ".",
@@ -203,11 +203,11 @@
     "types",
   ]
   pruneopts = "UT"
-  revision = "2e1be8f7d90e9d3e3e58b0ce470f2f14d075406f"
-  version = "v1.7.0"
+  revision = "eea6ad008b96acdaa524f5b409513bf062b500ad"
+  version = "v1.8.0"
 
 [[projects]]
-  digest = "1:61a4ca56459a0d38b89c92f967cd2b07450c638404853b7fe0c8d59f9cf10f93"
+  digest = "1:dcb2bed1efd20651aed13d9bb47a97e46f32066cc960e4a59305972b0761a353"
   name = "github.com/onsi/gomega"
   packages = [
     ".",
@@ -227,8 +227,8 @@
     "types",
   ]
   pruneopts = "UT"
-  revision = "65fb64232476ad9046e57c26cd0bff3d3a8dc6cd"
-  version = "v1.4.3"
+  revision = "90e289841c1ed79b7a598a7cd9959750cb5e89e2"
+  version = "v1.5.0"
 
 [[projects]]
   digest = "1:95741de3af260a92cc5c7f3f3061e85273f5a81b5db20d4bd68da74bd521675e"
@@ -251,17 +251,17 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:7f8b56b2d511c43b02a8c59480d24e7ee6206b57a8924adcd513b2392d3311fd"
+  digest = "1:df4bf9bd29c66899f4793b1e6bd16b476fbd627702ef06058450e8cefe5158d5"
   name = "github.com/pivotal-cf/aqueduct-utils"
   packages = [
     "data",
     "file",
   ]
   pruneopts = "UT"
-  revision = "ba60b9a1600a56422f93e04af405907066da323e"
+  revision = "d3d2521d89deb12eaabdbeaa63d99328edc5c111"
 
 [[projects]]
-  digest = "1:87f27e4019b90ae41fcadbd4c02c7ff2c39b3ced77645b1c36ef233863efb760"
+  digest = "1:e51e174bc63da88581903650da0bbd03b585b943a9ca6e9200f0e02ff1fbeae4"
   name = "github.com/pivotal-cf/om"
   packages = [
     "api",
@@ -269,8 +269,8 @@
     "progress",
   ]
   pruneopts = "UT"
-  revision = "838725d235b46a47e80a2d9cd8aae1b076e0af97"
-  version = "0.53.0"
+  revision = "509952ad3009aedf4195359e89ceeb072587ed3d"
+  version = "0.54.0"
 
 [[projects]]
   digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
@@ -324,12 +324,12 @@
   version = "v1.0.3"
 
 [[projects]]
-  digest = "1:de37e343c64582d7026bf8ab6ac5b22a72eac54f3a57020db31524affed9f423"
+  digest = "1:1b773526998f3dbde3a51a4a5881680c4d237d3600f570d900f97ac93c7ba0a8"
   name = "github.com/spf13/viper"
   packages = ["."]
   pruneopts = "UT"
-  revision = "6d33b5a963d922d182c91e8a1c88d81fd150cfd4"
-  version = "v1.3.1"
+  revision = "9e56dacc08fbbf8c9ee2dbc717553c758ce42bc9"
+  version = "v1.3.2"
 
 [[projects]]
   digest = "1:2643d81498e38e44bdcf480be199cac55f29e97403b0342d962824bfe9960722"
@@ -354,7 +354,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b5a6fb71fcb583bf7a77f4fef4fcd613c7882bb63d69286ff0b85efda830f493"
+  digest = "1:09d4ba0a111bd85dffabc19b9b6d89e89bef285790103ced8824d823813dcdab"
   name = "golang.org/x/crypto"
   packages = [
     "curve25519",
@@ -366,7 +366,7 @@
     "ssh",
   ]
   pruneopts = "UT"
-  revision = "8dd112bcdc25174059e45e07517d9fc663123347"
+  revision = "a1f597ede03a7bef967a422b5b3a5bd08805a01e"
 
 [[projects]]
   branch = "master"
@@ -382,7 +382,7 @@
     "proxy",
   ]
   pruneopts = "UT"
-  revision = "16b79f2e4e95ea23b2bf9903c9809ff7b013ce85"
+  revision = "9f648a60d9775ef5c977e7669d1673a7a67bef33"
 
 [[projects]]
   branch = "master"
@@ -398,14 +398,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:27466d85b880c670fca9f18ee19336ee3a59784e414d866ff0671656e0de03b9"
+  digest = "1:53df1464a35ecef619d5d29fc24427e34798c47c31f8a35ff709cb71b4009972"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
     "unix",
   ]
   pruneopts = "UT"
-  revision = "c2f5717e611cf8e89a852a41081355194d80c943"
+  revision = "a2f829d7f35f2ed1c3520c553a6226495455cae0"
 
 [[projects]]
   digest = "1:4392fcf42d5cf0e3ff78c96b2acf8223d49e4fdc53eb77c99d2f8dfe4680e006"
