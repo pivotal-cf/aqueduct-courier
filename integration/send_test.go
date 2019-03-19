@@ -118,6 +118,16 @@ var _ = Describe("Send", func() {
 		Expect(session.Err).To(gbytes.Say(fmt.Sprintf(cmd.RequiredConfigErrorFormat, strings.Join(requiredFlags, ", "))))
 		Expect(session.Err).To(gbytes.Say("Usage:"))
 	})
+
+	It("fails if the passed in path to tar file is invalid", func() {
+		command := exec.Command(binaryPath, "send", "--path=invalid-path", "--api-key="+validApiKey)
+		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+		Expect(err).NotTo(HaveOccurred())
+		Eventually(session).Should(gexec.Exit(1))
+
+		Expect(session.Err).To(gbytes.Say(fmt.Sprintf(cmd.FileNotFoundErrorFormat, "invalid-path")))
+	})
+
 })
 
 func generateValidDataTarFile(destinationDir string) string {

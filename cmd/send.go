@@ -19,6 +19,7 @@ const (
 	ApiKeyKey           = "API_KEY"
 
 	SendFailureMessage = "Failed to send data"
+	FileNotFoundErrorFormat = "File not found at: %s"
 )
 
 var dataLoaderURL string
@@ -48,7 +49,7 @@ func send(c *cobra.Command, _ []string) error {
 	sender := operations.SendExecutor{}
 	tarFile, err := os.Open(viper.GetString(DataTarFilePathFlag))
 	if err != nil {
-		panic(err)
+		return errors.New(fmt.Sprintf(FileNotFoundErrorFormat,viper.GetString(DataTarFilePathFlag)))
 	}
 
 	fmt.Printf("Sending %s to Pivotal at %s\n", viper.GetString(DataTarFilePathFlag), dataLoaderURL)
