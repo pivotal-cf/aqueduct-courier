@@ -100,6 +100,27 @@ func init() {
 	bindFlagAndEnvVar(collectCmd, UsageServiceSkipTlsVerifyFlag, false, fmt.Sprintf("Skip TLS validation for Usage Service components [$%s]", UsageServiceSkipTlsVerifyKey), UsageServiceSkipTlsVerifyKey)
 
 	collectCmd.Flags().BoolP("help", "h", false, "Help for collect")
+	collectCmd.Example = `
+      Collect data from Ops Manager only:
+      telemetry-collector collect --url --username --password [or --client-id and
+      --client-secret] --env-type --output-dir
+
+      Collect data from Ops Manager and Usage Service:
+      telemetry-collector collect --url --username --password [or --client-id and
+      --client-secret] --usage-service-url --usage-service-client-id
+      --usage-service-client-secret --cf-api-url --env-type --output-dir`
+
+	customHelpTextTemplate := `
+Collects information from a single Ops Manager (and optionally from
+Usage Service and/or Credhub) and outputs the content to the configured directory.
+
+USAGE EXAMPLES
+{{.Example}}
+
+FLAGS
+{{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}`
+
+	collectCmd.SetHelpTemplate(customHelpTextTemplate)
 	rootCmd.AddCommand(collectCmd)
 }
 
