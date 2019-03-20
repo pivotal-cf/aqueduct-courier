@@ -32,10 +32,28 @@ var sendCmd = &cobra.Command{
 }
 
 func init() {
-	bindFlagAndEnvVar(sendCmd, DataTarFilePathFlag, "", "Tar archive containing data from 'collect' command", DataTarFilePathKey)
-	bindFlagAndEnvVar(sendCmd, ApiKeyFlag, "", fmt.Sprintf("Telemetry Collector API Key used to authenticate with Pivotal [$%s]", ApiKeyKey), ApiKeyKey)
+	bindFlagAndEnvVar(sendCmd, DataTarFilePathFlag, "", fmt.Sprintf("``Local directory containing tar file with data from 'collect' command [$%s]", DataTarFilePathKey), DataTarFilePathKey)
+	bindFlagAndEnvVar(sendCmd, ApiKeyFlag, "", fmt.Sprintf("``Telemetry Collector API Key used to authenticate with Pivotal [$%s]\n", ApiKeyKey), ApiKeyKey)
 
-	sendCmd.Flags().BoolP("help", "h", false, "Help for send")
+	sendCmd.Flags().BoolP("help", "h", false, "Help for the send command\n")
+
+	sendCmd.Flags().SortFlags = false
+
+	sendCmd.Example = `
+      Send data to Pivotal:
+      telemetry-collector send --api-key --path`
+
+	customHelpTextTemplate := fmt.Sprintf(`Sends specified file to Pivotal's secure data store at %s
+
+USAGE EXAMPLES
+{{.Example}}
+
+FLAGS
+{{.LocalFlags.FlagUsages}}`, dataLoaderURL)
+
+	sendCmd.SetHelpTemplate(customHelpTextTemplate)
+	rootCmd.AddCommand(collectCmd)
+
 	rootCmd.AddCommand(sendCmd)
 }
 

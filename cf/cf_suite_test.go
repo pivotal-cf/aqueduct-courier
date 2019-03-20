@@ -9,5 +9,5 @@ import (
 
 func TestCf(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Cf Suite")
+	RunSpecs(t, "CF Suite")
 }
