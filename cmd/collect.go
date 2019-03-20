@@ -83,23 +83,28 @@ var collectCmd = &cobra.Command{
 }
 
 func init() {
-	bindFlagAndEnvVar(collectCmd, OpsManagerURLFlag, "", fmt.Sprintf("URL of Operations Manager to collect from [$%s]", OpsManagerURLKey), OpsManagerURLKey)
-	bindFlagAndEnvVar(collectCmd, OpsManagerUsernameFlag, "", fmt.Sprintf("Operations Manager username [$%s]\nNote: not required if using client/secret authentication", OpsManagerUsernameKey), OpsManagerUsernameKey)
-	bindFlagAndEnvVar(collectCmd, OpsManagerPasswordFlag, "", fmt.Sprintf("Operations Manager password [$%s]\nNote: not required if using client/secret authentication", OpsManagerPasswordKey), OpsManagerPasswordKey)
-	bindFlagAndEnvVar(collectCmd, OpsManagerClientIdFlag, "", fmt.Sprintf("Operations Manager client id [$%s]\nNote: not required if using username/password authentication", OpsManagerClientIdKey), OpsManagerClientIdKey)
-	bindFlagAndEnvVar(collectCmd, OpsManagerClientSecretFlag, "", fmt.Sprintf("Operations Manager client secret [$%s]\nNote: not required if using username/password authentication", OpsManagerClientSecretKey), OpsManagerClientSecretKey)
-	bindFlagAndEnvVar(collectCmd, OpsManagerTimeoutFlag, 30, fmt.Sprintf("Timeout (in seconds) for Operations Manager HTTP requests [$%s]", OpsManagerTimeoutKey), OpsManagerTimeoutKey)
-	bindFlagAndEnvVar(collectCmd, EnvTypeFlag, "", fmt.Sprintf("Describe the type of environment you're collecting from [$%s]\nValid options: %s, %s, %s, %s", EnvTypeKey, EnvTypeDevelopment, EnvTypeQA, EnvTypePreProduction, EnvTypeProduction), EnvTypeKey)
-	bindFlagAndEnvVar(collectCmd, OutputPathFlag, "", fmt.Sprintf("Local directory to write data [$%s]", OutputPathKey), OutputPathKey)
-	bindFlagAndEnvVar(collectCmd, SkipTlsVerifyFlag, false, fmt.Sprintf("Skip TLS validation on http requests to Operations Manager [$%s]", SkipTlsVerifyKey), SkipTlsVerifyKey)
-	bindFlagAndEnvVar(collectCmd, CollectFromCredhubFlag, false, fmt.Sprintf("Collect certificate expiry info from CredHub [$%s]", WithCredhubInfoKey), WithCredhubInfoKey)
-	bindFlagAndEnvVar(collectCmd, CfApiURLFlag, "", fmt.Sprintf("URL of the CF API used for UAA authentication in order to access the Usage Service [$%s]", CfApiURLKey), CfApiURLKey)
-	bindFlagAndEnvVar(collectCmd, UsageServiceURLFlag, "", fmt.Sprintf("URL of the Usage Service [$%s]", UsageServiceURLKey), UsageServiceURLKey)
-	bindFlagAndEnvVar(collectCmd, UsageServiceClientIDFlag, "", fmt.Sprintf("Usage Service client id [$%s]", UsageServiceClientIDKey), UsageServiceClientIDKey)
-	bindFlagAndEnvVar(collectCmd, UsageServiceClientSecretFlag, "", fmt.Sprintf("Usage Service client secret [$%s]", UsageServiceClientSecretKey), UsageServiceClientSecretKey)
-	bindFlagAndEnvVar(collectCmd, UsageServiceSkipTlsVerifyFlag, false, fmt.Sprintf("Skip TLS validation for Usage Service components [$%s]", UsageServiceSkipTlsVerifyKey), UsageServiceSkipTlsVerifyKey)
+	bindFlagAndEnvVar(collectCmd, OpsManagerURLFlag, "", fmt.Sprintf("``Ops Manager URL [$%s]", OpsManagerURLKey), OpsManagerURLKey)
+	bindFlagAndEnvVar(collectCmd, OpsManagerUsernameFlag, "", fmt.Sprintf("``Ops Manager username [$%s]", OpsManagerUsernameKey), OpsManagerUsernameKey)
+	bindFlagAndEnvVar(collectCmd, OpsManagerPasswordFlag, "", fmt.Sprintf("``Ops Manager password [$%s]", OpsManagerPasswordKey), OpsManagerPasswordKey)
+	bindFlagAndEnvVar(collectCmd, OpsManagerClientIdFlag, "", fmt.Sprintf("``Ops Manager client id (optional) [$%s]", OpsManagerClientIdKey), OpsManagerClientIdKey)
+	bindFlagAndEnvVar(collectCmd, OpsManagerClientSecretFlag, "", fmt.Sprintf("``Ops Manager client secret [$%s]", OpsManagerClientSecretKey), OpsManagerClientSecretKey)
+	bindFlagAndEnvVar(collectCmd, EnvTypeFlag, "", fmt.Sprintf("``Specify environment type (development, qa, pre-production, production) [$%s]", EnvTypeKey), EnvTypeKey)
+	bindFlagAndEnvVar(collectCmd, OpsManagerTimeoutFlag, 30, fmt.Sprintf("Ops Manager http request timeout in seconds [$%s]", OpsManagerTimeoutKey), OpsManagerTimeoutKey)
+	bindFlagAndEnvVar(collectCmd, SkipTlsVerifyFlag, false, fmt.Sprintf("``Skip TLS validation on http requests to Ops Manager [$%s]\n", SkipTlsVerifyKey), SkipTlsVerifyKey)
 
-	collectCmd.Flags().BoolP("help", "h", false, "Help for collect")
+	bindFlagAndEnvVar(collectCmd, CfApiURLFlag, "", fmt.Sprintf("``CF API URL for UAA authentication to access Usage Service [$%s]", CfApiURLKey), CfApiURLKey)
+	bindFlagAndEnvVar(collectCmd, UsageServiceURLFlag, "", fmt.Sprintf("``Usage Service URL [$%s]", UsageServiceURLKey), UsageServiceURLKey)
+	bindFlagAndEnvVar(collectCmd, UsageServiceClientIDFlag, "", fmt.Sprintf("``Usage Service client id [$%s]", UsageServiceClientIDKey), UsageServiceClientIDKey)
+	bindFlagAndEnvVar(collectCmd, UsageServiceClientSecretFlag, "", fmt.Sprintf("``Usage Service client secret [$%s]", UsageServiceClientSecretKey), UsageServiceClientSecretKey)
+	bindFlagAndEnvVar(collectCmd, UsageServiceSkipTlsVerifyFlag, false, fmt.Sprintf("``Skip TLS validation for Usage Service components [$%s]\n", UsageServiceSkipTlsVerifyKey), UsageServiceSkipTlsVerifyKey)
+
+	bindFlagAndEnvVar(collectCmd, CollectFromCredhubFlag, false, fmt.Sprintf("Include CredHub certificate expiry information [$%s]\n", WithCredhubInfoKey), WithCredhubInfoKey)
+	bindFlagAndEnvVar(collectCmd, OutputPathFlag, "", fmt.Sprintf("``Local directory to write data [$%s]\n", OutputPathKey), OutputPathKey)
+
+	collectCmd.Flags().BoolP("help", "h", false, "Help for the collect command\n")
+
+	collectCmd.Flags().SortFlags = false
+
 	collectCmd.Example = `
       Collect data from Ops Manager only:
       telemetry-collector collect --url --username --password [or --client-id and
@@ -118,8 +123,7 @@ USAGE EXAMPLES
 {{.Example}}
 
 FLAGS
-{{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}`
-
+{{.LocalFlags.FlagUsages}}`
 	collectCmd.SetHelpTemplate(customHelpTextTemplate)
 	rootCmd.AddCommand(collectCmd)
 }
