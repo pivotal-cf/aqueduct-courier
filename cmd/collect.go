@@ -86,7 +86,7 @@ func init() {
 	bindFlagAndEnvVar(collectCmd, OpsManagerURLFlag, "", fmt.Sprintf("``Ops Manager URL [$%s]", OpsManagerURLKey), OpsManagerURLKey)
 	bindFlagAndEnvVar(collectCmd, OpsManagerUsernameFlag, "", fmt.Sprintf("``Ops Manager username [$%s]", OpsManagerUsernameKey), OpsManagerUsernameKey)
 	bindFlagAndEnvVar(collectCmd, OpsManagerPasswordFlag, "", fmt.Sprintf("``Ops Manager password [$%s]", OpsManagerPasswordKey), OpsManagerPasswordKey)
-	bindFlagAndEnvVar(collectCmd, OpsManagerClientIdFlag, "", fmt.Sprintf("``Ops Manager client id (optional) [$%s]", OpsManagerClientIdKey), OpsManagerClientIdKey)
+	bindFlagAndEnvVar(collectCmd, OpsManagerClientIdFlag, "", fmt.Sprintf("``Ops Manager client id [$%s]", OpsManagerClientIdKey), OpsManagerClientIdKey)
 	bindFlagAndEnvVar(collectCmd, OpsManagerClientSecretFlag, "", fmt.Sprintf("``Ops Manager client secret [$%s]", OpsManagerClientSecretKey), OpsManagerClientSecretKey)
 	bindFlagAndEnvVar(collectCmd, EnvTypeFlag, "", fmt.Sprintf("``Specify environment type (development, qa, pre-production, production) [$%s]", EnvTypeKey), EnvTypeKey)
 	bindFlagAndEnvVar(collectCmd, OpsManagerTimeoutFlag, 30, fmt.Sprintf("Ops Manager http request timeout in seconds [$%s]", OpsManagerTimeoutKey), OpsManagerTimeoutKey)
