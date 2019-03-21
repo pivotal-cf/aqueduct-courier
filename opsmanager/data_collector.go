@@ -3,6 +3,7 @@ package opsmanager
 import (
 	"fmt"
 	"io"
+	"log"
 
 	"github.com/pivotal-cf/aqueduct-utils/data"
 	"github.com/pivotal-cf/om/api"
@@ -41,20 +42,26 @@ type OmService interface {
 type dataRetriever func() (io.Reader, error)
 
 type DataCollector struct {
+	logger log.Logger
 	omService             OmService
+	opsManagerURL string
 	pendingChangesService PendingChangesLister
 	deployProductsService DeployedProductsLister
 }
 
-func NewDataCollector(oms OmService, pcs PendingChangesLister, dps DeployedProductsLister) *DataCollector {
+func NewDataCollector(logger log.Logger, oms OmService, omURL string, pcs PendingChangesLister, dps DeployedProductsLister) *DataCollector {
 	return &DataCollector{
+		logger: logger,
 		omService:             oms,
+		opsManagerURL: omURL,
 		pendingChangesService: pcs,
 		deployProductsService: dps,
 	}
 }
 
 func (dc *DataCollector) Collect() ([]Data, string, error) {
+	dc.logger.Printf("Collecting data from Operations Manager at %s", dc.opsManagerURL)
+
 	var foundationId string
 	pc, err := dc.pendingChangesService.ListStagedPendingChanges()
 	if err != nil {

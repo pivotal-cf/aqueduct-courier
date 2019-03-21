@@ -131,7 +131,7 @@ var _ = Describe("Collect", func() {
 
 			tarFilePath := validatedTarFilePath(outputDirPath)
 			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
-			assertLogging(session, tarFilePath, defaultEnvVars[cmd.OpsManagerURLKey])
+			assertLogging(session, tarFilePath, defaultEnvVars[cmd.OpsManagerURLKey], "","")
 		})
 
 		It("succeeds with flag configuration", func() {
@@ -152,7 +152,7 @@ var _ = Describe("Collect", func() {
 			Eventually(session).Should(gexec.Exit(0))
 			tarFilePath := validatedTarFilePath(outputDirPath)
 			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
-			assertLogging(session, tarFilePath, flagValues[cmd.OpsManagerURLFlag])
+			assertLogging(session, tarFilePath, flagValues[cmd.OpsManagerURLFlag], "","")
 		})
 	})
 
@@ -170,7 +170,7 @@ var _ = Describe("Collect", func() {
 
 			tarFilePath := validatedTarFilePath(outputDirPath)
 			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
-			assertLogging(session, tarFilePath, defaultEnvVars[cmd.OpsManagerURLKey])
+			assertLogging(session, tarFilePath, defaultEnvVars[cmd.OpsManagerURLKey], "","")
 		})
 
 		It("succeeds with flag configuration", func() {
@@ -191,7 +191,7 @@ var _ = Describe("Collect", func() {
 			Eventually(session).Should(gexec.Exit(0))
 			tarFilePath := validatedTarFilePath(outputDirPath)
 			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
-			assertLogging(session, tarFilePath, flagValues[cmd.OpsManagerURLFlag])
+			assertLogging(session, tarFilePath, flagValues[cmd.OpsManagerURLFlag], "","")
 		})
 	})
 
@@ -319,6 +319,7 @@ var _ = Describe("Collect", func() {
 			tarFilePath := validatedTarFilePath(outputDirPath)
 			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
 			assertValidOutput(tarFilePath, data.UsageServiceCollectorDataSetId, "app_usage", "development")
+			assertLogging(session, tarFilePath, defaultEnvVars[cmd.OpsManagerURLFlag], "",usageService.URL())
 		})
 
 		It("succeeds with flag configuration", func() {
@@ -347,6 +348,7 @@ var _ = Describe("Collect", func() {
 			tarFilePath := validatedTarFilePath(outputDirPath)
 			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
 			assertValidOutput(tarFilePath, data.UsageServiceCollectorDataSetId, "app_usage", "development")
+			assertLogging(session, tarFilePath, flagValues[cmd.OpsManagerURLFlag], "",usageService.URL())
 		})
 
 		DescribeTable(
@@ -435,7 +437,7 @@ var _ = Describe("Collect", func() {
 			Eventually(session).Should(gexec.Exit(0))
 			tarFilePath := validatedTarFilePath(outputDirPath)
 			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "p-bosh_certificates", "development")
-			assertLogging(session, tarFilePath, flagValues[cmd.OpsManagerURLFlag])
+			assertLogging(session, tarFilePath, defaultEnvVars[cmd.OpsManagerURLKey], credhubServer.URL(),"")
 		})
 
 		It("collects information from credhub as well as ops manager with env variable configuration", func() {
@@ -447,7 +449,7 @@ var _ = Describe("Collect", func() {
 			Eventually(session).Should(gexec.Exit(0))
 			tarFilePath := validatedTarFilePath(outputDirPath)
 			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "p-bosh_certificates", "development")
-			assertLogging(session, tarFilePath, defaultEnvVars[cmd.OpsManagerURLKey])
+			assertLogging(session, tarFilePath, defaultEnvVars[cmd.OpsManagerURLKey], credhubServer.URL(),"")
 		})
 
 		It("errors if fetching credentials for credhub auth fails", func() {
@@ -591,9 +593,15 @@ func assertValidOutput(tarFilePath, dataSetType, filename, envType string) {
 	assertMetadataFileIsCorrect(tmpDir, envType, dataSetType)
 }
 
-func assertLogging(session *gexec.Session, tarFilePath, url string) {
-	Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Collecting data from Operations Manager at %s\n", url)))
-	Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Wrote output to %s\n", escapeWindowsPathRegex(tarFilePath))))
+func assertLogging(session *gexec.Session, tarFilePath, opsManagerURL, credHubURL,usageServiceURL string) {
+    Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Collecting data from Operations Manager at %s", opsManagerURL)))
+	if credHubURL != "" {
+		Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Collecting data from CredHub at %s", credHubURL)))
+	}
+	if usageServiceURL != "" {
+		Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Collecting data from Usage Service at %s", usageServiceURL)))
+	}
+    Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Wrote output to %s\n", escapeWindowsPathRegex(tarFilePath))))
 	Expect(session.Out).To(gbytes.Say("Success!\n"))
 }
 

@@ -2,6 +2,7 @@ package consumption
 
 import (
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"path"
@@ -37,6 +38,7 @@ type httpClient interface {
 }
 
 type Collector struct {
+	logger log.Logger
 	cfApiClient     cfApiClient
 	httpClient      httpClient
 	usageServiceURL string
@@ -44,8 +46,9 @@ type Collector struct {
 	clientSecret    string
 }
 
-func NewCollector(cfClient cfApiClient, httpClient httpClient, usageServiceURL, clientID, clientSecret string) *Collector {
+func NewCollector(logger log.Logger, cfClient cfApiClient, httpClient httpClient, usageServiceURL, clientID, clientSecret string) *Collector {
 	return &Collector{
+		logger: logger,
 		cfApiClient:     cfClient,
 		usageServiceURL: usageServiceURL,
 		httpClient:      httpClient,
@@ -55,6 +58,8 @@ func NewCollector(cfClient cfApiClient, httpClient httpClient, usageServiceURL, 
 }
 
 func (c *Collector) Collect() ([]Data, error) {
+	c.logger.Printf("Collecting data from Usage Service at %s", c.usageServiceURL)
+
 	usageURL, err := url.Parse(c.usageServiceURL)
 	if err != nil {
 		return []Data{}, errors.Wrapf(err, UsageServiceURLParsingError)

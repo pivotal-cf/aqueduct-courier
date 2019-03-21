@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -17,6 +18,7 @@ const (
 
 var (
 	version = "dev"
+	logger *log.Logger
 	rootCmd = &cobra.Command{
 		Use:   toolName,
 		Short: "Utility for collecting information about a PCF Foundation",
@@ -25,6 +27,8 @@ var (
 
 func Execute() {
 	rootCmd.Version = version
+	logger = log.New(os.Stdout, "", 0)
+
 	rootCmd.Flags().BoolP("help", "h", false, fmt.Sprintf("Help for %s", toolName))
 	rootCmd.Flags().BoolP("version", "v", false, fmt.Sprintf("Version for %s", toolName))
 	if err := rootCmd.Execute(); err != nil {

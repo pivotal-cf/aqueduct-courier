@@ -3,6 +3,7 @@ package consumption_test
 import (
 	"encoding/base64"
 	"io/ioutil"
+	"log"
 
 	"github.com/pivotal-cf/aqueduct-utils/data"
 
@@ -20,6 +21,7 @@ import (
 
 var _ = Describe("Collector", func() {
 	var (
+		logger *log.Logger
 		collector    *Collector
 		usageService *ghttp.Server
 		uaaService   *ghttp.Server
@@ -27,6 +29,7 @@ var _ = Describe("Collector", func() {
 	)
 
 	BeforeEach(func() {
+		logger = log.New(GinkgoWriter, "", 0)
 		uaaService = ghttp.NewServer()
 		uaaService.RouteToHandler(http.MethodPost, "/oauth/token", func(w http.ResponseWriter, req *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
@@ -62,7 +65,7 @@ var _ = Describe("Collector", func() {
 		cfApiClient = &consumptionfakes.FakeCfApiClient{}
 		cfApiClient.GetUAAURLReturns(uaaService.URL(), nil)
 
-		collector = NewCollector(cfApiClient, http.DefaultClient, usageService.URL(), "best-usage-service-client-id", "best-usage-service-client-secret")
+		collector = NewCollector(*logger, cfApiClient, http.DefaultClient, usageService.URL(), "best-usage-service-client-id", "best-usage-service-client-secret")
 	})
 
 	AfterEach(func() {
@@ -94,7 +97,7 @@ var _ = Describe("Collector", func() {
 		})
 
 		It("returns an error if the usage service URL is invalid", func() {
-			collector = NewCollector(cfApiClient, http.DefaultClient, " bad://url", "best-usage-service-client-id", "best-usage-service-client-secret")
+			collector = NewCollector(*logger, cfApiClient, http.DefaultClient, " bad://url", "best-usage-service-client-id", "best-usage-service-client-secret")
 			_, err := collector.Collect()
 
 			Expect(err).To(MatchError(ContainSubstring(UsageServiceURLParsingError)))

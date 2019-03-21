@@ -3,6 +3,7 @@ package opsmanager_test
 import (
 	"fmt"
 	"io"
+	"log"
 	"strings"
 
 	. "github.com/onsi/ginkgo"
@@ -18,7 +19,9 @@ import (
 
 var _ = Describe("DataCollector", func() {
 	var (
+		logger *log.Logger
 		omService              *opsmanagerfakes.FakeOmService
+		omURL string
 		pendingChangesLister   *opsmanagerfakes.FakePendingChangesLister
 		deployedProductsLister *opsmanagerfakes.FakeDeployedProductsLister
 
@@ -26,11 +29,13 @@ var _ = Describe("DataCollector", func() {
 	)
 
 	BeforeEach(func() {
+		logger = log.New(GinkgoWriter, "", 0)
 		omService = new(opsmanagerfakes.FakeOmService)
+		omURL = "some-opsmanager-url"
 		pendingChangesLister = new(opsmanagerfakes.FakePendingChangesLister)
 		deployedProductsLister = new(opsmanagerfakes.FakeDeployedProductsLister)
 
-		dataCollector = NewDataCollector(omService, pendingChangesLister, deployedProductsLister)
+		dataCollector = NewDataCollector(*logger, omService, omURL, pendingChangesLister, deployedProductsLister)
 	})
 
 	It("returns an error if there are pending changes with an action other than unchanged", func() {

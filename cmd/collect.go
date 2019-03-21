@@ -161,7 +161,6 @@ func collect(c *cobra.Command, _ []string) error {
 		return err
 	}
 
-	fmt.Printf("Collecting data from Operations Manager at %s\n", viper.GetString(OpsManagerURLFlag))
 	err = collectExecutor.Collect(envType, version)
 	if err != nil {
 		tarFile.Close()
@@ -169,8 +168,8 @@ func collect(c *cobra.Command, _ []string) error {
 		return err
 	}
 
-	fmt.Printf("Wrote output to %s\n", tarFilePath)
-	fmt.Println("Success!")
+	logger.Printf("Wrote output to %s\n", tarFilePath)
+	logger.Println("Success!")
 	return nil
 }
 
@@ -227,6 +226,7 @@ func makeConsumptionCollector() (consumptionDataCollector, error) {
 		client := network.NewClient(viper.GetBool(UsageServiceSkipTlsVerifyFlag))
 		cfApiClient := cf.NewClient(viper.GetString(CfApiURLFlag), client)
 		consumptionCollector := consumption.NewCollector(
+			*logger,
 			cfApiClient,
 			client,
 			viper.GetString(UsageServiceURLFlag),
@@ -249,8 +249,9 @@ func makeCredhubCollector(omService *opsmanager.Service, credhubCollectionEnable
 		if err != nil {
 			return nil, err
 		}
+		credHubURL := "https://"+chCreds.Host+":8844"
 		requestor, err := ogCredhub.New(
-			"https://"+chCreds.Host+":8844",
+			credHubURL,
 			ogCredhub.SkipTLSValidation(true),
 			ogCredhub.Auth(auth.UaaClientCredentials(chCreds.ClientID, chCreds.ClientSecret)),
 		)
@@ -258,7 +259,7 @@ func makeCredhubCollector(omService *opsmanager.Service, credhubCollectionEnable
 			return nil, errors.Wrap(err, CredhubClientError)
 		}
 		credhubService := credhub.NewCredhubService(requestor)
-		return credhub.NewDataCollector(credhubService), nil
+		return credhub.NewDataCollector(*logger, credhubService, credHubURL), nil
 	} else {
 		return nil, nil
 	}
@@ -283,7 +284,9 @@ func makeCollector(tarWriter *file.TarWriter) (*operations.CollectExecutor, erro
 	}
 
 	omCollector := opsmanager.NewDataCollector(
+		*logger,
 		omService,
+		viper.GetString(OpsManagerURLFlag),
 		apiService,
 		apiService,
 	)

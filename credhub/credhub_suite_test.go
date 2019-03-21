@@ -9,5 +9,5 @@ import (
 
 func TestCredhub(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Credhub Suite")
+	RunSpecs(t, "CredHub Suite")
 }

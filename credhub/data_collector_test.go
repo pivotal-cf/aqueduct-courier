@@ -6,16 +6,26 @@ import (
 	. "github.com/pivotal-cf/aqueduct-courier/credhub"
 	"github.com/pivotal-cf/aqueduct-courier/credhub/credhubfakes"
 	"github.com/pkg/errors"
+	"log"
 	"strings"
 )
 
 var _ = Describe("DataCollector", func() {
 
+	var (
+		logger *log.Logger
+		credHubURL string
+	)
+
+	BeforeEach(func(){
+		logger = log.New(GinkgoWriter, "", 0)
+	})
+
 	It("returns data using the credhub service", func() {
 		certificatesReader := strings.NewReader("certificates data reader")
-		credhubService := new(credhubfakes.FakeCredhubService)
-		credhubService.CertificatesReturns(certificatesReader, nil)
-		collector := NewDataCollector(credhubService)
+		credHubService := new(credhubfakes.FakeCredhubService)
+		credHubService.CertificatesReturns(certificatesReader, nil)
+		collector := NewDataCollector(*logger, credHubService, credHubURL)
 
 		data, err := collector.Collect()
 		Expect(err).NotTo(HaveOccurred())
@@ -24,9 +34,9 @@ var _ = Describe("DataCollector", func() {
 	})
 
 	It("returns an error when collecting certificates fails", func() {
-		credhubService := new(credhubfakes.FakeCredhubService)
-		credhubService.CertificatesReturns(nil, errors.New("collecting certificates is hard"))
-		collector := NewDataCollector(credhubService)
+		credHubService := new(credhubfakes.FakeCredhubService)
+		credHubService.CertificatesReturns(nil, errors.New("collecting certificates is hard"))
+		collector := NewDataCollector(*logger, credHubService, credHubURL)
 
 		_, err := collector.Collect()
 		Expect(err).To(HaveOccurred())
