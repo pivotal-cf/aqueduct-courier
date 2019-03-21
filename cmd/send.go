@@ -52,8 +52,6 @@ FLAGS
 {{.LocalFlags.FlagUsages}}`, dataLoaderURL)
 
 	sendCmd.SetHelpTemplate(customHelpTextTemplate)
-	rootCmd.AddCommand(collectCmd)
-
 	rootCmd.AddCommand(sendCmd)
 }
 
