@@ -225,7 +225,7 @@ func makeConsumptionCollector() (consumptionDataCollector, error) {
 
 		client := network.NewClient(viper.GetBool(UsageServiceSkipTlsVerifyFlag))
 		cfApiClient := cf.NewClient(viper.GetString(CfApiURLFlag), client)
-		consumptionCollector := consumption.NewCollector(
+		consumptionCollector := consumption.NewDataCollector(
 			*logger,
 			cfApiClient,
 			client,

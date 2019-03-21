@@ -37,7 +37,7 @@ type httpClient interface {
 	Do(request *http.Request) (*http.Response, error)
 }
 
-type Collector struct {
+type DataCollector struct {
 	logger log.Logger
 	cfApiClient     cfApiClient
 	httpClient      httpClient
@@ -46,8 +46,8 @@ type Collector struct {
 	clientSecret    string
 }
 
-func NewCollector(logger log.Logger, cfClient cfApiClient, httpClient httpClient, usageServiceURL, clientID, clientSecret string) *Collector {
-	return &Collector{
+func NewDataCollector(logger log.Logger, cfClient cfApiClient, httpClient httpClient, usageServiceURL, clientID, clientSecret string) *DataCollector {
+	return &DataCollector{
 		logger: logger,
 		cfApiClient:     cfClient,
 		usageServiceURL: usageServiceURL,
@@ -57,25 +57,25 @@ func NewCollector(logger log.Logger, cfClient cfApiClient, httpClient httpClient
 	}
 }
 
-func (c *Collector) Collect() ([]Data, error) {
-	c.logger.Printf("Collecting data from Usage Service at %s", c.usageServiceURL)
+func (dc *DataCollector) Collect() ([]Data, error) {
+	dc.logger.Printf("Collecting data from Usage Service at %s", dc.usageServiceURL)
 
-	usageURL, err := url.Parse(c.usageServiceURL)
+	usageURL, err := url.Parse(dc.usageServiceURL)
 	if err != nil {
 		return []Data{}, errors.Wrapf(err, UsageServiceURLParsingError)
 	}
 
-	uaaURL, err := c.cfApiClient.GetUAAURL()
+	uaaURL, err := dc.cfApiClient.GetUAAURL()
 	if err != nil {
 		return []Data{}, errors.Wrap(err, GetUAAURLError)
 	}
 
 	authedClient := cf.NewOAuthClient(
 		uaaURL,
-		c.clientID,
-		c.clientSecret,
+		dc.clientID,
+		dc.clientSecret,
 		5*time.Second,
-		c.httpClient,
+		dc.httpClient,
 	)
 
 	appUsageBody, err := getSystemReportBody(AppUsagesReportName, *usageURL, authedClient)

@@ -25,7 +25,7 @@ import (
 	"github.com/pivotal-cf/aqueduct-courier/opsmanager"
 )
 
-var _ = Describe("Collector", func() {
+var _ = Describe("DataCollector", func() {
 	var (
 		omDataCollector *operationsfakes.FakeOmDataCollector
 		tarWriter       *operationsfakes.FakeTarWriter

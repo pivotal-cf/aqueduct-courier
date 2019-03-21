@@ -19,13 +19,13 @@ import (
 	"github.com/pivotal-cf/aqueduct-courier/consumption/consumptionfakes"
 )
 
-var _ = Describe("Collector", func() {
+var _ = Describe("DataCollector", func() {
 	var (
-		logger *log.Logger
-		collector    *Collector
-		usageService *ghttp.Server
-		uaaService   *ghttp.Server
-		cfApiClient  *consumptionfakes.FakeCfApiClient
+		logger        *log.Logger
+		dataCollector *DataCollector
+		usageService  *ghttp.Server
+		uaaService    *ghttp.Server
+		cfApiClient   *consumptionfakes.FakeCfApiClient
 	)
 
 	BeforeEach(func() {
@@ -65,7 +65,7 @@ var _ = Describe("Collector", func() {
 		cfApiClient = &consumptionfakes.FakeCfApiClient{}
 		cfApiClient.GetUAAURLReturns(uaaService.URL(), nil)
 
-		collector = NewCollector(*logger, cfApiClient, http.DefaultClient, usageService.URL(), "best-usage-service-client-id", "best-usage-service-client-secret")
+		dataCollector = NewDataCollector(*logger, cfApiClient, http.DefaultClient, usageService.URL(), "best-usage-service-client-id", "best-usage-service-client-secret")
 	})
 
 	AfterEach(func() {
@@ -75,7 +75,7 @@ var _ = Describe("Collector", func() {
 
 	Describe("collect", func() {
 		It("accesses the usage service with an OAuth client configured appropriately, with the endpoint discovered from the CfApiClient", func() {
-			usageData, err := collector.Collect()
+			usageData, err := dataCollector.Collect()
 			Expect(err).ToNot(HaveOccurred())
 			Expect(len(usageData)).To(Equal(3))
 
@@ -97,8 +97,8 @@ var _ = Describe("Collector", func() {
 		})
 
 		It("returns an error if the usage service URL is invalid", func() {
-			collector = NewCollector(*logger, cfApiClient, http.DefaultClient, " bad://url", "best-usage-service-client-id", "best-usage-service-client-secret")
-			_, err := collector.Collect()
+			dataCollector = NewDataCollector(*logger, cfApiClient, http.DefaultClient, " bad://url", "best-usage-service-client-id", "best-usage-service-client-secret")
+			_, err := dataCollector.Collect()
 
 			Expect(err).To(MatchError(ContainSubstring(UsageServiceURLParsingError)))
 			Expect(err).To(MatchError(ContainSubstring("first path segment in URL cannot contain colon")))
@@ -106,7 +106,7 @@ var _ = Describe("Collector", func() {
 
 		It("returns an error if fetching the UAA token fails", func() {
 			cfApiClient.GetUAAURLReturns("", errors.New("getting UAA URL is hard"))
-			_, err := collector.Collect()
+			_, err := dataCollector.Collect()
 
 			Expect(err).To(MatchError(ContainSubstring(GetUAAURLError)))
 			Expect(err).To(MatchError(ContainSubstring("getting UAA URL is hard")))
@@ -117,7 +117,7 @@ var _ = Describe("Collector", func() {
 				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
 				w.WriteHeader(http.StatusMovedPermanently)
 			})
-			_, err := collector.Collect()
+			_, err := dataCollector.Collect()
 
 			Expect(err).To(MatchError(ContainSubstring("301 response missing Location header")))
 			Expect(err).To(MatchError(ContainSubstring(UsageServiceRequestError)))
@@ -128,7 +128,7 @@ var _ = Describe("Collector", func() {
 				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
 				w.WriteHeader(http.StatusInternalServerError)
 			})
-			_, err := collector.Collect()
+			_, err := dataCollector.Collect()
 
 			Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(UsageServiceUnexpectedResponseStatusErrorFormat, 500, AppUsagesReportName))))
 		})
@@ -138,7 +138,7 @@ var _ = Describe("Collector", func() {
 				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
 				w.WriteHeader(http.StatusMovedPermanently)
 			})
-			_, err := collector.Collect()
+			_, err := dataCollector.Collect()
 
 			Expect(err).To(MatchError(ContainSubstring("301 response missing Location header")))
 			Expect(err).To(MatchError(ContainSubstring(UsageServiceRequestError)))
@@ -149,7 +149,7 @@ var _ = Describe("Collector", func() {
 				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
 				w.WriteHeader(http.StatusInternalServerError)
 			})
-			_, err := collector.Collect()
+			_, err := dataCollector.Collect()
 
 			Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(UsageServiceUnexpectedResponseStatusErrorFormat, 500, ServiceUsagesReportName))))
 		})
@@ -159,7 +159,7 @@ var _ = Describe("Collector", func() {
 				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
 				w.WriteHeader(http.StatusMovedPermanently)
 			})
-			_, err := collector.Collect()
+			_, err := dataCollector.Collect()
 
 			Expect(err).To(MatchError(ContainSubstring("301 response missing Location header")))
 			Expect(err).To(MatchError(ContainSubstring(UsageServiceRequestError)))
@@ -170,7 +170,7 @@ var _ = Describe("Collector", func() {
 				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
 				w.WriteHeader(http.StatusInternalServerError)
 			})
-			_, err := collector.Collect()
+			_, err := dataCollector.Collect()
 
 			Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(UsageServiceUnexpectedResponseStatusErrorFormat, 500, TaskUsagesReportName))))
 		})
