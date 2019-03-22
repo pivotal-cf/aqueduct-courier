@@ -131,7 +131,7 @@ var _ = Describe("Collect", func() {
 
 			tarFilePath := validatedTarFilePath(outputDirPath)
 			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
-			assertLogging(session, tarFilePath, defaultEnvVars[cmd.OpsManagerURLKey], "","")
+			assertLogging(session, tarFilePath, false, false)
 		})
 
 		It("succeeds with flag configuration", func() {
@@ -152,7 +152,7 @@ var _ = Describe("Collect", func() {
 			Eventually(session).Should(gexec.Exit(0))
 			tarFilePath := validatedTarFilePath(outputDirPath)
 			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
-			assertLogging(session, tarFilePath, flagValues[cmd.OpsManagerURLFlag], "","")
+			assertLogging(session, tarFilePath, false, false)
 		})
 	})
 
@@ -170,7 +170,7 @@ var _ = Describe("Collect", func() {
 
 			tarFilePath := validatedTarFilePath(outputDirPath)
 			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
-			assertLogging(session, tarFilePath, defaultEnvVars[cmd.OpsManagerURLKey], "","")
+			assertLogging(session, tarFilePath, false, false)
 		})
 
 		It("succeeds with flag configuration", func() {
@@ -191,7 +191,7 @@ var _ = Describe("Collect", func() {
 			Eventually(session).Should(gexec.Exit(0))
 			tarFilePath := validatedTarFilePath(outputDirPath)
 			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
-			assertLogging(session, tarFilePath, flagValues[cmd.OpsManagerURLFlag], "","")
+			assertLogging(session, tarFilePath, false, false)
 		})
 	})
 
@@ -319,7 +319,7 @@ var _ = Describe("Collect", func() {
 			tarFilePath := validatedTarFilePath(outputDirPath)
 			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
 			assertValidOutput(tarFilePath, data.UsageServiceCollectorDataSetId, "app_usage", "development")
-			assertLogging(session, tarFilePath, defaultEnvVars[cmd.OpsManagerURLFlag], "",usageService.URL())
+			assertLogging(session, tarFilePath, false, true)
 		})
 
 		It("succeeds with flag configuration", func() {
@@ -348,7 +348,38 @@ var _ = Describe("Collect", func() {
 			tarFilePath := validatedTarFilePath(outputDirPath)
 			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
 			assertValidOutput(tarFilePath, data.UsageServiceCollectorDataSetId, "app_usage", "development")
-			assertLogging(session, tarFilePath, flagValues[cmd.OpsManagerURLFlag], "",usageService.URL())
+			assertLogging(session, tarFilePath, false, true)
+		})
+
+		It("fails if the usage service URL is invalid", func() {
+			defaultEnvVars[cmd.UsageServiceURLKey] = "-a:bad-url"
+			defaultEnvVars[cmd.CfApiURLKey] = cfService.URL()
+			defaultEnvVars[cmd.UsageServiceClientIDKey] = "best-usage-service-client-id"
+			defaultEnvVars[cmd.UsageServiceClientSecretKey] = "best-usage-service-client-secret"
+			defaultEnvVars[cmd.UsageServiceSkipTlsVerifyKey] = "true"
+			command := buildDefaultCommand(defaultEnvVars)
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(1))
+			Expect(session.Err).To(gbytes.Say(cmd.UsageServiceURLParsingError))
+			Expect(session.Err).NotTo(gbytes.Say("Usage:"))
+		})
+
+		It("fails if getting the UAA URL fails", func() {
+			cfService.RouteToHandler(http.MethodGet, "/v2/info", func(w http.ResponseWriter, req *http.Request) {
+				w.WriteHeader(500)
+			})
+
+			defaultEnvVars[cmd.UsageServiceURLKey] = usageService.URL()
+			defaultEnvVars[cmd.CfApiURLKey] = cfService.URL()
+			defaultEnvVars[cmd.UsageServiceClientIDKey] = "best-usage-service-client-id"
+			defaultEnvVars[cmd.UsageServiceClientSecretKey] = "best-usage-service-client-secret"
+			defaultEnvVars[cmd.UsageServiceSkipTlsVerifyKey] = "true"
+			command := buildDefaultCommand(defaultEnvVars)
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(1))
+			Expect(session.Err).To(gbytes.Say(cmd.GetUAAURLError))
 		})
 
 		DescribeTable(
@@ -437,7 +468,7 @@ var _ = Describe("Collect", func() {
 			Eventually(session).Should(gexec.Exit(0))
 			tarFilePath := validatedTarFilePath(outputDirPath)
 			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "p-bosh_certificates", "development")
-			assertLogging(session, tarFilePath, defaultEnvVars[cmd.OpsManagerURLKey], credhubServer.URL(),"")
+			assertLogging(session, tarFilePath, true, false)
 		})
 
 		It("collects information from credhub as well as ops manager with env variable configuration", func() {
@@ -449,7 +480,7 @@ var _ = Describe("Collect", func() {
 			Eventually(session).Should(gexec.Exit(0))
 			tarFilePath := validatedTarFilePath(outputDirPath)
 			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "p-bosh_certificates", "development")
-			assertLogging(session, tarFilePath, defaultEnvVars[cmd.OpsManagerURLKey], credhubServer.URL(),"")
+			assertLogging(session, tarFilePath, true, false)
 		})
 
 		It("errors if fetching credentials for credhub auth fails", func() {
@@ -531,6 +562,7 @@ var _ = Describe("Collect", func() {
 			w.WriteHeader(500)
 		})
 		defer failingServer.Close()
+
 		defaultEnvVars[cmd.OpsManagerURLKey] = failingServer.URL()
 		command := buildDefaultCommand(defaultEnvVars)
 		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
@@ -593,15 +625,15 @@ func assertValidOutput(tarFilePath, dataSetType, filename, envType string) {
 	assertMetadataFileIsCorrect(tmpDir, envType, dataSetType)
 }
 
-func assertLogging(session *gexec.Session, tarFilePath, opsManagerURL, credHubURL,usageServiceURL string) {
-    Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Collecting data from Operations Manager at %s", opsManagerURL)))
-	if credHubURL != "" {
-		Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Collecting data from CredHub at %s", credHubURL)))
+func assertLogging(session *gexec.Session, tarFilePath string, credHubEnabled, usageServiceEnabled bool) {
+	Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Collecting data from Operations Manager")))
+	if credHubEnabled {
+		Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Collecting data from CredHub")))
 	}
-	if usageServiceURL != "" {
-		Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Collecting data from Usage Service at %s", usageServiceURL)))
+	if usageServiceEnabled {
+		Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Collecting data from Usage Service")))
 	}
-    Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Wrote output to %s\n", escapeWindowsPathRegex(tarFilePath))))
+	Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Wrote output to %s\n", escapeWindowsPathRegex(tarFilePath))))
 	Expect(session.Out).To(gbytes.Say("Success!\n"))
 }
 

@@ -1,24 +1,29 @@
 package credhub_test
 
 import (
+	"log"
+	"strings"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 	. "github.com/pivotal-cf/aqueduct-courier/credhub"
 	"github.com/pivotal-cf/aqueduct-courier/credhub/credhubfakes"
 	"github.com/pkg/errors"
-	"log"
-	"strings"
 )
 
 var _ = Describe("DataCollector", func() {
 
 	var (
-		logger *log.Logger
-		credHubURL string
+		logger         *log.Logger
+		bufferedOutput *gbytes.Buffer
+		credHubURL     string
 	)
 
-	BeforeEach(func(){
-		logger = log.New(GinkgoWriter, "", 0)
+	BeforeEach(func() {
+		bufferedOutput = gbytes.NewBuffer()
+		logger = log.New(bufferedOutput, "", 0)
+		credHubURL = "some-credhub-url"
 	})
 
 	It("returns data using the credhub service", func() {
@@ -29,7 +34,7 @@ var _ = Describe("DataCollector", func() {
 
 		data, err := collector.Collect()
 		Expect(err).NotTo(HaveOccurred())
-
+		Expect(bufferedOutput).To(gbytes.Say("Collecting data from CredHub at some-credhub-url"))
 		Expect(data).To(Equal(NewData(certificatesReader)))
 	})
 
@@ -42,5 +47,4 @@ var _ = Describe("DataCollector", func() {
 		Expect(err).To(HaveOccurred())
 		Expect(err).To(MatchError("collecting certificates is hard"))
 	})
-
 })

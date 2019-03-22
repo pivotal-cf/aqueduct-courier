@@ -6,6 +6,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/onsi/gomega/gbytes"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-cf/aqueduct-courier/opsmanager/opsmanagerfakes"
@@ -19,9 +21,10 @@ import (
 
 var _ = Describe("DataCollector", func() {
 	var (
-		logger *log.Logger
+		logger                 *log.Logger
+		bufferedOutput         *gbytes.Buffer
 		omService              *opsmanagerfakes.FakeOmService
-		omURL string
+		omURL                  string
 		pendingChangesLister   *opsmanagerfakes.FakePendingChangesLister
 		deployedProductsLister *opsmanagerfakes.FakeDeployedProductsLister
 
@@ -29,7 +32,8 @@ var _ = Describe("DataCollector", func() {
 	)
 
 	BeforeEach(func() {
-		logger = log.New(GinkgoWriter, "", 0)
+		bufferedOutput = gbytes.NewBuffer()
+		logger = log.New(bufferedOutput, "", 0)
 		omService = new(opsmanagerfakes.FakeOmService)
 		omURL = "some-opsmanager-url"
 		pendingChangesLister = new(opsmanagerfakes.FakePendingChangesLister)
@@ -168,6 +172,7 @@ var _ = Describe("DataCollector", func() {
 
 		collectedData, foundationId, err := dataCollector.Collect()
 		Expect(err).ToNot(HaveOccurred())
+		Expect(bufferedOutput).To(gbytes.Say("Collecting data from Operations Manager at some-opsmanager-url"))
 		Expect(foundationId).To(Equal("p-bosh-always-first"))
 		Expect(collectedData).To(ConsistOf(
 			NewData(

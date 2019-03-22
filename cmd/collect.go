@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -73,6 +74,8 @@ const (
 	InvalidAuthConfigurationMessage  = "Invalid auth configuration. Requires username/password or client/secret to be set."
 	InvalidUsageConfigurationMessage = "Not all usage service configurations provided."
 	CreateTarFileFailureFormat       = "Could not create tar file %s"
+	UsageServiceURLParsingError      = "error parsing Usage Service URL"
+	GetUAAURLError                   = "error getting UAA URL"
 )
 
 var collectCmd = &cobra.Command{
@@ -225,13 +228,34 @@ func makeConsumptionCollector() (consumptionDataCollector, error) {
 
 		client := network.NewClient(viper.GetBool(UsageServiceSkipTlsVerifyFlag))
 		cfApiClient := cf.NewClient(viper.GetString(CfApiURLFlag), client)
-		consumptionCollector := consumption.NewDataCollector(
-			*logger,
-			cfApiClient,
-			client,
-			viper.GetString(UsageServiceURLFlag),
+
+		usageURL, err := url.Parse(viper.GetString(UsageServiceURLFlag))
+		if err != nil {
+			return nil, errors.New(UsageServiceURLParsingError)
+		}
+
+		uaaURL, err := cfApiClient.GetUAAURL()
+		if err != nil {
+			return nil, errors.New(GetUAAURLError)
+		}
+
+		authedClient := cf.NewOAuthClient(
+			uaaURL,
 			viper.GetString(UsageServiceClientIDFlag),
 			viper.GetString(UsageServiceClientSecretFlag),
+			5*time.Second,
+			client,
+		)
+
+		consumptionService := &consumption.Service{
+			BaseURL: usageURL,
+			Client: authedClient,
+		}
+
+		consumptionCollector := consumption.NewDataCollector(
+			*logger,
+			consumptionService,
+			viper.GetString(UsageServiceURLFlag),
 		)
 
 		return consumptionCollector, nil
