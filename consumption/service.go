@@ -1,12 +1,16 @@
 package consumption
 
 import (
-	"github.com/pivotal-cf/aqueduct-courier/cf"
-	"github.com/pkg/errors"
+	"bytes"
+	"encoding/json"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"path"
+
+	"github.com/pivotal-cf/aqueduct-courier/cf"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -18,17 +22,60 @@ const (
 	UsageServiceRequestError                        = "error accessing usage service"
 	UsageServiceUnexpectedResponseStatusErrorFormat = "unexpected status %d when accessing usage service: %s"
 
-	AppUsagesRequestError = "error retrieving app usages data"
+	AppUsagesRequestError     = "error retrieving app usages data"
 	ServiceUsagesRequestError = "error retrieving service usages data"
-	TaskUsagesRequestError ="error retrieving task usages data"
+	TaskUsagesRequestError    = "error retrieving task usages data"
+	UnmarshalResponseError    = "error unmarshalling response"
+	ReadResponseError         = "error reading response"
 )
+
+//go:generate counterfeiter . httpClient
+type httpClient interface {
+	Do(*http.Request) (*http.Response, error)
+}
 
 type Service struct {
 	BaseURL *url.URL
-	Client cf.OAuthClient
+	Client  cf.OAuthClient
 }
 
-func(s *Service) AppUsages() (io.Reader, error) {
+type usage struct {
+	Month            int     `json:"month"`
+	Year             int     `json:"year"`
+	DurationInHours  float64 `json:"duration_in_hours"`
+	AverageInstances float64 `json:"average_instances"`
+	MaximumInstances float64 `json:"maximum_instances"`
+}
+
+type serviceReport struct {
+	ReportTime            string `json:"report_time"`
+	MonthlyServiceReports []struct {
+		ServiceName string  `json:"service_name"`
+		ServiceGUID string  `json:"service_guid"`
+		Usages      []usage `json:"usages"`
+		Plans       []struct {
+			Usages          []usage `json:"usages"`
+			ServicePlanGUID string  `json:"service_plan_guid"`
+		} `json:"plans"`
+	} `json:"monthly_service_reports"`
+	YearlyServiceReport []struct {
+		ServiceName      string  `json:"service_name"`
+		ServiceGUID      string  `json:"service_guid"`
+		Year             int     `json:"year"`
+		DurationInHours  float64 `json:"duration_in_hours"`
+		MaximumInstances float64 `json:"maximum_instances"`
+		AverageInstances float64 `json:"average_instances"`
+		Plans            []struct {
+			Year             int     `json:"year"`
+			ServicePlanGUID  string  `json:"service_plan_guid"`
+			DurationInHours  float64 `json:"duration_in_hours"`
+			MaximumInstances float64 `json:"maximum_instances"`
+			AverageInstances float64 `json:"average_instances"`
+		} `json:"plans"`
+	} `json:"yearly_service_report"`
+}
+
+func (s *Service) AppUsages() (io.Reader, error) {
 	respBody, err := s.makeRequest(AppUsagesReportName)
 	if err != nil {
 		return nil, errors.Wrap(err, AppUsagesRequestError)
@@ -36,15 +83,30 @@ func(s *Service) AppUsages() (io.Reader, error) {
 	return respBody, nil
 }
 
-func(s *Service) ServiceUsages() (io.Reader, error) {
+func (s *Service) ServiceUsages() (io.Reader, error) {
 	respBody, err := s.makeRequest(ServiceUsagesReportName)
 	if err != nil {
 		return nil, errors.Wrap(err, ServiceUsagesRequestError)
 	}
-	return respBody, nil
+
+	contents, err := ioutil.ReadAll(respBody)
+	if err != nil {
+		return nil, errors.Wrapf(err, ReadResponseError)
+	}
+
+	var sReport serviceReport
+	if err := json.Unmarshal(contents, &sReport); err != nil {
+		return nil, errors.Wrapf(err, UnmarshalResponseError)
+	}
+
+	redactedContent, err := json.Marshal(sReport)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(redactedContent), nil
 }
 
-func(s *Service) TaskUsages() (io.Reader, error) {
+func (s *Service) TaskUsages() (io.Reader, error) {
 	respBody, err := s.makeRequest(TaskUsagesReportName)
 	if err != nil {
 		return nil, errors.Wrap(err, TaskUsagesRequestError)

@@ -77,7 +77,7 @@ func (s *Service) Installations() (io.Reader, error) {
 	}
 
 	var i installations
-	if err := json.Unmarshal([]byte(contents), &i); err != nil {
+	if err := json.Unmarshal(contents, &i); err != nil {
 		return nil, errors.Wrapf(err, InvalidResponseErrorFormat, InstallationsPath)
 	}
 	for _, installation := range i.Installations {
@@ -104,7 +104,7 @@ func (s *Service) CertificateAuthorities() (io.Reader, error) {
 	}
 
 	var ca certificateAuthorities
-	if err := json.Unmarshal([]byte(contents), &ca); err != nil {
+	if err := json.Unmarshal(contents, &ca); err != nil {
 		return nil, errors.Wrapf(err, InvalidResponseErrorFormat, CertificateAuthoritiesPath)
 	}
 	for _, certificateAuthority := range ca.CertificateAuthorities {
@@ -143,7 +143,7 @@ func (s *Service) ProductProperties(guid string) (io.Reader, error) {
 	}
 
 	var ps productProperties
-	if err := json.Unmarshal([]byte(contents), &ps); err != nil {
+	if err := json.Unmarshal(contents, &ps); err != nil {
 		return nil, errors.Wrapf(err, InvalidResponseErrorFormat, productPropertiesPath)
 	}
 	for propertyName, property := range ps.Properties {

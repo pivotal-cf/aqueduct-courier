@@ -338,6 +338,7 @@ var _ = Describe("Service", func() {
 			Expect(err).NotTo(HaveOccurred())
 			actualContent, err := ioutil.ReadAll(actual)
 			Expect(err).NotTo(HaveOccurred())
+
 			Expect(string(actualContent)).To(Equal(`{"installations":[{"other":42},{"other":24}]}`))
 			Expect(requestor.CurlCallCount()).To(Equal(1))
 			input := requestor.CurlArgsForCall(0)
