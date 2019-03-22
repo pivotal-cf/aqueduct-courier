@@ -18,7 +18,7 @@ const (
 	ApiKeyFlag          = "api-key"
 	ApiKeyKey           = "API_KEY"
 
-	SendFailureMessage = "Failed to send data"
+	SendFailureMessage      = "Failed to send data"
 	FileNotFoundErrorFormat = "File not found at: %s"
 )
 
@@ -43,12 +43,14 @@ func init() {
       Send data to Pivotal:
       telemetry-collector send --api-key --path`
 
-	customHelpTextTemplate := fmt.Sprintf(`Sends specified file to Pivotal's secure data store at %s
+	customHelpTextTemplate := fmt.Sprintf(`
+Sends specified file to Pivotal's secure data store at %s
 
 USAGE EXAMPLES
 {{.Example}}
 
 FLAGS
+
 {{.LocalFlags.FlagUsages}}`, dataLoaderURL)
 
 	sendCmd.SetHelpTemplate(customHelpTextTemplate)
@@ -65,7 +67,7 @@ func send(c *cobra.Command, _ []string) error {
 	sender := operations.SendExecutor{}
 	tarFile, err := os.Open(viper.GetString(DataTarFilePathFlag))
 	if err != nil {
-		return errors.New(fmt.Sprintf(FileNotFoundErrorFormat,viper.GetString(DataTarFilePathFlag)))
+		return errors.New(fmt.Sprintf(FileNotFoundErrorFormat, viper.GetString(DataTarFilePathFlag)))
 	}
 
 	logger.Printf("Sending %s to Pivotal at %s\n", viper.GetString(DataTarFilePathFlag), dataLoaderURL)

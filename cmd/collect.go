@@ -126,6 +126,7 @@ USAGE EXAMPLES
 {{.Example}}
 
 FLAGS
+
 {{.LocalFlags.FlagUsages}}`
 	collectCmd.SetHelpTemplate(customHelpTextTemplate)
 	rootCmd.AddCommand(collectCmd)
@@ -249,7 +250,7 @@ func makeConsumptionCollector() (consumptionDataCollector, error) {
 
 		consumptionService := &consumption.Service{
 			BaseURL: usageURL,
-			Client: authedClient,
+			Client:  authedClient,
 		}
 
 		consumptionCollector := consumption.NewDataCollector(
@@ -273,7 +274,7 @@ func makeCredhubCollector(omService *opsmanager.Service, credhubCollectionEnable
 		if err != nil {
 			return nil, err
 		}
-		credHubURL := "https://"+chCreds.Host+":8844"
+		credHubURL := "https://" + chCreds.Host + ":8844"
 		requestor, err := ogCredhub.New(
 			credHubURL,
 			ogCredhub.SkipTLSValidation(true),

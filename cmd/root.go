@@ -18,7 +18,7 @@ const (
 
 var (
 	version = "dev"
-	logger *log.Logger
+	logger  *log.Logger
 	rootCmd = &cobra.Command{
 		Use:   toolName,
 		Short: "Utility for collecting information about a PCF Foundation",
@@ -31,6 +31,28 @@ func Execute() {
 
 	rootCmd.Flags().BoolP("help", "h", false, fmt.Sprintf("Help for %s", toolName))
 	rootCmd.Flags().BoolP("version", "v", false, fmt.Sprintf("Version for %s", toolName))
+
+	rootCmd.Example = `
+  "telemetry-collector [command]" executes a command
+  "telemetry-collector [command] --help" shows information about a command`
+
+	customHelpTextTemplate := `
+Utility for collecting information about a PCF foundation
+
+USAGE EXAMPLES
+{{.Example}}
+
+COMMANDS
+
+  collect     Collects information from a PCF foundation
+  send        Sends information to Pivotal
+  help        Shows help about any command
+
+FLAGS
+
+{{.LocalFlags.FlagUsages}}`
+	rootCmd.SetHelpTemplate(customHelpTextTemplate)
+
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
