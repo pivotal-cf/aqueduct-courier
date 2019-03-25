@@ -1,122 +1,84 @@
 package consumption_test
 
 import (
-	"encoding/base64"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"time"
+	"path"
+
+	"github.com/pkg/errors"
+
+	"github.com/pivotal-cf/aqueduct-courier/consumption/consumptionfakes"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/ghttp"
-	"github.com/pivotal-cf/aqueduct-courier/cf"
 	. "github.com/pivotal-cf/aqueduct-courier/consumption"
 )
 
 var _ = Describe("Service", func() {
 	var (
-		service      *Service
-		usageService *ghttp.Server
-		uaaService   *ghttp.Server
-		authClient   cf.OAuthClient
+		service    *Service
+		fakeClient *consumptionfakes.FakeHttpClient
+		usageURL   *url.URL
 	)
 
 	BeforeEach(func() {
-		usageService = ghttp.NewServer()
-		uaaService = ghttp.NewServer()
+		var err error
+		fakeClient = new(consumptionfakes.FakeHttpClient)
 
-		uaaService.RouteToHandler(http.MethodPost, "/oauth/token", func(w http.ResponseWriter, req *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
-
-			credentialBytes := []byte("best-usage-service-client-id:best-usage-service-client-secret")
-
-			base64credentials := base64.StdEncoding.EncodeToString(credentialBytes)
-			Expect(req.Header.Get("authorization")).To(Equal("Basic " + base64credentials))
-
-			w.Write([]byte(`{
-						"access_token": "some-uaa-token",
-						"token_type": "bearer",
-						"expires_in": 3600
-						}`))
-		})
-
-		authClient = cf.NewOAuthClient(
-			uaaService.URL(),
-			"best-usage-service-client-id",
-			"best-usage-service-client-secret",
-			5*time.Second,
-			http.DefaultClient,
-		)
-
-		usageURL, err := url.Parse(usageService.URL())
+		usageHost := "http://usage.example.com/supposedprefix/"
+		usageURL, err = url.Parse(usageHost)
 		Expect(err).To(Not(HaveOccurred()))
+
 		service = &Service{
 			BaseURL: usageURL,
-			Client:  authClient,
+			Client:  fakeClient,
 		}
 	})
 
-	AfterEach(func() {
-		uaaService.Close()
-		usageService.Close()
-	})
-
 	Describe("App Usages", func() {
-		BeforeEach(func() {
-			usageService.RouteToHandler(http.MethodGet, "/system_report/app_usages", func(w http.ResponseWriter, req *http.Request) {
-				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
-				w.WriteHeader(http.StatusOK)
-				w.Write([]byte(`successful app usage content`))
-			})
-		})
-
 		It("returns app usage content", func() {
-			expectedBody := []byte(`successful app usage content`)
+			body := ioutil.NopCloser(bytes.NewReader([]byte(`successful app usage content`)))
+			appUsagesResponse := &http.Response{Body: body, StatusCode: http.StatusOK}
+			fakeClient.DoReturns(appUsagesResponse, nil)
 
+			expectedBody := []byte(`successful app usage content`)
 			respBody, err := service.AppUsages()
 			Expect(err).NotTo(HaveOccurred())
+
+			Expect(fakeClient.DoCallCount()).To(Equal(1))
+			req := fakeClient.DoArgsForCall(0)
+
+			usageURL.Path = path.Join(usageURL.Path, SystemReportPathPrefix, AppUsagesReportName)
+			Expect(req.URL).To(Equal(usageURL))
+
 			actualBytes, err := ioutil.ReadAll(respBody)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(actualBytes).To(Equal(expectedBody))
 		})
 
 		It("errors when the request to the usage service fails", func() {
-			usageService.RouteToHandler(http.MethodGet, "/system_report/app_usages", func(w http.ResponseWriter, req *http.Request) {
-				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
-				w.WriteHeader(http.StatusMovedPermanently)
-			})
+			fakeClient.DoReturns(nil, errors.New("requesting things is hard"))
 			_, err := service.AppUsages()
-			Expect(err).To(MatchError(ContainSubstring("301 response missing Location header")))
+
+			Expect(err).To(MatchError(ContainSubstring("requesting things is hard")))
 			Expect(err).To(MatchError(ContainSubstring(UsageServiceRequestError)))
 		})
 
 		It("errors when the usage service returns an unexpected response", func() {
-			usageService.RouteToHandler(http.MethodGet, "/system_report/app_usages", func(w http.ResponseWriter, req *http.Request) {
-				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
-				w.WriteHeader(http.StatusInternalServerError)
-			})
+			badStatusResponse := &http.Response{Body: nil, StatusCode: http.StatusInternalServerError}
+			fakeClient.DoReturns(badStatusResponse, nil)
 			_, err := service.AppUsages()
+
 			Expect(err).To(MatchError(ContainSubstring(AppUsagesRequestError)))
 			Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(UsageServiceUnexpectedResponseStatusErrorFormat, http.StatusInternalServerError, AppUsagesReportName))))
 		})
 	})
 
 	Describe("Service Usages", func() {
-		BeforeEach(func() {
-			usageService.RouteToHandler(http.MethodGet, "/system_report/service_usages", func(w http.ResponseWriter, req *http.Request) {
-				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
-				w.WriteHeader(http.StatusOK)
-				w.Write([]byte(`{"monthly_service_reports":[{"plans":[{"service_plan_name":"cool-name"}]}]}`))
-			})
-		})
-
-		AfterEach(func() {
-			usageService.Close()
-		})
-
 		It("removes service plan names from monthly and yearly service usage contents and returns the rest", func() {
 			reportsJson := []byte(`{
   "report_time": "2017-05-11",
@@ -169,14 +131,19 @@ var _ = Describe("Service", func() {
     }
   ]
 }`)
-			usageService.RouteToHandler(http.MethodGet, "/system_report/service_usages", func(w http.ResponseWriter, req *http.Request) {
-				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
-				w.WriteHeader(http.StatusOK)
-				w.Write(reportsJson)
-			})
+			body := ioutil.NopCloser(bytes.NewReader(reportsJson))
+			serviceUsagesResponse := &http.Response{Body: body, StatusCode: http.StatusOK}
+			fakeClient.DoReturns(serviceUsagesResponse, nil)
 
 			respBody, err := service.ServiceUsages()
 			Expect(err).NotTo(HaveOccurred())
+
+			Expect(fakeClient.DoCallCount()).To(Equal(1))
+			req := fakeClient.DoArgsForCall(0)
+
+			usageURL.Path = path.Join(usageURL.Path, SystemReportPathPrefix, ServiceUsagesReportName)
+			Expect(req.URL).To(Equal(usageURL))
+
 			actualContent, err := ioutil.ReadAll(respBody)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -239,60 +206,58 @@ var _ = Describe("Service", func() {
 		})
 
 		It("errors when the request to the usage service fails", func() {
-			usageService.RouteToHandler(http.MethodGet, "/system_report/service_usages", func(w http.ResponseWriter, req *http.Request) {
-				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
-				w.WriteHeader(http.StatusMovedPermanently)
-			})
+			fakeClient.DoReturns(nil, errors.New("requesting things is hard"))
 			_, err := service.ServiceUsages()
-			Expect(err).To(MatchError(ContainSubstring("301 response missing Location header")))
+
+			Expect(err).To(MatchError(ContainSubstring("requesting things is hard")))
 			Expect(err).To(MatchError(ContainSubstring(UsageServiceRequestError)))
 		})
 
 		It("errors when the usage service returns an unexpected response", func() {
-			usageService.RouteToHandler(http.MethodGet, "/system_report/service_usages", func(w http.ResponseWriter, req *http.Request) {
-				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
-				w.WriteHeader(http.StatusInternalServerError)
-			})
+			badStatusResponse := &http.Response{Body: nil, StatusCode: http.StatusInternalServerError}
+			fakeClient.DoReturns(badStatusResponse, nil)
 			_, err := service.ServiceUsages()
+
 			Expect(err).To(MatchError(ContainSubstring(ServiceUsagesRequestError)))
 			Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(UsageServiceUnexpectedResponseStatusErrorFormat, http.StatusInternalServerError, ServiceUsagesReportName))))
 		})
 
-		PIt("errors if the contents cannot be read from the response", func() {
-			usageService.RouteToHandler(http.MethodGet, "/system_report/service_usages", func(w http.ResponseWriter, req *http.Request) {
-				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
-				w.WriteHeader(http.StatusOK)
-				w.Write([]byte(`{}`))
-			})
+		It("errors if the contents cannot be read from the response", func() {
+			body := ioutil.NopCloser(&badReader{})
+			badReaderResponse := &http.Response{Body: body, StatusCode: http.StatusOK}
+			fakeClient.DoReturns(badReaderResponse, nil)
+
 			_, err := service.ServiceUsages()
 			Expect(err).To(MatchError(ContainSubstring(ReadResponseError)))
+			Expect(err).To(MatchError(ContainSubstring("bad-reader")))
 		})
 
 		It("errors if the contents are not json", func() {
-			usageService.RouteToHandler(http.MethodGet, "/system_report/service_usages", func(w http.ResponseWriter, req *http.Request) {
-				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
-				w.WriteHeader(http.StatusOK)
-				w.Write([]byte(`not-valid-json`))
-			})
+			body := ioutil.NopCloser(bytes.NewReader([]byte(`not-good-json`)))
+			badJSONResponse := &http.Response{Body: body, StatusCode: http.StatusOK}
+			fakeClient.DoReturns(badJSONResponse, nil)
+
 			_, err := service.ServiceUsages()
 			Expect(err).To(MatchError(ContainSubstring(UnmarshalResponseError)))
 		})
 	})
 
 	Describe("Task Usages", func() {
-		BeforeEach(func() {
-			usageService.RouteToHandler(http.MethodGet, "/system_report/task_usages", func(w http.ResponseWriter, req *http.Request) {
-				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
-				w.WriteHeader(http.StatusOK)
-				w.Write([]byte(`successful task usage content`))
-			})
-		})
-
 		It("returns task usage content", func() {
+			body := ioutil.NopCloser(bytes.NewReader([]byte(`successful task usage content`)))
+			appUsagesResponse := &http.Response{Body: body, StatusCode: http.StatusOK}
+			fakeClient.DoReturns(appUsagesResponse, nil)
+
 			expectedBody := []byte(`successful task usage content`)
 
 			respBody, err := service.TaskUsages()
 			Expect(err).NotTo(HaveOccurred())
+
+			Expect(fakeClient.DoCallCount()).To(Equal(1))
+			req := fakeClient.DoArgsForCall(0)
+
+			usageURL.Path = path.Join(usageURL.Path, SystemReportPathPrefix, TaskUsagesReportName)
+			Expect(req.URL).To(Equal(usageURL))
 
 			actualBytes, err := ioutil.ReadAll(respBody)
 			Expect(err).NotTo(HaveOccurred())
@@ -300,23 +265,26 @@ var _ = Describe("Service", func() {
 		})
 
 		It("errors when the request to the usage service fails", func() {
-			usageService.RouteToHandler(http.MethodGet, "/system_report/task_usages", func(w http.ResponseWriter, req *http.Request) {
-				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
-				w.WriteHeader(http.StatusMovedPermanently)
-			})
+			fakeClient.DoReturns(nil, errors.New("requesting things is hard"))
 			_, err := service.TaskUsages()
-			Expect(err).To(MatchError(ContainSubstring("301 response missing Location header")))
+
+			Expect(err).To(MatchError(ContainSubstring("requesting things is hard")))
 			Expect(err).To(MatchError(ContainSubstring(UsageServiceRequestError)))
 		})
 
 		It("errors when the usage service returns an unexpected response", func() {
-			usageService.RouteToHandler(http.MethodGet, "/system_report/task_usages", func(w http.ResponseWriter, req *http.Request) {
-				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
-				w.WriteHeader(http.StatusInternalServerError)
-			})
+			badStatusResponse := &http.Response{Body: nil, StatusCode: http.StatusInternalServerError}
+			fakeClient.DoReturns(badStatusResponse, nil)
 			_, err := service.TaskUsages()
+
 			Expect(err).To(MatchError(ContainSubstring(TaskUsagesRequestError)))
 			Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(UsageServiceUnexpectedResponseStatusErrorFormat, http.StatusInternalServerError, TaskUsagesReportName))))
 		})
 	})
 })
+
+type badReader struct{}
+
+func (b *badReader) Read([]byte) (int, error) {
+	return 0, errors.New("bad-reader")
+}

@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"path"
 
-	"github.com/pivotal-cf/aqueduct-courier/cf"
 	"github.com/pkg/errors"
 )
 
@@ -36,7 +35,7 @@ type httpClient interface {
 
 type Service struct {
 	BaseURL *url.URL
-	Client  cf.OAuthClient
+	Client  httpClient
 }
 
 type usage struct {
@@ -115,8 +114,9 @@ func (s *Service) TaskUsages() (io.Reader, error) {
 }
 
 func (s *Service) makeRequest(reportName string) (io.Reader, error) {
-	s.BaseURL.Path = path.Join(SystemReportPathPrefix, reportName)
-	req, err := http.NewRequest(http.MethodGet, s.BaseURL.String(), nil)
+	targetURL, _ := url.Parse(s.BaseURL.String())
+	targetURL.Path = path.Join(targetURL.Path, SystemReportPathPrefix, reportName)
+	req, err := http.NewRequest(http.MethodGet, targetURL.String(), nil)
 	if err != nil {
 		return nil, errors.Wrap(err, CreateUsageServiceHTTPRequestError)
 	}
