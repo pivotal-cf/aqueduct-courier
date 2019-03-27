@@ -63,6 +63,7 @@ const (
 	CfApiURLFlag                  = "cf-api-url"
 	UsageServiceSkipTlsVerifyFlag = "usage-service-insecure-skip-tls-verify"
 
+	EnvTypeSandbox       = "sandbox"
 	EnvTypeDevelopment   = "development"
 	EnvTypeQA            = "qa"
 	EnvTypePreProduction = "pre-production"
@@ -91,7 +92,7 @@ func init() {
 	bindFlagAndEnvVar(collectCmd, OpsManagerPasswordFlag, "", fmt.Sprintf("``Ops Manager password [$%s]", OpsManagerPasswordKey), OpsManagerPasswordKey)
 	bindFlagAndEnvVar(collectCmd, OpsManagerClientIdFlag, "", fmt.Sprintf("``Ops Manager client id [$%s]", OpsManagerClientIdKey), OpsManagerClientIdKey)
 	bindFlagAndEnvVar(collectCmd, OpsManagerClientSecretFlag, "", fmt.Sprintf("``Ops Manager client secret [$%s]", OpsManagerClientSecretKey), OpsManagerClientSecretKey)
-	bindFlagAndEnvVar(collectCmd, EnvTypeFlag, "", fmt.Sprintf("``Specify environment type (development, qa, pre-production, production) [$%s]", EnvTypeKey), EnvTypeKey)
+	bindFlagAndEnvVar(collectCmd, EnvTypeFlag, "", fmt.Sprintf("``Specify environment type (sandbox, development, qa, pre-production, production) [$%s]", EnvTypeKey), EnvTypeKey)
 	bindFlagAndEnvVar(collectCmd, OpsManagerTimeoutFlag, 30, fmt.Sprintf("Ops Manager http request timeout in seconds [$%s]", OpsManagerTimeoutKey), OpsManagerTimeoutKey)
 	bindFlagAndEnvVar(collectCmd, SkipTlsVerifyFlag, false, fmt.Sprintf("``Skip TLS validation on http requests to Ops Manager [$%s]\n", SkipTlsVerifyKey), SkipTlsVerifyKey)
 
@@ -206,7 +207,7 @@ func validateCredConfig() error {
 }
 
 func validateAndNormalizeEnvType() (string, error) {
-	validEnvTypes := []string{EnvTypeDevelopment, EnvTypeQA, EnvTypePreProduction, EnvTypeProduction}
+	validEnvTypes := []string{EnvTypeSandbox, EnvTypeDevelopment, EnvTypeQA, EnvTypePreProduction, EnvTypeProduction}
 	envType := strings.ToLower(viper.GetString(EnvTypeFlag))
 	for _, validType := range validEnvTypes {
 		if validType == envType {

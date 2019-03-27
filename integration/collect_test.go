@@ -94,6 +94,7 @@ var _ = Describe("Collect", func() {
 		Entry(cmd.EnvTypeQA, cmd.EnvTypeQA),
 		Entry(cmd.EnvTypePreProduction, cmd.EnvTypePreProduction),
 		Entry(cmd.EnvTypeProduction, cmd.EnvTypeProduction),
+		Entry(cmd.EnvTypeSandbox, cmd.EnvTypeSandbox),
 	)
 
 	DescribeTable(
