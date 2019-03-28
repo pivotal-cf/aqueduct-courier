@@ -112,7 +112,7 @@ var _ = Describe("Collect", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(1))
 			Eventually(session.Err).Should(gbytes.Say(cmd.InvalidAuthConfigurationMessage))
-			Expect(session.Err).To(gbytes.Say("Usage:"))
+			Expect(session.Err).To(gbytes.Say("USAGE EXAMPLES"))
 			assertOutputDirEmpty(outputDirPath)
 		},
 		Entry("none provided", cmd.OpsManagerUsernameKey, cmd.OpsManagerPasswordKey, cmd.OpsManagerClientIdKey, cmd.OpsManagerClientSecretKey),
@@ -228,7 +228,7 @@ var _ = Describe("Collect", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(1))
 			Eventually(session.Err).Should(gbytes.Say("Timeout exceeded"))
-			Expect(session.Err).NotTo(gbytes.Say("Usage:"))
+			Expect(session.Err).NotTo(gbytes.Say("USAGE EXAMPLES"))
 			assertOutputDirEmpty(outputDirPath)
 		})
 
@@ -249,7 +249,7 @@ var _ = Describe("Collect", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(1))
 			Eventually(session.Err).Should(gbytes.Say("Timeout exceeded"))
-			Expect(session.Err).NotTo(gbytes.Say("Usage:"))
+			Expect(session.Err).NotTo(gbytes.Say("USAGE EXAMPLES"))
 			assertOutputDirEmpty(outputDirPath)
 		})
 	})
@@ -363,7 +363,7 @@ var _ = Describe("Collect", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(1))
 			Expect(session.Err).To(gbytes.Say(cmd.UsageServiceURLParsingError))
-			Expect(session.Err).NotTo(gbytes.Say("Usage:"))
+			Expect(session.Err).NotTo(gbytes.Say("USAGE EXAMPLES"))
 		})
 
 		It("fails if getting the UAA URL fails", func() {
@@ -505,7 +505,7 @@ var _ = Describe("Collect", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(1))
 			Expect(session.Err).To(gbytes.Say("unexpected status"))
-			Expect(session.Err).NotTo(gbytes.Say("Usage:"))
+			Expect(session.Err).NotTo(gbytes.Say("USAGE EXAMPLES"))
 			assertOutputDirEmpty(outputDirPath)
 		})
 
@@ -530,7 +530,7 @@ var _ = Describe("Collect", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(1))
 			Expect(session.Err).To(gbytes.Say(cmd.CredhubClientError))
-			Expect(session.Err).NotTo(gbytes.Say("Usage:"))
+			Expect(session.Err).NotTo(gbytes.Say("USAGE EXAMPLES"))
 			assertOutputDirEmpty(outputDirPath)
 		})
 	})
@@ -542,7 +542,7 @@ var _ = Describe("Collect", func() {
 		Eventually(session).Should(gexec.Exit(1))
 		requiredFlags := []string{"--" + cmd.OpsManagerURLFlag, "--" + cmd.EnvTypeFlag, "--" + cmd.OutputPathFlag}
 		Expect(session.Err).To(gbytes.Say(fmt.Sprintf(cmd.RequiredConfigErrorFormat, strings.Join(requiredFlags, ", "))))
-		Expect(session.Err).To(gbytes.Say("Usage:"))
+		Expect(session.Err).To(gbytes.Say("USAGE EXAMPLES"))
 		assertOutputDirEmpty(outputDirPath)
 	})
 
@@ -553,7 +553,7 @@ var _ = Describe("Collect", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(session).Should(gexec.Exit(1))
 		Expect(session.Err).To(gbytes.Say(fmt.Sprintf(cmd.InvalidEnvTypeFailureFormat, "invalid-type")))
-		Expect(session.Err).To(gbytes.Say("Usage:"))
+		Expect(session.Err).To(gbytes.Say("USAGE EXAMPLES"))
 		assertOutputDirEmpty(outputDirPath)
 	})
 
@@ -570,7 +570,7 @@ var _ = Describe("Collect", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(session).Should(gexec.Exit(1))
 		Expect(session.Err).To(gbytes.Say(operations.OpsManagerCollectFailureMessage))
-		Expect(session.Err).NotTo(gbytes.Say("Usage:"))
+		Expect(session.Err).NotTo(gbytes.Say("USAGE EXAMPLES"))
 		assertOutputDirEmpty(outputDirPath)
 	})
 
@@ -581,7 +581,7 @@ var _ = Describe("Collect", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(session).Should(gexec.Exit(1))
 		Expect(session.Err).To(gbytes.Say(fmt.Sprintf(cmd.CreateTarFileFailureFormat, "")))
-		Expect(session.Err).NotTo(gbytes.Say("Usage:"))
+		Expect(session.Err).NotTo(gbytes.Say("USAGE EXAMPLES"))
 	})
 })
 

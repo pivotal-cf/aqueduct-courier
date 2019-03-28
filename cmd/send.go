@@ -36,24 +36,26 @@ func init() {
 	bindFlagAndEnvVar(sendCmd, DataTarFilePathFlag, "", fmt.Sprintf("``The path to the file with data from the 'collect' command [$%s]\n", DataTarFilePathKey), DataTarFilePathKey)
 
 	sendCmd.Flags().BoolP("help", "h", false, "Help for the send command\n")
-
 	sendCmd.Flags().SortFlags = false
 
 	sendCmd.Example = `
       Send data to Pivotal:
       telemetry-collector send --api-key --path`
 
-	customHelpTextTemplate := fmt.Sprintf(`
-Sends specified file to Pivotal's secure data store at %s
-
+	customUsageTextTemplate := `
 USAGE EXAMPLES
 {{.Example}}
 
 FLAGS
 
-{{.LocalFlags.FlagUsages}}`, dataLoaderURL)
+{{.LocalFlags.FlagUsages}}`
+
+	customHelpTextTemplate := fmt.Sprintf(`
+Sends specified file to Pivotal's secure data store at %s
+%s`, dataLoaderURL, customUsageTextTemplate)
 
 	sendCmd.SetHelpTemplate(customHelpTextTemplate)
+	sendCmd.SetUsageTemplate(customUsageTextTemplate)
 	rootCmd.AddCommand(sendCmd)
 }
 

@@ -106,7 +106,6 @@ func init() {
 	bindFlagAndEnvVar(collectCmd, OutputPathFlag, "", fmt.Sprintf("``Local directory to write data [$%s]\n", OutputPathKey), OutputPathKey)
 
 	collectCmd.Flags().BoolP("help", "h", false, "Help for the collect command\n")
-
 	collectCmd.Flags().SortFlags = false
 
 	collectCmd.Example = `
@@ -119,17 +118,21 @@ func init() {
       --client-secret] --usage-service-url --usage-service-client-id
       --usage-service-client-secret --cf-api-url --env-type --output-dir`
 
-	customHelpTextTemplate := `
-Collects information from a single Ops Manager (and optionally from
-Usage Service and/or Credhub) and outputs the content to the configured directory.
-
+	customUsageTextTemplate := `
 USAGE EXAMPLES
 {{.Example}}
 
 FLAGS
 
 {{.LocalFlags.FlagUsages}}`
+
+	customHelpTextTemplate := fmt.Sprintf(`
+Collects information from a single Ops Manager (and optionally from
+Usage Service and/or Credhub) and outputs the content to the configured directory.
+%s`, customUsageTextTemplate)
+
 	collectCmd.SetHelpTemplate(customHelpTextTemplate)
+	collectCmd.SetUsageTemplate(customUsageTextTemplate)
 	rootCmd.AddCommand(collectCmd)
 }
 

@@ -67,8 +67,8 @@ var _ = Describe("Send", func() {
 
 			dataLoader.RouteToHandler(http.MethodPost, operations.PostPath, ghttp.CombineHandlers(
 				ghttp.VerifyHeader(http.Header{
-					"Authorization": []string{fmt.Sprintf("Token %s", validApiKey)},
-					"Content-Type":  []string{operations.TarMimeType},
+					"Authorization":                           []string{fmt.Sprintf("Token %s", validApiKey)},
+					"Content-Type":                            []string{operations.TarMimeType},
 					operations.HTTPSenderVersionRequestHeader: []string{testVersion},
 				}),
 				ghttp.VerifyBody(srcContentBytes),
@@ -106,7 +106,7 @@ var _ = Describe("Send", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(session).Should(gexec.Exit(1))
 		Expect(session.Err).To(gbytes.Say(cmd.SendFailureMessage))
-		Expect(session.Err).NotTo(gbytes.Say("Usage:"))
+		Expect(session.Err).NotTo(gbytes.Say("USAGE EXAMPLES"))
 	})
 
 	It("fails if required flags have not been set", func() {
@@ -116,7 +116,7 @@ var _ = Describe("Send", func() {
 		Eventually(session).Should(gexec.Exit(1))
 		requiredFlags := []string{"--" + cmd.DataTarFilePathFlag, "--" + cmd.ApiKeyFlag}
 		Expect(session.Err).To(gbytes.Say(fmt.Sprintf(cmd.RequiredConfigErrorFormat, strings.Join(requiredFlags, ", "))))
-		Expect(session.Err).To(gbytes.Say("Usage:"))
+		Expect(session.Err).To(gbytes.Say("USAGE EXAMPLES"))
 	})
 
 	It("fails if the passed in path to tar file is invalid", func() {
