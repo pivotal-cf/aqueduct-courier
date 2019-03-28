@@ -5,14 +5,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/elazarl/goproxy"
 	"github.com/mholt/archiver"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -41,32 +44,7 @@ var _ = Describe("Collect", func() {
 		outputDirPath, err = ioutil.TempDir("", "")
 		Expect(err).NotTo(HaveOccurred())
 
-		opsManagerServer = ghttp.NewTLSServer()
-		opsManagerServer.RouteToHandler(http.MethodPost, "/uaa/oauth/token", func(w http.ResponseWriter, req *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
-
-			w.Write([]byte(`{
-					"access_token": "some-opsman-token",
-					"token_type": "bearer",
-					"expires_in": 3600
-					}`))
-		})
-		emptyObjectResponse := func(w http.ResponseWriter, req *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(`{}`))
-		}
-		emptyArrayResponse := func(w http.ResponseWriter, req *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(`[]`))
-		}
-		opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/staged/pending_changes", emptyObjectResponse)
-		opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/deployed/products", emptyArrayResponse)
-		opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/vm_types", emptyArrayResponse)
-		opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/diagnostic_report", emptyObjectResponse)
-		opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/installations", emptyObjectResponse)
-		opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/deployed/certificates", emptyObjectResponse)
-		opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/certificate_authorities", emptyObjectResponse)
-
+		opsManagerServer = setupOpsManagerServer()
 		defaultEnvVars = map[string]string{
 			cmd.OpsManagerURLKey:      opsManagerServer.URL(),
 			cmd.OpsManagerUsernameKey: "some-username",
@@ -124,7 +102,6 @@ var _ = Describe("Collect", func() {
 
 	Context("with ops manager user/password authentication", func() {
 		It("succeeds with env variable configuration", func() {
-			defaultEnvVars[cmd.SkipTlsVerifyKey] = "true"
 			command := buildDefaultCommand(defaultEnvVars)
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
@@ -163,7 +140,6 @@ var _ = Describe("Collect", func() {
 			delete(defaultEnvVars, cmd.OpsManagerPasswordKey)
 			defaultEnvVars[cmd.OpsManagerClientIdKey] = "some-client-id"
 			defaultEnvVars[cmd.OpsManagerClientSecretKey] = "some-client-secret"
-			defaultEnvVars[cmd.SkipTlsVerifyKey] = "true"
 			command := buildDefaultCommand(defaultEnvVars)
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
@@ -535,6 +511,151 @@ var _ = Describe("Collect", func() {
 		})
 	})
 
+	Context("when an https_proxy is set", func() {
+		var (
+			usageService  *ghttp.Server
+			cfService     *ghttp.Server
+			uaaService    *ghttp.Server
+			credhubServer *ghttp.Server
+			proxyServer   *http.Server
+			listenerPort  int
+		)
+
+		BeforeEach(func() {
+			uaaService = ghttp.NewTLSServer()
+			uaaService.RouteToHandler(http.MethodPost, "/oauth/token", func(w http.ResponseWriter, req *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				credentialBytes := []byte("best-usage-service-client-id:best-usage-service-client-secret")
+
+				base64credentials := base64.StdEncoding.EncodeToString(credentialBytes)
+				Expect(req.Header.Get("authorization")).To(Equal("Basic " + base64credentials))
+
+				w.Write([]byte(`{
+					"access_token": "some-uaa-token",
+					"token_type": "bearer",
+					"expires_in": 3600
+				}`))
+			})
+
+			cfService = ghttp.NewTLSServer()
+			cfService.RouteToHandler(http.MethodGet, "/v2/info", func(w http.ResponseWriter, req *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.Write([]byte(`{ "token_endpoint": "https://uaa.example.com" }`))
+			})
+
+			usageService = ghttp.NewTLSServer()
+			usageService.RouteToHandler(http.MethodGet, "/system_report/app_usages", func(w http.ResponseWriter, req *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.Write([]byte(`{}`))
+				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
+			})
+			usageService.RouteToHandler(http.MethodGet, "/system_report/service_usages", func(w http.ResponseWriter, req *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.Write([]byte(`{}`))
+				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
+			})
+			usageService.RouteToHandler(http.MethodGet, "/system_report/task_usages", func(w http.ResponseWriter, req *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.Write([]byte(`{}`))
+				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
+			})
+
+			credhubServer = ghttp.NewUnstartedServer()
+			listener, err := net.Listen("tcp", "127.0.0.1:8844")
+			Expect(err).NotTo(HaveOccurred())
+			credhubServer.HTTPTestServer.Listener = listener
+			credhubServer.HTTPTestServer.StartTLS()
+			credhubServer.RouteToHandler(http.MethodGet, "/info", func(w http.ResponseWriter, req *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.Write([]byte(`{ "auth-server": {"url": "https://127.0.0.1:8844"}}`))
+			})
+
+			credhubServer.RouteToHandler(http.MethodPost, "/oauth/token", func(w http.ResponseWriter, req *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.Write([]byte(`{
+					"access_token": "some-credhub-token",
+					"token_type": "bearer",
+					"expires_in": 3600
+					}`))
+			})
+			credhubServer.RouteToHandler(http.MethodGet, "/api/v1/certificates", func(w http.ResponseWriter, req *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.Write([]byte(`{}`))
+			})
+
+			boshCredentialsResponse := func(w http.ResponseWriter, req *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.Write([]byte(`{ "credential": "BOSH_CLIENT=best_client BOSH_CLIENT_SECRET=best_secret BOSH_CA_CERT=/cool/path BOSH_ENVIRONMENT=credhub.example.com bosh "}`))
+			}
+			opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/deployed/director/credentials/bosh_commandline_credentials", boshCredentialsResponse)
+
+			proxy := goproxy.NewProxyHttpServer()
+			proxy.OnRequest().HandleConnect(goproxy.AlwaysMitm)
+			proxy.OnRequest().DoFunc(
+				func(r *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
+					var (
+						err         error
+						testServUrl *url.URL
+					)
+					switch r.Host {
+					case "uaa.example.com":
+						testServUrl, err = url.Parse(uaaService.URL())
+					case "opsman.example.com":
+						testServUrl, err = url.Parse(opsManagerServer.URL())
+					case "cfapi.example.com":
+						testServUrl, err = url.Parse(cfService.URL())
+					case "usageService.example.com":
+						testServUrl, err = url.Parse(usageService.URL())
+					case "credhub.example.com:8844":
+						testServUrl, err = url.Parse(credhubServer.URL())
+					default:
+						log.Fatalf("Unexpected host: %s", r.Host)
+					}
+					Expect(err).NotTo(HaveOccurred())
+					testServUrl.Path = r.URL.Path
+					r.URL = testServUrl
+					return r, nil
+				})
+
+			listener, err = net.Listen("tcp", ":0")
+			Expect(err).ToNot(HaveOccurred())
+			listenerPort = listener.Addr().(*net.TCPAddr).Port
+			proxyServer = &http.Server{Handler: proxy}
+			go func() {
+				proxyServer.Serve(listener)
+			}()
+		})
+
+		AfterEach(func() {
+			proxyServer.Close()
+			usageService.Close()
+			cfService.Close()
+			uaaService.Close()
+			credhubServer.Close()
+		})
+
+		It("proxies traffic for all remote http services (ops manager, credhub, usage service, uaa, etc)", func() {
+			defaultEnvVars[cmd.OpsManagerURLKey] = "https://opsman.example.com"
+			defaultEnvVars[cmd.CfApiURLKey] = "https://cfapi.example.com"
+			defaultEnvVars[cmd.UsageServiceURLKey] = "https://usageService.example.com"
+			defaultEnvVars[cmd.UsageServiceClientIDKey] = "best-usage-service-client-id"
+			defaultEnvVars[cmd.UsageServiceClientSecretKey] = "best-usage-service-client-secret"
+			defaultEnvVars[cmd.UsageServiceSkipTlsVerifyKey] = "true"
+			defaultEnvVars[cmd.WithCredhubInfoKey] = "true"
+
+			defaultEnvVars["HTTPS_PROXY"] = fmt.Sprintf("http://localhost:%d", listenerPort)
+
+			command := buildDefaultCommand(defaultEnvVars)
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+
+			tarFilePath := validatedTarFilePath(outputDirPath)
+			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
+			assertLogging(session, tarFilePath, false, false)
+		})
+	})
+
 	It("fails if the required variables are not set", func() {
 		command := exec.Command(aqueductBinaryPath, "collect")
 		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
@@ -645,4 +766,34 @@ func buildDefaultCommand(envVars map[string]string) *exec.Cmd {
 		command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))
 	}
 	return command
+}
+
+func setupOpsManagerServer() *ghttp.Server {
+	opsManagerServer := ghttp.NewTLSServer()
+	opsManagerServer.RouteToHandler(http.MethodPost, "/uaa/oauth/token", func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		w.Write([]byte(`{
+					"access_token": "some-opsman-token",
+					"token_type": "bearer",
+					"expires_in": 3600
+					}`))
+	})
+	emptyObjectResponse := func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{}`))
+	}
+	emptyArrayResponse := func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`[]`))
+	}
+	opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/staged/pending_changes", emptyObjectResponse)
+	opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/deployed/products", emptyArrayResponse)
+	opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/vm_types", emptyArrayResponse)
+	opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/diagnostic_report", emptyObjectResponse)
+	opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/installations", emptyObjectResponse)
+	opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/deployed/certificates", emptyObjectResponse)
+	opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/certificate_authorities", emptyObjectResponse)
+
+	return opsManagerServer
 }
