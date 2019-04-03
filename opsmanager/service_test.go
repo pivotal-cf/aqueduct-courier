@@ -432,16 +432,34 @@ var _ = Describe("Service", func() {
 	})
 
 	Describe("CertificateAuthorities", func() {
-		It("returns deployed certificates content, removing the cert_pem key", func() {
-			body := ioutil.NopCloser(strings.NewReader(`{"certificate_authorities":[{"keys": "for-cert-authorities", "cert_pem": "some-pem"}]}`))
-
+		It("returns deployed certificates content, removing unknown keys", func() {
+			body := ioutil.NopCloser(strings.NewReader(`{
+"certificate_authorities":[{
+	"guid": "f7bc18f34f2a7a9403c3",
+	"issuer": "Pivotal",
+	"created_on": "2017-02-09",
+	"expires_on": "2021-01-10",
+	"active": true,
+	"cert_pem": "should not be here",
+	"nats_cert_pem": "should not be here",
+	"random_key": "should not be here"
+}]}`))
 			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
 			actual, err := service.CertificateAuthorities()
 			Expect(err).NotTo(HaveOccurred())
 			actualContent, err := ioutil.ReadAll(actual)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(string(actualContent)).To(Equal(`{"certificate_authorities":[{"keys":"for-cert-authorities"}]}`))
+			var actualCertAuths map[string][]interface{}
+			err = json.Unmarshal(actualContent, &actualCertAuths)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(actualCertAuths["certificate_authorities"]).To(ConsistOf(map[string]interface{}{
+				"guid":       "f7bc18f34f2a7a9403c3",
+				"issuer":     "Pivotal",
+				"created_on": "2017-02-09",
+				"expires_on": "2021-01-10",
+				"active":     true,
+			}))
 			Expect(requestor.CurlCallCount()).To(Equal(1))
 			input := requestor.CurlArgsForCall(0)
 			Expect(input).To(Equal(api.RequestServiceCurlInput{Path: CertificateAuthoritiesPath, Method: http.MethodGet}))

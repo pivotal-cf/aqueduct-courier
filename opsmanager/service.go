@@ -41,7 +41,15 @@ type BoshCredential struct {
 }
 
 type certificateAuthorities struct {
-	CertificateAuthorities []map[string]interface{} `json:"certificate_authorities"`
+	CertificateAuthorities []certificateAuthority `json:"certificate_authorities"`
+}
+
+type certificateAuthority struct {
+	GUID      string `json:"guid"`
+	Issuer    string `json:"issuer"`
+	CreatedOn string `json:"created_on"`
+	ExpiresOn string `json:"expires_on"`
+	Active    bool   `json:"active"`
 }
 
 type installations struct {
@@ -106,9 +114,6 @@ func (s *Service) CertificateAuthorities() (io.Reader, error) {
 	var ca certificateAuthorities
 	if err := json.Unmarshal(contents, &ca); err != nil {
 		return nil, errors.Wrapf(err, InvalidResponseErrorFormat, CertificateAuthoritiesPath)
-	}
-	for _, certificateAuthority := range ca.CertificateAuthorities {
-		delete(certificateAuthority, "cert_pem")
 	}
 
 	redactedContent, err := json.Marshal(ca)
