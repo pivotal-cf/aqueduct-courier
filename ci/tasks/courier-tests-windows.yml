@@ -4,6 +4,7 @@ platform: windows
 inputs:
 - name: aqueduct-courier
   path: go/src/github.com/pivotal-cf/aqueduct-courier
+  name: ci
 
 run:
   path: powershell
@@ -11,4 +12,4 @@ run:
   - "-ExecutionPolicy"
   - "Bypass"
   - "-File"
-  - go/src/github.com/pivotal-cf/aqueduct-courier/ci/tasks/courier-tests.ps1
+  - ci/ci/tasks/courier-tests.ps1

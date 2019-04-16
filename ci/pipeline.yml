@@ -28,6 +28,20 @@ resources:
     branch: master
     uri: git@github.com:pivotal-cf/aqueduct-courier
     private_key: {{courier-git-deploy-private-key}}
+    ignore_paths: [ci]
+- name: lts-aqueduct-courier
+  type: git
+  source:
+    branch: {{lts_branch_name}}
+    uri: git@github.com:pivotal-cf/aqueduct-courier
+    private_key: {{courier-git-deploy-private-key}}
+    ignore_paths: [ci]
+- name: ci
+  type: git
+  source:
+    uri: git@github.com:pivotal-cf/aqueduct-courier
+    private_key: {{courier-git-deploy-private-key}}
+    paths: [ci]
 - name: staging-binaries
   type: gcs-resource
   source:
@@ -83,15 +97,17 @@ jobs:
   plan:
   - get: aqueduct-courier
     trigger: true
+  - get: ci
   - task: run-tests
-    file: aqueduct-courier/ci/tasks/courier-tests.yml
+    file: ci/ci/tasks/courier-tests.yml
 
 - name: windows-courier-tests
   plan:
   - get: aqueduct-courier
     trigger: true
+  - get: ci
   - task: run-tests
-    file: aqueduct-courier/ci/tasks/courier-tests-windows.yml
+    file: ci/ci/tasks/courier-tests-windows.yml
 
 - name: build-staging-binaries
   serial_groups: [version]
@@ -101,8 +117,9 @@ jobs:
     trigger: true
   - get: version
     params: {pre: build}
+  - get: ci
   - task: build-binaries
-    file: aqueduct-courier/ci/tasks/build-binaries.yml
+    file: ci/ci/tasks/build-binaries.yml
     params:
       DATA_LOADER_URL: {{staging-data-loader-url}}
   - put: staging-binaries
@@ -123,8 +140,9 @@ jobs:
     trigger: true
   - get: staging-linux-binary
     passed: [build-staging-binaries]
+  - get: ci
   - task: collect-credhub-info
-    file: aqueduct-courier/ci/tasks/collect-with-credhub-info.yml
+    file: ci/ci/tasks/collect-with-credhub-info.yml
     input_mapping:
       binary: staging-linux-binary
     params:
@@ -148,11 +166,12 @@ jobs:
   - get: staging-linux-binary
     passed: [build-staging-binaries]
   - get: task-docker-image
+  - get: ci
   - task: collect-with-opsmanager-user-creds
     image: task-docker-image
     input_mapping:
       binary: staging-linux-binary
-    file: aqueduct-courier/ci/tasks/collect.yml
+    file: ci/ci/tasks/collect.yml
     params:
       OPS_MANAGER_URL: {{courier-ops-manager-url}}
       OPS_MANAGER_USERNAME: {{courier-ops-manager-username}}
@@ -170,7 +189,7 @@ jobs:
       binary: staging-linux-binary
     output_mapping:
       collected-data: collected-data-with-client-creds
-    file: aqueduct-courier/ci/tasks/collect.yml
+    file: ci/ci/tasks/collect.yml
     params:
       OPS_MANAGER_URL: {{courier-ops-manager-url}}
       OPS_MANAGER_CLIENT_ID: {{courier-ops-manager-client-id}}
@@ -186,7 +205,7 @@ jobs:
     image: task-docker-image
     input_mapping:
       binary: staging-linux-binary
-    file: aqueduct-courier/ci/tasks/send.yml
+    file: ci/ci/tasks/send.yml
     params:
       API_KEY: {{loader-api-key}}
 
@@ -203,8 +222,9 @@ jobs:
       repository: aqueduct-courier
       tag: version/version
       only_tag: true
+  - get: ci
   - task: build-binaries
-    file: aqueduct-courier/ci/tasks/build-binaries.yml
+    file: ci/ci/tasks/build-binaries.yml
     params:
       DATA_LOADER_URL: {{production-data-loader-url}}
       ENSURE_HTTPS: true
@@ -237,11 +257,12 @@ jobs:
   - get: production-linux-binary
     passed: [build-production-binaries]
   - get: task-docker-image
+  - get: ci
   - task: collect-with-opsmanager-user-creds
     image: task-docker-image
     input_mapping:
       binary: production-linux-binary
-    file: aqueduct-courier/ci/tasks/collect.yml
+    file: ci/ci/tasks/collect.yml
     params:
       OPS_MANAGER_URL: {{courier-ops-manager-url}}
       OPS_MANAGER_USERNAME: {{courier-ops-manager-username}}
@@ -257,7 +278,7 @@ jobs:
     image: task-docker-image
     input_mapping:
       binary: production-linux-binary
-    file: aqueduct-courier/ci/tasks/send.yml
+    file: ci/ci/tasks/send.yml
     params:
       API_KEY: {{production-loader-api-key}}
 
@@ -270,12 +291,13 @@ jobs:
     passed: [test-collect-and-send-production]
   - get: version
     passed: [build-production-binaries]
+  - get: ci
   - task: prepare-release-files
-    file: aqueduct-courier/ci/tasks/prep-release-files.yml
+    file: ci/ci/tasks/prep-release-files.yml
     input_mapping:
       binaries-tar: production-binaries
   - task: write-metadata
-    file: aqueduct-courier/ci/tasks/write-metadata.yml
+    file: ci/ci/tasks/write-metadata.yml
   - put: pivotal-telemetry-collector
     params:
       file_glob: release-files/*
@@ -314,14 +336,15 @@ jobs:
     trigger: true
   - get: aqueduct-courier
   - get: task-docker-image
+  - get: ci
   - task: strip-collector-version
     image: task-docker-image
-    file: aqueduct-courier/ci/tasks/strip-collector-version.yml
+    file: ci/ci/tasks/strip-collector-version.yml
     input_mapping:
       binary-with-version: pivotal-telemetry-collector
   - task: collect
     image: task-docker-image
-    file: aqueduct-courier/ci/tasks/collect.yml
+    file: ci/ci/tasks/collect.yml
     params:
       OPS_MANAGER_URL: {{courier-ops-manager-url}}
       OPS_MANAGER_USERNAME: {{courier-ops-manager-username}}
@@ -335,7 +358,7 @@ jobs:
       INSECURE_SKIP_TLS_VERIFY: true
   - task: send
     image: task-docker-image
-    file: aqueduct-courier/ci/tasks/send.yml
+    file: ci/ci/tasks/send.yml
     params:
       API_KEY: {{production-loader-api-key}}
     on_failure:
@@ -343,3 +366,232 @@ jobs:
       params:
         text: |
           Failed to send OpsManager dataset to production. Build: https://wings.pivotal.io/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+
+############################ LTS
+- name: lts-courier-tests
+  plan:
+  - get: aqueduct-courier
+    resource: lts-aqueduct-courier
+    trigger: true
+  - get: ci
+  - task: run-tests
+    file: ci/ci/tasks/courier-tests.yml
+
+- name: lts-windows-courier-tests
+  plan:
+  - get: aqueduct-courier
+    resource: lts-aqueduct-courier
+    trigger: true
+  - get: ci
+  - task: run-tests
+    file: ci/ci/tasks/courier-tests-windows.yml
+
+- name: lts-build-staging-binaries
+  plan:
+  - get: aqueduct-courier
+    resource: lts-aqueduct-courier
+    passed: [lts-courier-tests, lts-windows-courier-tests]
+    trigger: true
+  - get: ci
+  - task: generate-version-file
+    file: ci/ci/tasks/generate-version-file.yml
+    params:
+      VERSION: {{lts_version}}
+  - task: build-binaries
+    file: ci/ci/tasks/build-binaries.yml
+    params:
+      DATA_LOADER_URL: {{staging-data-loader-url}}
+  - put: staging-binaries
+    params:
+      file: lts-aqueduct-binaries/aqueduct-cli-*.tgz
+  - put: staging-linux-binary
+    params:
+      file: linux-binary/*linux*
+
+- name: lts-test-collect-credhub-info
+  plan:
+  - get: aqueduct-courier
+    resource: lts-aqueduct-courier
+    passed: [lts-build-staging-binaries]
+    trigger: true
+  - get: staging-linux-binary
+    passed: [lts-build-staging-binaries]
+  - get: ci
+  - task: collect-credhub-info
+    file: ci/ci/tasks/collect-with-credhub-info.yml
+    input_mapping:
+      binary: staging-linux-binary
+    params:
+      GCP_SERVICE_ACCOUNT_KEY: {{courier-gcp-service-account-key}}
+      GCP_PROJECT_ID: {{courier-gcp-project-id}}
+      GCP_INSTANCE_NAME: {{courier-opsman-gcp-instance-name}}
+      GCP_ZONE: {{courier-gcp-zone}}
+      OPS_MANAGER_URL: {{courier-ops-manager-url}}
+      OPS_MANAGER_USERNAME: {{courier-ops-manager-username}}
+      OPS_MANAGER_PASSWORD: {{courier-ops-manager-password}}
+
+- name: lts-test-collect-and-send
+  plan:
+  - get: aqueduct-courier
+    resource: lts-aqueduct-courier
+    passed: [lts-build-staging-binaries]
+    trigger: true
+  - get: staging-linux-binary
+    passed: [lts-build-staging-binaries]
+  - get: task-docker-image
+  - get: ci
+  - task: collect-with-opsmanager-user-creds
+    image: task-docker-image
+    input_mapping:
+      binary: staging-linux-binary
+    file: ci/ci/tasks/collect.yml
+    params:
+      OPS_MANAGER_URL: {{courier-ops-manager-url}}
+      OPS_MANAGER_USERNAME: {{courier-ops-manager-username}}
+      OPS_MANAGER_PASSWORD: {{courier-ops-manager-password}}
+      ENV_TYPE: development
+      INSECURE_SKIP_TLS_VERIFY: true
+      CF_API_URL: {{courier-cf-api-url}}
+      USAGE_SERVICE_URL: {{courier-usage-service-url}}
+      USAGE_SERVICE_CLIENT_ID: {{courier-usage-service-client-id}}
+      USAGE_SERVICE_CLIENT_SECRET: {{courier-usage-service-client-secret}}
+      USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
+  - task: collect-with-opsmanager-client-creds
+    image: task-docker-image
+    input_mapping:
+      binary: staging-linux-binary
+    output_mapping:
+      collected-data: collected-data-with-client-creds
+    file: ci/ci/tasks/collect.yml
+    params:
+      OPS_MANAGER_URL: {{courier-ops-manager-url}}
+      OPS_MANAGER_CLIENT_ID: {{courier-ops-manager-client-id}}
+      OPS_MANAGER_CLIENT_SECRET: {{courier-ops-manager-client-secret}}
+      ENV_TYPE: development
+      INSECURE_SKIP_TLS_VERIFY: true
+      CF_API_URL: {{courier-cf-api-url}}
+      USAGE_SERVICE_URL: {{courier-usage-service-url}}
+      USAGE_SERVICE_CLIENT_ID: {{courier-usage-service-client-id}}
+      USAGE_SERVICE_CLIENT_SECRET: {{courier-usage-service-client-secret}}
+      USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
+  - task: send
+    image: task-docker-image
+    input_mapping:
+      binary: staging-linux-binary
+    file: ci/ci/tasks/send.yml
+    params:
+      API_KEY: {{loader-api-key}}
+
+- name: lts-build-production-binaries
+  plan:
+  - get: aqueduct-courier
+    resource: lts-aqueduct-courier
+    passed: [lts-test-collect-and-send, lts-test-collect-credhub-info]
+  - get: ci
+  - put: lts-aqueduct-courier
+    params:
+      repository: lts-aqueduct-courier
+      tag: {{lts_version}}
+      only_tag: true
+  - task: generate-version-file
+    file: ci/ci/tasks/generate-version-file.yml
+    params:
+      VERSION: {{lts_version}}
+  - task: build-binaries
+    file: ci/ci/tasks/build-binaries.yml
+    params:
+      DATA_LOADER_URL: {{production-data-loader-url}}
+      ENSURE_HTTPS: true
+  - put: production-binaries
+    params:
+      file: lts-aqueduct-binaries/aqueduct-cli-*.tgz
+  - put: production-linux-binary
+    params:
+      file: linux-binary/*linux*
+
+- name: lts-test-collect-and-send-production
+  plan:
+  - get: aqueduct-courier
+    resource: lts-aqueduct-courier
+    passed: [lts-build-production-binaries]
+    trigger: true
+  - get: production-binaries
+    passed: [lts-build-production-binaries]
+  - get: production-linux-binary
+    passed: [lts-build-production-binaries]
+  - get: task-docker-image
+  - get: ci
+  - task: collect-with-opsmanager-user-creds
+    image: task-docker-image
+    input_mapping:
+      binary: production-linux-binary
+    file: ci/ci/tasks/collect.yml
+    params:
+      OPS_MANAGER_URL: {{courier-ops-manager-url}}
+      OPS_MANAGER_USERNAME: {{courier-ops-manager-username}}
+      OPS_MANAGER_PASSWORD: {{courier-ops-manager-password}}
+      ENV_TYPE: development
+      INSECURE_SKIP_TLS_VERIFY: true
+      CF_API_URL: {{courier-cf-api-url}}
+      USAGE_SERVICE_URL: {{courier-usage-service-url}}
+      USAGE_SERVICE_CLIENT_ID: {{courier-usage-service-client-id}}
+      USAGE_SERVICE_CLIENT_SECRET: {{courier-usage-service-client-secret}}
+      USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
+  - task: send
+    image: task-docker-image
+    input_mapping:
+      binary: production-linux-binary
+    file: ci/ci/tasks/send.yml
+    params:
+      API_KEY: {{production-loader-api-key}}
+
+- name: lts-release-to-pivnet
+  plan:
+  - get: aqueduct-courier
+    resource: lts-aqueduct-courier
+    passed: [lts-test-collect-and-send-production]
+    trigger: true
+  - get: production-binaries
+    passed: [lts-test-collect-and-send-production]
+  - get: ci
+  - task: generate-version-file
+    file: ci/ci/tasks/generate-version-file.yml
+    params:
+      VERSION: {{lts_version}}
+  - task: prepare-release-files
+    file: ci/ci/tasks/prep-release-files.yml
+    input_mapping:
+      binaries-tar: production-binaries
+  - task: write-metadata
+    file: ci/ci/tasks/write-metadata.yml
+  - put: pivotal-telemetry-collector
+    params:
+      file_glob: release-files/*
+      metadata_file: metadata/metadata
+
+groups:
+- name: edge
+  jobs:
+  - courier-tests
+  - windows-courier-tests
+  - build-staging-binaries
+  - test-collect-credhub-info
+  - test-collect-and-send
+  - build-production-binaries
+  - auto-patch
+  - test-collect-and-send-production
+  - release-to-pivnet
+  - major
+  - minor
+  - patch
+  - ensure-production-sends
+- name: lts
+  jobs:
+  - lts-courier-tests
+  - lts-windows-courier-tests
+  - lts-build-staging-binaries
+  - lts-test-collect-credhub-info
+  - lts-test-collect-and-send
+  - lts-build-production-binaries
+  - lts-test-collect-and-send-production
+  - lts-release-to-pivnet

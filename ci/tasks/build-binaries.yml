@@ -11,13 +11,14 @@ inputs:
 - name: aqueduct-courier
   path: go/src/github.com/pivotal-cf/aqueduct-courier
 - name: version
+- name: ci
 
 outputs:
 - name: aqueduct-binaries
 - name: linux-binary
 
 run:
-  path: go/src/github.com/pivotal-cf/aqueduct-courier/ci/tasks/build-binaries
+  path: ci/ci/tasks/build-binaries
 
 params:
   DATA_LOADER_URL:

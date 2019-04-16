@@ -10,6 +10,7 @@ image_resource:
 inputs:
 - name: aqueduct-courier
   path: go/src/github.com/pivotal-cf/aqueduct-courier
+- name: ci
 
 run:
-  path: go/src/github.com/pivotal-cf/aqueduct-courier/ci/tasks/courier-tests
+  path: ci/ci/tasks/courier-tests
