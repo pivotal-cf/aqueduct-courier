@@ -1,0 +1,24 @@
+---
+platform: linux
+
+image_resource:
+  type: registry-image
+  source:
+    repository: ubuntu
+    tag: xenial
+
+outputs:
+  - name: version
+
+run:
+  path: sh
+  args:
+  - -c
+  - |
+    #!/bin/bash
+
+    set -xe
+    echo $VERSION > version/version
+
+params:
+  VERSION:
