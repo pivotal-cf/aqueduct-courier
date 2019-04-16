@@ -448,7 +448,8 @@ jobs:
     image: task-docker-image
     input_mapping:
       binary: staging-linux-binary
-    file: ci/ci/tasks/collect.yml
+    #TODO: reconsider
+    file: aqueduct-courier/ci/tasks/collect.yml
     params:
       OPS_MANAGER_URL: {{courier-ops-manager-url}}
       OPS_MANAGER_USERNAME: {{courier-ops-manager-username}}
@@ -466,7 +467,8 @@ jobs:
       binary: staging-linux-binary
     output_mapping:
       collected-data: collected-data-with-client-creds
-    file: ci/ci/tasks/collect.yml
+    #TODO: reconsider
+    file: aqueduct-courier/ci/tasks/collect.yml
     params:
       OPS_MANAGER_URL: {{courier-ops-manager-url}}
       OPS_MANAGER_CLIENT_ID: {{courier-ops-manager-client-id}}
