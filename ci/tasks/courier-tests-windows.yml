@@ -4,7 +4,7 @@ platform: windows
 inputs:
 - name: aqueduct-courier
   path: go/src/github.com/pivotal-cf/aqueduct-courier
-  name: ci
+- name: ci
 
 run:
   path: powershell
