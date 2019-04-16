@@ -94,6 +94,7 @@ resources:
 
 jobs:
 - name: courier-tests
+  serial_groups: [courier-tests]
   plan:
   - get: aqueduct-courier
     trigger: true
@@ -102,6 +103,7 @@ jobs:
     file: ci/ci/tasks/courier-tests.yml
 
 - name: windows-courier-tests
+  serial_groups: [windows-courier-tests]
   plan:
   - get: aqueduct-courier
     trigger: true
@@ -369,6 +371,7 @@ jobs:
 
 ############################ LTS
 - name: lts-courier-tests
+  serial_groups: [courier-tests]
   plan:
   - get: aqueduct-courier
     resource: lts-aqueduct-courier
@@ -378,6 +381,7 @@ jobs:
     file: ci/ci/tasks/courier-tests.yml
 
 - name: lts-windows-courier-tests
+  serial_groups: [windows-courier-tests]
   plan:
   - get: aqueduct-courier
     resource: lts-aqueduct-courier
@@ -403,7 +407,7 @@ jobs:
       DATA_LOADER_URL: {{staging-data-loader-url}}
   - put: staging-binaries
     params:
-      file: lts-aqueduct-binaries/aqueduct-cli-*.tgz
+      file: aqueduct-binaries/aqueduct-cli-*.tgz
   - put: staging-linux-binary
     params:
       file: linux-binary/*linux*
@@ -504,7 +508,7 @@ jobs:
       ENSURE_HTTPS: true
   - put: production-binaries
     params:
-      file: lts-aqueduct-binaries/aqueduct-cli-*.tgz
+      file: aqueduct-binaries/aqueduct-cli-*.tgz
   - put: production-linux-binary
     params:
       file: linux-binary/*linux*
