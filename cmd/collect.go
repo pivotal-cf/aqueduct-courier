@@ -248,7 +248,7 @@ func makeConsumptionCollector() (consumptionDataCollector, error) {
 			uaaURL,
 			viper.GetString(UsageServiceClientIDFlag),
 			viper.GetString(UsageServiceClientSecretFlag),
-			5*time.Second,
+			30*time.Second,
 			client,
 		)
 
