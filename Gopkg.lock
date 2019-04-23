@@ -2,7 +2,7 @@
 
 
 [[projects]]
-  digest = "1:483e48e37b5ebbdf1a3cc3cbc84234bdaa8540797852a088cb6a48d16c02a72b"
+  digest = "1:3d641d954cc3f5b35393b94ca1bc16f6804757af2de571763e026d1e3f20c536"
   name = "code.cloudfoundry.org/credhub-cli"
   packages = [
     "credhub",
@@ -16,8 +16,8 @@
     "errors",
   ]
   pruneopts = "UT"
-  revision = "381313dc41bae002d594fc91682cb67210ab2d48"
-  version = "2.3.0"
+  revision = "fba821c6ffafbce8987c98037e8530aa2931ff38"
+  version = "2.4.0"
 
 [[projects]]
   branch = "master"
@@ -90,12 +90,12 @@
   version = "v0.0.1"
 
 [[projects]]
-  digest = "1:950caca7dfcf796419232ba996c9c3539d09f26af27ba848c4508e604c13efbb"
+  digest = "1:88e0b0baeb9072f0a4afbcf12dda615fc8be001d1802357538591155998da21b"
   name = "github.com/hashicorp/go-version"
   packages = ["."]
   pruneopts = "UT"
-  revision = "d40cf49b3a77bba84a7afdbd7f1dc295d114efb1"
-  version = "v1.1.0"
+  revision = "ac23dc3fea5d1a983c43f6a0f6e2c13f0195d8bd"
+  version = "v1.2.0"
 
 [[projects]]
   digest = "1:c0d19ab64b32ce9fe5cf4ddceba78d5bc9807f0016db6b1183599da3dcc24d10"
@@ -231,23 +231,23 @@
   version = "v1.5.0"
 
 [[projects]]
-  digest = "1:95741de3af260a92cc5c7f3f3061e85273f5a81b5db20d4bd68da74bd521675e"
+  digest = "1:e0f50a07c0def90588d69f77178712c6fdc67eb6576365f551cce98b44b501bf"
   name = "github.com/pelletier/go-toml"
   packages = ["."]
   pruneopts = "UT"
-  revision = "c01d1270ff3e442a8a57cddc1c92dc1138598194"
-  version = "v1.2.0"
+  revision = "63909f0a90ab0f36909e8e044e46ace10cf13ba2"
+  version = "v1.3.0"
 
 [[projects]]
-  digest = "1:d4c88b5ad20151a96c1e5a55547a944b6af623aa315f69ee0d172b00f95d27fb"
+  digest = "1:cf9272ab0a637cb1ffa40e2b6220108d7016a36b3eb357e4b57aacb7a8f725c0"
   name = "github.com/pierrec/lz4"
   packages = [
     ".",
     "internal/xxh32",
   ]
   pruneopts = "UT"
-  revision = "062282ea0dcff40c9fb8525789eef9644b1fbd6e"
-  version = "v2.1.0"
+  revision = "9419d2361c8ae111073ffe3337ecc364fb590921"
+  version = "v2.1.2"
 
 [[projects]]
   branch = "master"
@@ -258,10 +258,10 @@
     "file",
   ]
   pruneopts = "UT"
-  revision = "d3d2521d89deb12eaabdbeaa63d99328edc5c111"
+  revision = "bada9bb7193882f4d0f555bf13a18dd9e0288d5d"
 
 [[projects]]
-  digest = "1:e51e174bc63da88581903650da0bbd03b585b943a9ca6e9200f0e02ff1fbeae4"
+  digest = "1:2d47f860131635532f693ec5166a49533b5dca969eb466a5fd460ef9c3747d8c"
   name = "github.com/pivotal-cf/om"
   packages = [
     "api",
@@ -269,8 +269,8 @@
     "progress",
   ]
   pruneopts = "UT"
-  revision = "509952ad3009aedf4195359e89ceeb072587ed3d"
-  version = "0.54.0"
+  revision = "0c72696a3ca897b224198e9a01816fbef3088422"
+  version = "0.56.0"
 
 [[projects]]
   digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
@@ -281,15 +281,15 @@
   version = "v0.8.1"
 
 [[projects]]
-  digest = "1:3e39bafd6c2f4bf3c76c3bfd16a2e09e016510ad5db90dc02b88e2f565d6d595"
+  digest = "1:bb495ec276ab82d3dd08504bbc0594a65de8c3b22c6f2aaa92d05b73fbf3a82e"
   name = "github.com/spf13/afero"
   packages = [
     ".",
     "mem",
   ]
   pruneopts = "UT"
-  revision = "f4711e4db9e9a1d3887343acb72b2bbfc2f686f5"
-  version = "v1.2.1"
+  revision = "588a75ec4f32903aa5e39a2619ba6a4631e28424"
+  version = "v1.2.2"
 
 [[projects]]
   digest = "1:08d65904057412fc0270fc4812a1c90c594186819243160dc779a402d4b6d0bc"
@@ -354,7 +354,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:09d4ba0a111bd85dffabc19b9b6d89e89bef285790103ced8824d823813dcdab"
+  digest = "1:4b4fbe3cfa58f1f95eb0ab4fefc95efda7af333722f7f272c9828ecabb25a0ac"
   name = "golang.org/x/crypto"
   packages = [
     "curve25519",
@@ -366,11 +366,11 @@
     "ssh",
   ]
   pruneopts = "UT"
-  revision = "a1f597ede03a7bef967a422b5b3a5bd08805a01e"
+  revision = "d864b10871cd4370fe574816b489c819c675ccc7"
 
 [[projects]]
   branch = "master"
-  digest = "1:f646aa909be9067dc588a9e24dd52392e848a0da5424c0cfa9f00d9ed3b68cf9"
+  digest = "1:44d31e896dadaad411d0d50b0236d389fb53d10c79cb39aba223dc5b24761f02"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -382,11 +382,11 @@
     "proxy",
   ]
   pruneopts = "UT"
-  revision = "9f648a60d9775ef5c977e7669d1673a7a67bef33"
+  revision = "afa5a82059c6356159f699d81beff22a81842231"
 
 [[projects]]
   branch = "master"
-  digest = "1:13e1dd706312f7b3ae1ed16a9e251e7b56240a9e09db24de6a4f24bf57968676"
+  digest = "1:ea31c184eb8c9cfa35e072f99f28019f0947e41e976e171916d0bf6e145a59c4"
   name = "golang.org/x/oauth2"
   packages = [
     ".",
@@ -394,18 +394,18 @@
     "internal",
   ]
   pruneopts = "UT"
-  revision = "e64efc72b421e893cbf63f17ba2221e7d6d0b0f3"
+  revision = "9f3314589c9a9136388751d9adae6b0ed400978a"
 
 [[projects]]
   branch = "master"
-  digest = "1:53df1464a35ecef619d5d29fc24427e34798c47c31f8a35ff709cb71b4009972"
+  digest = "1:e6c02fc27ab754451291d6ab582aabaf46f5e977be1d7ad7e05c89639cf5cac7"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
     "unix",
   ]
   pruneopts = "UT"
-  revision = "a2f829d7f35f2ed1c3520c553a6226495455cae0"
+  revision = "953cdadca894cdc07be76fc99f95b40c28f06623"
 
 [[projects]]
   digest = "1:4392fcf42d5cf0e3ff78c96b2acf8223d49e4fdc53eb77c99d2f8dfe4680e006"
@@ -437,7 +437,7 @@
   version = "v0.3.0"
 
 [[projects]]
-  digest = "1:6f3bd49ddf2e104e52062774d797714371fac1b8bddfd8e124ce78e6b2264a10"
+  digest = "1:6eb6e3b6d9fffb62958cf7f7d88dbbe1dd6839436b0802e194c590667a40412a"
   name = "google.golang.org/appengine"
   packages = [
     "internal",
@@ -449,8 +449,8 @@
     "urlfetch",
   ]
   pruneopts = "UT"
-  revision = "e9657d882bb81064595ca3b56cbe2546bbabf7b1"
-  version = "v1.4.0"
+  revision = "54a98f90d1c46b7731eb8fb305d2a321c30ef610"
+  version = "v1.5.0"
 
 [[projects]]
   digest = "1:d219400f09c151f0ada918bab650ef46f7ebdb1ff4fea923fdcb839481ec7ec1"
