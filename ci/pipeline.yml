@@ -355,13 +355,13 @@ jobs:
     image: task-docker-image
     file: ci/ci/tasks/collect.yml
     params:
-      OPS_MANAGER_URL: {{courier-ops-manager-url}}
-      OPS_MANAGER_USERNAME: {{courier-ops-manager-username}}
-      OPS_MANAGER_PASSWORD: {{courier-ops-manager-password}}
-      CF_API_URL: {{courier-cf-api-url}}
-      USAGE_SERVICE_URL: {{courier-usage-service-url}}
-      USAGE_SERVICE_CLIENT_ID: {{courier-usage-service-client-id}}
-      USAGE_SERVICE_CLIENT_SECRET: {{courier-usage-service-client-secret}}
+      OPS_MANAGER_URL: {{production-courier-ops-manager-url}}
+      OPS_MANAGER_USERNAME: {{production-courier-ops-manager-username}}
+      OPS_MANAGER_PASSWORD: {{production-courier-ops-manager-password}}
+      CF_API_URL: {{production-courier-cf-api-url}}
+      USAGE_SERVICE_URL: {{production-courier-usage-service-url}}
+      USAGE_SERVICE_CLIENT_ID: {{production-courier-usage-service-client-id}}
+      USAGE_SERVICE_CLIENT_SECRET: {{production-courier-usage-service-client-secret}}
       USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
       ENV_TYPE: development
       INSECURE_SKIP_TLS_VERIFY: true
