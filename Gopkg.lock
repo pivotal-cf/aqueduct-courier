@@ -50,6 +50,14 @@
   version = "v0.0.1"
 
 [[projects]]
+  digest = "1:2b7b174ae68705866555b73fd848de0749b93b1f99e3295e27f89bebe8702203"
+  name = "github.com/elazarl/goproxy"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "947c36da3153ff334e74d9d980de341d25f358ba"
+  version = "v1.1"
+
+[[projects]]
   digest = "1:abeb38ade3f32a92943e5be54f55ed6d6e3b6602761d74b4aab4c9dd45c18abd"
   name = "github.com/fsnotify/fsnotify"
   packages = ["."]
@@ -491,6 +499,7 @@
   input-imports = [
     "code.cloudfoundry.org/credhub-cli/credhub",
     "code.cloudfoundry.org/credhub-cli/credhub/auth",
+    "github.com/elazarl/goproxy",
     "github.com/gofrs/uuid",
     "github.com/mholt/archiver",
     "github.com/onsi/ginkgo",
