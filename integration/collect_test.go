@@ -237,43 +237,7 @@ var _ = Describe("Collect", func() {
 			uaaService   *ghttp.Server
 		)
 		BeforeEach(func() {
-			uaaService = ghttp.NewTLSServer()
-			uaaService.RouteToHandler(http.MethodPost, "/oauth/token", func(w http.ResponseWriter, req *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				credentialBytes := []byte("best-usage-service-client-id:best-usage-service-client-secret")
-
-				base64credentials := base64.StdEncoding.EncodeToString(credentialBytes)
-				Expect(req.Header.Get("authorization")).To(Equal("Basic " + base64credentials))
-
-				w.Write([]byte(`{
-					"access_token": "some-uaa-token",
-					"token_type": "bearer",
-					"expires_in": 3600
-				}`))
-			})
-
-			cfService = ghttp.NewTLSServer()
-			cfService.RouteToHandler(http.MethodGet, "/v2/info", func(w http.ResponseWriter, req *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.Write([]byte(`{ "token_endpoint": "` + uaaService.URL() + `" }`))
-			})
-
-			usageService = ghttp.NewTLSServer()
-			usageService.RouteToHandler(http.MethodGet, "/system_report/app_usages", func(w http.ResponseWriter, req *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.Write([]byte(`{}`))
-				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
-			})
-			usageService.RouteToHandler(http.MethodGet, "/system_report/service_usages", func(w http.ResponseWriter, req *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.Write([]byte(`{}`))
-				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
-			})
-			usageService.RouteToHandler(http.MethodGet, "/system_report/task_usages", func(w http.ResponseWriter, req *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.Write([]byte(`{}`))
-				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
-			})
+			uaaService, cfService, usageService = setupUsageService("")
 		})
 
 		AfterEach(func() {
@@ -392,28 +356,7 @@ var _ = Describe("Collect", func() {
 		var credhubServer *ghttp.Server
 
 		BeforeEach(func() {
-			credhubServer = ghttp.NewUnstartedServer()
-			listener, err := net.Listen("tcp", "127.0.0.1:8844")
-			Expect(err).NotTo(HaveOccurred())
-			credhubServer.HTTPTestServer.Listener = listener
-			credhubServer.HTTPTestServer.StartTLS()
-			credhubServer.RouteToHandler(http.MethodGet, "/info", func(w http.ResponseWriter, req *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.Write([]byte(`{ "auth-server": {"url": "https://127.0.0.1:8844"}}`))
-			})
-
-			credhubServer.RouteToHandler(http.MethodPost, "/oauth/token", func(w http.ResponseWriter, req *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.Write([]byte(`{
-					"access_token": "some-credhub-token",
-					"token_type": "bearer",
-					"expires_in": 3600
-					}`))
-			})
-			credhubServer.RouteToHandler(http.MethodGet, "/api/v1/certificates", func(w http.ResponseWriter, req *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.Write([]byte(`{}`))
-			})
+			credhubServer = setupCredHubServer()
 
 			boshCredentialsResponse := func(w http.ResponseWriter, req *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
@@ -522,7 +465,7 @@ var _ = Describe("Collect", func() {
 		)
 
 		BeforeEach(func() {
-			uaaService = ghttp.NewTLSServer()
+			uaaService, cfService, usageService = setupUsageService("https://uaa.example.com")
 			uaaService.RouteToHandler(http.MethodPost, "/oauth/token", func(w http.ResponseWriter, req *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				credentialBytes := []byte("best-usage-service-client-id:best-usage-service-client-secret")
@@ -537,52 +480,7 @@ var _ = Describe("Collect", func() {
 				}`))
 			})
 
-			cfService = ghttp.NewTLSServer()
-			cfService.RouteToHandler(http.MethodGet, "/v2/info", func(w http.ResponseWriter, req *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.Write([]byte(`{ "token_endpoint": "https://uaa.example.com" }`))
-			})
-
-			usageService = ghttp.NewTLSServer()
-			usageService.RouteToHandler(http.MethodGet, "/system_report/app_usages", func(w http.ResponseWriter, req *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.Write([]byte(`{}`))
-				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
-			})
-			usageService.RouteToHandler(http.MethodGet, "/system_report/service_usages", func(w http.ResponseWriter, req *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.Write([]byte(`{}`))
-				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
-			})
-			usageService.RouteToHandler(http.MethodGet, "/system_report/task_usages", func(w http.ResponseWriter, req *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.Write([]byte(`{}`))
-				Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
-			})
-
-			credhubServer = ghttp.NewUnstartedServer()
-			listener, err := net.Listen("tcp", "127.0.0.1:8844")
-			Expect(err).NotTo(HaveOccurred())
-			credhubServer.HTTPTestServer.Listener = listener
-			credhubServer.HTTPTestServer.StartTLS()
-			credhubServer.RouteToHandler(http.MethodGet, "/info", func(w http.ResponseWriter, req *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.Write([]byte(`{ "auth-server": {"url": "https://127.0.0.1:8844"}}`))
-			})
-
-			credhubServer.RouteToHandler(http.MethodPost, "/oauth/token", func(w http.ResponseWriter, req *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.Write([]byte(`{
-					"access_token": "some-credhub-token",
-					"token_type": "bearer",
-					"expires_in": 3600
-					}`))
-			})
-			credhubServer.RouteToHandler(http.MethodGet, "/api/v1/certificates", func(w http.ResponseWriter, req *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.Write([]byte(`{}`))
-			})
-
+			credhubServer = setupCredHubServer()
 			boshCredentialsResponse := func(w http.ResponseWriter, req *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
 				w.Write([]byte(`{ "credential": "BOSH_CLIENT=best_client BOSH_CLIENT_SECRET=best_secret BOSH_CA_CERT=/cool/path BOSH_ENVIRONMENT=credhub.example.com bosh "}`))
@@ -617,7 +515,7 @@ var _ = Describe("Collect", func() {
 					return r, nil
 				})
 
-			listener, err = net.Listen("tcp", ":0")
+			listener, err := net.Listen("tcp", ":0")
 			Expect(err).ToNot(HaveOccurred())
 			listenerPort = listener.Addr().(*net.TCPAddr).Port
 			proxyServer = &http.Server{Handler: proxy}
@@ -796,4 +694,78 @@ func setupOpsManagerServer() *ghttp.Server {
 	opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/certificate_authorities", emptyObjectResponse)
 
 	return opsManagerServer
+}
+
+func setupCredHubServer() *ghttp.Server {
+	credhubServer := ghttp.NewUnstartedServer()
+	listener, err := net.Listen("tcp", "127.0.0.1:8844")
+	Expect(err).NotTo(HaveOccurred())
+	credhubServer.HTTPTestServer.Listener = listener
+	credhubServer.HTTPTestServer.StartTLS()
+	credhubServer.RouteToHandler(http.MethodGet, "/info", func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{ "auth-server": {"url": "https://127.0.0.1:8844"}}`))
+	})
+
+	credhubServer.RouteToHandler(http.MethodPost, "/oauth/token", func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{
+					"access_token": "some-credhub-token",
+					"token_type": "bearer",
+					"expires_in": 3600
+					}`))
+	})
+	credhubServer.RouteToHandler(http.MethodGet, "/api/v1/certificates", func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{}`))
+	})
+
+	return credhubServer
+}
+
+func setupUsageService(uaaServiceURLOverride string) (uaaService, cfService, usageService *ghttp.Server) {
+	uaaService = ghttp.NewTLSServer()
+	uaaService.RouteToHandler(http.MethodPost, "/oauth/token", func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		credentialBytes := []byte("best-usage-service-client-id:best-usage-service-client-secret")
+
+		base64credentials := base64.StdEncoding.EncodeToString(credentialBytes)
+		Expect(req.Header.Get("authorization")).To(Equal("Basic " + base64credentials))
+
+		w.Write([]byte(`{
+					"access_token": "some-uaa-token",
+					"token_type": "bearer",
+					"expires_in": 3600
+				}`))
+	})
+
+	cfService = ghttp.NewTLSServer()
+
+	cfService.RouteToHandler(http.MethodGet, "/v2/info", func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if uaaServiceURLOverride != "" {
+			w.Write([]byte(`{ "token_endpoint": "` + uaaServiceURLOverride + `" }`))
+		} else {
+			w.Write([]byte(`{ "token_endpoint": "` + uaaService.URL() + `" }`))
+		}
+	})
+
+	usageService = ghttp.NewTLSServer()
+	usageService.RouteToHandler(http.MethodGet, "/system_report/app_usages", func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{}`))
+		Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
+	})
+	usageService.RouteToHandler(http.MethodGet, "/system_report/service_usages", func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{}`))
+		Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
+	})
+	usageService.RouteToHandler(http.MethodGet, "/system_report/task_usages", func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{}`))
+		Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
+	})
+
+	return
 }
