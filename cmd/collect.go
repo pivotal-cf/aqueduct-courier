@@ -241,7 +241,7 @@ func makeConsumptionCollector() (consumptionDataCollector, error) {
 
 		uaaURL, err := cfApiClient.GetUAAURL()
 		if err != nil {
-			return nil, errors.New(GetUAAURLError)
+			return nil, errors.Wrap(err, GetUAAURLError)
 		}
 
 		authedClient := cf.NewOAuthClient(

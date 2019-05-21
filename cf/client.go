@@ -11,10 +11,11 @@ import (
 )
 
 const (
-	CfApiURLParsingError                     = "error parsing CF API URL"
-	CreateCfApiTTPRequestError               = "error creating HTTP request to CF API endpoint"
-	CfApiRequestError                        = "error accessing CF API ENDPOINT"
-	CFApiUnmarshalError                      = "error unmarshaling CF API response"
+	CfApiURLParsingError                     = "error parsing CF API URL: %s"
+	CreateCfApiHTTPRequestError              = "error creating HTTP request for CF API endpoint: %s"
+	CfApiRequestError                        = "error accessing CF API endpoint: %s"
+	CFApiReadResponseError                   = "error reading response from CF API endpoint: %s"
+	CFApiUnmarshalError                      = "error unmarshaling response from CF API endpoint: %s"
 	CFApiUnexpectedResponseStatusErrorFormat = "unexpected status in CF API response: %d"
 	UAAEndpointEmptyError                    = "UAA url is empty"
 )
@@ -35,31 +36,34 @@ func NewClient(cfApiURL string, httpClient httpClient) *Client {
 func (cl *Client) GetUAAURL() (string, error) {
 	cfApiURL, err := url.Parse(cl.cfApiURL)
 	if err != nil {
-		return "", errors.Wrap(err, CfApiURLParsingError)
+		return "", errors.Wrapf(err, CfApiURLParsingError, cl.cfApiURL)
 	}
 
 	cfApiURL.Path = path.Join(cfApiURL.Path, "/v2/info")
 	req, err := http.NewRequest(http.MethodGet, cfApiURL.String(), nil)
 	if err != nil {
-		return "", errors.Wrap(err, CreateCfApiTTPRequestError)
+		return "", errors.Wrap(err, CreateCfApiHTTPRequestError)
 	}
 
 	resp, err := cl.httpClient.Do(req)
 	if err != nil {
-		return "", errors.Wrap(err, CfApiRequestError)
+		return "", errors.Wrapf(err, CfApiRequestError, cfApiURL.String())
 	}
 	if resp.StatusCode != http.StatusOK {
 		return "", errors.Errorf(CFApiUnexpectedResponseStatusErrorFormat, resp.StatusCode)
 	}
 
 	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", errors.Wrapf(err, CFApiReadResponseError, cfApiURL.String())
+	}
 
 	var cfResponse struct {
 		TokenEndpoint string `json:"token_endpoint"`
 	}
 	err = json.Unmarshal(respBody, &cfResponse)
 	if err != nil {
-		return "", errors.Wrap(err, CFApiUnmarshalError)
+		return "", errors.Wrapf(err, CFApiUnmarshalError, cfApiURL.String())
 	}
 
 	if cfResponse.TokenEndpoint == "" {

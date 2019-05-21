@@ -15,6 +15,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pivotal-cf/aqueduct-courier/cf"
+
 	"github.com/elazarl/goproxy"
 	"github.com/mholt/archiver"
 	. "github.com/onsi/ginkgo"
@@ -321,6 +323,7 @@ var _ = Describe("Collect", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(1))
 			Expect(session.Err).To(gbytes.Say(cmd.GetUAAURLError))
+			Expect(session.Err).To(gbytes.Say(fmt.Sprintf(cf.CFApiUnexpectedResponseStatusErrorFormat, http.StatusInternalServerError)))
 		})
 
 		DescribeTable(
