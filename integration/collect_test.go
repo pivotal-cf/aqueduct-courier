@@ -20,6 +20,7 @@ import (
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"github.com/onsi/gomega/ghttp"
+	"github.com/pivotal-cf/aqueduct-courier/cf"
 	"github.com/pivotal-cf/aqueduct-courier/cmd"
 	"github.com/pivotal-cf/aqueduct-courier/operations"
 	"github.com/pivotal-cf/aqueduct-utils/data"
@@ -381,6 +382,7 @@ var _ = Describe("Collect", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(1))
 			Expect(session.Err).To(gbytes.Say(cmd.GetUAAURLError))
+			Expect(session.Err).To(gbytes.Say(fmt.Sprintf(cf.CFApiUnexpectedResponseStatusErrorFormat, http.StatusInternalServerError)))
 		})
 
 		DescribeTable(
