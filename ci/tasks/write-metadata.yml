@@ -26,7 +26,7 @@ run:
     ---
     release:
       version: "$(cat version/version)"
-      eula_slug: "telemetry-eula"
+      eula_slug: "telemetry-eula-v2"
       release_type: "Alpha Release"
       availability: Admins Only
       eccn: "EAR99"
