@@ -507,15 +507,15 @@ jobs:
       resource: lts-aqueduct-courier
       passed: [lts-test-collect-and-send, lts-test-collect-credhub-info]
     - get: ci
-  - put: lts-aqueduct-courier
-    params:
-      repository: lts-aqueduct-courier
-      tag: {{lts_version}}
-      only_tag: true
   - task: generate-version-file
     file: ci/ci/tasks/generate-version-file.yml
     params:
       VERSION: {{lts_version}}
+  - put: lts-aqueduct-courier
+    params:
+      repository: aqueduct-courier
+      tag: version/version
+      only_tag: true
   - task: build-binaries
     file: ci/ci/tasks/build-binaries.yml
     params:
