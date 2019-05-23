@@ -5,12 +5,13 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
-	"github.com/pkg/errors"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 const (
@@ -42,6 +43,8 @@ func (s *Service) Certificates() (io.Reader, error) {
 		return nil, errors.Wrap(err, ListCertificatesError)
 	}
 
+	defer resp.Body.Close()
+
 	certificatesContent, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, errors.Wrap(err, ListCertificatesReadError)
@@ -62,6 +65,7 @@ func (s *Service) Certificates() (io.Reader, error) {
 		if err != nil {
 			return nil, errors.Wrapf(err, GetCertificateDataErrorFormat, certMap["name"])
 		}
+		resp.Body.Close()
 
 		cert, err := parseCertFromDataResponse(resp.Body)
 		if err != nil {

@@ -75,22 +75,17 @@ type serviceReport struct {
 }
 
 func (s *Service) AppUsages() (io.Reader, error) {
-	respBody, err := s.makeRequest(AppUsagesReportName)
+	contents, err := s.makeRequest(AppUsagesReportName)
 	if err != nil {
 		return nil, errors.Wrap(err, AppUsagesRequestError)
 	}
-	return respBody, nil
+	return bytes.NewReader(contents), nil
 }
 
 func (s *Service) ServiceUsages() (io.Reader, error) {
-	respBody, err := s.makeRequest(ServiceUsagesReportName)
+	contents, err := s.makeRequest(ServiceUsagesReportName)
 	if err != nil {
 		return nil, errors.Wrap(err, ServiceUsagesRequestError)
-	}
-
-	contents, err := ioutil.ReadAll(respBody)
-	if err != nil {
-		return nil, errors.Wrapf(err, ReadResponseError)
 	}
 
 	var sReport serviceReport
@@ -110,10 +105,10 @@ func (s *Service) TaskUsages() (io.Reader, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, TaskUsagesRequestError)
 	}
-	return respBody, nil
+	return bytes.NewReader(respBody), nil
 }
 
-func (s *Service) makeRequest(reportName string) (io.Reader, error) {
+func (s *Service) makeRequest(reportName string) ([]byte, error) {
 	targetURL, _ := url.Parse(s.BaseURL.String())
 	targetURL.Path = path.Join(targetURL.Path, SystemReportPathPrefix, reportName)
 	req, err := http.NewRequest(http.MethodGet, targetURL.String(), nil)
@@ -125,8 +120,16 @@ func (s *Service) makeRequest(reportName string) (io.Reader, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, UsageServiceRequestError)
 	}
+	defer resp.Body.Close()
+
 	if resp.StatusCode != http.StatusOK {
 		return nil, errors.Errorf(UsageServiceUnexpectedResponseStatusErrorFormat, resp.StatusCode, reportName)
 	}
-	return resp.Body, nil
+
+	contents, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, errors.Wrapf(err, ReadResponseError)
+	}
+
+	return contents, nil
 }

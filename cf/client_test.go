@@ -1,108 +1,97 @@
 package cf_test
 
 import (
+	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
-	"github.com/pivotal-cf/aqueduct-courier/consumption/consumptionfakes"
+	"github.com/pivotal-cf/aqueduct-courier/cf/cffakes"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/ghttp"
 	"github.com/pkg/errors"
 
 	. "github.com/pivotal-cf/aqueduct-courier/cf"
 )
 
 var _ = Describe("Client", func() {
+	const (
+		cfURL = "https://example.com/whatever"
+	)
 	var (
-		client       *Client
-		cfApiService *ghttp.Server
-		err          error
-		uaaURL       string
+		client         *Client
+		responseReader *readerCloser
+		fakeHTTPClient *cffakes.FakeHttpClient
 	)
 
 	BeforeEach(func() {
-		cfApiService = ghttp.NewServer()
-		v2InfoResponse := fmt.Sprintf(`{"token_endpoint":"http://api.funstuff.com/uaa"}`)
+		v2InfoResponse := `{"token_endpoint":"http://api.funstuff.com/uaa"}`
+		responseReader = &readerCloser{reader: bytes.NewReader([]byte(v2InfoResponse))}
 
-		cfApiService.RouteToHandler(http.MethodGet, "/v2/info", func(w http.ResponseWriter, req *http.Request) {
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(v2InfoResponse))
-		})
-		client = NewClient(cfApiService.URL(), http.DefaultClient)
-	})
-
-	AfterEach(func() {
-		cfApiService.Close()
+		fakeHTTPClient = &cffakes.FakeHttpClient{}
+		fakeHTTPClient.DoReturns(&http.Response{Body: responseReader, StatusCode: http.StatusOK}, nil)
+		client = NewClient(cfURL, fakeHTTPClient)
 	})
 
 	Describe("GetUAAURL", func() {
 		It("makes a request to UAA and retrieves the UAA url", func() {
-			uaaURL, err = client.GetUAAURL()
+			uaaURL, err := client.GetUAAURL()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(uaaURL).To(Equal("http://api.funstuff.com/uaa"))
-			Expect(len(cfApiService.ReceivedRequests())).To(Equal(1))
+			Expect(responseReader.isClosed).To(BeTrue())
 		})
 
 		It("returns an error when the CF API URL is invalid", func() {
 			client = NewClient(" bad://url", nil)
-			uaaURL, err = client.GetUAAURL()
+			_, err := client.GetUAAURL()
 			Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(CfApiURLParsingError, " bad://url"))))
 			Expect(err).To(MatchError(ContainSubstring("first path segment in URL cannot contain colon")))
 		})
 
 		It("returns an error when the request to the CF API endpoint fails", func() {
-			cfApiService.RouteToHandler(http.MethodGet, "/v2/info", func(w http.ResponseWriter, req *http.Request) {
-				w.WriteHeader(http.StatusMovedPermanently)
-			})
-			uaaURL, err = client.GetUAAURL()
+			fakeHTTPClient.DoReturns(nil, errors.New("Requesting stuff is hard"))
 
-			Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(CfApiRequestError, cfApiService.URL()+"/v2/info"))))
-			Expect(err).To(MatchError(ContainSubstring("301 response missing Location header")))
+			_, err := client.GetUAAURL()
+
+			Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(CfApiRequestError, cfURL+"/v2/info"))))
+			Expect(err).To(MatchError(ContainSubstring("Requesting stuff is hard")))
 		})
 
 		It("returns an error when reading the response fails", func() {
-			fakeHTTPClient := consumptionfakes.FakeHttpClient{}
-			fakeHTTPClient.DoReturns(&http.Response{StatusCode: http.StatusOK, Body: ioutil.NopCloser(&badReader{})}, nil)
-			client = NewClient("http://some-cf-api-url", &fakeHTTPClient)
+			responseReader := &readerCloser{reader: &badReader{}}
+			fakeHTTPClient.DoReturns(&http.Response{StatusCode: http.StatusOK, Body: responseReader}, nil)
 
-			uaaURL, err = client.GetUAAURL()
-			Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(CFApiReadResponseError, "http://some-cf-api-url/v2/info"))))
+			_, err := client.GetUAAURL()
+			Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(CFApiReadResponseError, cfURL+"/v2/info"))))
 			Expect(err).To(MatchError(ContainSubstring("Reading is hard")))
+			Expect(responseReader.isClosed).To(BeTrue())
 		})
 
 		It("returns an error when unmarshaling the response fails", func() {
-			v2InfoResponse := fmt.Sprintf(`{"messed-up,"}`)
-			cfApiService.RouteToHandler(http.MethodGet, "/v2/info", func(w http.ResponseWriter, req *http.Request) {
-				w.WriteHeader(http.StatusOK)
-				w.Write([]byte(v2InfoResponse))
-			})
+			responseReader = &readerCloser{reader: bytes.NewReader([]byte(`{"messed-up,"}`))}
+			fakeHTTPClient.DoReturns(&http.Response{Body: responseReader, StatusCode: http.StatusOK}, nil)
 
-			uaaURL, err = client.GetUAAURL()
-			Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(CFApiUnmarshalError, cfApiService.URL()+"/v2/info"))))
+			_, err := client.GetUAAURL()
+			Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(CFApiUnmarshalError, cfURL+"/v2/info"))))
 			Expect(err).To(MatchError(ContainSubstring("invalid character '}' after object key")))
+			Expect(responseReader.isClosed).To(BeTrue())
 		})
 
 		It("returns an error when the response is not 200", func() {
-			cfApiService.RouteToHandler(http.MethodGet, "/v2/info", func(w http.ResponseWriter, req *http.Request) {
-				w.WriteHeader(http.StatusInternalServerError)
-			})
-
-			uaaURL, err = client.GetUAAURL()
+			fakeHTTPClient.DoReturns(&http.Response{Body: responseReader, StatusCode: http.StatusInternalServerError}, nil)
+			_, err := client.GetUAAURL()
 			Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(CFApiUnexpectedResponseStatusErrorFormat, 500))))
+			Expect(responseReader.isClosed).To(BeTrue())
 		})
 
 		It("returns an error if the UAA endpoint is empty", func() {
-			v2InfoResponse := fmt.Sprintf(`{"token_endpoint":"", "other_non_string_prop": true}`)
-			cfApiService.RouteToHandler(http.MethodGet, "/v2/info", func(w http.ResponseWriter, req *http.Request) {
-				w.WriteHeader(http.StatusOK)
-				w.Write([]byte(v2InfoResponse))
-			})
+			responseReader = &readerCloser{reader: bytes.NewReader([]byte(`{"token_endpoint":"", "other_non_string_prop": true}`))}
+			fakeHTTPClient.DoReturns(&http.Response{Body: responseReader, StatusCode: http.StatusOK}, nil)
 
-			uaaURL, err = client.GetUAAURL()
+			_, err := client.GetUAAURL()
 			Expect(err).To(MatchError(ContainSubstring(UAAEndpointEmptyError)))
+			Expect(responseReader.isClosed).To(BeTrue())
 		})
 
 	})
@@ -112,4 +101,18 @@ type badReader struct{}
 
 func (r *badReader) Read(b []byte) (n int, err error) {
 	return 0, errors.New("Reading is hard")
+}
+
+type readerCloser struct {
+	reader   io.Reader
+	isClosed bool
+}
+
+func (rc *readerCloser) Read(p []byte) (n int, err error) {
+	return rc.reader.Read(p)
+}
+
+func (rc *readerCloser) Close() error {
+	rc.isClosed = true
+	return nil
 }

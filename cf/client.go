@@ -25,6 +25,7 @@ type Client struct {
 	httpClient httpClient
 }
 
+//go:generate counterfeiter . httpClient
 type httpClient interface {
 	Do(request *http.Request) (*http.Response, error)
 }
@@ -49,6 +50,8 @@ func (cl *Client) GetUAAURL() (string, error) {
 	if err != nil {
 		return "", errors.Wrapf(err, CfApiRequestError, cfApiURL.String())
 	}
+	defer resp.Body.Close()
+
 	if resp.StatusCode != http.StatusOK {
 		return "", errors.Errorf(CFApiUnexpectedResponseStatusErrorFormat, resp.StatusCode)
 	}

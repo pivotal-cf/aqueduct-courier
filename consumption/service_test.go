@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -41,7 +42,7 @@ var _ = Describe("Service", func() {
 
 	Describe("App Usages", func() {
 		It("returns app usage content", func() {
-			body := ioutil.NopCloser(bytes.NewReader([]byte(`successful app usage content`)))
+			body := &readerCloser{reader: bytes.NewReader([]byte(`successful app usage content`))}
 			appUsagesResponse := &http.Response{Body: body, StatusCode: http.StatusOK}
 			fakeClient.DoReturns(appUsagesResponse, nil)
 
@@ -55,9 +56,10 @@ var _ = Describe("Service", func() {
 			usageURL.Path = path.Join(usageURL.Path, SystemReportPathPrefix, AppUsagesReportName)
 			Expect(req.URL).To(Equal(usageURL))
 
-			actualBytes, err := ioutil.ReadAll(respBody)
+			Expect(body.isClosed).To(BeTrue())
+			content, err := ioutil.ReadAll(respBody)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(actualBytes).To(Equal(expectedBody))
+			Expect(content).To(Equal([]byte(expectedBody)))
 		})
 
 		It("errors when the request to the usage service fails", func() {
@@ -69,10 +71,12 @@ var _ = Describe("Service", func() {
 		})
 
 		It("errors when the usage service returns an unexpected response", func() {
-			badStatusResponse := &http.Response{Body: nil, StatusCode: http.StatusInternalServerError}
+			body := &readerCloser{}
+			badStatusResponse := &http.Response{Body: body, StatusCode: http.StatusInternalServerError}
 			fakeClient.DoReturns(badStatusResponse, nil)
 			_, err := service.AppUsages()
 
+			Expect(body.isClosed).To(BeTrue())
 			Expect(err).To(MatchError(ContainSubstring(AppUsagesRequestError)))
 			Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(UsageServiceUnexpectedResponseStatusErrorFormat, http.StatusInternalServerError, AppUsagesReportName))))
 		})
@@ -131,7 +135,7 @@ var _ = Describe("Service", func() {
     }
   ]
 }`)
-			body := ioutil.NopCloser(bytes.NewReader(reportsJson))
+			body := &readerCloser{reader: bytes.NewReader(reportsJson)}
 			serviceUsagesResponse := &http.Response{Body: body, StatusCode: http.StatusOK}
 			fakeClient.DoReturns(serviceUsagesResponse, nil)
 
@@ -144,11 +148,12 @@ var _ = Describe("Service", func() {
 			usageURL.Path = path.Join(usageURL.Path, SystemReportPathPrefix, ServiceUsagesReportName)
 			Expect(req.URL).To(Equal(usageURL))
 
-			actualContent, err := ioutil.ReadAll(respBody)
+			Expect(body.isClosed).To(BeTrue())
+			content, err := ioutil.ReadAll(respBody)
 			Expect(err).NotTo(HaveOccurred())
 
 			var actualResults map[string]interface{}
-			Expect(json.Unmarshal(actualContent, &actualResults)).To(Succeed())
+			Expect(json.Unmarshal(content, &actualResults)).To(Succeed())
 
 			expectedResultJson := []byte(`{
   "report_time": "2017-05-11",
@@ -214,26 +219,29 @@ var _ = Describe("Service", func() {
 		})
 
 		It("errors when the usage service returns an unexpected response", func() {
-			badStatusResponse := &http.Response{Body: nil, StatusCode: http.StatusInternalServerError}
+			body := &readerCloser{}
+			badStatusResponse := &http.Response{Body: body, StatusCode: http.StatusInternalServerError}
 			fakeClient.DoReturns(badStatusResponse, nil)
 			_, err := service.ServiceUsages()
 
+			Expect(body.isClosed).To(BeTrue())
 			Expect(err).To(MatchError(ContainSubstring(ServiceUsagesRequestError)))
 			Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(UsageServiceUnexpectedResponseStatusErrorFormat, http.StatusInternalServerError, ServiceUsagesReportName))))
 		})
 
 		It("errors if the contents cannot be read from the response", func() {
-			body := ioutil.NopCloser(&badReader{})
+			body := &readerCloser{reader: &badReader{}}
 			badReaderResponse := &http.Response{Body: body, StatusCode: http.StatusOK}
 			fakeClient.DoReturns(badReaderResponse, nil)
 
 			_, err := service.ServiceUsages()
+			Expect(body.isClosed).To(BeTrue())
 			Expect(err).To(MatchError(ContainSubstring(ReadResponseError)))
 			Expect(err).To(MatchError(ContainSubstring("bad-reader")))
 		})
 
 		It("errors if the contents are not json", func() {
-			body := ioutil.NopCloser(bytes.NewReader([]byte(`not-good-json`)))
+			body := &readerCloser{reader: bytes.NewReader([]byte(`not-good-json`))}
 			badJSONResponse := &http.Response{Body: body, StatusCode: http.StatusOK}
 			fakeClient.DoReturns(badJSONResponse, nil)
 
@@ -244,7 +252,7 @@ var _ = Describe("Service", func() {
 
 	Describe("Task Usages", func() {
 		It("returns task usage content", func() {
-			body := ioutil.NopCloser(bytes.NewReader([]byte(`successful task usage content`)))
+			body := &readerCloser{reader: bytes.NewReader([]byte(`successful task usage content`))}
 			appUsagesResponse := &http.Response{Body: body, StatusCode: http.StatusOK}
 			fakeClient.DoReturns(appUsagesResponse, nil)
 
@@ -259,9 +267,10 @@ var _ = Describe("Service", func() {
 			usageURL.Path = path.Join(usageURL.Path, SystemReportPathPrefix, TaskUsagesReportName)
 			Expect(req.URL).To(Equal(usageURL))
 
-			actualBytes, err := ioutil.ReadAll(respBody)
+			Expect(body.isClosed).To(BeTrue())
+			content, err := ioutil.ReadAll(respBody)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(actualBytes).To(Equal(expectedBody))
+			Expect(content).To(Equal(expectedBody))
 		})
 
 		It("errors when the request to the usage service fails", func() {
@@ -273,10 +282,12 @@ var _ = Describe("Service", func() {
 		})
 
 		It("errors when the usage service returns an unexpected response", func() {
-			badStatusResponse := &http.Response{Body: nil, StatusCode: http.StatusInternalServerError}
+			body := &readerCloser{}
+			badStatusResponse := &http.Response{Body: body, StatusCode: http.StatusInternalServerError}
 			fakeClient.DoReturns(badStatusResponse, nil)
 			_, err := service.TaskUsages()
 
+			Expect(body.isClosed).To(BeTrue())
 			Expect(err).To(MatchError(ContainSubstring(TaskUsagesRequestError)))
 			Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(UsageServiceUnexpectedResponseStatusErrorFormat, http.StatusInternalServerError, TaskUsagesReportName))))
 		})
@@ -287,4 +298,18 @@ type badReader struct{}
 
 func (b *badReader) Read([]byte) (int, error) {
 	return 0, errors.New("bad-reader")
+}
+
+type readerCloser struct {
+	reader   io.Reader
+	isClosed bool
+}
+
+func (rc *readerCloser) Read(p []byte) (n int, err error) {
+	return rc.reader.Read(p)
+}
+
+func (rc *readerCloser) Close() error {
+	rc.isClosed = true
+	return nil
 }
