@@ -9,11 +9,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	. "github.com/pivotal-cf/aqueduct-courier/credhub"
-	"github.com/pivotal-cf/aqueduct-courier/credhub/credhubfakes"
-	"github.com/pkg/errors"
+	"io"
 	"io/ioutil"
 	"math/big"
 	"net"
@@ -21,6 +17,12 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	. "github.com/pivotal-cf/aqueduct-courier/credhub"
+	"github.com/pivotal-cf/aqueduct-courier/credhub/credhubfakes"
+	"github.com/pkg/errors"
 )
 
 var _ = Describe("Service", func() {
@@ -49,6 +51,10 @@ var _ = Describe("Service", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		credhubRequestor := new(credhubfakes.FakeCredhubRequestor)
+		certificatesBody := &readerCloser{reader: bytes.NewReader(certListResponse)}
+		cert1Body := &readerCloser{reader: bytes.NewReader(cert1DataResponse)}
+		cert2Body := &readerCloser{reader: bytes.NewReader(cert2DataResponse)}
+
 		credhubRequestor.RequestStub = func(method string, pathStr string, query url.Values, body interface{}, checkServerErr bool) (*http.Response, error) {
 			response := http.Response{}
 			Expect(method).To(Equal(http.MethodGet))
@@ -57,14 +63,14 @@ var _ = Describe("Service", func() {
 			switch pathStr {
 			case "/api/v1/certificates":
 				Expect(query).To(Equal(url.Values{}))
-				response.Body = ioutil.NopCloser(bytes.NewReader(certListResponse))
+				response.Body = certificatesBody
 			case "/api/v1/data":
 				certPath := query.Get("name")
 				switch certPath {
 				case "cert1-name-path":
-					response.Body = ioutil.NopCloser(bytes.NewReader(cert1DataResponse))
+					response.Body = cert1Body
 				case "cert2-name-path":
-					response.Body = ioutil.NopCloser(bytes.NewReader(cert2DataResponse))
+					response.Body = cert2Body
 				default:
 					Fail(fmt.Sprintf("Unexpected cert path %s", certPath))
 				}
@@ -81,6 +87,10 @@ var _ = Describe("Service", func() {
 
 		certContent, err := ioutil.ReadAll(reader)
 		Expect(err).NotTo(HaveOccurred())
+
+		Expect(certificatesBody.isClosed).To(BeTrue())
+		Expect(cert1Body.isClosed).To(BeTrue())
+		Expect(cert2Body.isClosed).To(BeTrue())
 
 		var credhubCertificates map[string][]map[string]string
 		Expect(json.Unmarshal(certContent, &credhubCertificates)).To(Succeed())
@@ -125,7 +135,7 @@ var _ = Describe("Service", func() {
 			response := http.Response{}
 			switch pathStr {
 			case "/api/v1/certificates":
-				response.Body = ioutil.NopCloser(&badReader{})
+				response.Body = &readerCloser{reader: &badReader{}}
 			default:
 				Fail(fmt.Sprintf("Unexpected request path %s", pathStr))
 			}
@@ -145,7 +155,7 @@ var _ = Describe("Service", func() {
 			response := http.Response{}
 			switch pathStr {
 			case "/api/v1/certificates":
-				response.Body = ioutil.NopCloser(strings.NewReader("Simply not JSON!"))
+				response.Body = &readerCloser{reader: strings.NewReader("Simply not JSON!")}
 			default:
 				Fail(fmt.Sprintf("Unexpected request path %s", pathStr))
 			}
@@ -166,7 +176,7 @@ var _ = Describe("Service", func() {
 			response := http.Response{}
 			switch pathStr {
 			case "/api/v1/certificates":
-				response.Body = ioutil.NopCloser(bytes.NewReader(certListResponse))
+				response.Body = &readerCloser{reader: bytes.NewReader(certListResponse)}
 			case "/api/v1/data":
 				return nil, errors.New("requesting data stuff is hard")
 			default:
@@ -190,9 +200,9 @@ var _ = Describe("Service", func() {
 			response := http.Response{}
 			switch pathStr {
 			case "/api/v1/certificates":
-				response.Body = ioutil.NopCloser(bytes.NewReader(certListResponse))
+				response.Body = &readerCloser{reader: bytes.NewReader(certListResponse)}
 			case "/api/v1/data":
-				response.Body = ioutil.NopCloser(&badReader{})
+				response.Body = &readerCloser{reader: &badReader{}}
 			default:
 				Fail(fmt.Sprintf("Unexpected request path %s", pathStr))
 			}
@@ -214,9 +224,9 @@ var _ = Describe("Service", func() {
 			response := http.Response{}
 			switch pathStr {
 			case "/api/v1/certificates":
-				response.Body = ioutil.NopCloser(bytes.NewReader(certListResponse))
+				response.Body = &readerCloser{reader: bytes.NewReader(certListResponse)}
 			case "/api/v1/data":
-				response.Body = ioutil.NopCloser(strings.NewReader("totally not json"))
+				response.Body = &readerCloser{reader: strings.NewReader("totally not json")}
 			default:
 				Fail(fmt.Sprintf("Unexpected request path %s", pathStr))
 			}
@@ -237,9 +247,9 @@ var _ = Describe("Service", func() {
 			response := http.Response{}
 			switch pathStr {
 			case "/api/v1/certificates":
-				response.Body = ioutil.NopCloser(bytes.NewReader(certListResponse))
+				response.Body = &readerCloser{reader: bytes.NewReader(certListResponse)}
 			case "/api/v1/data":
-				response.Body = ioutil.NopCloser(strings.NewReader(`{"data": [{}]}`))
+				response.Body = &readerCloser{reader: strings.NewReader(`{"data": [{}]}`)}
 			default:
 				Fail(fmt.Sprintf("Unexpected request path %s", pathStr))
 			}
@@ -270,9 +280,9 @@ var _ = Describe("Service", func() {
 			response := http.Response{}
 			switch pathStr {
 			case "/api/v1/certificates":
-				response.Body = ioutil.NopCloser(bytes.NewReader(certListResponse))
+				response.Body = &readerCloser{reader: bytes.NewReader(certListResponse)}
 			case "/api/v1/data":
-				response.Body = ioutil.NopCloser(bytes.NewReader(parsedDataResponse))
+				response.Body = &readerCloser{reader: bytes.NewReader(parsedDataResponse)}
 			default:
 				Fail(fmt.Sprintf("Unexpected request path %s", pathStr))
 			}
@@ -312,9 +322,9 @@ func makeCert(notBefore, notAfter time.Time, issuingOrg string) string {
 	issuerCert := x509.Certificate{
 		SerialNumber: big.NewInt(42),
 		Subject: pkix.Name{
-				Country:      []string{"Melchizedek"},
-				Organization: []string{issuingOrg},
-			},
+			Country:      []string{"Melchizedek"},
+			Organization: []string{issuingOrg},
+		},
 		NotBefore: notBefore,
 		NotAfter:  notAfter,
 
@@ -349,4 +359,18 @@ func makeCert(notBefore, notAfter time.Time, issuingOrg string) string {
 	Expect(pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes})).To(Succeed())
 
 	return string(certOut.Bytes())
+}
+
+type readerCloser struct {
+	reader   io.Reader
+	isClosed bool
+}
+
+func (rc *readerCloser) Read(p []byte) (n int, err error) {
+	return rc.reader.Read(p)
+}
+
+func (rc *readerCloser) Close() error {
+	rc.isClosed = true
+	return nil
 }

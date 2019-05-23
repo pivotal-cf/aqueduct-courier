@@ -74,14 +74,9 @@ type Requestor interface {
 }
 
 func (s *Service) Installations() (io.Reader, error) {
-	contentReader, err := s.makeRequest(InstallationsPath)
+	contents, err := s.makeRequest(InstallationsPath)
 	if err != nil {
 		return nil, err
-	}
-
-	contents, err := ioutil.ReadAll(contentReader)
-	if err != nil {
-		return nil, errors.Wrapf(err, ReadResponseBodyFailureFormat, InstallationsPath)
 	}
 
 	var i installations
@@ -101,14 +96,9 @@ func (s *Service) Installations() (io.Reader, error) {
 }
 
 func (s *Service) CertificateAuthorities() (io.Reader, error) {
-	contentReader, err := s.makeRequest(CertificateAuthoritiesPath)
+	contents, err := s.makeRequest(CertificateAuthoritiesPath)
 	if err != nil {
 		return nil, err
-	}
-
-	contents, err := ioutil.ReadAll(contentReader)
-	if err != nil {
-		return nil, errors.Wrapf(err, ReadResponseBodyFailureFormat, CertificateAuthoritiesPath)
 	}
 
 	var ca certificateAuthorities
@@ -124,27 +114,22 @@ func (s *Service) CertificateAuthorities() (io.Reader, error) {
 	return bytes.NewReader(redactedContent), nil
 }
 func (s *Service) Certificates() (io.Reader, error) {
-	return s.makeRequest(CertificatesPath)
+	return s.makeRequestReader(CertificatesPath)
 }
 
 func (s *Service) DeployedProducts() (io.Reader, error) {
-	return s.makeRequest(DeployedProductsPath)
+	return s.makeRequestReader(DeployedProductsPath)
 }
 
 func (s *Service) ProductResources(guid string) (io.Reader, error) {
-	return s.makeRequest(fmt.Sprintf(ProductResourcesPathFormat, guid))
+	return s.makeRequestReader(fmt.Sprintf(ProductResourcesPathFormat, guid))
 }
 
 func (s *Service) ProductProperties(guid string) (io.Reader, error) {
 	productPropertiesPath := fmt.Sprintf(ProductPropertiesPathFormat, guid)
-	contentReader, err := s.makeRequest(productPropertiesPath)
+	contents, err := s.makeRequest(productPropertiesPath)
 	if err != nil {
 		return nil, err
-	}
-
-	contents, err := ioutil.ReadAll(contentReader)
-	if err != nil {
-		return nil, errors.Wrapf(err, ReadResponseBodyFailureFormat, productPropertiesPath)
 	}
 
 	var ps productProperties
@@ -166,22 +151,17 @@ func (s *Service) ProductProperties(guid string) (io.Reader, error) {
 }
 
 func (s *Service) VmTypes() (io.Reader, error) {
-	return s.makeRequest(VmTypesPath)
+	return s.makeRequestReader(VmTypesPath)
 }
 
 func (s *Service) DiagnosticReport() (io.Reader, error) {
-	return s.makeRequest(DiagnosticReportPath)
+	return s.makeRequestReader(DiagnosticReportPath)
 }
 
 func (s *Service) BoshCredentials() (BoshCredential, error) {
-	output, err := s.makeRequest(BoshCredentialsPath)
+	credBytes, err := s.makeRequest(BoshCredentialsPath)
 	if err != nil {
 		return BoshCredential{}, err
-	}
-
-	credBytes, err := ioutil.ReadAll(output)
-	if err != nil {
-		return BoshCredential{}, errors.Wrapf(err, ReadResponseBodyFailureFormat, BoshCredentialsPath)
 	}
 
 	var credentialMap map[string]string
@@ -211,19 +191,34 @@ func (s *Service) BoshCredentials() (BoshCredential, error) {
 	return bCred, nil
 }
 
-func (s *Service) makeRequest(path string) (io.Reader, error) {
+func (s *Service) makeRequestReader(path string) (io.Reader, error) {
+	content, err := s.makeRequest(path)
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewReader(content), nil
+}
+
+func (s *Service) makeRequest(path string) ([]byte, error) {
 	input := api.RequestServiceCurlInput{
 		Path:   path,
 		Method: http.MethodGet,
 	}
-	output, err := s.Requestor.Curl(input)
+	resp, err := s.Requestor.Curl(input)
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf(RequestFailureErrorFormat, http.MethodGet, path))
+		return nil, errors.Wrapf(err, RequestFailureErrorFormat, http.MethodGet, path)
 	}
-	if output.StatusCode != http.StatusOK {
-		return nil, errors.New(fmt.Sprintf(RequestUnexpectedStatusErrorFormat, http.MethodGet, path, output.StatusCode))
+
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.New(fmt.Sprintf(RequestUnexpectedStatusErrorFormat, http.MethodGet, path, resp.StatusCode))
 	}
-	return output.Body, nil
+
+	contents, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, errors.Wrapf(err, ReadResponseBodyFailureFormat, input.Path)
+	}
+	return contents, nil
 }
 
 func allowedPropertyType(propertyType string) bool {

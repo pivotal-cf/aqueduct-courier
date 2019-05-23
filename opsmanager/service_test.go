@@ -32,13 +32,16 @@ var _ = Describe("Service", func() {
 
 	Describe("DeployedProducts", func() {
 		It("returns deployed products content", func() {
-			body := ioutil.NopCloser(strings.NewReader("deployed-products"))
+			body := &readerCloser{reader: strings.NewReader("deployed-products")}
 
 			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
 			actual, err := service.DeployedProducts()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(actual).To(Equal(body))
+			Expect(body.isClosed).To(BeTrue())
+			content, err := ioutil.ReadAll(actual)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(content).To(Equal([]byte("deployed-products")))
 			Expect(requestor.CurlCallCount()).To(Equal(1))
 			input := requestor.CurlArgsForCall(0)
 			Expect(input).To(Equal(api.RequestServiceCurlInput{Path: DeployedProductsPath, Method: http.MethodGet}))
@@ -56,10 +59,12 @@ var _ = Describe("Service", func() {
 		})
 
 		It("returns an error when requestor returns a non 200 status code", func() {
-			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusBadGateway}, nil)
+			body := &readerCloser{}
+			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusBadGateway}, nil)
 
 			actual, err := service.DeployedProducts()
 			Expect(actual).To(BeNil())
+			Expect(body.isClosed).To(BeTrue())
 			Expect(err).To(MatchError(fmt.Sprintf(
 				RequestUnexpectedStatusErrorFormat, http.MethodGet, DeployedProductsPath, http.StatusBadGateway,
 			)))
@@ -76,13 +81,16 @@ var _ = Describe("Service", func() {
 		})
 
 		It("returns product resources content", func() {
-			body := ioutil.NopCloser(strings.NewReader("product-resources"))
+			body := &readerCloser{reader: strings.NewReader("product-resources")}
 
 			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
 			actual, err := service.ProductResources(productGUID)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(actual).To(Equal(body))
+			Expect(body.isClosed).To(BeTrue())
+			content, err := ioutil.ReadAll(actual)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(content).To(Equal([]byte("product-resources")))
 
 			Expect(requestor.CurlCallCount()).To(Equal(1))
 			input := requestor.CurlArgsForCall(0)
@@ -101,10 +109,12 @@ var _ = Describe("Service", func() {
 		})
 
 		It("returns an error when requestor returns a non 200 status code", func() {
-			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusBadGateway}, nil)
+			body := &readerCloser{}
+			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusBadGateway}, nil)
 
 			actual, err := service.ProductResources(productGUID)
 			Expect(actual).To(BeNil())
+			Expect(body.isClosed).To(BeTrue())
 			Expect(err).To(MatchError(fmt.Sprintf(
 				RequestUnexpectedStatusErrorFormat, http.MethodGet, expectedProductPath, http.StatusBadGateway,
 			)))
@@ -246,10 +256,12 @@ var _ = Describe("Service", func() {
 		})
 
 		It("returns an error when requestor returns a non 200 status code", func() {
-			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusBadGateway}, nil)
+			body := &readerCloser{}
+			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusBadGateway}, nil)
 
 			actual, err := service.ProductProperties(productGUID)
 			Expect(actual).To(BeNil())
+			Expect(body.isClosed).To(BeTrue())
 			Expect(err).To(MatchError(fmt.Sprintf(
 				RequestUnexpectedStatusErrorFormat, http.MethodGet, expectedProductPropertiesPath, http.StatusBadGateway,
 			)))
@@ -258,13 +270,16 @@ var _ = Describe("Service", func() {
 
 	Describe("VmTypes", func() {
 		It("returns product resources content", func() {
-			body := ioutil.NopCloser(strings.NewReader("vm-types"))
+			body := &readerCloser{reader: strings.NewReader("vm-types")}
 
 			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
 			actual, err := service.VmTypes()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(actual).To(Equal(body))
+			Expect(body.isClosed).To(BeTrue())
+			content, err := ioutil.ReadAll(actual)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(content).To(Equal([]byte("vm-types")))
 			Expect(requestor.CurlCallCount()).To(Equal(1))
 			input := requestor.CurlArgsForCall(0)
 			Expect(input).To(Equal(api.RequestServiceCurlInput{Path: VmTypesPath, Method: http.MethodGet}))
@@ -282,10 +297,12 @@ var _ = Describe("Service", func() {
 		})
 
 		It("returns an error when requestor returns a non 200 status code", func() {
-			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusBadGateway}, nil)
+			body := &readerCloser{}
+			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusBadGateway, Body: body}, nil)
 
 			actual, err := service.VmTypes()
 			Expect(actual).To(BeNil())
+			Expect(body.isClosed).To(BeTrue())
 			Expect(err).To(MatchError(fmt.Sprintf(
 				RequestUnexpectedStatusErrorFormat, http.MethodGet, VmTypesPath, http.StatusBadGateway,
 			)))
@@ -294,13 +311,16 @@ var _ = Describe("Service", func() {
 
 	Describe("DiagnosticReport", func() {
 		It("returns product resources content", func() {
-			body := ioutil.NopCloser(strings.NewReader("diagnostic-report"))
+			body := &readerCloser{reader: strings.NewReader("diagnostic-report")}
 
 			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
 			actual, err := service.DiagnosticReport()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(actual).To(Equal(body))
+			Expect(body.isClosed).To(BeTrue())
+			content, err := ioutil.ReadAll(actual)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(content).To(Equal([]byte("diagnostic-report")))
 			Expect(requestor.CurlCallCount()).To(Equal(1))
 			input := requestor.CurlArgsForCall(0)
 			Expect(input).To(Equal(api.RequestServiceCurlInput{Path: DiagnosticReportPath, Method: http.MethodGet}))
@@ -318,10 +338,12 @@ var _ = Describe("Service", func() {
 		})
 
 		It("returns an error when requestor returns a non 200 status code", func() {
-			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusBadGateway}, nil)
+			body := &readerCloser{}
+			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusBadGateway, Body: body}, nil)
 
 			actual, err := service.DiagnosticReport()
 			Expect(actual).To(BeNil())
+			Expect(body.isClosed).To(BeTrue())
 			Expect(err).To(MatchError(fmt.Sprintf(
 				RequestUnexpectedStatusErrorFormat, http.MethodGet, DiagnosticReportPath, http.StatusBadGateway,
 			)))
@@ -330,7 +352,7 @@ var _ = Describe("Service", func() {
 
 	Describe("Installations", func() {
 		It("removes user names from the installation content and returns the rest", func() {
-			body := ioutil.NopCloser(strings.NewReader(`{"installations": [{"user_name": "foo", "other": 42}, {"user_name": "bar", "other": 24}]}`))
+			body := &readerCloser{reader: strings.NewReader(`{"installations": [{"user_name": "foo", "other": 42}, {"user_name": "bar", "other": 24}]}`)}
 
 			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
@@ -360,7 +382,7 @@ var _ = Describe("Service", func() {
 		})
 
 		It("errors if the contents are not json", func() {
-			body := ioutil.NopCloser(strings.NewReader(`you-thought-this-was-json`))
+			body := &readerCloser{reader: strings.NewReader(`you-thought-this-was-json`)}
 
 			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
@@ -383,10 +405,12 @@ var _ = Describe("Service", func() {
 		})
 
 		It("returns an error when requestor returns a non 200 status code", func() {
-			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusBadGateway}, nil)
+			body := &readerCloser{}
+			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusBadGateway, Body: body}, nil)
 
 			actual, err := service.Installations()
 			Expect(actual).To(BeNil())
+			Expect(body.isClosed).To(BeTrue())
 			Expect(err).To(MatchError(fmt.Sprintf(
 				RequestUnexpectedStatusErrorFormat, http.MethodGet, InstallationsPath, http.StatusBadGateway,
 			)))
@@ -395,7 +419,7 @@ var _ = Describe("Service", func() {
 
 	Describe("Certificates", func() {
 		It("returns deployed certificates content", func() {
-			body := ioutil.NopCloser(strings.NewReader(`{"certificates":[{"keys": "for-certs"}]}`))
+			body := &readerCloser{reader: strings.NewReader(`{"certificates":[{"keys": "for-certs"}]}`)}
 
 			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
@@ -421,10 +445,12 @@ var _ = Describe("Service", func() {
 		})
 
 		It("returns an error when requestor returns a non 200 status code", func() {
-			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusBadGateway}, nil)
+			body := &readerCloser{}
+			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusBadGateway, Body: body}, nil)
 
 			actual, err := service.Certificates()
 			Expect(actual).To(BeNil())
+			Expect(body.isClosed).To(BeTrue())
 			Expect(err).To(MatchError(fmt.Sprintf(
 				RequestUnexpectedStatusErrorFormat, http.MethodGet, CertificatesPath, http.StatusBadGateway,
 			)))
@@ -433,7 +459,7 @@ var _ = Describe("Service", func() {
 
 	Describe("CertificateAuthorities", func() {
 		It("returns deployed certificates content, removing unknown keys", func() {
-			body := ioutil.NopCloser(strings.NewReader(`{
+			body := &readerCloser{reader: strings.NewReader(`{
 "certificate_authorities":[{
 	"guid": "f7bc18f34f2a7a9403c3",
 	"issuer": "Pivotal",
@@ -443,7 +469,7 @@ var _ = Describe("Service", func() {
 	"cert_pem": "should not be here",
 	"nats_cert_pem": "should not be here",
 	"random_key": "should not be here"
-}]}`))
+}]}`)}
 			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
 			actual, err := service.CertificateAuthorities()
@@ -480,7 +506,7 @@ var _ = Describe("Service", func() {
 		})
 
 		It("errors if the contents are not json", func() {
-			body := ioutil.NopCloser(strings.NewReader(`you-thought-this-was-json`))
+			body := &readerCloser{reader: strings.NewReader(`you-thought-this-was-json`)}
 
 			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
@@ -503,10 +529,12 @@ var _ = Describe("Service", func() {
 		})
 
 		It("returns an error when requestor returns a non 200 status code", func() {
-			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusBadGateway}, nil)
+			body := &readerCloser{}
+			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusBadGateway, Body: body}, nil)
 
 			actual, err := service.CertificateAuthorities()
 			Expect(actual).To(BeNil())
+			Expect(body.isClosed).To(BeTrue())
 			Expect(err).To(MatchError(fmt.Sprintf(
 				RequestUnexpectedStatusErrorFormat, http.MethodGet, CertificateAuthoritiesPath, http.StatusBadGateway,
 			)))
@@ -515,7 +543,7 @@ var _ = Describe("Service", func() {
 
 	Describe("BoshCredentials", func() {
 		It("returns the bosh credentials content", func() {
-			body := ioutil.NopCloser(strings.NewReader(`{ "credential": "BOSH_CLIENT=best_client BOSH_CLIENT_SECRET=best_secret BOSH_CA_CERT=/cool/path BOSH_ENVIRONMENT=10.9.8.7 bosh "}`))
+			body := &readerCloser{reader: strings.NewReader(`{ "credential": "BOSH_CLIENT=best_client BOSH_CLIENT_SECRET=best_secret BOSH_CA_CERT=/cool/path BOSH_ENVIRONMENT=10.9.8.7 bosh "}`)}
 			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
 			actual, err := service.BoshCredentials()
@@ -545,7 +573,7 @@ var _ = Describe("Service", func() {
 		})
 
 		It("errors if the contents are not json", func() {
-			body := ioutil.NopCloser(strings.NewReader(`you-thought-this-was-json`))
+			body := &readerCloser{reader: strings.NewReader(`you-thought-this-was-json`)}
 
 			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
@@ -568,10 +596,12 @@ var _ = Describe("Service", func() {
 		})
 
 		It("returns an error when requestor returns a non 200 status code", func() {
-			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusBadGateway}, nil)
+			body := &readerCloser{}
+			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusBadGateway, Body: body}, nil)
 
 			actual, err := service.BoshCredentials()
 			Expect(actual).To(Equal(BoshCredential{}))
+			Expect(body.isClosed).To(BeTrue())
 			Expect(err).To(MatchError(fmt.Sprintf(
 				RequestUnexpectedStatusErrorFormat, http.MethodGet, BoshCredentialsPath, http.StatusBadGateway,
 			)))
@@ -582,4 +612,18 @@ var _ = Describe("Service", func() {
 //go:generate counterfeiter . reader
 type reader interface {
 	io.Reader
+}
+
+type readerCloser struct {
+	reader   io.Reader
+	isClosed bool
+}
+
+func (rc *readerCloser) Read(p []byte) (n int, err error) {
+	return rc.reader.Read(p)
+}
+
+func (rc *readerCloser) Close() error {
+	rc.isClosed = true
+	return nil
 }
