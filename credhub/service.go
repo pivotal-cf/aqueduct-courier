@@ -50,7 +50,7 @@ func (s *Service) Certificates() (io.Reader, error) {
 		return nil, errors.Wrap(err, ListCertificatesReadError)
 	}
 
-	var parsedCertificates map[string][]map[string]string
+	var parsedCertificates map[string][]struct{ Name string }
 	err = json.Unmarshal(certificatesContent, &parsedCertificates)
 	if err != nil {
 		return nil, errors.Wrap(err, ParseCertificatesError)
@@ -59,21 +59,21 @@ func (s *Service) Certificates() (io.Reader, error) {
 	var certificateInfos []map[string]string
 	for _, certMap := range parsedCertificates["certificates"] {
 		query := url.Values{}
-		query.Set("name", certMap["name"])
+		query.Set("name", certMap.Name)
 
 		resp, err := s.requestor.Request(http.MethodGet, "/api/v1/data", query, nil, true)
 		if err != nil {
-			return nil, errors.Wrapf(err, GetCertificateDataErrorFormat, certMap["name"])
+			return nil, errors.Wrapf(err, GetCertificateDataErrorFormat, certMap.Name)
 		}
-		resp.Body.Close()
 
 		cert, err := parseCertFromDataResponse(resp.Body)
 		if err != nil {
-			return nil, errors.Wrapf(err, GetCertificateDataReadErrorFormat, certMap["name"])
+			return nil, errors.Wrapf(err, GetCertificateDataReadErrorFormat, certMap.Name)
 		}
+		resp.Body.Close()
 
 		certificateInfos = append(certificateInfos, map[string]string{
-			"name":       certMap["name"],
+			"name":       certMap.Name,
 			"not_before": cert.NotBefore.Format(time.RFC3339),
 			"not_after":  cert.NotAfter.Format(time.RFC3339),
 			"issuer":     cert.Issuer.String(),
@@ -90,7 +90,11 @@ func parseCertFromDataResponse(body io.Reader) (*x509.Certificate, error) {
 		return nil, err
 	}
 
-	var parsedDataResponse map[string][]struct{ Value struct{ Certificate string } }
+	var parsedDataResponse map[string][]struct {
+		Value struct {
+			Certificate string
+		}
+	}
 
 	err = json.Unmarshal(dataContent, &parsedDataResponse)
 	if err != nil {
