@@ -26,7 +26,7 @@ run:
 
     command_string="cd /tmp &&
       mkdir /tmp/foundation_collection &&
-      ./telemetry-collector-linux-amd64 collect --env-type development --with-credhub-info --url $OPS_MANAGER_URL --username $OPS_MANAGER_USERNAME --password $OPS_MANAGER_PASSWORD --insecure-skip-tls-verify --output-dir /tmp/foundation_collection ;
+      ./telemetry-collector-linux-amd64 collect --env-type development --with-credhub-info --url $OPS_MANAGER_URL --username $OPS_MANAGER_USERNAME --password $OPS_MANAGER_PASSWORD --insecure-skip-tls-verify --output-dir /tmp/foundation_collection &&
       rm -rf /tmp/foundation_collection"
     gcloud compute ssh not-root@"$GCP_INSTANCE_NAME" --zone "$GCP_ZONE" --command "$command_string" --quiet
 
