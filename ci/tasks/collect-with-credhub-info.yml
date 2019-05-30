@@ -14,7 +14,7 @@ run:
   args:
   - -c
   - |
-    set -e
+    set -eu
 
     chmod +x ./binary/telemetry-collector-linux-amd64
     ./binary/telemetry-collector-linux-amd64 --version
@@ -25,9 +25,9 @@ run:
     gcloud compute scp binary/telemetry-collector-linux-amd64 not-root@"$GCP_INSTANCE_NAME":/tmp --zone "$GCP_ZONE" --quiet
 
     command_string="cd /tmp &&
+      rm -rf /tmp/foundation_collection &&
       mkdir /tmp/foundation_collection &&
-      ./telemetry-collector-linux-amd64 collect --env-type development --with-credhub-info --url $OPS_MANAGER_URL --username $OPS_MANAGER_USERNAME --password $OPS_MANAGER_PASSWORD --insecure-skip-tls-verify --output-dir /tmp/foundation_collection &&
-      rm -rf /tmp/foundation_collection"
+      ./telemetry-collector-linux-amd64 collect --env-type development --with-credhub-info --url $OPS_MANAGER_URL --username $OPS_MANAGER_USERNAME --password $OPS_MANAGER_PASSWORD --insecure-skip-tls-verify --output-dir /tmp/foundation_collection"
     gcloud compute ssh not-root@"$GCP_INSTANCE_NAME" --zone "$GCP_ZONE" --command "$command_string" --quiet
 
 

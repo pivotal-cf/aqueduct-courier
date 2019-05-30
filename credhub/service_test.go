@@ -297,11 +297,13 @@ var _ = Describe("Service", func() {
 })
 
 func makeCertListResponse(certNames ...string) []byte {
-	certListResponseStruct := map[string][]map[string]string{}
-	certListResponseStruct["certificates"] = []map[string]string{}
+	certListResponseStruct := map[string][]map[string]interface{}{}
+	certListResponseStruct["certificates"] = []map[string]interface{}{}
 	for _, certName := range certNames {
-		certListResponseStruct["certificates"] = append(certListResponseStruct["certificates"], map[string]string{
-			"name": certName,
+		certListResponseStruct["certificates"] = append(certListResponseStruct["certificates"], map[string]interface{}{
+			"name":      certName,
+			"unwanted":  true,
+			"no-matter": []string{"ever"},
 		})
 	}
 	certListResponse, err := json.Marshal(certListResponseStruct)
@@ -367,6 +369,9 @@ type readerCloser struct {
 }
 
 func (rc *readerCloser) Read(p []byte) (n int, err error) {
+	if rc.isClosed {
+		return 0, errors.New("Read called on closed body")
+	}
 	return rc.reader.Read(p)
 }
 
