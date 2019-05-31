@@ -45,7 +45,7 @@ jobs:
       state_dir: bbl-state
 - name: deploy-windows-worker
   plan:
-  - aggregate:
+  - in_parallel:
     - get: bbl-state
       passed: [bbl-up]
       trigger: true
