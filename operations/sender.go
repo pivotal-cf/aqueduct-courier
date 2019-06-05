@@ -55,7 +55,7 @@ func makeFileUploadRequest(bodyReader io.Reader, apiToken, uploadURL, senderVers
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set(AuthorizationHeaderKey, "Token "+apiToken)
+	req.Header.Set(AuthorizationHeaderKey, "Bearer "+apiToken)
 	req.Header.Set(HTTPSenderVersionRequestHeader, senderVersion)
 	req.Header.Set("Content-Type", TarMimeType)
 

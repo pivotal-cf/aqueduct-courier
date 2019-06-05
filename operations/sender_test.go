@@ -67,7 +67,7 @@ var _ = Describe("Sender", func() {
 	It("posts to the data loader with the correct API key in the header", func() {
 		Expect(sender.Send(client, tmpFile.Name(), "http://example.com", "some-key", "")).To(Succeed())
 		req := client.DoArgsForCall(0)
-		Expect(req.Header.Get("Authorization")).To(Equal("Token some-key"))
+		Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-key"))
 	})
 
 	It("fails if the request object cannot be created", func() {

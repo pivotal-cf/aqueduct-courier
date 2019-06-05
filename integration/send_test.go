@@ -67,7 +67,7 @@ var _ = Describe("Send", func() {
 
 			dataLoader.RouteToHandler(http.MethodPost, operations.PostPath, ghttp.CombineHandlers(
 				ghttp.VerifyHeader(http.Header{
-					"Authorization":                           []string{fmt.Sprintf("Token %s", validApiKey)},
+					"Authorization":                           []string{fmt.Sprintf("Bearer %s", validApiKey)},
 					"Content-Type":                            []string{operations.TarMimeType},
 					operations.HTTPSenderVersionRequestHeader: []string{testVersion},
 				}),
@@ -100,7 +100,6 @@ var _ = Describe("Send", func() {
 
 	It("exits non-zero when sending to pivotal fails", func() {
 		dataLoader.RouteToHandler(http.MethodPost, operations.PostPath, ghttp.RespondWith(http.StatusUnauthorized, ""))
-
 		command := exec.Command(binaryPath, "send", "--path="+sourceDataTarFilePath, "--api-key=incorrect-key")
 		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
