@@ -310,20 +310,56 @@ var _ = Describe("Service", func() {
 	})
 
 	Describe("DiagnosticReport", func() {
-		It("returns product resources content", func() {
-			body := &readerCloser{reader: strings.NewReader("diagnostic-report")}
+		It("returns product resources content without ntp server", func() {
 
+			rawDiagnosticReportContents := `{
+"other-valid-key": true,
+"director_configuration": {
+    "bosh_recreate_on_next_deploy": false,
+    "resurrector_enabled": false,
+    "blobstore_type": "local",
+    "max_threads": null,
+    "database_type": "internal",
+	"ntp_servers": [
+      "169.254.169.254"
+    ]}}`
+
+			expectedDiagnosticReport := map[string]interface{}{
+				"other-valid-key": true,
+				"director_configuration": map[string]interface{}{
+					"bosh_recreate_on_next_deploy": false,
+					"resurrector_enabled":          false,
+					"blobstore_type":               "local",
+					"max_threads":                  nil,
+					"database_type":                "internal"},
+			}
+
+			body := &readerCloser{reader: strings.NewReader(rawDiagnosticReportContents)}
 			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
 			actual, err := service.DiagnosticReport()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(body.isClosed).To(BeTrue())
-			content, err := ioutil.ReadAll(actual)
+			actualContent, err := ioutil.ReadAll(actual)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(content).To(Equal([]byte("diagnostic-report")))
+
+			var actualDiagnosticReport map[string]interface{}
+			Expect(json.Unmarshal(actualContent, &actualDiagnosticReport)).To(Succeed())
+			Expect(actualDiagnosticReport).To(Equal(expectedDiagnosticReport))
+
 			Expect(requestor.CurlCallCount()).To(Equal(1))
 			input := requestor.CurlArgsForCall(0)
 			Expect(input).To(Equal(api.RequestServiceCurlInput{Path: DiagnosticReportPath, Method: http.MethodGet}))
+		})
+
+		It("returns an error when unmarshalling the response errors", func() {
+			body := &readerCloser{reader: bytes.NewReader([]byte(`something-invalid`))}
+			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusOK, Body: body}, nil)
+
+			actual, err := service.DiagnosticReport()
+			Expect(actual).To(BeNil())
+			Expect(err).To(MatchError(ContainSubstring(UnmarshalResponseError)))
+			Expect(err).To(MatchError(ContainSubstring("invalid character")))
 		})
 
 		It("returns an error when requestor errors", func() {
