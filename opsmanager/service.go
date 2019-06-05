@@ -28,6 +28,7 @@ const (
 	InvalidResponseErrorFormat         = "Invalid response format for request to %s"
 	RequestFailureErrorFormat          = "Failed %s %s"
 	RequestUnexpectedStatusErrorFormat = "%s %s returned with unexpected status %d"
+	UnmarshalResponseError             = "error unmarshalling response"
 )
 
 type Service struct {
@@ -155,7 +156,26 @@ func (s *Service) VmTypes() (io.Reader, error) {
 }
 
 func (s *Service) DiagnosticReport() (io.Reader, error) {
-	return s.makeRequestReader(DiagnosticReportPath)
+	diagnosticReportBytes, err := s.makeRequest(DiagnosticReportPath)
+	if err != nil {
+		return nil, err
+	}
+
+	var diagnosticReportMap map[string]interface{}
+	err = json.Unmarshal(diagnosticReportBytes, &diagnosticReportMap)
+	if err != nil {
+		return nil, errors.Wrap(err, UnmarshalResponseError)
+	}
+
+	val, _ := diagnosticReportMap["director_configuration"].(map[string]interface{})
+	delete(val, "ntp_servers")
+
+	redactedDiagnosticReport, err := json.Marshal(diagnosticReportMap)
+	if err != nil {
+		return nil, err
+	}
+
+	return bytes.NewReader(redactedDiagnosticReport), nil
 }
 
 func (s *Service) BoshCredentials() (BoshCredential, error) {
