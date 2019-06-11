@@ -1,18 +1,18 @@
 resource_types:
-  - name: gcs-resource
-    type: registry-image
-    source:
-      repository: frodenas/gcs-resource
-  - name: pivnet
-    type: registry-image
-    source:
-      repository: pivotalcf/pivnet-resource
-      tag: latest-final
-  - name: slack-notification
-    type: registry-image
-    source:
-      repository: cfcommunity/slack-notification-resource
-      tag: latest
+- name: gcs-resource
+  type: registry-image
+  source:
+    repository: frodenas/gcs-resource
+- name: pivnet
+  type: registry-image
+  source:
+    repository: pivotalcf/pivnet-resource
+    tag: latest-final
+- name: slack-notification
+  type: registry-image
+  source:
+    repository: cfcommunity/slack-notification-resource
+    tag: latest
 
 resources:
 - name: pivotal-telemetry-collector
@@ -308,7 +308,7 @@ jobs:
     file: ci/ci/tasks/write-metadata.yml
   - put: pivotal-telemetry-collector
     params:
-      file_glob: release-files/*
+      file_glob: release-files/telemetry-collector-*.tgz
       metadata_file: metadata/metadata
 
 - name: major
@@ -340,20 +340,18 @@ jobs:
   - in_parallel:
     - get: pivotal-telemetry-collector
       params:
-        globs: ["telemetry-collector-linux-amd64*"]
+        globs: ["telemetry-collector-*"]
+        unpack: true
     - get: prod-collection-timer
       trigger: true
     - get: aqueduct-courier
     - get: task-docker-image
     - get: ci
-  - task: strip-collector-version
-    image: task-docker-image
-    file: ci/ci/tasks/strip-collector-version.yml
-    input_mapping:
-      binary-with-version: pivotal-telemetry-collector
   - task: collect
     image: task-docker-image
     file: ci/ci/tasks/collect.yml
+    input_mapping:
+      binary: pivotal-telemetry-collector
     params:
       OPS_MANAGER_URL: {{production-courier-ops-manager-url}}
       OPS_MANAGER_USERNAME: {{production-courier-ops-manager-username}}
@@ -368,6 +366,8 @@ jobs:
   - task: send
     image: task-docker-image
     file: ci/ci/tasks/send.yml
+    input_mapping:
+      binary: pivotal-telemetry-collector
     params:
       API_KEY: {{production-loader-api-key}}
     on_failure:
@@ -460,8 +460,7 @@ jobs:
     image: task-docker-image
     input_mapping:
       binary: staging-linux-binary
-    # Using branch's ci instead of master's due to task differences
-    file: aqueduct-courier/ci/tasks/collect.yml
+    file: ci/ci/tasks/collect.yml
     params:
       OPS_MANAGER_URL: {{courier-ops-manager-url}}
       OPS_MANAGER_USERNAME: {{courier-ops-manager-username}}
@@ -479,8 +478,7 @@ jobs:
       binary: staging-linux-binary
     output_mapping:
       collected-data: collected-data-with-client-creds
-    # Using branch's ci instead of master's due to task differences
-    file: aqueduct-courier/ci/tasks/collect.yml
+    file: ci/ci/tasks/collect.yml
     params:
       OPS_MANAGER_URL: {{courier-ops-manager-url}}
       OPS_MANAGER_CLIENT_ID: {{courier-ops-manager-client-id}}
@@ -517,7 +515,7 @@ jobs:
       tag: version/version
       only_tag: true
   - task: build-binaries
-    file: ci/ci/tasks/build-binaries.yml
+    file: ci/ci/tasks/deprecated/build-binaries.yml
     params:
       DATA_LOADER_URL: {{production-data-loader-url}}
       ENSURE_HTTPS: true
@@ -580,7 +578,7 @@ jobs:
     params:
       VERSION: {{lts_version}}
   - task: prepare-release-files
-    file: ci/ci/tasks/prep-release-files.yml
+    file: ci/ci/tasks/deprecated/prep-release-files.yml
     input_mapping:
       binaries-tar: production-binaries
   - task: write-metadata

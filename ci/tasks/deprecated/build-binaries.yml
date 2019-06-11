@@ -1,0 +1,25 @@
+---
+platform: linux
+
+image_resource:
+  type: registry-image
+  source:
+    repository: golang
+    tag: latest
+
+inputs:
+- name: aqueduct-courier
+  path: go/src/github.com/pivotal-cf/aqueduct-courier
+- name: version
+- name: ci
+
+outputs:
+- name: aqueduct-binaries
+- name: linux-binary
+
+run:
+  path: ci/ci/tasks/deprecated/build-binaries
+
+params:
+  DATA_LOADER_URL:
+  ENSURE_HTTPS:

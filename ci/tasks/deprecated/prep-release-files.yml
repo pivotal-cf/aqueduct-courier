@@ -25,12 +25,8 @@ run:
 
     set -xe
 
-    mkdir tmp-release-files
-
-    tar -xvf binaries-tar/*.tgz -C tmp-release-files
+    tar -xvf binaries-tar/*.tgz -C release-files
 
     VERSION=$(cat version/version)
-    cp ci/ci/tasks/collect.yml tmp-release-files
-    cp ci/ci/tasks/send.yml tmp-release-files
-
-    tar -C tmp-release-files -zcf release-files/telemetry-collector-"$VERSION".tgz .
+    cp ci/ci/tasks/collect.yml release-files/concourse-collect-task-$VERSION.yml
+    cp ci/ci/tasks/send.yml release-files/concourse-send-task-$VERSION.yml
