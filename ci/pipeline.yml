@@ -338,9 +338,13 @@ jobs:
 - name: ensure-production-sends
   plan:
   - in_parallel:
-    - get: pivotal-telemetry-collector
+    - get: binary
+      resource: pivotal-telemetry-collector
       params:
-        globs: ["telemetry-collector-*"]
+        unpack: true
+    - get: tasks
+      resource: pivotal-telemetry-collector
+      params:
         unpack: true
     - get: prod-collection-timer
       trigger: true
@@ -349,9 +353,7 @@ jobs:
     - get: ci
   - task: collect
     image: task-docker-image
-    file: ci/ci/tasks/collect.yml
-    input_mapping:
-      binary: pivotal-telemetry-collector
+    file: tasks/collect.yml
     params:
       OPS_MANAGER_URL: {{production-courier-ops-manager-url}}
       OPS_MANAGER_USERNAME: {{production-courier-ops-manager-username}}
@@ -365,9 +367,7 @@ jobs:
       INSECURE_SKIP_TLS_VERIFY: true
   - task: send
     image: task-docker-image
-    file: ci/ci/tasks/send.yml
-    input_mapping:
-      binary: pivotal-telemetry-collector
+    file: tasks/send.yml
     params:
       API_KEY: {{production-loader-api-key}}
     on_failure:
