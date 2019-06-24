@@ -223,17 +223,18 @@ var _ = Describe("Send", func() {
 		})
 	})
 
-	Context("TLS configuration", func() {
-		var tlsDataLoader *ghttp.Server
+	Context("TLS 1.2 strictness", func() {
+		var unsupportedTLSDataLoader *ghttp.Server
 
 		BeforeEach(func() {
-			tlsDataLoader = ghttp.NewTLSServer()
+			unsupportedTLSDataLoader = ghttp.NewTLSServer()
+			unsupportedTLSDataLoader.HTTPTestServer.TLS.MaxVersion = tls.VersionTLS11
 
 			var err error
 			binaryPath, err = gexec.Build(
 				"github.com/pivotal-cf/aqueduct-courier",
 				"-ldflags",
-				fmt.Sprintf("-X github.com/pivotal-cf/aqueduct-courier/cmd.dataLoaderURL=%s -X github.com/pivotal-cf/aqueduct-courier/cmd.version=%s", tlsDataLoader.URL(), testVersion),
+				fmt.Sprintf("-X github.com/pivotal-cf/aqueduct-courier/cmd.dataLoaderURL=%s -X github.com/pivotal-cf/aqueduct-courier/cmd.version=%s", unsupportedTLSDataLoader.URL(), testVersion),
 			)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -244,17 +245,15 @@ var _ = Describe("Send", func() {
 		})
 
 		AfterEach(func() {
-			tlsDataLoader.Close()
+			unsupportedTLSDataLoader.Close()
 			Expect(os.RemoveAll(tempDir)).To(Succeed())
 		})
 
 		It("fails if the server TLS version is less than 1.2", func() {
-			tlsDataLoader.HTTPTestServer.TLS.MaxVersion = tls.VersionTLS11
-
-			tlsDataLoader.RouteToHandler(http.MethodGet, "/", func(w http.ResponseWriter, req *http.Request) {
+			unsupportedTLSDataLoader.RouteToHandler(http.MethodGet, "/", func(w http.ResponseWriter, req *http.Request) {
 				w.WriteHeader(http.StatusNoContent)
 			})
-			command := exec.Command(binaryPath, "send", "--path="+sourceDataTarFilePath, "--api-key=incorrect-key")
+			command := exec.Command(binaryPath, "send", "--path="+sourceDataTarFilePath, "--api-key=irrelevant-key")
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(1))
