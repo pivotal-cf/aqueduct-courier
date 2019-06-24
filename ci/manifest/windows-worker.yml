@@ -6,13 +6,13 @@ releases:
   url: https://s3.amazonaws.com/concourse-release-candidates/concourse-4.0.1-rc.6.tgz
   sha1: 739ff95802f9db73b89c76b14679410c624df64a
 - name: windows-tools
-  version: 8
-  url: https://bosh.io/d/github.com/cloudfoundry-incubator/windows-tools-release?v=8
-  sha1: 7d025c66c65a04ca79b7c21ac8e12f8a301db036
+  version: 46
+  url: https://bosh.io/d/github.com/cloudfoundry-incubator/windows-tools-release?v=46
+  sha1: de4369dbce21546296185103ea9a53d61f1d4c0a
 - name: windows-utilities
-  version: 0.10.0
-  url: https://bosh.io/d/github.com/cloudfoundry-incubator/windows-utilities-release?v=0.10.0
-  sha1: 2bf15743be48e696a72236c05e8e3e137474cedd
+  version: 0.11.0
+  url: https://bosh.io/d/github.com/cloudfoundry-incubator/windows-utilities-release?v=0.11.0
+  sha1: efc10ac0f4acae23637ce2c6f864d20df2e3a781
 
 stemcells:
 - alias: windows2016
