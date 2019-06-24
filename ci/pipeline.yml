@@ -20,7 +20,6 @@ resources:
   source:
     api_token: {{pivnet-api-token}}
     product_slug: pivotal-telemetry-collector
-    release_type: Alpha Release
     copy_metadata: true
 - name: aqueduct-courier
   type: git
@@ -342,10 +341,12 @@ jobs:
       resource: pivotal-telemetry-collector
       params:
         unpack: true
+        globs: ["*.tgz"]
     - get: tasks
       resource: pivotal-telemetry-collector
       params:
         unpack: true
+        globs: ["*.tgz"]
     - get: prod-collection-timer
       trigger: true
     - get: aqueduct-courier
