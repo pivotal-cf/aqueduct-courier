@@ -259,7 +259,7 @@ var _ = Describe("Send", func() {
 			Eventually(session).Should(gexec.Exit(1))
 
 			Expect(session.Err).To(gbytes.Say(cmd.SendFailureMessage))
-			Expect(session.Err).To(gbytes.Say("protocol version not supported"))
+			Expect(session.Err).To(gbytes.Say("protocol version"))
 		})
 	})
 
