@@ -2,6 +2,7 @@ package integration
 
 import (
 	"crypto/md5"
+	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -30,8 +31,9 @@ import (
 
 var _ = Describe("Send", func() {
 	var (
-		binaryPath            string
-		dataLoader            *ghttp.Server
+		binaryPath string
+		dataLoader *ghttp.Server
+
 		tempDir               string
 		sourceDataTarFilePath string
 		validApiKey           = "best-key"
@@ -220,6 +222,48 @@ var _ = Describe("Send", func() {
 			Expect(session.Err).To(gbytes.Say(fmt.Sprintf(cmd.FileNotFoundErrorFormat, "invalid-path")))
 		})
 	})
+
+	Context("TLS configuration", func() {
+		var tlsDataLoader *ghttp.Server
+
+		BeforeEach(func() {
+			tlsDataLoader = ghttp.NewTLSServer()
+
+			var err error
+			binaryPath, err = gexec.Build(
+				"github.com/pivotal-cf/aqueduct-courier",
+				"-ldflags",
+				fmt.Sprintf("-X github.com/pivotal-cf/aqueduct-courier/cmd.dataLoaderURL=%s -X github.com/pivotal-cf/aqueduct-courier/cmd.version=%s", tlsDataLoader.URL(), testVersion),
+			)
+			Expect(err).NotTo(HaveOccurred())
+
+			tempDir, err = ioutil.TempDir("", "")
+			Expect(err).NotTo(HaveOccurred())
+
+			sourceDataTarFilePath = generateValidDataTarFile(tempDir)
+		})
+
+		AfterEach(func() {
+			tlsDataLoader.Close()
+			Expect(os.RemoveAll(tempDir)).To(Succeed())
+		})
+
+		It("fails if the server TLS version is less than 1.2", func() {
+			tlsDataLoader.HTTPTestServer.TLS.MaxVersion = tls.VersionTLS11
+
+			tlsDataLoader.RouteToHandler(http.MethodGet, "/", func(w http.ResponseWriter, req *http.Request) {
+				w.WriteHeader(http.StatusNoContent)
+			})
+			command := exec.Command(binaryPath, "send", "--path="+sourceDataTarFilePath, "--api-key=incorrect-key")
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(1))
+
+			Expect(session.Err).To(gbytes.Say(cmd.SendFailureMessage))
+			Expect(session.Err).To(gbytes.Say("protocol version not supported"))
+		})
+	})
+
 })
 
 func generateValidDataTarFile(destinationDir string) string {

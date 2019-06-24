@@ -1,6 +1,7 @@
 package network_test
 
 import (
+	"crypto/tls"
 	"net/http"
 	"strings"
 
@@ -15,12 +16,8 @@ var _ = Describe("Client", func() {
 	var (
 		server *ghttp.Server
 	)
-
 	BeforeEach(func() {
 		server = ghttp.NewTLSServer()
-		server.RouteToHandler(http.MethodGet, "/", func(w http.ResponseWriter, req *http.Request) {
-			w.WriteHeader(http.StatusNoContent)
-		})
 	})
 
 	AfterEach(func() {
@@ -28,6 +25,12 @@ var _ = Describe("Client", func() {
 	})
 
 	Describe("Do", func() {
+		BeforeEach(func() {
+			server.RouteToHandler(http.MethodGet, "/", func(w http.ResponseWriter, req *http.Request) {
+				w.WriteHeader(http.StatusNoContent)
+			})
+		})
+
 		Context("when skipTLSVerification is set to false", func() {
 			It("throws an error for invalid certificates", func() {
 				client := NewClient(false)
@@ -50,6 +53,25 @@ var _ = Describe("Client", func() {
 				_, err = client.Do(req)
 				Expect(err).NotTo(HaveOccurred())
 			})
+		})
+	})
+
+	Describe("MinVersion", func() {
+		BeforeEach(func() {
+			server.HTTPTestServer.TLS.MaxVersion = tls.VersionTLS11
+			server.RouteToHandler(http.MethodGet, "/", func(w http.ResponseWriter, req *http.Request) {
+				w.WriteHeader(http.StatusNoContent)
+			})
+		})
+
+		It("fails requests to servers with a TLS version lower than 1.2", func() {
+			client := NewClient(true)
+
+			req, err := http.NewRequest(http.MethodGet, server.URL(), strings.NewReader("request-body"))
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = client.Do(req)
+			Expect(err).To(MatchError(ContainSubstring("protocol version not supported")))
 		})
 	})
 })

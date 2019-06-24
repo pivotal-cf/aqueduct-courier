@@ -13,6 +13,7 @@ func NewClient(skipTLSVerification bool) *http.Client {
 			Proxy: http.ProxyFromEnvironment,
 			TLSClientConfig: &tls.Config{
 				InsecureSkipVerify: skipTLSVerification,
+				MinVersion:         tls.VersionTLS12,
 			},
 			DialContext: (&net.Dialer{
 				Timeout:   5 * time.Second,

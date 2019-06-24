@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"net/http"
-
+	"github.com/pivotal-cf/aqueduct-courier/network"
 	"github.com/pivotal-cf/aqueduct-courier/operations"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -72,8 +71,10 @@ func send(c *cobra.Command, _ []string) error {
 		return errors.New(fmt.Sprintf(FileNotFoundErrorFormat, viper.GetString(DataTarFilePathFlag)))
 	}
 
+	client := network.NewClient(false)
+
 	logger.Printf("Sending %s to Pivotal at %s\n", viper.GetString(DataTarFilePathFlag), dataLoaderURL)
-	err = sender.Send(http.DefaultClient, tarFile.Name(), dataLoaderURL, viper.GetString(ApiKeyFlag), version)
+	err = sender.Send(client, tarFile.Name(), dataLoaderURL, viper.GetString(ApiKeyFlag), version)
 	if err != nil {
 		return errors.Wrap(err, SendFailureMessage)
 	}
