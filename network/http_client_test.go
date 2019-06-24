@@ -71,7 +71,7 @@ var _ = Describe("Client", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = client.Do(req)
-			Expect(err).To(MatchError(ContainSubstring("protocol version not supported")))
+			Expect(err).To(MatchError(ContainSubstring("protocol version")))
 		})
 	})
 })
