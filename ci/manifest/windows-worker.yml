@@ -34,10 +34,6 @@ instance_groups:
   networks: [{name: default}]
   azs: [z1]
   jobs:
-  - name: houdini-windows
-    release: concourse
-  - name: baggageclaim-windows
-    release: concourse
   - name: worker-windows
     release: concourse
     properties:
