@@ -13,7 +13,7 @@ resources:
 - name: bbl-state
   type: bbl-state-resource
   source:
-    bucket: platform-insights-bbl-state
+    bucket: windows-worker-bbl-state
     iaas: gcp
     gcp_region: us-east1
     gcp_service_account_key: {{courier-gcp-service-account-key}}
@@ -41,7 +41,6 @@ jobs:
   - put: bbl-state
     params:
       command: up
-      name_file: bbl-state/name
       state_dir: bbl-state
 - name: deploy-windows-worker
   plan:
