@@ -42,7 +42,8 @@ instance_groups:
         hosts:
         - ((tsa_host)):2222
         host_public_key: ((tsa_host_public_key))
-        worker_key: ((worker_private_key))
+        worker_key:
+          private_key: ((worker_private_key))
   - name: golang-windows
     release: windows-tools
   - name: git
