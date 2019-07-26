@@ -27,7 +27,7 @@ import (
 	"github.com/onsi/gomega/ghttp"
 	"github.com/pivotal-cf/aqueduct-courier/cmd"
 	"github.com/pivotal-cf/aqueduct-courier/operations"
-	"github.com/pivotal-cf/aqueduct-utils/data"
+	"github.com/pivotal-cf/telemetry-utils/data"
 )
 
 const (

@@ -2,7 +2,7 @@
 
 
 [[projects]]
-  digest = "1:3d641d954cc3f5b35393b94ca1bc16f6804757af2de571763e026d1e3f20c536"
+  digest = "1:10df8aacadb2e9b653e28062632eef7e1409cbe34ce876850cccdda8fa2bff61"
   name = "code.cloudfoundry.org/credhub-cli"
   packages = [
     "credhub",
@@ -16,8 +16,16 @@
     "errors",
   ]
   pruneopts = "UT"
-  revision = "fba821c6ffafbce8987c98037e8530aa2931ff38"
-  version = "2.4.0"
+  revision = "f00bc2f38515c473238b854a99fc2aba8666d6d2"
+  version = "2.5.2"
+
+[[projects]]
+  branch = "master"
+  digest = "1:ef09c94a4b7a61b41034d03a885b1c1e87bf544bcd78a8784c3c0b36e8d00e2e"
+  name = "github.com/andybalholm/brotli"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "ed0fd649404dcdcdae403d0e62b555889ee4e6b9"
 
 [[projects]]
   branch = "master"
@@ -28,11 +36,12 @@
   revision = "54f73bdb8a8e85a6611d3d29ab9bbf98c2a060d7"
 
 [[projects]]
-  digest = "1:332f9b596a72322f319331a0364a2d48b40b008978aae873fb4b5fada75b44f6"
+  digest = "1:dfedafdd42492d6a20ac115b8e1d6ccc6085ffba33274d5f07e66b83e9a0b02b"
   name = "github.com/cloudfoundry/socks5-proxy"
   packages = ["."]
   pruneopts = "UT"
-  revision = "3c6b4eec9c2d16c1dac4c42bdb5f755ba09daff8"
+  revision = "633b6fe4c3d8d72a4e7397a948027db02a8e2a96"
+  version = "v0.2.0"
 
 [[projects]]
   digest = "1:d052bda13fd17bd8cf52ccae57b0a03ffeea80cffc2cffc62741235fa34f92cf"
@@ -82,12 +91,23 @@
   version = "v3.2.0"
 
 [[projects]]
-  digest = "1:318f1c959a8a740366fce4b1e1eb2fd914036b4af58fbd0a003349b305f118ad"
+  branch = "master"
+  digest = "1:8f251d09f52a8920bdba202b0c18a24cafb4f70f94b9afd8d02bf7643cfc99a0"
+  name = "github.com/golang/gddo"
+  packages = [
+    "httputil",
+    "httputil/header",
+  ]
+  pruneopts = "UT"
+  revision = "af0f2af80721261f4d211b2c9563f7b46b2aab06"
+
+[[projects]]
+  digest = "1:573ca21d3669500ff845bdebee890eb7fc7f0f50c59f2132f2a0c6b03d85086a"
   name = "github.com/golang/protobuf"
   packages = ["proto"]
   pruneopts = "UT"
-  revision = "b5d812f8a3706043e23a9cd5babf2e5423744d30"
-  version = "v1.3.1"
+  revision = "6c65a5562fc06764971b7c5d05c76c75e84bdbf7"
+  version = "v1.3.2"
 
 [[projects]]
   digest = "1:e4f5819333ac698d294fe04dbf640f84719658d5c7ce195b10060cc37292ce79"
@@ -147,12 +167,43 @@
   version = "v1.0"
 
 [[projects]]
-  digest = "1:c568d7727aa262c32bdf8a3f7db83614f7af0ed661474b24588de635c20024c7"
+  digest = "1:512c580243ca2b7dfeabbd5077189ae15dd4c227941307758e8b741dc7f6c939"
+  name = "github.com/klauspost/compress"
+  packages = [
+    "flate",
+    "fse",
+    "huff0",
+    "snappy",
+    "zstd",
+    "zstd/internal/xxhash",
+  ]
+  pruneopts = "UT"
+  revision = "23256797d1e4ccac36fad828362cdfef5b3aeb90"
+  version = "v1.7.4"
+
+[[projects]]
+  digest = "1:923c4d7194b42e054b2eb8a6c62824ac55e23ececc1c7e48d4da69c971c55954"
+  name = "github.com/klauspost/cpuid"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "05a8198c0f5a27739aec358908d7e12c64ce6eb7"
+  version = "v1.2.1"
+
+[[projects]]
+  digest = "1:ce7769e1e6c4180a163da92df483369d689c8849eacfdd24a3cdcbcdc47b8b95"
+  name = "github.com/klauspost/pgzip"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "083b1c3f84dd6486588802e5ce295de3a7f41a8b"
+  version = "v1.2.1"
+
+[[projects]]
+  digest = "1:5a0ef768465592efca0412f7e838cdc0826712f8447e70e6ccc52eb441e9ab13"
   name = "github.com/magiconair/properties"
   packages = ["."]
   pruneopts = "UT"
-  revision = "c2353362d570a7bfa228149c62842019201cfb71"
-  version = "v1.8.0"
+  revision = "de8848e004dd33dc07a2947b3d76f618a7fc7ef1"
+  version = "v1.8.1"
 
 [[projects]]
   digest = "1:0356f3312c9bd1cbeda81505b7fd437501d8e778ab66998ef69f00d7f9b3a0d7"
@@ -163,12 +214,12 @@
   version = "v0.0.4"
 
 [[projects]]
-  digest = "1:67b3e2eb7a5bcfe8374b617315f1a8dfdff3c131a451eb2c01664790ef6dd4e6"
+  digest = "1:b6796acb292886d9525ec987cfb10f2771e18aac389350c214a44a565f5c3e1c"
   name = "github.com/mholt/archiver"
   packages = ["."]
   pruneopts = "UT"
-  revision = "d572b2e8b82726cee9476d1b9d63a7fe9b601ff1"
-  version = "v3.1.1"
+  revision = "33320f6f730664f9896b05b777e53ae4c917f572"
+  version = "v3.2.0"
 
 [[projects]]
   digest = "1:53bc4cd4914cd7cd52139990d5170d6dc99067ae31c56530621b18b35fc30318"
@@ -239,37 +290,26 @@
   version = "v1.5.0"
 
 [[projects]]
-  digest = "1:e0f50a07c0def90588d69f77178712c6fdc67eb6576365f551cce98b44b501bf"
+  digest = "1:93131d8002d7025da13582877c32d1fc302486775a1b06f62241741006428c5e"
   name = "github.com/pelletier/go-toml"
   packages = ["."]
   pruneopts = "UT"
-  revision = "63909f0a90ab0f36909e8e044e46ace10cf13ba2"
-  version = "v1.3.0"
+  revision = "728039f679cbcd4f6a54e080d2219a4c4928c546"
+  version = "v1.4.0"
 
 [[projects]]
-  digest = "1:cf9272ab0a637cb1ffa40e2b6220108d7016a36b3eb357e4b57aacb7a8f725c0"
+  digest = "1:f690a0a27cefae695fa9587aa3ed23652e593be1d98b35f8184d10bccec30444"
   name = "github.com/pierrec/lz4"
   packages = [
     ".",
     "internal/xxh32",
   ]
   pruneopts = "UT"
-  revision = "9419d2361c8ae111073ffe3337ecc364fb590921"
-  version = "v2.1.2"
+  revision = "057d66e894a4e55853274a3bbbf7de02ba639e43"
+  version = "v2.2.4"
 
 [[projects]]
-  branch = "master"
-  digest = "1:df4bf9bd29c66899f4793b1e6bd16b476fbd627702ef06058450e8cefe5158d5"
-  name = "github.com/pivotal-cf/aqueduct-utils"
-  packages = [
-    "data",
-    "file",
-  ]
-  pruneopts = "UT"
-  revision = "bada9bb7193882f4d0f555bf13a18dd9e0288d5d"
-
-[[projects]]
-  digest = "1:2d47f860131635532f693ec5166a49533b5dca969eb466a5fd460ef9c3747d8c"
+  digest = "1:44cbb1125ad99124736fbcc59d944273f45bbf2c0d961438ce152f5139378210"
   name = "github.com/pivotal-cf/om"
   packages = [
     "api",
@@ -277,8 +317,19 @@
     "progress",
   ]
   pruneopts = "UT"
-  revision = "0c72696a3ca897b224198e9a01816fbef3088422"
-  version = "0.56.0"
+  revision = "dcc3fde1ce7447092c452eaa99344264b5849c50"
+  version = "3.0.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:df4bf9bd29c66899f4793b1e6bd16b476fbd627702ef06058450e8cefe5158d5"
+  name = "github.com/pivotal-cf/telemetry-utils"
+  packages = [
+    "data",
+    "file",
+  ]
+  pruneopts = "UT"
+  revision = "2b8e7cfab52dd8b73fc1fc8191175398a0b0daa2"
 
 [[projects]]
   digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
@@ -308,12 +359,12 @@
   version = "v1.3.0"
 
 [[projects]]
-  digest = "1:645cabccbb4fa8aab25a956cbcbdf6a6845ca736b2c64e197ca7cbb9d210b939"
+  digest = "1:e096613fb7cf34743d49af87d197663cfccd61876e2219853005a57baedfa562"
   name = "github.com/spf13/cobra"
   packages = ["."]
   pruneopts = "UT"
-  revision = "ef82de70bb3f60c65fb8eebacbb2d122ef517385"
-  version = "v0.0.3"
+  revision = "f2b07da1e2c38d5f12845a4f607e2e1018cbb1f5"
+  version = "v0.0.5"
 
 [[projects]]
   digest = "1:1b753ec16506f5864d26a28b43703c58831255059644351bbcb019b843950900"
@@ -332,12 +383,12 @@
   version = "v1.0.3"
 
 [[projects]]
-  digest = "1:1b773526998f3dbde3a51a4a5881680c4d237d3600f570d900f97ac93c7ba0a8"
+  digest = "1:11118bd196646c6515fea3d6c43f66162833c6ae4939bfb229b9956d91c6cf17"
   name = "github.com/spf13/viper"
   packages = ["."]
   pruneopts = "UT"
-  revision = "9e56dacc08fbbf8c9ee2dbc717553c758ce42bc9"
-  version = "v1.3.2"
+  revision = "b5bf975e5823809fb22c7644d008757f78a4259e"
+  version = "v1.4.0"
 
 [[projects]]
   digest = "1:2643d81498e38e44bdcf480be199cac55f29e97403b0342d962824bfe9960722"
@@ -362,7 +413,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4b4fbe3cfa58f1f95eb0ab4fefc95efda7af333722f7f272c9828ecabb25a0ac"
+  digest = "1:ffebede762b00a7ffe84ef08efc4f4e87823b5298b4fd477313579f553db0c6a"
   name = "golang.org/x/crypto"
   packages = [
     "curve25519",
@@ -374,11 +425,11 @@
     "ssh",
   ]
   pruneopts = "UT"
-  revision = "d864b10871cd4370fe574816b489c819c675ccc7"
+  revision = "4def268fd1a49955bfb3dda92fe3db4f924f2285"
 
 [[projects]]
   branch = "master"
-  digest = "1:44d31e896dadaad411d0d50b0236d389fb53d10c79cb39aba223dc5b24761f02"
+  digest = "1:fac05dcfb077fe3a2342b8850912cd37747baa8caf601888a35b526982a27019"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -390,11 +441,11 @@
     "proxy",
   ]
   pruneopts = "UT"
-  revision = "afa5a82059c6356159f699d81beff22a81842231"
+  revision = "ca1201d0de80cfde86cb01aea620983605dfe99b"
 
 [[projects]]
   branch = "master"
-  digest = "1:ea31c184eb8c9cfa35e072f99f28019f0947e41e976e171916d0bf6e145a59c4"
+  digest = "1:457f9784b7d0402c051d4af2aa29b9ac602129801b0e4a643006d294f40775ec"
   name = "golang.org/x/oauth2"
   packages = [
     ".",
@@ -402,21 +453,21 @@
     "internal",
   ]
   pruneopts = "UT"
-  revision = "9f3314589c9a9136388751d9adae6b0ed400978a"
+  revision = "0f29369cfe4552d0e4bcddc57cc75f4d7e672a33"
 
 [[projects]]
   branch = "master"
-  digest = "1:e6c02fc27ab754451291d6ab582aabaf46f5e977be1d7ad7e05c89639cf5cac7"
+  digest = "1:cb765633311f4d8df85cdd33a71da68f15f5a5161c6522eaa3ae79d31fc19718"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
     "unix",
   ]
   pruneopts = "UT"
-  revision = "953cdadca894cdc07be76fc99f95b40c28f06623"
+  revision = "fc99dfbffb4e5ed5758a37e31dd861afe285406b"
 
 [[projects]]
-  digest = "1:4392fcf42d5cf0e3ff78c96b2acf8223d49e4fdc53eb77c99d2f8dfe4680e006"
+  digest = "1:7570a3e4daa14b7627089e77ad8c714f5f36b4cf1b7dfd8510df7d6935dc42a0"
   name = "golang.org/x/text"
   packages = [
     "encoding",
@@ -430,6 +481,8 @@
     "encoding/traditionalchinese",
     "encoding/unicode",
     "internal/gen",
+    "internal/language",
+    "internal/language/compact",
     "internal/tag",
     "internal/triegen",
     "internal/ucd",
@@ -441,8 +494,8 @@
     "unicode/norm",
   ]
   pruneopts = "UT"
-  revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
-  version = "v0.3.0"
+  revision = "342b2e1fbaa52c93f31447ad2c6abc048c63e475"
+  version = "v0.3.2"
 
 [[projects]]
   digest = "1:6eb6e3b6d9fffb62958cf7f7d88dbbe1dd6839436b0802e194c590667a40412a"
@@ -457,8 +510,8 @@
     "urlfetch",
   ]
   pruneopts = "UT"
-  revision = "54a98f90d1c46b7731eb8fb305d2a321c30ef610"
-  version = "v1.5.0"
+  revision = "b2f4a3cf3c67576a2ee09e1fe62656a5086ce880"
+  version = "v1.6.1"
 
 [[projects]]
   digest = "1:d219400f09c151f0ada918bab650ef46f7ebdb1ff4fea923fdcb839481ec7ec1"
@@ -508,10 +561,10 @@
     "github.com/onsi/gomega/gbytes",
     "github.com/onsi/gomega/gexec",
     "github.com/onsi/gomega/ghttp",
-    "github.com/pivotal-cf/aqueduct-utils/data",
-    "github.com/pivotal-cf/aqueduct-utils/file",
     "github.com/pivotal-cf/om/api",
     "github.com/pivotal-cf/om/network",
+    "github.com/pivotal-cf/telemetry-utils/data",
+    "github.com/pivotal-cf/telemetry-utils/file",
     "github.com/pkg/errors",
     "github.com/spf13/cobra",
     "github.com/spf13/viper",

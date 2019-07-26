@@ -17,7 +17,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	. "github.com/pivotal-cf/aqueduct-courier/operations"
-	"github.com/pivotal-cf/aqueduct-utils/data"
+	"github.com/pivotal-cf/telemetry-utils/data"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

@@ -11,7 +11,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-cf/aqueduct-courier/opsmanager/opsmanagerfakes"
-	"github.com/pivotal-cf/aqueduct-utils/data"
+	"github.com/pivotal-cf/telemetry-utils/data"
 
 	"github.com/pkg/errors"
 

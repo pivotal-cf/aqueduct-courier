@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -13,31 +14,29 @@ type Info struct {
 	Version string `json:"version"`
 }
 
-func (i Info) VersionAtLeast(major, minor int) bool {
+func (i Info) VersionAtLeast(major, minor int) (bool, error) {
 	// Given: X.Y-build.Z or X.Y.Z-build.A
 	// Extract X and Y
-	idx := strings.Index(i.Version, ".")
-	majv := i.Version[:idx]                                        // take substring up to '.'
-	legacyMinv := i.Version[idx+1 : strings.Index(i.Version, "-")] // take substring between '.' and '-'
-
-	maj, err := strconv.Atoi(majv)
+	parts := strings.Split(i.Version, ".")
+	if len(parts) < 2 {
+		return false, fmt.Errorf("invalid version: '%s'", i.Version)
+	}
+	maj, err := strconv.Atoi(parts[0])
 	if err != nil {
-		panic("invalid version: " + i.Version)
+		return false, fmt.Errorf("invalid version: '%s'", i.Version)
 	}
 
-	min, err := strconv.Atoi(legacyMinv)
+	//remove "-build.A" information
+	minParts := strings.Split(parts[1], "-")
+	min, err := strconv.Atoi(minParts[0])
 	if err != nil {
-		semverMinv := legacyMinv[:strings.Index(legacyMinv, ".")] // take substring up to '.'
-		min, err = strconv.Atoi(semverMinv)
-		if err != nil {
-			panic("invalid version: " + i.Version)
-		}
+		return false, fmt.Errorf("invalid version: '%s'", i.Version)
 	}
 
 	if maj < major || (maj == major && min < minor) {
-		return false
+		return false, nil
 	}
-	return true
+	return true, nil
 }
 
 // Info gets information about Ops Manager.
@@ -46,7 +45,7 @@ func (a Api) Info() (Info, error) {
 		Info Info `json:"info"`
 	}
 
-	resp, err := a.sendAPIRequest("GET", "/api/v0/info", nil)
+	resp, err := a.sendUnauthedAPIRequest("GET", "/api/v0/info", nil)
 	if err != nil {
 		return r.Info, errors.Wrap(err, "could not make request to info endpoint")
 	}

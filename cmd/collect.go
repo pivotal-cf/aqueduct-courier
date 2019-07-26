@@ -23,8 +23,8 @@ import (
 
 	"github.com/pivotal-cf/aqueduct-courier/operations"
 	"github.com/pivotal-cf/aqueduct-courier/opsmanager"
-	"github.com/pivotal-cf/aqueduct-utils/file"
 	omNetwork "github.com/pivotal-cf/om/network"
+	"github.com/pivotal-cf/telemetry-utils/file"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

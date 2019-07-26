@@ -2,8 +2,9 @@ package credhub
 
 import (
 	"fmt"
-	"github.com/pivotal-cf/aqueduct-utils/data"
 	"io"
+
+	"github.com/pivotal-cf/telemetry-utils/data"
 )
 
 type Data struct {

@@ -1,11 +1,12 @@
 package credhub_test
 
 import (
+	"strings"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/pivotal-cf/aqueduct-courier/credhub"
-	"github.com/pivotal-cf/aqueduct-utils/data"
-	"strings"
+	"github.com/pivotal-cf/telemetry-utils/data"
 )
 
 var _ = Describe("Data", func() {

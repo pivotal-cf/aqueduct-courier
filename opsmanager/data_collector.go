@@ -5,8 +5,8 @@ import (
 	"io"
 	"log"
 
-	"github.com/pivotal-cf/aqueduct-utils/data"
 	"github.com/pivotal-cf/om/api"
+	"github.com/pivotal-cf/telemetry-utils/data"
 	"github.com/pkg/errors"
 )
 
@@ -42,18 +42,18 @@ type OmService interface {
 type dataRetriever func() (io.Reader, error)
 
 type DataCollector struct {
-	logger log.Logger
+	logger                log.Logger
 	omService             OmService
-	opsManagerURL string
+	opsManagerURL         string
 	pendingChangesService PendingChangesLister
 	deployProductsService DeployedProductsLister
 }
 
 func NewDataCollector(logger log.Logger, oms OmService, omURL string, pcs PendingChangesLister, dps DeployedProductsLister) *DataCollector {
 	return &DataCollector{
-		logger: logger,
+		logger:                logger,
 		omService:             oms,
-		opsManagerURL: omURL,
+		opsManagerURL:         omURL,
 		pendingChangesService: pcs,
 		deployProductsService: dps,
 	}

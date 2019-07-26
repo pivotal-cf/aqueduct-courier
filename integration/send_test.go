@@ -19,14 +19,14 @@ import (
 	"github.com/elazarl/goproxy"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-cf/aqueduct-utils/data"
+	"github.com/pivotal-cf/telemetry-utils/data"
 
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"github.com/onsi/gomega/ghttp"
 	"github.com/pivotal-cf/aqueduct-courier/cmd"
 	"github.com/pivotal-cf/aqueduct-courier/operations"
-	"github.com/pivotal-cf/aqueduct-utils/file"
+	"github.com/pivotal-cf/telemetry-utils/file"
 )
 
 var _ = Describe("Send", func() {

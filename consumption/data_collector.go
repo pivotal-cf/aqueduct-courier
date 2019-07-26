@@ -4,7 +4,7 @@ import (
 	"io"
 	"log"
 
-	"github.com/pivotal-cf/aqueduct-utils/data"
+	"github.com/pivotal-cf/telemetry-utils/data"
 	"github.com/pkg/errors"
 )
 

@@ -71,24 +71,41 @@ func (a Api) UpdateStagedDirectorAvailabilityZones(input AvailabilityZoneInput, 
 		return err
 	}
 
-	decoratedConfig, err := yaml.Marshal(azs)
-	if err != nil {
-		return errors.Wrap(err, "problem marshalling request") // un-tested
-	}
+	for _, az := range azs.AvailabilityZones {
+		decoratedConfig, err := yaml.Marshal(map[string]interface{}{
+			"availability_zone": az,
+		})
+		if err != nil {
+			return errors.Wrap(err, "problem marshalling request") // un-tested
+		}
 
-	jsonData, err := yamlConverter.YAMLToJSON(decoratedConfig)
-	if err != nil {
-		return errors.Wrap(err, "problem converting request to JSON") // un-tested
-	}
+		jsonData, err := yamlConverter.YAMLToJSON(decoratedConfig)
+		if err != nil {
+			return errors.Wrap(err, "problem converting request to JSON") // un-tested
+		}
 
-	resp, err := a.sendAPIRequest("PUT", "/api/v0/staged/director/availability_zones", jsonData)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
+		if az.GUID != "" {
+			resp, err := a.sendAPIRequest("PUT", fmt.Sprintf("/api/v0/staged/director/availability_zones/%s", az.GUID), jsonData)
+			if err != nil {
+				return err
+			}
+			defer resp.Body.Close()
 
-	if err = validateStatusOKOrVerificationWarning(resp, ignoreVerifierWarnings); err != nil {
-		return err
+			if err = validateStatusOKOrVerificationWarning(resp, ignoreVerifierWarnings); err != nil {
+				return err
+			}
+			continue
+		}
+
+		resp, err := a.sendAPIRequest("POST", "/api/v0/staged/director/availability_zones", jsonData)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+
+		if err = validateStatusOKOrVerificationWarning(resp, ignoreVerifierWarnings); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -218,6 +235,140 @@ func (a Api) addGUIDToExistingNetworks(networks Networks) (Networks, error) {
 	}
 
 	return networks, nil
+}
+
+type IAASConfigurationsInput json.RawMessage
+
+type IAASConfigurationsAPIPayload struct {
+	Fields            map[string]interface{} `json:",inline,omitempty" yaml:",inline,omitempty"`
+	IAASConfiguration []*IAASConfiguration   `json:"iaas_configurations" yaml:"iaas_configurations"`
+}
+
+type IAASConfigurationDirectorPropertiesPayload struct {
+	Fields            map[string]interface{} `json:",inline,omitempty" yaml:",inline,omitempty"`
+	IAASConfiguration *IAASConfiguration     `json:"iaas_configuration" yaml:"iaas_configuration"`
+}
+
+type IAASConfiguration struct {
+	GUID   string                 `json:"guid,omitempty" yaml:"guid,omitempty"`
+	Name   string                 `json:"name,omitempty" yaml:"name,omitempty"`
+	Fields map[string]interface{} `json:",inline,omitempty" yaml:",inline,omitempty"`
+}
+
+func (a Api) UpdateStagedDirectorIAASConfigurations(iaasConfig IAASConfigurationsInput) error {
+	iaasConfigurations := []*IAASConfiguration{}
+	err := yaml.Unmarshal(iaasConfig, &iaasConfigurations)
+	if err != nil {
+		return fmt.Errorf("could not unmarshal iaas_configurations object: %v", err)
+	}
+
+	response, err := a.sendAPIRequest("GET", "/api/v0/staged/director/iaas_configurations", nil)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+
+	existingIAASJSON, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return err
+	}
+	var existingIAASes IAASConfigurationsAPIPayload
+	err = yaml.Unmarshal(existingIAASJSON, &existingIAASes)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal JSON response from Ops Manager: %s", err)
+	}
+
+	for _, config := range iaasConfigurations {
+		for _, existingIAAS := range existingIAASes.IAASConfiguration {
+			if config.Name == existingIAAS.Name {
+				config.GUID = existingIAAS.GUID
+				break
+			}
+		}
+	}
+
+	for _, config := range iaasConfigurations {
+		decoratedConfig, err := yaml.Marshal(map[string]interface{}{
+			"iaas_configuration": config,
+		})
+		if err != nil {
+			return errors.Wrap(err, "problem marshalling request") // un-tested
+		}
+
+		jsonData, err := yamlConverter.YAMLToJSON(decoratedConfig)
+		if err != nil {
+			return errors.Wrap(err, "problem converting request to JSON") // un-tested
+		}
+
+		if config.GUID == "" {
+			resp, err := a.sendAPIRequest("POST", "/api/v0/staged/director/iaas_configurations", jsonData)
+			if err != nil {
+				return err
+			}
+			if resp.StatusCode == http.StatusNotImplemented {
+				return a.updateIAASConfigurationInDirectorProperties(iaasConfigurations)
+			}
+			if err = validateStatusOK(resp); err != nil {
+				return err
+			}
+			continue
+		}
+
+		resp, err := a.sendAPIRequest("PUT", fmt.Sprintf("/api/v0/staged/director/iaas_configurations/%s", config.GUID), jsonData)
+		if err != nil {
+			return err
+		}
+		if err = validateStatusOK(resp); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (a Api) updateIAASConfigurationInDirectorProperties(iaasConfigurations []*IAASConfiguration) error {
+	if len(iaasConfigurations) > 1 {
+		return errors.New("multiple iaas_configurations are not allowed for your IAAS.\nSupported IAASes include: vsphere and openstack.")
+	}
+
+	resp, err := a.sendAPIRequest("GET", "/api/v0/staged/director/properties", nil)
+	existingIAASJSON, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("could not get IAAS configuration from the director: %s", err)
+	}
+
+	var existingIAAS IAASConfigurationDirectorPropertiesPayload
+	err = json.Unmarshal(existingIAASJSON, &existingIAAS)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal JSON response from Ops Manager: %s", err)
+	}
+	if existingIAAS.IAASConfiguration != nil {
+		for _, config := range iaasConfigurations {
+			if config.Name == existingIAAS.IAASConfiguration.Name {
+				config.GUID = existingIAAS.IAASConfiguration.GUID
+				break
+			}
+		}
+	}
+
+	iaasConfig := IAASConfigurationDirectorPropertiesPayload {
+		IAASConfiguration: iaasConfigurations[0],
+	}
+	contents, err := yaml.Marshal(iaasConfig)
+	if err != nil {
+		return errors.Wrap(err, "problem marshalling request") // un-tested
+	}
+
+	jsonData, err := yamlConverter.YAMLToJSON(contents)
+	if err != nil {
+		return errors.Wrap(err, "problem converting request to JSON") // un-tested
+	}
+	err = a.UpdateStagedDirectorProperties(jsonData)
+	if err != nil {
+		return fmt.Errorf("failed to update IAAS configuration in the director properties: %s", err)
+	}
+
+	return nil
 }
 
 func (a Api) addGUIDToExistingAZs(azs AvailabilityZones) (AvailabilityZones, error) {
