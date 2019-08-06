@@ -27,7 +27,7 @@ import (
 	"github.com/onsi/gomega/ghttp"
 	"github.com/pivotal-cf/aqueduct-courier/cmd"
 	"github.com/pivotal-cf/aqueduct-courier/operations"
-	"github.com/pivotal-cf/telemetry-utils/data"
+	"github.com/pivotal-cf/telemetry-utils/collector_tar"
 )
 
 const (
@@ -110,7 +110,7 @@ var _ = Describe("Collect", func() {
 			Eventually(session).Should(gexec.Exit(0))
 
 			tarFilePath := validatedTarFilePath(outputDirPath)
-			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
+			assertValidOutput(tarFilePath, collector_tar.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
 			assertLogging(session, tarFilePath, false, false)
 		})
 
@@ -131,7 +131,7 @@ var _ = Describe("Collect", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
 			tarFilePath := validatedTarFilePath(outputDirPath)
-			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
+			assertValidOutput(tarFilePath, collector_tar.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
 			assertLogging(session, tarFilePath, false, false)
 		})
 	})
@@ -148,7 +148,7 @@ var _ = Describe("Collect", func() {
 			Eventually(session).Should(gexec.Exit(0))
 
 			tarFilePath := validatedTarFilePath(outputDirPath)
-			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
+			assertValidOutput(tarFilePath, collector_tar.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
 			assertLogging(session, tarFilePath, false, false)
 		})
 
@@ -169,7 +169,7 @@ var _ = Describe("Collect", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
 			tarFilePath := validatedTarFilePath(outputDirPath)
-			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
+			assertValidOutput(tarFilePath, collector_tar.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
 			assertLogging(session, tarFilePath, false, false)
 		})
 	})
@@ -260,8 +260,8 @@ var _ = Describe("Collect", func() {
 			Eventually(session).Should(gexec.Exit(0))
 
 			tarFilePath := validatedTarFilePath(outputDirPath)
-			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
-			assertValidOutput(tarFilePath, data.UsageServiceCollectorDataSetId, "app_usage", "development")
+			assertValidOutput(tarFilePath, collector_tar.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
+			assertValidOutput(tarFilePath, collector_tar.UsageServiceCollectorDataSetId, "app_usage", "development")
 			assertLogging(session, tarFilePath, false, true)
 		})
 
@@ -289,8 +289,8 @@ var _ = Describe("Collect", func() {
 			Eventually(session).Should(gexec.Exit(0))
 
 			tarFilePath := validatedTarFilePath(outputDirPath)
-			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
-			assertValidOutput(tarFilePath, data.UsageServiceCollectorDataSetId, "app_usage", "development")
+			assertValidOutput(tarFilePath, collector_tar.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
+			assertValidOutput(tarFilePath, collector_tar.UsageServiceCollectorDataSetId, "app_usage", "development")
 			assertLogging(session, tarFilePath, false, true)
 		})
 
@@ -390,7 +390,7 @@ var _ = Describe("Collect", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
 			tarFilePath := validatedTarFilePath(outputDirPath)
-			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "p-bosh_certificates", "development")
+			assertValidOutput(tarFilePath, collector_tar.OpsManagerCollectorDataSetId, "p-bosh_certificates", "development")
 			assertLogging(session, tarFilePath, true, false)
 		})
 
@@ -402,7 +402,7 @@ var _ = Describe("Collect", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
 			tarFilePath := validatedTarFilePath(outputDirPath)
-			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "p-bosh_certificates", "development")
+			assertValidOutput(tarFilePath, collector_tar.OpsManagerCollectorDataSetId, "p-bosh_certificates", "development")
 			assertLogging(session, tarFilePath, true, false)
 		})
 
@@ -552,7 +552,7 @@ var _ = Describe("Collect", func() {
 			Eventually(session).Should(gexec.Exit(0))
 
 			tarFilePath := validatedTarFilePath(outputDirPath)
-			assertValidOutput(tarFilePath, data.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
+			assertValidOutput(tarFilePath, collector_tar.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
 			assertLogging(session, tarFilePath, false, false)
 		})
 	})
@@ -616,9 +616,9 @@ func validatedTarFilePath(outputDirPath string) string {
 }
 
 func assertMetadataFileIsCorrect(contentDir, expectedEnvType, dataSetType string) {
-	content, err := ioutil.ReadFile(filepath.Join(contentDir, dataSetType, data.MetadataFileName))
+	content, err := ioutil.ReadFile(filepath.Join(contentDir, dataSetType, collector_tar.MetadataFileName))
 	Expect(err).NotTo(HaveOccurred(), "Expected metadata file to exist but did not")
-	var metadata data.Metadata
+	var metadata collector_tar.Metadata
 	Expect(json.Unmarshal(content, &metadata)).To(Succeed())
 	Expect(metadata.EnvType).To(Equal(expectedEnvType))
 	Expect(metadata.CollectorVersion).To(Equal(testVersion))

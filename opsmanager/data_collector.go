@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/pivotal-cf/om/api"
-	"github.com/pivotal-cf/telemetry-utils/data"
+	"github.com/pivotal-cf/telemetry-utils/collector_tar"
 	"github.com/pkg/errors"
 )
 
@@ -79,19 +79,19 @@ func (dc *DataCollector) Collect() ([]Data, string, error) {
 
 	var d []Data
 
-	d, err = appendRetrievedData(d, dc.omService.DeployedProducts, data.OpsManagerProductType, data.DeployedProductsDataType)
+	d, err = appendRetrievedData(d, dc.omService.DeployedProducts, collector_tar.OpsManagerProductType, collector_tar.DeployedProductsDataType)
 	if err != nil {
 		return []Data{}, "", err
 	}
 
 	for _, product := range pl {
-		if product.Type != data.DirectorProductType {
-			d, err = appendRetrievedData(d, dc.productResourcesCaller(product.GUID), product.Type, data.ResourcesDataType)
+		if product.Type != collector_tar.DirectorProductType {
+			d, err = appendRetrievedData(d, dc.productResourcesCaller(product.GUID), product.Type, collector_tar.ResourcesDataType)
 			if err != nil {
 				return []Data{}, "", err
 			}
 
-			d, err = appendRetrievedData(d, dc.productPropertiesCaller(product.GUID), product.Type, data.PropertiesDataType)
+			d, err = appendRetrievedData(d, dc.productPropertiesCaller(product.GUID), product.Type, collector_tar.PropertiesDataType)
 			if err != nil {
 				return []Data{}, "", err
 			}
@@ -100,27 +100,27 @@ func (dc *DataCollector) Collect() ([]Data, string, error) {
 		}
 	}
 
-	d, err = appendRetrievedData(d, dc.omService.VmTypes, data.OpsManagerProductType, data.VmTypesDataType)
+	d, err = appendRetrievedData(d, dc.omService.VmTypes, collector_tar.OpsManagerProductType, collector_tar.VmTypesDataType)
 	if err != nil {
 		return []Data{}, "", err
 	}
 
-	d, err = appendRetrievedData(d, dc.omService.DiagnosticReport, data.OpsManagerProductType, data.DiagnosticReportDataType)
+	d, err = appendRetrievedData(d, dc.omService.DiagnosticReport, collector_tar.OpsManagerProductType, collector_tar.DiagnosticReportDataType)
 	if err != nil {
 		return []Data{}, "", err
 	}
 
-	d, err = appendRetrievedData(d, dc.omService.Installations, data.OpsManagerProductType, data.InstallationsDataType)
+	d, err = appendRetrievedData(d, dc.omService.Installations, collector_tar.OpsManagerProductType, collector_tar.InstallationsDataType)
 	if err != nil {
 		return []Data{}, "", err
 	}
 
-	d, err = appendRetrievedData(d, dc.omService.Certificates, data.OpsManagerProductType, data.CertificatesDataType)
+	d, err = appendRetrievedData(d, dc.omService.Certificates, collector_tar.OpsManagerProductType, collector_tar.CertificatesDataType)
 	if err != nil {
 		return []Data{}, "", err
 	}
 
-	d, err = appendRetrievedData(d, dc.omService.CertificateAuthorities, data.OpsManagerProductType, data.CertificateAuthoritiesDataType)
+	d, err = appendRetrievedData(d, dc.omService.CertificateAuthorities, collector_tar.OpsManagerProductType, collector_tar.CertificateAuthoritiesDataType)
 	if err != nil {
 		return []Data{}, "", err
 	}

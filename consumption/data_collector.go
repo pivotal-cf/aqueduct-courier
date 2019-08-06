@@ -4,7 +4,7 @@ import (
 	"io"
 	"log"
 
-	"github.com/pivotal-cf/telemetry-utils/data"
+	"github.com/pivotal-cf/telemetry-utils/collector_tar"
 	"github.com/pkg/errors"
 )
 
@@ -55,8 +55,8 @@ func (dc *DataCollector) Collect() ([]Data, error) {
 	}
 
 	return []Data{
-		NewData(appUsagesDataReader, data.AppUsageDataType),
-		NewData(serviceUsagesDataReader, data.ServiceUsageDataType),
-		NewData(taskUsagesDataReader, data.TaskUsageDataType),
+		NewData(appUsagesDataReader, collector_tar.AppUsageDataType),
+		NewData(serviceUsagesDataReader, collector_tar.ServiceUsageDataType),
+		NewData(taskUsagesDataReader, collector_tar.TaskUsageDataType),
 	}, nil
 }

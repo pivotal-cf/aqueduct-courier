@@ -19,14 +19,14 @@ import (
 	"github.com/elazarl/goproxy"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pivotal-cf/telemetry-utils/data"
+	"github.com/pivotal-cf/telemetry-utils/collector_tar"
 
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"github.com/onsi/gomega/ghttp"
 	"github.com/pivotal-cf/aqueduct-courier/cmd"
 	"github.com/pivotal-cf/aqueduct-courier/operations"
-	"github.com/pivotal-cf/telemetry-utils/file"
+	"github.com/pivotal-cf/telemetry-utils/tar"
 )
 
 var _ = Describe("Send", func() {
@@ -271,7 +271,7 @@ func generateValidDataTarFile(destinationDir string) string {
 	Expect(err).NotTo(HaveOccurred())
 	defer tarFile.Close()
 
-	writer := file.NewTarWriter(tarFile)
+	writer := tar.NewTarWriter(tarFile)
 	defer writer.Close()
 
 	Expect(writer.AddFile([]byte{}, filepath.Join("some-data-set-name1", "file1"))).To(Succeed())
@@ -279,20 +279,20 @@ func generateValidDataTarFile(destinationDir string) string {
 	sum := md5.Sum([]byte{})
 	emptyFileChecksum := base64.StdEncoding.EncodeToString(sum[:])
 
-	var metadata data.Metadata
-	metadata.FileDigests = []data.FileDigest{
+	var metadata collector_tar.Metadata
+	metadata.FileDigests = []collector_tar.FileDigest{
 		{Name: "file1", MD5Checksum: emptyFileChecksum},
 	}
 	metadataContents, err := json.Marshal(metadata)
 	Expect(err).NotTo(HaveOccurred())
-	Expect(writer.AddFile(metadataContents, filepath.Join("some-data-set-name1", data.MetadataFileName))).To(Succeed())
+	Expect(writer.AddFile(metadataContents, filepath.Join("some-data-set-name1", collector_tar.MetadataFileName))).To(Succeed())
 
-	metadata.FileDigests = []data.FileDigest{
+	metadata.FileDigests = []collector_tar.FileDigest{
 		{Name: "file2", MD5Checksum: emptyFileChecksum},
 	}
 	metadataContents, err = json.Marshal(metadata)
 	Expect(err).NotTo(HaveOccurred())
-	Expect(writer.AddFile(metadataContents, filepath.Join("some-data-set-name1", data.MetadataFileName))).To(Succeed())
+	Expect(writer.AddFile(metadataContents, filepath.Join("some-data-set-name1", collector_tar.MetadataFileName))).To(Succeed())
 
 	return tarFilePath
 }

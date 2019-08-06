@@ -24,7 +24,7 @@ import (
 	"github.com/pivotal-cf/aqueduct-courier/operations"
 	"github.com/pivotal-cf/aqueduct-courier/opsmanager"
 	omNetwork "github.com/pivotal-cf/om/network"
-	"github.com/pivotal-cf/telemetry-utils/file"
+	"github.com/pivotal-cf/telemetry-utils/tar"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -160,7 +160,7 @@ func collect(c *cobra.Command, _ []string) error {
 	}
 	defer tarFile.Close()
 
-	tarWriter := file.NewTarWriter(tarFile)
+	tarWriter := tar.NewTarWriter(tarFile)
 
 	collectExecutor, err := makeCollector(tarWriter)
 	if err != nil {
@@ -294,7 +294,7 @@ func makeCredhubCollector(omService *opsmanager.Service, credhubCollectionEnable
 	}
 }
 
-func makeCollector(tarWriter *file.TarWriter) (*operations.CollectExecutor, error) {
+func makeCollector(tarWriter *tar.TarWriter) (*operations.CollectExecutor, error) {
 	authedClient, _ := omNetwork.NewOAuthClient(
 		viper.GetString(OpsManagerURLFlag),
 		viper.GetString(OpsManagerUsernameFlag),

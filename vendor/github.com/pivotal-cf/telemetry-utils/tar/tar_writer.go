@@ -1,4 +1,4 @@
-package file
+package tar
 
 import (
 	"archive/tar"

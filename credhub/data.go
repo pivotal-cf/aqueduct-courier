@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/pivotal-cf/telemetry-utils/data"
+	"github.com/pivotal-cf/telemetry-utils/collector_tar"
 )
 
 type Data struct {
@@ -28,9 +28,9 @@ func (d Data) MimeType() string {
 }
 
 func (d Data) Type() string {
-	return data.DirectorProductType
+	return collector_tar.DirectorProductType
 }
 
 func (d Data) DataType() string {
-	return data.CertificatesDataType
+	return collector_tar.CertificatesDataType
 }

@@ -7,7 +7,7 @@ import (
 
 	"github.com/onsi/gomega/gbytes"
 
-	"github.com/pivotal-cf/telemetry-utils/data"
+	"github.com/pivotal-cf/telemetry-utils/collector_tar"
 
 	"github.com/pkg/errors"
 
@@ -47,9 +47,9 @@ var _ = Describe("DataCollector", func() {
 
 			Expect(bufferedOutput).To(gbytes.Say("Collecting data from Usage Service at some-usage-url"))
 			Expect(collectedUsageData).To(ConsistOf(
-				NewData(appUsagesReader, data.AppUsageDataType),
-				NewData(taskUsagesReader, data.TaskUsageDataType),
-				NewData(serviceUsagesReader, data.ServiceUsageDataType)),
+				NewData(appUsagesReader, collector_tar.AppUsageDataType),
+				NewData(taskUsagesReader, collector_tar.TaskUsageDataType),
+				NewData(serviceUsagesReader, collector_tar.ServiceUsageDataType)),
 			)
 		})
 

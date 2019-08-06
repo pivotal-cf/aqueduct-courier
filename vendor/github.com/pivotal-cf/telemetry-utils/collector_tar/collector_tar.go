@@ -1,4 +1,4 @@
-package data
+package collector_tar
 
 import (
 	"bytes"

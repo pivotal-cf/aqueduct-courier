@@ -15,7 +15,7 @@ import (
 	"github.com/pivotal-cf/aqueduct-courier/credhub"
 
 	"github.com/pivotal-cf/aqueduct-courier/opsmanager"
-	"github.com/pivotal-cf/telemetry-utils/data"
+	"github.com/pivotal-cf/telemetry-utils/collector_tar"
 	"github.com/pkg/errors"
 )
 
@@ -87,7 +87,7 @@ func (ce *CollectExecutor) Collect(envType, collectorVersion string) error {
 		return errors.Wrap(err, OpsManagerCollectFailureMessage)
 	}
 
-	opsManagerMetadata := data.Metadata{
+	opsManagerMetadata := collector_tar.Metadata{
 		CollectorVersion: collectorVersion,
 		EnvType:          envType,
 		CollectionId:     collectionID.String(),
@@ -95,7 +95,7 @@ func (ce *CollectExecutor) Collect(envType, collectorVersion string) error {
 		CollectedAt:      time.Now().UTC().Format(time.RFC3339),
 	}
 
-	usageMetadata := data.Metadata{
+	usageMetadata := collector_tar.Metadata{
 		CollectorVersion: collectorVersion,
 		EnvType:          envType,
 		CollectionId:     opsManagerMetadata.CollectionId,
@@ -104,7 +104,7 @@ func (ce *CollectExecutor) Collect(envType, collectorVersion string) error {
 	}
 
 	for _, omData := range omDatas {
-		err = ce.addData(omData, &opsManagerMetadata, data.OpsManagerCollectorDataSetId)
+		err = ce.addData(omData, &opsManagerMetadata, collector_tar.OpsManagerCollectorDataSetId)
 		if err != nil {
 			return err
 		}
@@ -116,7 +116,7 @@ func (ce *CollectExecutor) Collect(envType, collectorVersion string) error {
 			return errors.Wrap(err, CredhubCollectFailureMessage)
 		}
 
-		err = ce.addData(chData, &opsManagerMetadata, data.OpsManagerCollectorDataSetId)
+		err = ce.addData(chData, &opsManagerMetadata, collector_tar.OpsManagerCollectorDataSetId)
 		if err != nil {
 			return err
 		}
@@ -126,7 +126,7 @@ func (ce *CollectExecutor) Collect(envType, collectorVersion string) error {
 	if err != nil {
 		return err
 	}
-	err = ce.tarWriter.AddFile(metadataContents, filepath.Join(data.OpsManagerCollectorDataSetId, data.MetadataFileName))
+	err = ce.tarWriter.AddFile(metadataContents, filepath.Join(collector_tar.OpsManagerCollectorDataSetId, collector_tar.MetadataFileName))
 	if err != nil {
 		return errors.Wrap(err, DataWriteFailureMessage)
 	}
@@ -138,7 +138,7 @@ func (ce *CollectExecutor) Collect(envType, collectorVersion string) error {
 		}
 
 		for _, consumptionData := range usageData {
-			err = ce.addData(consumptionData, &usageMetadata, data.UsageServiceCollectorDataSetId)
+			err = ce.addData(consumptionData, &usageMetadata, collector_tar.UsageServiceCollectorDataSetId)
 			if err != nil {
 				return err
 			}
@@ -148,7 +148,7 @@ func (ce *CollectExecutor) Collect(envType, collectorVersion string) error {
 			return err
 		}
 
-		err = ce.tarWriter.AddFile(usageMetadataContents, filepath.Join(data.UsageServiceCollectorDataSetId, data.MetadataFileName))
+		err = ce.tarWriter.AddFile(usageMetadataContents, filepath.Join(collector_tar.UsageServiceCollectorDataSetId, collector_tar.MetadataFileName))
 		if err != nil {
 			return errors.Wrap(err, DataWriteFailureMessage)
 		}
@@ -157,7 +157,7 @@ func (ce *CollectExecutor) Collect(envType, collectorVersion string) error {
 	return nil
 }
 
-func (ce *CollectExecutor) addData(collectedData collectedData, metadata *data.Metadata, dataSetType string) error {
+func (ce *CollectExecutor) addData(collectedData collectedData, metadata *collector_tar.Metadata, dataSetType string) error {
 	dataContents, err := ioutil.ReadAll(collectedData.Content())
 	if err != nil {
 		return errors.Wrap(err, ContentReadingFailureMessage)
@@ -169,7 +169,7 @@ func (ce *CollectExecutor) addData(collectedData collectedData, metadata *data.M
 	}
 
 	md5Sum := md5.Sum([]byte(dataContents))
-	metadata.FileDigests = append(metadata.FileDigests, data.FileDigest{
+	metadata.FileDigests = append(metadata.FileDigests, collector_tar.FileDigest{
 		Name:        collectedData.Name(),
 		MimeType:    collectedData.MimeType(),
 		ProductType: collectedData.Type(),

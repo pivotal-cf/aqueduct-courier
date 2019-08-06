@@ -11,7 +11,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pivotal-cf/aqueduct-courier/opsmanager/opsmanagerfakes"
-	"github.com/pivotal-cf/telemetry-utils/data"
+	"github.com/pivotal-cf/telemetry-utils/collector_tar"
 
 	"github.com/pkg/errors"
 
@@ -77,63 +77,63 @@ var _ = Describe("DataCollector", func() {
 	It("returns an error when omService.ProductResources errors", func() {
 		deployedProductsLister.ListDeployedProductsReturns(
 			[]api.DeployedProductOutput{
-				{Type: data.DirectorProductType, GUID: "p-bosh-always-first"},
+				{Type: collector_tar.DirectorProductType, GUID: "p-bosh-always-first"},
 				{Type: "best-product-1", GUID: "p1-guid"},
 			},
 			nil,
 		)
 		omService.ProductResourcesReturns(nil, errors.New("Requesting things is hard"))
 		collectedData, foundationId, err := dataCollector.Collect()
-		assertOmServiceFailure(collectedData, foundationId, err, "best-product-1", data.ResourcesDataType, "Requesting things is hard")
+		assertOmServiceFailure(collectedData, foundationId, err, "best-product-1", collector_tar.ResourcesDataType, "Requesting things is hard")
 	})
 
 	It("returns an error when omService.ProductProperties errors", func() {
 		deployedProductsLister.ListDeployedProductsReturns(
 			[]api.DeployedProductOutput{
-				{Type: data.DirectorProductType, GUID: "p-bosh-always-first"},
+				{Type: collector_tar.DirectorProductType, GUID: "p-bosh-always-first"},
 				{Type: "best-product-1", GUID: "p1-guid"},
 			},
 			nil,
 		)
 		omService.ProductPropertiesReturns(nil, errors.New("Requesting things is hard"))
 		collectedData, foundationId, err := dataCollector.Collect()
-		assertOmServiceFailure(collectedData, foundationId, err, "best-product-1", data.PropertiesDataType, "Requesting things is hard")
+		assertOmServiceFailure(collectedData, foundationId, err, "best-product-1", collector_tar.PropertiesDataType, "Requesting things is hard")
 	})
 
 	It("returns an error when omService.VmTypes errors", func() {
 		omService.VmTypesReturns(nil, errors.New("Requesting things is hard"))
 		collectedData, foundationId, err := dataCollector.Collect()
-		assertOmServiceFailure(collectedData, foundationId, err, data.OpsManagerProductType, data.VmTypesDataType, "Requesting things is hard")
+		assertOmServiceFailure(collectedData, foundationId, err, collector_tar.OpsManagerProductType, collector_tar.VmTypesDataType, "Requesting things is hard")
 	})
 
 	It("returns an error when omService.DiagnosticReport errors", func() {
 		omService.DiagnosticReportReturns(nil, errors.New("Requesting things is hard"))
 		collectedData, foundationId, err := dataCollector.Collect()
-		assertOmServiceFailure(collectedData, foundationId, err, data.OpsManagerProductType, data.DiagnosticReportDataType, "Requesting things is hard")
+		assertOmServiceFailure(collectedData, foundationId, err, collector_tar.OpsManagerProductType, collector_tar.DiagnosticReportDataType, "Requesting things is hard")
 	})
 
 	It("returns an error when omService.DeployedProducts errors", func() {
 		omService.DeployedProductsReturns(nil, errors.New("Requesting things is hard"))
 		collectedData, foundationId, err := dataCollector.Collect()
-		assertOmServiceFailure(collectedData, foundationId, err, data.OpsManagerProductType, data.DeployedProductsDataType, "Requesting things is hard")
+		assertOmServiceFailure(collectedData, foundationId, err, collector_tar.OpsManagerProductType, collector_tar.DeployedProductsDataType, "Requesting things is hard")
 	})
 
 	It("returns an error when omService.Installations errors", func() {
 		omService.InstallationsReturns(nil, errors.New("Requesting things is hard"))
 		collectedData, foundationId, err := dataCollector.Collect()
-		assertOmServiceFailure(collectedData, foundationId, err, data.OpsManagerProductType, data.InstallationsDataType, "Requesting things is hard")
+		assertOmServiceFailure(collectedData, foundationId, err, collector_tar.OpsManagerProductType, collector_tar.InstallationsDataType, "Requesting things is hard")
 	})
 
 	It("returns an error when omService.Certificates errors", func() {
 		omService.CertificatesReturns(nil, errors.New("Requesting things is hard"))
 		collectedData, foundationId, err := dataCollector.Collect()
-		assertOmServiceFailure(collectedData, foundationId, err, data.OpsManagerProductType, data.CertificatesDataType, "Requesting things is hard")
+		assertOmServiceFailure(collectedData, foundationId, err, collector_tar.OpsManagerProductType, collector_tar.CertificatesDataType, "Requesting things is hard")
 	})
 
 	It("returns an error when omService.CertificateAuthorities errors", func() {
 		omService.CertificateAuthoritiesReturns(nil, errors.New("Requesting things is hard"))
 		collectedData, foundationId, err := dataCollector.Collect()
-		assertOmServiceFailure(collectedData, foundationId, err, data.OpsManagerProductType, data.CertificateAuthoritiesDataType, "Requesting things is hard")
+		assertOmServiceFailure(collectedData, foundationId, err, collector_tar.OpsManagerProductType, collector_tar.CertificateAuthoritiesDataType, "Requesting things is hard")
 	})
 
 	It("succeeds", func() {
@@ -151,7 +151,7 @@ var _ = Describe("DataCollector", func() {
 		installationsReader := strings.NewReader("installations data")
 		certificatesReader := strings.NewReader("certificates data")
 		certificateAuthoritiesReader := strings.NewReader("certificate authorities data")
-		directorProduct := api.DeployedProductOutput{Type: data.DirectorProductType, GUID: "p-bosh-always-first"}
+		directorProduct := api.DeployedProductOutput{Type: collector_tar.DirectorProductType, GUID: "p-bosh-always-first"}
 		deployedProducts := []api.DeployedProductOutput{
 			{Type: "best-product-1", GUID: "p1-guid"},
 			{Type: "best-product-2", GUID: "p2-guid"},
@@ -177,53 +177,53 @@ var _ = Describe("DataCollector", func() {
 		Expect(collectedData).To(ConsistOf(
 			NewData(
 				deployedProductsReader,
-				data.OpsManagerProductType,
-				data.DeployedProductsDataType,
+				collector_tar.OpsManagerProductType,
+				collector_tar.DeployedProductsDataType,
 			),
 			NewData(
 				resourcesReaders[0],
 				deployedProducts[0].Type,
-				data.ResourcesDataType,
+				collector_tar.ResourcesDataType,
 			),
 			NewData(
 				resourcesReaders[1],
 				deployedProducts[1].Type,
-				data.ResourcesDataType,
+				collector_tar.ResourcesDataType,
 			),
 			NewData(
 				propertiesReaders[0],
 				deployedProducts[0].Type,
-				data.PropertiesDataType,
+				collector_tar.PropertiesDataType,
 			),
 			NewData(
 				propertiesReaders[1],
 				deployedProducts[1].Type,
-				data.PropertiesDataType,
+				collector_tar.PropertiesDataType,
 			),
 			NewData(
 				vmTypesReader,
-				data.OpsManagerProductType,
-				data.VmTypesDataType,
+				collector_tar.OpsManagerProductType,
+				collector_tar.VmTypesDataType,
 			),
 			NewData(
 				diagnosticReportReader,
-				data.OpsManagerProductType,
-				data.DiagnosticReportDataType,
+				collector_tar.OpsManagerProductType,
+				collector_tar.DiagnosticReportDataType,
 			),
 			NewData(
 				installationsReader,
-				data.OpsManagerProductType,
-				data.InstallationsDataType,
+				collector_tar.OpsManagerProductType,
+				collector_tar.InstallationsDataType,
 			),
 			NewData(
 				certificatesReader,
-				data.OpsManagerProductType,
-				data.CertificatesDataType,
+				collector_tar.OpsManagerProductType,
+				collector_tar.CertificatesDataType,
 			),
 			NewData(
 				certificateAuthoritiesReader,
-				data.OpsManagerProductType,
-				data.CertificateAuthoritiesDataType,
+				collector_tar.OpsManagerProductType,
+				collector_tar.CertificateAuthoritiesDataType,
 			),
 		))
 	})
@@ -233,12 +233,12 @@ var _ = Describe("DataCollector", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(foundationId).To(Equal(""))
 		Expect(collectedData).To(ConsistOf(
-			NewData(nil, data.OpsManagerProductType, data.DeployedProductsDataType),
-			NewData(nil, data.OpsManagerProductType, data.VmTypesDataType),
-			NewData(nil, data.OpsManagerProductType, data.DiagnosticReportDataType),
-			NewData(nil, data.OpsManagerProductType, data.InstallationsDataType),
-			NewData(nil, data.OpsManagerProductType, data.CertificatesDataType),
-			NewData(nil, data.OpsManagerProductType, data.CertificateAuthoritiesDataType),
+			NewData(nil, collector_tar.OpsManagerProductType, collector_tar.DeployedProductsDataType),
+			NewData(nil, collector_tar.OpsManagerProductType, collector_tar.VmTypesDataType),
+			NewData(nil, collector_tar.OpsManagerProductType, collector_tar.DiagnosticReportDataType),
+			NewData(nil, collector_tar.OpsManagerProductType, collector_tar.InstallationsDataType),
+			NewData(nil, collector_tar.OpsManagerProductType, collector_tar.CertificatesDataType),
+			NewData(nil, collector_tar.OpsManagerProductType, collector_tar.CertificateAuthoritiesDataType),
 		))
 	})
 })
