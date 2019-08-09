@@ -1,18 +1,18 @@
 name: windows-worker
 
 releases:
-- name: concourse
-  version: "5.3.0"
-  url: "https://bosh.io/d/github.com/concourse/concourse-bosh-release?v=5.3.0"
-  sha1: 97410a92b3c2385b728a7414ad34520491701d4e
-- name: windows-tools
-  version: 46
-  url: https://bosh.io/d/github.com/cloudfoundry-incubator/windows-tools-release?v=46
-  sha1: de4369dbce21546296185103ea9a53d61f1d4c0a
-- name: windows-utilities
-  version: "0.11.0"
-  url: https://bosh.io/d/github.com/cloudfoundry-incubator/windows-utilities-release?v=0.11.0
-  sha1: efc10ac0f4acae23637ce2c6f864d20df2e3a781
+- name: "concourse"
+  version: "5.4.1"
+  url: "https://bosh.io/d/github.com/concourse/concourse-bosh-release?v=5.4.1"
+  sha1: "c7051a773cc33435f7d608a020d8e0765c8faf4a"
+- name: "windows-tools"
+  version: "48"
+  url: "https://bosh.io/d/github.com/cloudfoundry-incubator/windows-tools-release?v=48"
+  sha1: "d4330e42fc9b0ddb119f97051a8d06430b3749cf"
+- name: "windows-utilities"
+  version: "0.13.0"
+  url: "https://bosh.io/d/github.com/cloudfoundry-incubator/windows-utilities-release?v=0.13.0"
+  sha1: "339c0a80a295a3ecfa75688807909b46759d66d1"
 
 stemcells:
 - alias: windows2016
