@@ -327,8 +327,30 @@ var _ = Describe("Collect", func() {
 			Expect(session.Err).To(gbytes.Say(fmt.Sprintf(cf.CFApiUnexpectedResponseStatusErrorFormat, http.StatusInternalServerError)))
 		})
 
+		It("fails if the UAA server TLS version is less than 1.2", func() {
+			uaaService = serverWithMaxTLSVersion(tls.VersionTLS11)
+			cfService = ghttp.NewTLSServer()
+			usageService = ghttp.NewTLSServer()
+			setupUsageServerServiceHandlers(uaaService, cfService, usageService, "")
+
+			defaultEnvVars[cmd.UsageServiceURLKey] = usageService.URL()
+			defaultEnvVars[cmd.CfApiURLKey] = cfService.URL()
+			defaultEnvVars[cmd.UsageServiceClientIDKey] = "best-usage-service-client-id"
+			defaultEnvVars[cmd.UsageServiceClientSecretKey] = "best-usage-service-client-secret"
+			defaultEnvVars[cmd.UsageServiceSkipTlsVerifyKey] = "true"
+			command := buildDefaultCommand(defaultEnvVars)
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(1))
+			Expect(session.Err).To(gbytes.Say("protocol version not supported"))
+		})
+
 		It("fails if cf api server TLS version is less than 1.2", func() {
-			cfService.HTTPTestServer.TLS.MaxVersion = tls.VersionTLS11
+			uaaService = ghttp.NewTLSServer()
+			cfService = serverWithMaxTLSVersion(tls.VersionTLS11)
+			usageService = ghttp.NewTLSServer()
+			setupUsageServerServiceHandlers(uaaService, cfService, usageService, "")
+
 			defaultEnvVars[cmd.UsageServiceURLKey] = usageService.URL()
 			defaultEnvVars[cmd.CfApiURLKey] = cfService.URL()
 			defaultEnvVars[cmd.UsageServiceClientIDKey] = "best-usage-service-client-id"
@@ -342,21 +364,12 @@ var _ = Describe("Collect", func() {
 		})
 
 		It("fails if the usage service server TLS version is less than 1.2", func() {
-			usageService.HTTPTestServer.TLS.MaxVersion = tls.VersionTLS11
-			defaultEnvVars[cmd.UsageServiceURLKey] = usageService.URL()
-			defaultEnvVars[cmd.CfApiURLKey] = cfService.URL()
-			defaultEnvVars[cmd.UsageServiceClientIDKey] = "best-usage-service-client-id"
-			defaultEnvVars[cmd.UsageServiceClientSecretKey] = "best-usage-service-client-secret"
-			defaultEnvVars[cmd.UsageServiceSkipTlsVerifyKey] = "true"
-			command := buildDefaultCommand(defaultEnvVars)
-			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-			Expect(err).NotTo(HaveOccurred())
-			Eventually(session).Should(gexec.Exit(1))
-			Expect(session.Err).To(gbytes.Say("protocol version not supported"))
-		})
+			uaaService = ghttp.NewTLSServer()
+			cfService = ghttp.NewTLSServer()
+			usageService = serverWithMaxTLSVersion(tls.VersionTLS11)
 
-		It("fails if the UAA server TLS version is less than 1.2", func() {
-			uaaService.HTTPTestServer.TLS.MaxVersion = tls.VersionTLS11
+			setupUsageServerServiceHandlers(uaaService, cfService, usageService, "")
+
 			defaultEnvVars[cmd.UsageServiceURLKey] = usageService.URL()
 			defaultEnvVars[cmd.CfApiURLKey] = cfService.URL()
 			defaultEnvVars[cmd.UsageServiceClientIDKey] = "best-usage-service-client-id"
@@ -650,7 +663,12 @@ var _ = Describe("Collect", func() {
 	})
 
 	It("fails if the Ops Manager server TLS version is less than 1.2", func() {
-		opsManagerServer.HTTPTestServer.TLS.MaxVersion = tls.VersionTLS11
+		opsManagerServer := serverWithMaxTLSVersion(tls.VersionTLS11)
+		opsManagerServer.RouteToHandler(http.MethodPost, "/uaa/oauth/token", func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.Write([]byte(`{}`))
+		})
+		defaultEnvVars[cmd.OpsManagerURLKey] = opsManagerServer.URL()
 		command := buildDefaultCommand(defaultEnvVars)
 		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
@@ -723,7 +741,6 @@ func buildDefaultCommand(envVars map[string]string) *exec.Cmd {
 
 func setupOpsManagerServer() *ghttp.Server {
 	opsManagerServer := ghttp.NewTLSServer()
-	opsManagerServer.HTTPTestServer.Config.ErrorLog = log.New(GinkgoWriter, "", 0)
 	opsManagerServer.RouteToHandler(http.MethodPost, "/uaa/oauth/token", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
@@ -754,7 +771,7 @@ func setupOpsManagerServer() *ghttp.Server {
 
 func setupCredHubServer() *ghttp.Server {
 	credhubServer := ghttp.NewUnstartedServer()
-	credhubServer.HTTPTestServer.Config.ErrorLog = log.New(GinkgoWriter, "", 0)
+
 	listener, err := net.Listen("tcp", "127.0.0.1:8844")
 	Expect(err).NotTo(HaveOccurred())
 	credhubServer.HTTPTestServer.Listener = listener
@@ -782,7 +799,14 @@ func setupCredHubServer() *ghttp.Server {
 
 func setupUsageService(uaaServiceURLOverride string) (uaaService, cfService, usageService *ghttp.Server) {
 	uaaService = ghttp.NewTLSServer()
-	uaaService.HTTPTestServer.Config.ErrorLog = log.New(GinkgoWriter, "", 0)
+	cfService = ghttp.NewTLSServer()
+	usageService = ghttp.NewTLSServer()
+
+	setupUsageServerServiceHandlers(uaaService, cfService, usageService, uaaServiceURLOverride)
+	return
+}
+
+func setupUsageServerServiceHandlers(uaaService, cfService, usageService *ghttp.Server, uaaServiceURLOverride string) {
 	uaaService.RouteToHandler(http.MethodPost, "/oauth/token", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		credentialBytes := []byte("best-usage-service-client-id:best-usage-service-client-secret")
@@ -797,8 +821,6 @@ func setupUsageService(uaaServiceURLOverride string) (uaaService, cfService, usa
 				}`))
 	})
 
-	cfService = ghttp.NewTLSServer()
-	cfService.HTTPTestServer.Config.ErrorLog = log.New(GinkgoWriter, "", 0)
 	cfService.RouteToHandler(http.MethodGet, "/v2/info", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if uaaServiceURLOverride != "" {
@@ -808,8 +830,6 @@ func setupUsageService(uaaServiceURLOverride string) (uaaService, cfService, usa
 		}
 	})
 
-	usageService = ghttp.NewTLSServer()
-	usageService.HTTPTestServer.Config.ErrorLog = log.New(GinkgoWriter, "", 0)
 	usageService.RouteToHandler(http.MethodGet, "/system_report/app_usages", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(`{}`))
@@ -825,6 +845,23 @@ func setupUsageService(uaaServiceURLOverride string) (uaaService, cfService, usa
 		w.Write([]byte(`{}`))
 		Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
 	})
+}
 
-	return
+func serverWithMaxTLSVersion(version uint16) *ghttp.Server {
+	server := ghttp.NewUnstartedServer()
+	listener, err := listenOnFreePort()
+	Expect(err).NotTo(HaveOccurred())
+	server.HTTPTestServer.Listener = listener
+	server.HTTPTestServer.TLS = &tls.Config{MaxVersion: version}
+	server.HTTPTestServer.Config.ErrorLog = log.New(GinkgoWriter, "", 0)
+	server.HTTPTestServer.StartTLS()
+	return server
+}
+
+func listenOnFreePort() (net.Listener, error) {
+	listener, err := net.Listen("tcp", "127.0.0.1:")
+	if err != nil {
+		return nil, err
+	}
+	return listener, nil
 }

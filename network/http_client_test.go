@@ -2,6 +2,7 @@ package network_test
 
 import (
 	"crypto/tls"
+	"log"
 	"net/http"
 	"strings"
 
@@ -18,6 +19,7 @@ var _ = Describe("Client", func() {
 	)
 	BeforeEach(func() {
 		server = ghttp.NewTLSServer()
+		server.HTTPTestServer.Config.ErrorLog = log.New(GinkgoWriter, "", 0)
 	})
 
 	AfterEach(func() {
