@@ -309,7 +309,7 @@
   version = "v2.2.4"
 
 [[projects]]
-  digest = "1:44cbb1125ad99124736fbcc59d944273f45bbf2c0d961438ce152f5139378210"
+  digest = "1:0ea01cb86ab3e7c607870a7879f30ba3c96a62e4b0d4b16e20e8800407e10411"
   name = "github.com/pivotal-cf/om"
   packages = [
     "api",
@@ -317,8 +317,8 @@
     "progress",
   ]
   pruneopts = "UT"
-  revision = "dcc3fde1ce7447092c452eaa99344264b5849c50"
-  version = "3.0.0"
+  revision = "26fc4eb4ce55306c360a6926a8ea62309c6c41c6"
+  version = "3.1.0"
 
 [[projects]]
   branch = "master"

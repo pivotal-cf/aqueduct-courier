@@ -4,7 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
@@ -412,4 +415,67 @@ func (a Api) checkStagedProducts(productName string) (string, error) {
 	}
 
 	return "", nil
+}
+
+func (a Api) GetStagedProductJobMaxInFlight(productGUID string) (ProductJobMaxInFlights map[string]interface{}, err error) {
+	resp, err := a.sendAPIRequest(
+		"GET",
+		fmt.Sprintf("/api/v0/staged/products/%s/max_in_flight", productGUID),
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+	if err = validateStatusOK(resp); err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+	contents, err := ioutil.ReadAll(resp.Body)
+
+	var payload map[string]interface{}
+	err = json.Unmarshal(contents, &payload)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON response from server: %v", err)
+	}
+
+	ProductJobMaxInFlights, _ = payload["max_in_flight"].(map[string]interface{})
+	return ProductJobMaxInFlights, nil
+}
+
+func (a Api) UpdateStagedProductJobMaxInFlight(productGUID string, jobsToMaxInFlight map[string]interface{}) error {
+	if len(jobsToMaxInFlight) == 0 {
+		return nil
+	}
+
+	for job, maxInFlight := range jobsToMaxInFlight {
+		if v, ok := maxInFlight.(string); ok {
+			if !(strings.Contains(v, "%") || v == "default") {
+				value, err := strconv.Atoi(v)
+				if err != nil {
+					return fmt.Errorf("invalid max_in_flight value provided for job '%s': '%s'\nvalid options configurations include percentages ('50%%'), counts ('2'), and 'default'", job, v)
+				}
+				jobsToMaxInFlight[job] = value
+			}
+		}
+	}
+
+	payload, err := json.Marshal(jobsToMaxInFlight)
+	if err != nil {
+		return err
+	}
+
+	resp, err := a.sendAPIRequest("PUT",
+		fmt.Sprintf("/api/v0/staged/products/%s/max_in_flight", productGUID),
+		[]byte(fmt.Sprintf(`{"max_in_flight": %s}`, payload)),
+	)
+	if err != nil {
+		return errors.Wrap(err, "could not make api request to staged product networks_and_azs endpoint")
+	}
+
+	if err = validateStatusOK(resp); err != nil {
+		return err
+	}
+
+	return nil
 }
