@@ -15,6 +15,11 @@ resource_types:
     tag: latest
 
 resources:
+- name: platform-automation-image
+  type: pivnet
+  source:
+    api_token: {{pivnet-api-token}}
+    product_slug: platform-automation
 - name: pivotal-telemetry-collector
   type: pivnet
   source:
@@ -81,11 +86,6 @@ resources:
   type: time
   source:
     interval: 10m
-- name: task-docker-image
-  type: registry-image
-  source:
-    repository: ubuntu
-    tag: xenial
 - name: prod-slack-notification
   type: slack-notification
   source:
@@ -169,10 +169,13 @@ jobs:
       trigger: true
     - get: staging-linux-binary
       passed: [build-staging-binaries]
-    - get: task-docker-image
+    - get: platform-automation-image
+      params:
+        unpack: true
+        globs: ["*.tgz"]
     - get: ci
   - task: collect-with-opsmanager-user-creds
-    image: task-docker-image
+    image: platform-automation-image
     input_mapping:
       binary: staging-linux-binary
     file: ci/ci/tasks/collect.yml
@@ -188,7 +191,7 @@ jobs:
       USAGE_SERVICE_CLIENT_SECRET: {{courier-usage-service-client-secret}}
       USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
   - task: collect-with-opsmanager-client-creds
-    image: task-docker-image
+    image: platform-automation-image
     input_mapping:
       binary: staging-linux-binary
     output_mapping:
@@ -206,7 +209,7 @@ jobs:
       USAGE_SERVICE_CLIENT_SECRET: {{courier-usage-service-client-secret}}
       USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
   - task: send
-    image: task-docker-image
+    image: platform-automation-image
     input_mapping:
       binary: staging-linux-binary
     file: ci/ci/tasks/send.yml
@@ -262,10 +265,13 @@ jobs:
       passed: [build-production-binaries]
     - get: production-linux-binary
       passed: [build-production-binaries]
-    - get: task-docker-image
+    - get: platform-automation-image
+      params:
+        unpack: true
+        globs: ["*.tgz"]
     - get: ci
   - task: collect-with-opsmanager-user-creds
-    image: task-docker-image
+    image: platform-automation-image
     input_mapping:
       binary: production-linux-binary
     file: ci/ci/tasks/collect.yml
@@ -281,7 +287,7 @@ jobs:
       USAGE_SERVICE_CLIENT_SECRET: {{production-courier-usage-service-client-secret}}
       USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
   - task: send
-    image: task-docker-image
+    image: platform-automation-image
     input_mapping:
       binary: production-linux-binary
     file: ci/ci/tasks/send.yml
@@ -350,10 +356,13 @@ jobs:
     - get: prod-collection-timer
       trigger: true
     - get: aqueduct-courier
-    - get: task-docker-image
+    - get: platform-automation-image
+      params:
+        unpack: true
+        globs: ["*.tgz"]
     - get: ci
   - task: collect
-    image: task-docker-image
+    image: platform-automation-image
     file: tasks/collect.yml
     params:
       OPS_MANAGER_URL: {{production-courier-ops-manager-url}}
@@ -367,7 +376,7 @@ jobs:
       ENV_TYPE: development
       INSECURE_SKIP_TLS_VERIFY: true
   - task: send
-    image: task-docker-image
+    image: platform-automation-image
     file: tasks/send.yml
     params:
       API_KEY: {{production-loader-api-key}}
@@ -455,10 +464,13 @@ jobs:
       trigger: true
     - get: staging-linux-binary
       passed: [lts-build-staging-binaries]
-    - get: task-docker-image
+    - get: platform-automation-image
+      params:
+        unpack: true
+        globs: ["*.tgz"]
     - get: ci
   - task: collect-with-opsmanager-user-creds
-    image: task-docker-image
+    image: platform-automation-image
     input_mapping:
       binary: staging-linux-binary
     file: ci/ci/tasks/collect.yml
@@ -474,7 +486,7 @@ jobs:
       USAGE_SERVICE_CLIENT_SECRET: {{courier-usage-service-client-secret}}
       USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
   - task: collect-with-opsmanager-client-creds
-    image: task-docker-image
+    image: platform-automation-image
     input_mapping:
       binary: staging-linux-binary
     output_mapping:
@@ -492,7 +504,7 @@ jobs:
       USAGE_SERVICE_CLIENT_SECRET: {{courier-usage-service-client-secret}}
       USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
   - task: send
-    image: task-docker-image
+    image: platform-automation-image
     input_mapping:
       binary: staging-linux-binary
     file: ci/ci/tasks/send.yml
@@ -538,10 +550,13 @@ jobs:
       passed: [lts-build-production-binaries]
     - get: production-linux-binary
       passed: [lts-build-production-binaries]
-    - get: task-docker-image
+    - get: platform-automation-image
+      params:
+        unpack: true
+        globs: ["*.tgz"]
     - get: ci
   - task: collect-with-opsmanager-user-creds
-    image: task-docker-image
+    image: platform-automation-image
     input_mapping:
       binary: production-linux-binary
     file: ci/ci/tasks/collect.yml
@@ -557,7 +572,7 @@ jobs:
       USAGE_SERVICE_CLIENT_SECRET: {{production-courier-usage-service-client-secret}}
       USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
   - task: send
-    image: task-docker-image
+    image: platform-automation-image
     input_mapping:
       binary: production-linux-binary
     file: ci/ci/tasks/send.yml
