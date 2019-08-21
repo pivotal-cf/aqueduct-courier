@@ -82,14 +82,14 @@ var _ = Describe("Collect", func() {
 		})
 
 		It("accepts an aliased url in the config file configuration", func() {
-			config := fmt.Sprintf(`
-target: %s
-username: some-username
-password: some-password
-env-type: "Development"
-insecure-skip-tls-verify: true
-output-dir: %s
-`, opsManagerServer.URL(), outputDirPath)
+			config := fmt.Sprintf(`{
+				"target": "%s",
+				"username": "some-username",
+				"password": "some-password",
+				"env-type": "Development",
+				"insecure-skip-tls-verify": true,
+				"output-dir": "%s"
+			}`,	opsManagerServer.URL(), outputDirPath)
 			configFile := filepath.Join(configDirPath, "config.yml")
 			err := ioutil.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
@@ -105,14 +105,14 @@ output-dir: %s
 		})
 
 		It("does not accept an aliased url in config file configuration if url is defined as a flag", func() {
-			config := fmt.Sprintf(`
-target: invalid.url.example.com
-username: some-username
-password: some-password
-env-type: "Development"
-insecure-skip-tls-verify: true
-output-dir: %s
-`, outputDirPath)
+			config := fmt.Sprintf(fmt.Sprintf(`{
+				"target": "invalid.url.example.com",
+				"username": "some-username",
+				"password": "some-password",
+				"env-type": "Development",
+				"insecure-skip-tls-verify": true,
+				"output-dir": "%s"
+			}`, outputDirPath))
 			configFile := filepath.Join(configDirPath, "config.yml")
 			err := ioutil.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
@@ -131,14 +131,14 @@ output-dir: %s
 		})
 
 		It("does not accept an aliased url in config file configuration if url is defined as a flag", func() {
-			config := fmt.Sprintf(`
-target: invalid.url.example.com
-username: some-username
-password: some-password
-env-type: "Development"
-insecure-skip-tls-verify: true
-output-dir: %s
-`, outputDirPath)
+			config := fmt.Sprintf(`{
+				"target": "invalid.url.example.com",
+				"username": "some-username",
+				"password": "some-password",
+				"env-type": "Development",
+				"insecure-skip-tls-verify": true,
+				"output-dir": "%s"
+			}`, outputDirPath)
 			configFile := filepath.Join(configDirPath, "config.yml")
 			err := ioutil.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
@@ -157,14 +157,14 @@ output-dir: %s
 		})
 
 		It("accepts an aliased skip tls validation in the config file configuration", func() {
-			config := fmt.Sprintf(`
-url: %s
-username: some-username
-password: some-password
-env-type: "Development"
-skip-ssl-validation: true
-output-dir: %s
-`, opsManagerServer.URL(), outputDirPath)
+			config := fmt.Sprintf(`{
+				"url": "%s",
+				"username": "some-username",
+				"password": "some-password",
+				"env-type": "Development",
+				"skip-ssl-validation": true,
+				"output-dir": "%s"
+			}`, opsManagerServer.URL(), outputDirPath)
 			configFile := filepath.Join(configDirPath, "config.yml")
 			err := ioutil.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
@@ -180,14 +180,15 @@ output-dir: %s
 		})
 
 		It("does not accept an aliased skip tls validation in config file configuration if skip tls validation is defined as a flag", func() {
-			config := fmt.Sprintf(`
-url: %s
-username: some-username
-password: some-password
-env-type: "Development"
-skip-ssl-validation: false
-output-dir: %s
-`, opsManagerServer.URL(), outputDirPath)
+			config := fmt.Sprintf(
+				`{
+				"url": "%s",
+				"username": "some-username",
+				"password": "some-password",
+				"env-type": "Development",
+				"skip-ssl-validation": false,
+				"output-dir": "%s"
+			}`, opsManagerServer.URL(), outputDirPath)
 			configFile := filepath.Join(configDirPath, "config.yml")
 			err := ioutil.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
@@ -206,14 +207,14 @@ output-dir: %s
 		})
 
 		It("does not accept an aliased skip tls validation in config file configuration if skip tls validation is defined as an environment variable", func() {
-			config := fmt.Sprintf(`
-url: %s
-username: some-username
-password: some-password
-env-type: "Development"
-skip-ssl-validation: false
-output-dir: %s
-`, opsManagerServer.URL(), outputDirPath)
+			config := fmt.Sprintf(`{
+				"url": "%s",
+				"username": "some-username",
+				"password": "some-password",
+				"env-type": "Development",
+				"skip-ssl-validation": "false",
+				"output-dir": "%s"
+			}`, opsManagerServer.URL(), outputDirPath)
 			configFile := filepath.Join(configDirPath, "config.yml")
 			err := ioutil.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
@@ -251,14 +252,15 @@ output-dir: %s
 	DescribeTable(
 		"succeeds with valid env type configuration from a config file",
 		func(envType string) {
-			config := fmt.Sprintf(`
-env-type: %s
-url: %s
-username: some-username
-password: some-password
-insecure-skip-tls-verify: true
-output-dir: %s
-`, envType, opsManagerServer.URL(), outputDirPath)
+			config := fmt.Sprintf(`{
+				"env-type": "%s",
+				"url": "%s",
+				"username": "some-username",
+				"password": "some-password",
+				"env-type": "Development",
+				"insecure-skip-tls-verify": "true",
+				"output-dir": "%s"
+			}`, envType, opsManagerServer.URL(), outputDirPath)
 
 			configFile := filepath.Join(configDirPath, "config.yml")
 			err := ioutil.WriteFile(configFile, []byte(config), 0755)
@@ -336,14 +338,14 @@ output-dir: %s
 		})
 
 		It("succeeds with config file configuration", func() {
-			config := fmt.Sprintf(`
-url: %s
-username: some-username
-password: some-password
-env-type: "Development"
-insecure-skip-tls-verify: true
-output-dir: %s
-`, opsManagerServer.URL(), outputDirPath)
+			config := fmt.Sprintf(`{
+				"url": "%s",
+				"username": "some-username",
+				"password": "some-password",
+				"env-type": "Development",
+				"insecure-skip-tls-verify": "true",
+				"output-dir": "%s"
+			}`, opsManagerServer.URL(), outputDirPath)
 
 			configFile := filepath.Join(configDirPath, "config.yml")
 			err := ioutil.WriteFile(configFile, []byte(config), 0755)
@@ -398,14 +400,14 @@ output-dir: %s
 		})
 
 		It("succeeds with config file configuration", func() {
-			config := fmt.Sprintf(`
-url: %s
-client-id: some-client-id
-client-secret: some-client-secret
-env-type: "Development"
-insecure-skip-tls-verify: true
-output-dir: %s
-`, opsManagerServer.URL(), outputDirPath)
+			config := fmt.Sprintf(`{
+				"url": "%s",
+				"client-id": "some-client-id",
+				"client-secret": "some-client-secret",
+				"env-type": "Development",
+				"insecure-skip-tls-verify": "true",
+				"output-dir": "%s"
+			}`, opsManagerServer.URL(), outputDirPath)
 
 			configFile := filepath.Join(configDirPath, "config.yml")
 			err := ioutil.WriteFile(configFile, []byte(config), 0755)
@@ -480,14 +482,15 @@ output-dir: %s
 		})
 
 		It("uses the timeout specified by config file configuration", func() {
-			config := fmt.Sprintf(`
-ops-manager-timeout: 1
-url: %s
-client-id: whatever
-client-secret: whatever
-env-type: "Development"
-output-dir: %s
-`, slowServer.URL(), outputDirPath)
+			config := fmt.Sprintf(`{
+				"ops-manager-timeout": 1,
+				"url": "%s",
+				"client-id": "whatever",
+				"client-secret": "whatever",
+				"env-type": "Development",
+				"insecure-skip-tls-verify": "true",
+				"output-dir": "%s"
+			}`, slowServer.URL(), outputDirPath)
 
 			configFile := filepath.Join(configDirPath, "config.yml")
 			err := ioutil.WriteFile(configFile, []byte(config), 0755)
@@ -567,20 +570,20 @@ output-dir: %s
 		})
 
 		It("uses the usage service client credentials specified by config file configuration", func() {
-			config := fmt.Sprintf(`
-ops-manager-timeout: 1
-url: %s
-client-id: whatever
-client-secret: whatever
-insecure-skip-tls-verify: true
-env-type: "Development"
-output-dir: %s
-cf-api-url: %s
-usage-service-url: %s
-usage-service-client-id: best-usage-service-client-id
-usage-service-client-secret: best-usage-service-client-secret
-usage-service-insecure-skip-tls-verify: true
-`, opsManagerServer.URL(), outputDirPath, cfService.URL(), usageService.URL())
+			config := fmt.Sprintf(`{
+				"ops-manager-timeout": 1,
+				"url": "%s",
+				"client-id": "whatever",
+				"client-secret": "whatever",
+				"insecure-skip-tls-verify": true,
+				"env-type": "Development",
+				"output-dir": "%s",
+				"cf-api-url": "%s",
+				"usage-service-url": "%s",
+				"usage-service-client-id": "best-usage-service-client-id",
+				"usage-service-client-secret": "best-usage-service-client-secret",
+				"usage-service-insecure-skip-tls-verify": true
+			}`, opsManagerServer.URL(), outputDirPath, cfService.URL(), usageService.URL())
 			configFile := filepath.Join(configDirPath, "config.yml")
 			err := ioutil.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
@@ -765,15 +768,15 @@ usage-service-insecure-skip-tls-verify: true
 		})
 
 		It("collects information from credhub as well as ops manager with config file configuration", func() {
-			config := fmt.Sprintf(`
-url: %s
-username: some-username
-password: some-password
-env-type: "Development"
-insecure-skip-tls-verify: true
-output-dir: %s
-with-credhub-info: true
-`, opsManagerServer.URL(), outputDirPath)
+			config := fmt.Sprintf(`{
+				"url": "%s",
+				"username": "some-username",
+				"password": "some-password",
+				"env-type": "Development",
+				"insecure-skip-tls-verify": "true",
+				"output-dir": "%s",
+				"with-credhub-info": "true"
+			}`, opsManagerServer.URL(), outputDirPath)
 			configFile := filepath.Join(configDirPath, "config.yml")
 			err := ioutil.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
