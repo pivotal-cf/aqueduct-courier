@@ -14,10 +14,6 @@ run:
 
     set -xe
 
-    # allows proper certificate verification
-    apt-get update
-    apt-get install -y ca-certificates
-
     chmod +x ./binary/telemetry-collector-linux-amd64
     ./binary/telemetry-collector-linux-amd64 --version
     ./binary/telemetry-collector-linux-amd64 send --path ./collected-data/*.tar
