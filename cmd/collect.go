@@ -158,20 +158,7 @@ func collect(c *cobra.Command, _ []string) error {
 		}
 	}
 
-	if viper.GetString(OpsManagerURLFlag) == "" {
-		viper.RegisterAlias(OpsManagerURLFlag, OpsManagerURLAliasFlag)
-	}
-
-	found := false
-	c.Flags().Visit(func(flag *pflag.Flag) {
-		if flag.Name == SkipTlsVerifyFlag {
-			found = true
-		}
-	})
-
-	if !found && os.Getenv(SkipTlsVerifyKey) == "" {
-		viper.RegisterAlias(SkipTlsVerifyFlag, SkipTlsVerifyAliasFlag)
-	}
+	handleAliases(c)
 
 	if err := verifyRequiredConfig(OpsManagerURLFlag, EnvTypeFlag, OutputPathFlag); err != nil {
 		return err
@@ -215,6 +202,23 @@ func collect(c *cobra.Command, _ []string) error {
 	logger.Printf("Wrote output to %s\n", tarFilePath)
 	logger.Println("Success!")
 	return nil
+}
+
+func handleAliases(c *cobra.Command) {
+	if viper.GetString(OpsManagerURLFlag) == "" {
+		viper.RegisterAlias(OpsManagerURLFlag, OpsManagerURLAliasFlag)
+	}
+
+	var passedAsFlag bool
+	c.Flags().Visit(func(flag *pflag.Flag) {
+		if flag.Name == SkipTlsVerifyFlag {
+			passedAsFlag = true
+		}
+	})
+
+	if !passedAsFlag && os.Getenv(SkipTlsVerifyKey) == "" {
+		viper.RegisterAlias(SkipTlsVerifyFlag, SkipTlsVerifyAliasFlag)
+	}
 }
 
 func useConfigFile() bool {
