@@ -40,6 +40,7 @@ var _ = Describe("Collect", func() {
 		outputDirPath    string
 		defaultEnvVars   map[string]string
 		opsManagerServer *ghttp.Server
+		configDirPath    string
 	)
 
 	BeforeEach(func() {
@@ -55,18 +56,216 @@ var _ = Describe("Collect", func() {
 			cmd.EnvTypeKey:            "Development",
 			cmd.OutputPathKey:         outputDirPath,
 		}
+
+		configDirPath, err = ioutil.TempDir("", "")
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	AfterEach(func() {
 		opsManagerServer.Close()
 		Expect(os.RemoveAll(outputDirPath)).To(Succeed())
+
+		Expect(os.RemoveAll(configDirPath)).To(Succeed())
+	})
+
+	Context("aliases for config file input", func() {
+		It("doesn't print the aliased commands in the help", func() {
+			command := exec.Command(aqueductBinaryPath, "collect", "--help")
+
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+
+			stdOut := string(session.Out.Contents())
+			Expect(stdOut).ToNot(ContainSubstring("--target"))
+			Expect(stdOut).ToNot(ContainSubstring("--skip-ssl-validation"))
+		})
+
+		It("accepts an aliased url in the config file configuration", func() {
+			config := fmt.Sprintf(`
+target: %s
+username: some-username
+password: some-password
+env-type: "Development"
+insecure-skip-tls-verify: true
+output-dir: %s
+`, opsManagerServer.URL(), outputDirPath)
+			configFile := filepath.Join(configDirPath, "config.yml")
+			err := ioutil.WriteFile(configFile, []byte(config), 0755)
+			Expect(err).ToNot(HaveOccurred())
+
+			command := exec.Command(aqueductBinaryPath, "collect", "--config", configFile)
+
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+			tarFilePath := validatedTarFilePath(outputDirPath)
+			assertValidOutput(tarFilePath, collector_tar.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
+			assertLogging(session, tarFilePath, false, false)
+		})
+
+		It("does not accept an aliased url in config file configuration if url is defined as a flag", func() {
+			config := fmt.Sprintf(`
+target: invalid.url.example.com
+username: some-username
+password: some-password
+env-type: "Development"
+insecure-skip-tls-verify: true
+output-dir: %s
+`, outputDirPath)
+			configFile := filepath.Join(configDirPath, "config.yml")
+			err := ioutil.WriteFile(configFile, []byte(config), 0755)
+			Expect(err).ToNot(HaveOccurred())
+
+			command := exec.Command(aqueductBinaryPath, "collect",
+				"--config", configFile,
+				"--"+cmd.OpsManagerURLFlag, opsManagerServer.URL(),
+			)
+
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+			tarFilePath := validatedTarFilePath(outputDirPath)
+			assertValidOutput(tarFilePath, collector_tar.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
+			assertLogging(session, tarFilePath, false, false)
+		})
+
+		It("does not accept an aliased url in config file configuration if url is defined as a flag", func() {
+			config := fmt.Sprintf(`
+target: invalid.url.example.com
+username: some-username
+password: some-password
+env-type: "Development"
+insecure-skip-tls-verify: true
+output-dir: %s
+`, outputDirPath)
+			configFile := filepath.Join(configDirPath, "config.yml")
+			err := ioutil.WriteFile(configFile, []byte(config), 0755)
+			Expect(err).ToNot(HaveOccurred())
+
+			command := exec.Command(aqueductBinaryPath, "collect",
+				"--config", configFile,
+			)
+			command.Env = append(command.Env, fmt.Sprintf("%s=%s", cmd.OpsManagerURLKey, opsManagerServer.URL()))
+
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+			tarFilePath := validatedTarFilePath(outputDirPath)
+			assertValidOutput(tarFilePath, collector_tar.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
+			assertLogging(session, tarFilePath, false, false)
+		})
+
+		It("accepts an aliased skip tls validation in the config file configuration", func() {
+			config := fmt.Sprintf(`
+url: %s
+username: some-username
+password: some-password
+env-type: "Development"
+skip-ssl-validation: true
+output-dir: %s
+`, opsManagerServer.URL(), outputDirPath)
+			configFile := filepath.Join(configDirPath, "config.yml")
+			err := ioutil.WriteFile(configFile, []byte(config), 0755)
+			Expect(err).ToNot(HaveOccurred())
+
+			command := exec.Command(aqueductBinaryPath, "collect", "--config", configFile)
+
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+			tarFilePath := validatedTarFilePath(outputDirPath)
+			assertValidOutput(tarFilePath, collector_tar.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
+			assertLogging(session, tarFilePath, false, false)
+		})
+
+		It("does not accept an aliased skip tls validation in config file configuration if skip tls validation is defined as a flag", func() {
+			config := fmt.Sprintf(`
+url: %s
+username: some-username
+password: some-password
+env-type: "Development"
+skip-ssl-validation: false
+output-dir: %s
+`, opsManagerServer.URL(), outputDirPath)
+			configFile := filepath.Join(configDirPath, "config.yml")
+			err := ioutil.WriteFile(configFile, []byte(config), 0755)
+			Expect(err).ToNot(HaveOccurred())
+
+			command := exec.Command(aqueductBinaryPath, "collect",
+				"--config", configFile,
+				"--"+cmd.SkipTlsVerifyFlag, "true",
+			)
+
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+			tarFilePath := validatedTarFilePath(outputDirPath)
+			assertValidOutput(tarFilePath, collector_tar.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
+			assertLogging(session, tarFilePath, false, false)
+		})
+
+		It("does not accept an aliased skip tls validation in config file configuration if skip tls validation is defined as an environment variable", func() {
+			config := fmt.Sprintf(`
+url: %s
+username: some-username
+password: some-password
+env-type: "Development"
+skip-ssl-validation: false
+output-dir: %s
+`, opsManagerServer.URL(), outputDirPath)
+			configFile := filepath.Join(configDirPath, "config.yml")
+			err := ioutil.WriteFile(configFile, []byte(config), 0755)
+			Expect(err).ToNot(HaveOccurred())
+
+			command := exec.Command(aqueductBinaryPath, "collect",
+				"--config", configFile,
+			)
+			command.Env = append(command.Env, fmt.Sprintf("%s=%s", cmd.SkipTlsVerifyKey, "true"))
+
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+			tarFilePath := validatedTarFilePath(outputDirPath)
+			assertValidOutput(tarFilePath, collector_tar.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
+			assertLogging(session, tarFilePath, false, false)
+		})
 	})
 
 	DescribeTable(
-		"succeeds with valid env type configuration",
+		"succeeds with valid env type configuration from an environment variable",
 		func(envType string) {
 			command := buildDefaultCommand(defaultEnvVars)
 			command.Env = append(command.Env, fmt.Sprintf("%s=%s", cmd.EnvTypeKey, envType))
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+		},
+		Entry(cmd.EnvTypeDevelopment, cmd.EnvTypeDevelopment),
+		Entry(cmd.EnvTypeQA, cmd.EnvTypeQA),
+		Entry(cmd.EnvTypePreProduction, cmd.EnvTypePreProduction),
+		Entry(cmd.EnvTypeProduction, cmd.EnvTypeProduction),
+		Entry(cmd.EnvTypeSandbox, cmd.EnvTypeSandbox),
+	)
+
+	DescribeTable(
+		"succeeds with valid env type configuration from a config file",
+		func(envType string) {
+			config := fmt.Sprintf(`
+env-type: %s
+url: %s
+username: some-username
+password: some-password
+insecure-skip-tls-verify: true
+output-dir: %s
+`, envType, opsManagerServer.URL(), outputDirPath)
+
+			configFile := filepath.Join(configDirPath, "config.yml")
+			err := ioutil.WriteFile(configFile, []byte(config), 0755)
+			Expect(err).ToNot(HaveOccurred())
+
+			command := exec.Command(aqueductBinaryPath, "collect", "--config", configFile)
+
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
@@ -135,6 +334,30 @@ var _ = Describe("Collect", func() {
 			assertValidOutput(tarFilePath, collector_tar.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
 			assertLogging(session, tarFilePath, false, false)
 		})
+
+		It("succeeds with config file configuration", func() {
+			config := fmt.Sprintf(`
+url: %s
+username: some-username
+password: some-password
+env-type: "Development"
+insecure-skip-tls-verify: true
+output-dir: %s
+`, opsManagerServer.URL(), outputDirPath)
+
+			configFile := filepath.Join(configDirPath, "config.yml")
+			err := ioutil.WriteFile(configFile, []byte(config), 0755)
+			Expect(err).ToNot(HaveOccurred())
+
+			command := exec.Command(aqueductBinaryPath, "collect", "--config", configFile)
+
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+			tarFilePath := validatedTarFilePath(outputDirPath)
+			assertValidOutput(tarFilePath, collector_tar.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
+			assertLogging(session, tarFilePath, false, false)
+		})
 	})
 
 	Context("with ops manager client/secret authentication", func() {
@@ -166,6 +389,30 @@ var _ = Describe("Collect", func() {
 			for k, v := range flagValues {
 				command.Args = append(command.Args, fmt.Sprintf("--%s=%s", k, v))
 			}
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+			tarFilePath := validatedTarFilePath(outputDirPath)
+			assertValidOutput(tarFilePath, collector_tar.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
+			assertLogging(session, tarFilePath, false, false)
+		})
+
+		It("succeeds with config file configuration", func() {
+			config := fmt.Sprintf(`
+url: %s
+client-id: some-client-id
+client-secret: some-client-secret
+env-type: "Development"
+insecure-skip-tls-verify: true
+output-dir: %s
+`, opsManagerServer.URL(), outputDirPath)
+
+			configFile := filepath.Join(configDirPath, "config.yml")
+			err := ioutil.WriteFile(configFile, []byte(config), 0755)
+			Expect(err).ToNot(HaveOccurred())
+
+			command := exec.Command(aqueductBinaryPath, "collect", "--config", configFile)
+
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
@@ -231,6 +478,30 @@ var _ = Describe("Collect", func() {
 			Expect(session.Err).NotTo(gbytes.Say("USAGE EXAMPLES"))
 			assertOutputDirEmpty(outputDirPath)
 		})
+
+		It("uses the timeout specified by config file configuration", func() {
+			config := fmt.Sprintf(`
+ops-manager-timeout: 1
+url: %s
+client-id: whatever
+client-secret: whatever
+env-type: "Development"
+output-dir: %s
+`, slowServer.URL(), outputDirPath)
+
+			configFile := filepath.Join(configDirPath, "config.yml")
+			err := ioutil.WriteFile(configFile, []byte(config), 0755)
+			Expect(err).ToNot(HaveOccurred())
+
+			command := exec.Command(aqueductBinaryPath, "collect", "--config", configFile)
+
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(1))
+			Eventually(session.Err).Should(gbytes.Say("Timeout exceeded"))
+			Expect(session.Err).NotTo(gbytes.Say("USAGE EXAMPLES"))
+			assertOutputDirEmpty(outputDirPath)
+		})
 	})
 
 	Context("with usage service client/secret authentication", func() {
@@ -285,6 +556,37 @@ var _ = Describe("Collect", func() {
 			for k, v := range flagValues {
 				command.Args = append(command.Args, fmt.Sprintf("--%s=%s", k, v))
 			}
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+
+			tarFilePath := validatedTarFilePath(outputDirPath)
+			assertValidOutput(tarFilePath, collector_tar.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
+			assertValidOutput(tarFilePath, collector_tar.UsageServiceCollectorDataSetId, "app_usage", "development")
+			assertLogging(session, tarFilePath, false, true)
+		})
+
+		It("uses the usage service client credentials specified by config file configuration", func() {
+			config := fmt.Sprintf(`
+ops-manager-timeout: 1
+url: %s
+client-id: whatever
+client-secret: whatever
+insecure-skip-tls-verify: true
+env-type: "Development"
+output-dir: %s
+cf-api-url: %s
+usage-service-url: %s
+usage-service-client-id: best-usage-service-client-id
+usage-service-client-secret: best-usage-service-client-secret
+usage-service-insecure-skip-tls-verify: true
+`, opsManagerServer.URL(), outputDirPath, cfService.URL(), usageService.URL())
+			configFile := filepath.Join(configDirPath, "config.yml")
+			err := ioutil.WriteFile(configFile, []byte(config), 0755)
+			Expect(err).ToNot(HaveOccurred())
+
+			command := exec.Command(aqueductBinaryPath, "collect", "--config", configFile)
+
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
@@ -454,6 +756,30 @@ var _ = Describe("Collect", func() {
 			defaultEnvVars[cmd.OpsManagerURLKey] = opsManagerServer.URL()
 			defaultEnvVars[cmd.WithCredhubInfoKey] = "true"
 			command := buildDefaultCommand(defaultEnvVars)
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+			tarFilePath := validatedTarFilePath(outputDirPath)
+			assertValidOutput(tarFilePath, collector_tar.OpsManagerCollectorDataSetId, "p-bosh_certificates", "development")
+			assertLogging(session, tarFilePath, true, false)
+		})
+
+		It("collects information from credhub as well as ops manager with config file configuration", func() {
+			config := fmt.Sprintf(`
+url: %s
+username: some-username
+password: some-password
+env-type: "Development"
+insecure-skip-tls-verify: true
+output-dir: %s
+with-credhub-info: true
+`, opsManagerServer.URL(), outputDirPath)
+			configFile := filepath.Join(configDirPath, "config.yml")
+			err := ioutil.WriteFile(configFile, []byte(config), 0755)
+			Expect(err).ToNot(HaveOccurred())
+
+			command := exec.Command(aqueductBinaryPath, "collect", "--config", configFile)
+
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
@@ -732,6 +1058,15 @@ func assertLogging(session *gexec.Session, tarFilePath string, credHubEnabled, u
 
 func buildDefaultCommand(envVars map[string]string) *exec.Cmd {
 	command := exec.Command(aqueductBinaryPath, "collect", "--"+cmd.SkipTlsVerifyFlag)
+	command.Env = os.Environ()
+	for k, v := range envVars {
+		command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))
+	}
+	return command
+}
+
+func buildDefaultCommandWithConfigFile(envVars map[string]string, configPath string) *exec.Cmd {
+	command := exec.Command(aqueductBinaryPath, "collect", "--"+cmd.SkipTlsVerifyFlag, "--"+cmd.ConfigFlag, configPath)
 	command.Env = os.Environ()
 	for k, v := range envVars {
 		command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))

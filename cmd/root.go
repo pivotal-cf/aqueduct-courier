@@ -63,7 +63,6 @@ func verifyRequiredConfig(keys ...string) error {
 	for _, k := range keys {
 		if viper.GetString(k) == "" {
 			missingFlags = append(missingFlags, "--"+k)
-
 		}
 	}
 
