@@ -106,7 +106,7 @@ func init() {
 	bindFlagAndEnvVar(collectCmd, EnvTypeFlag, "", fmt.Sprintf("``Specify environment type (sandbox, development, qa, pre-production, production) [$%s]", EnvTypeKey), EnvTypeKey)
 	bindFlagAndEnvVar(collectCmd, OpsManagerTimeoutFlag, 30, fmt.Sprintf("``Ops Manager http request timeout in seconds [$%s]", OpsManagerTimeoutKey), OpsManagerTimeoutKey)
 	bindFlagAndEnvVar(collectCmd, SkipTlsVerifyFlag, false, fmt.Sprintf("``Skip TLS validation on http requests to Ops Manager [$%s]\n", SkipTlsVerifyKey), SkipTlsVerifyKey)
-	bindFlagAndEnvVar(collectCmd, SkipTlsVerifyAliasFlag, "", fmt.Sprintf("``Ops Manager URL [$%s]", SkipTlsVerifyKeyAlias), SkipTlsVerifyKeyAlias)
+	bindFlagAndEnvVar(collectCmd, SkipTlsVerifyAliasFlag, false, fmt.Sprintf("``Ops Manager URL [$%s]", SkipTlsVerifyKeyAlias), SkipTlsVerifyKeyAlias)
 	collectCmd.Flags().MarkHidden(SkipTlsVerifyAliasFlag)
 
 	bindFlagAndEnvVar(collectCmd, CfApiURLFlag, "", fmt.Sprintf("``CF API URL for UAA authentication to access Usage Service [$%s]", CfApiURLKey), CfApiURLKey)
@@ -209,14 +209,17 @@ func handleAliases(c *cobra.Command) {
 		viper.RegisterAlias(OpsManagerURLFlag, OpsManagerURLAliasFlag)
 	}
 
-	var passedAsFlag bool
+	var originalPassedAsFlag, aliasedPassedAsFlag bool
 	c.Flags().Visit(func(flag *pflag.Flag) {
-		if flag.Name == SkipTlsVerifyFlag {
-			passedAsFlag = true
+		switch flag.Name {
+		case SkipTlsVerifyFlag:
+			originalPassedAsFlag = true
+		case SkipTlsVerifyAliasFlag:
+			aliasedPassedAsFlag = true
 		}
 	})
 
-	if !passedAsFlag && os.Getenv(SkipTlsVerifyKey) == "" {
+	if (!originalPassedAsFlag && os.Getenv(SkipTlsVerifyKey) == "") || aliasedPassedAsFlag {
 		viper.RegisterAlias(SkipTlsVerifyFlag, SkipTlsVerifyAliasFlag)
 	}
 }

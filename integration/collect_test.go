@@ -89,7 +89,7 @@ var _ = Describe("Collect", func() {
 				"env-type": "Development",
 				"insecure-skip-tls-verify": true,
 				"output-dir": "%s"
-			}`,	opsManagerServer.URL(), outputDirPath)
+			}`, opsManagerServer.URL(), outputDirPath)
 			configFile := filepath.Join(configDirPath, "config.yml")
 			err := ioutil.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
@@ -223,6 +223,28 @@ var _ = Describe("Collect", func() {
 				"--config", configFile,
 			)
 			command.Env = append(command.Env, fmt.Sprintf("%s=%s", cmd.SkipTlsVerifyKey, "true"))
+
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+			tarFilePath := validatedTarFilePath(outputDirPath)
+			assertValidOutput(tarFilePath, collector_tar.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
+			assertLogging(session, tarFilePath, false, false)
+		})
+
+		FIt("accepts an aliased skip tls validation with flag configuration", func() {
+			flagValues := map[string]string{
+				cmd.OpsManagerURLFlag:      opsManagerServer.URL(),
+				cmd.OpsManagerUsernameFlag: "whatever",
+				cmd.OpsManagerPasswordFlag: "whatever",
+				cmd.EnvTypeFlag:            "Development",
+				cmd.OutputPathFlag:         outputDirPath,
+			}
+			command := exec.Command(aqueductBinaryPath, "collect")
+			for k, v := range flagValues {
+				command.Args = append(command.Args, fmt.Sprintf("--%s=%s", k, v))
+			}
+			command.Args = append(command.Args, "--skip-ssl-validation")
 
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
