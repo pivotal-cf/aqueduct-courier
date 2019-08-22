@@ -2,12 +2,13 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/pflag"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/spf13/pflag"
 
 	"github.com/pivotal-cf/om/api"
 
@@ -94,7 +95,6 @@ var collectCmd = &cobra.Command{
 }
 
 func init() {
-	bindFlagAndEnvVar(collectCmd, ConfigFlag, "", fmt.Sprintf("``Config file for all other command line arguments [$%s]", ConfigFileKey), ConfigFileKey)
 	bindFlagAndEnvVar(collectCmd, OpsManagerURLFlag, "", fmt.Sprintf("``Ops Manager URL [$%s]", OpsManagerURLKey), OpsManagerURLKey)
 	bindFlagAndEnvVar(collectCmd, OpsManagerURLAliasFlag, "", fmt.Sprintf("``Ops Manager URL [$%s]", OpsManagerURLAliasKey), OpsManagerURLAliasKey)
 	collectCmd.Flags().MarkHidden(OpsManagerURLAliasFlag)
@@ -117,6 +117,8 @@ func init() {
 
 	bindFlagAndEnvVar(collectCmd, CollectFromCredhubFlag, false, fmt.Sprintf("Include CredHub certificate expiry information [$%s]\n", WithCredhubInfoKey), WithCredhubInfoKey)
 	bindFlagAndEnvVar(collectCmd, OutputPathFlag, "", fmt.Sprintf("``Local directory to write data [$%s]\n", OutputPathKey), OutputPathKey)
+
+	bindFlagAndEnvVar(collectCmd, ConfigFlag, "", fmt.Sprintf("``Config file for all other command line arguments, requires a file extension e.g. '.yml' or '.json' [$%s]\n", ConfigFileKey), ConfigFileKey)
 
 	collectCmd.Flags().BoolP("help", "h", false, "Help for the collect command\n")
 	collectCmd.Flags().SortFlags = false

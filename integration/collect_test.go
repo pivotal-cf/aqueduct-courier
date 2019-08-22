@@ -232,7 +232,7 @@ var _ = Describe("Collect", func() {
 			assertLogging(session, tarFilePath, false, false)
 		})
 
-		FIt("accepts an aliased skip tls validation with flag configuration", func() {
+		It("accepts an aliased skip tls validation with flag configuration", func() {
 			flagValues := map[string]string{
 				cmd.OpsManagerURLFlag:      opsManagerServer.URL(),
 				cmd.OpsManagerUsernameFlag: "whatever",
@@ -1083,15 +1083,6 @@ func assertLogging(session *gexec.Session, tarFilePath string, credHubEnabled, u
 
 func buildDefaultCommand(envVars map[string]string) *exec.Cmd {
 	command := exec.Command(aqueductBinaryPath, "collect", "--"+cmd.SkipTlsVerifyFlag)
-	command.Env = os.Environ()
-	for k, v := range envVars {
-		command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))
-	}
-	return command
-}
-
-func buildDefaultCommandWithConfigFile(envVars map[string]string, configPath string) *exec.Cmd {
-	command := exec.Command(aqueductBinaryPath, "collect", "--"+cmd.SkipTlsVerifyFlag, "--"+cmd.ConfigFlag, configPath)
 	command.Env = os.Environ()
 	for k, v := range envVars {
 		command.Env = append(command.Env, fmt.Sprintf("%s=%s", k, v))
