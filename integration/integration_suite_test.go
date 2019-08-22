@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
+	"fmt"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
-	"fmt"
 )
 
 func TestAqueductCollector(t *testing.T) {

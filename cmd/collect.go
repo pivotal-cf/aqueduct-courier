@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/spf13/pflag"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -31,7 +32,9 @@ import (
 )
 
 const (
+	ConfigFileKey                = "CONFIG_FILE"
 	OpsManagerURLKey             = "OPS_MANAGER_URL"
+	OpsManagerURLAliasKey        = "TARGET"
 	OpsManagerUsernameKey        = "OPS_MANAGER_USERNAME"
 	OpsManagerPasswordKey        = "OPS_MANAGER_PASSWORD"
 	OpsManagerClientIdKey        = "OPS_MANAGER_CLIENT_ID"
@@ -40,6 +43,7 @@ const (
 	EnvTypeKey                   = "ENV_TYPE"
 	OutputPathKey                = "OUTPUT_DIR"
 	SkipTlsVerifyKey             = "INSECURE_SKIP_TLS_VERIFY"
+	SkipTlsVerifyKeyAlias        = "SKIP_SSL_VALIDATION"
 	WithCredhubInfoKey           = "WITH_CREDHUB_INFO"
 	UsageServiceURLKey           = "USAGE_SERVICE_URL"
 	UsageServiceClientIDKey      = "USAGE_SERVICE_CLIENT_ID"
@@ -47,7 +51,9 @@ const (
 	CfApiURLKey                  = "CF_API_URL"
 	UsageServiceSkipTlsVerifyKey = "USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY"
 
+	ConfigFlag                    = "config"
 	OpsManagerURLFlag             = "url"
+	OpsManagerURLAliasFlag        = "target"
 	OpsManagerUsernameFlag        = "username"
 	OpsManagerPasswordFlag        = "password"
 	OpsManagerClientIdFlag        = "client-id"
@@ -57,6 +63,7 @@ const (
 	EnvTypeFlag                   = "env-type"
 	OutputPathFlag                = "output-dir"
 	SkipTlsVerifyFlag             = "insecure-skip-tls-verify"
+	SkipTlsVerifyAliasFlag        = "skip-ssl-validation"
 	UsageServiceURLFlag           = "usage-service-url"
 	UsageServiceClientIDFlag      = "usage-service-client-id"
 	UsageServiceClientSecretFlag  = "usage-service-client-secret"
@@ -87,7 +94,11 @@ var collectCmd = &cobra.Command{
 }
 
 func init() {
+	bindFlagAndEnvVar(collectCmd, ConfigFlag, "", fmt.Sprintf("``Config file for all other command line arguments [$%s]", ConfigFileKey), ConfigFileKey)
 	bindFlagAndEnvVar(collectCmd, OpsManagerURLFlag, "", fmt.Sprintf("``Ops Manager URL [$%s]", OpsManagerURLKey), OpsManagerURLKey)
+	bindFlagAndEnvVar(collectCmd, OpsManagerURLAliasFlag, "", fmt.Sprintf("``Ops Manager URL [$%s]", OpsManagerURLAliasKey), OpsManagerURLAliasKey)
+	collectCmd.Flags().MarkHidden(OpsManagerURLAliasFlag)
+
 	bindFlagAndEnvVar(collectCmd, OpsManagerUsernameFlag, "", fmt.Sprintf("``Ops Manager username [$%s]", OpsManagerUsernameKey), OpsManagerUsernameKey)
 	bindFlagAndEnvVar(collectCmd, OpsManagerPasswordFlag, "", fmt.Sprintf("``Ops Manager password [$%s]", OpsManagerPasswordKey), OpsManagerPasswordKey)
 	bindFlagAndEnvVar(collectCmd, OpsManagerClientIdFlag, "", fmt.Sprintf("``Ops Manager client id [$%s]", OpsManagerClientIdKey), OpsManagerClientIdKey)
@@ -95,6 +106,8 @@ func init() {
 	bindFlagAndEnvVar(collectCmd, EnvTypeFlag, "", fmt.Sprintf("``Specify environment type (sandbox, development, qa, pre-production, production) [$%s]", EnvTypeKey), EnvTypeKey)
 	bindFlagAndEnvVar(collectCmd, OpsManagerTimeoutFlag, 30, fmt.Sprintf("``Ops Manager http request timeout in seconds [$%s]", OpsManagerTimeoutKey), OpsManagerTimeoutKey)
 	bindFlagAndEnvVar(collectCmd, SkipTlsVerifyFlag, false, fmt.Sprintf("``Skip TLS validation on http requests to Ops Manager [$%s]\n", SkipTlsVerifyKey), SkipTlsVerifyKey)
+	bindFlagAndEnvVar(collectCmd, SkipTlsVerifyAliasFlag, false, fmt.Sprintf("``Ops Manager URL [$%s]", SkipTlsVerifyKeyAlias), SkipTlsVerifyKeyAlias)
+	collectCmd.Flags().MarkHidden(SkipTlsVerifyAliasFlag)
 
 	bindFlagAndEnvVar(collectCmd, CfApiURLFlag, "", fmt.Sprintf("``CF API URL for UAA authentication to access Usage Service [$%s]", CfApiURLKey), CfApiURLKey)
 	bindFlagAndEnvVar(collectCmd, UsageServiceURLFlag, "", fmt.Sprintf("``Usage Service URL [$%s]", UsageServiceURLKey), UsageServiceURLKey)
@@ -137,6 +150,16 @@ Usage Service and/or Credhub) and outputs the content to the configured director
 }
 
 func collect(c *cobra.Command, _ []string) error {
+	if useConfigFile() {
+		viper.SetConfigFile(viper.GetString(ConfigFlag))
+		err := viper.ReadInConfig()
+		if err != nil {
+			return fmt.Errorf("error reading config file: %s \n", err)
+		}
+	}
+
+	handleAliases(c)
+
 	if err := verifyRequiredConfig(OpsManagerURLFlag, EnvTypeFlag, OutputPathFlag); err != nil {
 		return err
 	}
@@ -179,6 +202,30 @@ func collect(c *cobra.Command, _ []string) error {
 	logger.Printf("Wrote output to %s\n", tarFilePath)
 	logger.Println("Success!")
 	return nil
+}
+
+func handleAliases(c *cobra.Command) {
+	if viper.GetString(OpsManagerURLFlag) == "" {
+		viper.RegisterAlias(OpsManagerURLFlag, OpsManagerURLAliasFlag)
+	}
+
+	var originalPassedAsFlag, aliasedPassedAsFlag bool
+	c.Flags().Visit(func(flag *pflag.Flag) {
+		switch flag.Name {
+		case SkipTlsVerifyFlag:
+			originalPassedAsFlag = true
+		case SkipTlsVerifyAliasFlag:
+			aliasedPassedAsFlag = true
+		}
+	})
+
+	if (!originalPassedAsFlag && os.Getenv(SkipTlsVerifyKey) == "") || aliasedPassedAsFlag {
+		viper.RegisterAlias(SkipTlsVerifyFlag, SkipTlsVerifyAliasFlag)
+	}
+}
+
+func useConfigFile() bool {
+	return viper.GetString(ConfigFlag) != ""
 }
 
 func anyUsageServiceConfigsProvided() bool {
