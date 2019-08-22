@@ -89,7 +89,7 @@ var _ = Describe("Collect", func() {
 				"env-type": "Development",
 				"insecure-skip-tls-verify": true,
 				"output-dir": "%s"
-			}`, opsManagerServer.URL(), outputDirPath)
+			}`, opsManagerServer.URL(), escapeFilePathForWindows(outputDirPath))
 			configFile := filepath.Join(configDirPath, "config.yml")
 			err := ioutil.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
@@ -112,7 +112,7 @@ var _ = Describe("Collect", func() {
 				"env-type": "Development",
 				"insecure-skip-tls-verify": true,
 				"output-dir": "%s"
-			}`, outputDirPath))
+			}`, escapeFilePathForWindows(outputDirPath)))
 			configFile := filepath.Join(configDirPath, "config.yml")
 			err := ioutil.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
@@ -138,7 +138,7 @@ var _ = Describe("Collect", func() {
 				"env-type": "Development",
 				"insecure-skip-tls-verify": true,
 				"output-dir": "%s"
-			}`, outputDirPath)
+			}`, escapeFilePathForWindows(outputDirPath))
 			configFile := filepath.Join(configDirPath, "config.yml")
 			err := ioutil.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
@@ -164,7 +164,7 @@ var _ = Describe("Collect", func() {
 				"env-type": "Development",
 				"skip-ssl-validation": true,
 				"output-dir": "%s"
-			}`, opsManagerServer.URL(), outputDirPath)
+			}`, opsManagerServer.URL(), escapeFilePathForWindows(outputDirPath))
 			configFile := filepath.Join(configDirPath, "config.yml")
 			err := ioutil.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
@@ -188,7 +188,7 @@ var _ = Describe("Collect", func() {
 				"env-type": "Development",
 				"skip-ssl-validation": false,
 				"output-dir": "%s"
-			}`, opsManagerServer.URL(), outputDirPath)
+			}`, opsManagerServer.URL(), escapeFilePathForWindows(outputDirPath))
 			configFile := filepath.Join(configDirPath, "config.yml")
 			err := ioutil.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
@@ -214,7 +214,7 @@ var _ = Describe("Collect", func() {
 				"env-type": "Development",
 				"skip-ssl-validation": "false",
 				"output-dir": "%s"
-			}`, opsManagerServer.URL(), outputDirPath)
+			}`, opsManagerServer.URL(), escapeFilePathForWindows(outputDirPath))
 			configFile := filepath.Join(configDirPath, "config.yml")
 			err := ioutil.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
@@ -282,7 +282,7 @@ var _ = Describe("Collect", func() {
 				"env-type": "Development",
 				"insecure-skip-tls-verify": "true",
 				"output-dir": "%s"
-			}`, envType, opsManagerServer.URL(), outputDirPath)
+			}`, envType, opsManagerServer.URL(), escapeFilePathForWindows(outputDirPath))
 
 			configFile := filepath.Join(configDirPath, "config.yml")
 			err := ioutil.WriteFile(configFile, []byte(config), 0755)
@@ -367,7 +367,7 @@ var _ = Describe("Collect", func() {
 				"env-type": "Development",
 				"insecure-skip-tls-verify": "true",
 				"output-dir": "%s"
-			}`, opsManagerServer.URL(), outputDirPath)
+			}`, opsManagerServer.URL(), escapeFilePathForWindows(outputDirPath))
 
 			configFile := filepath.Join(configDirPath, "config.yml")
 			err := ioutil.WriteFile(configFile, []byte(config), 0755)
@@ -429,7 +429,7 @@ var _ = Describe("Collect", func() {
 				"env-type": "Development",
 				"insecure-skip-tls-verify": "true",
 				"output-dir": "%s"
-			}`, opsManagerServer.URL(), outputDirPath)
+			}`, opsManagerServer.URL(), escapeFilePathForWindows(outputDirPath))
 
 			configFile := filepath.Join(configDirPath, "config.yml")
 			err := ioutil.WriteFile(configFile, []byte(config), 0755)
@@ -512,7 +512,7 @@ var _ = Describe("Collect", func() {
 				"env-type": "Development",
 				"insecure-skip-tls-verify": "true",
 				"output-dir": "%s"
-			}`, slowServer.URL(), outputDirPath)
+			}`, slowServer.URL(), escapeFilePathForWindows(outputDirPath))
 
 			configFile := filepath.Join(configDirPath, "config.yml")
 			err := ioutil.WriteFile(configFile, []byte(config), 0755)
@@ -605,7 +605,7 @@ var _ = Describe("Collect", func() {
 				"usage-service-client-id": "best-usage-service-client-id",
 				"usage-service-client-secret": "best-usage-service-client-secret",
 				"usage-service-insecure-skip-tls-verify": true
-			}`, opsManagerServer.URL(), outputDirPath, cfService.URL(), usageService.URL())
+			}`, opsManagerServer.URL(), escapeFilePathForWindows(outputDirPath), cfService.URL(), usageService.URL())
 			configFile := filepath.Join(configDirPath, "config.yml")
 			err := ioutil.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
@@ -798,7 +798,7 @@ var _ = Describe("Collect", func() {
 				"insecure-skip-tls-verify": "true",
 				"output-dir": "%s",
 				"with-credhub-info": "true"
-			}`, opsManagerServer.URL(), outputDirPath)
+			}`, opsManagerServer.URL(), escapeFilePathForWindows(outputDirPath))
 			configFile := filepath.Join(configDirPath, "config.yml")
 			err := ioutil.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
@@ -1215,4 +1215,8 @@ func listenOnFreePort() (net.Listener, error) {
 		return nil, err
 	}
 	return listener, nil
+}
+
+func escapeFilePathForWindows(path string) string {
+	return strings.Replace(path, `\`, `\\`, -1)
 }
