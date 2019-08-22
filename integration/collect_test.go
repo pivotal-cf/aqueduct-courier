@@ -130,7 +130,7 @@ var _ = Describe("Collect", func() {
 			assertLogging(session, tarFilePath, false, false)
 		})
 
-		It("does not accept an aliased url in config file configuration if url is defined as a flag", func() {
+		It("does not accept an aliased url in config file configuration if url is defined as an environment variable", func() {
 			config := fmt.Sprintf(`{
 				"target": "invalid.url.example.com",
 				"username": "some-username",
@@ -143,9 +143,8 @@ var _ = Describe("Collect", func() {
 			err := ioutil.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
 
-			command := exec.Command(aqueductBinaryPath, "collect",
-				"--config", configFile,
-			)
+			command := exec.Command(aqueductBinaryPath, "collect", "--config", configFile)
+			command.Env = os.Environ()
 			command.Env = append(command.Env, fmt.Sprintf("%s=%s", cmd.OpsManagerURLKey, opsManagerServer.URL()))
 
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
@@ -219,9 +218,8 @@ var _ = Describe("Collect", func() {
 			err := ioutil.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
 
-			command := exec.Command(aqueductBinaryPath, "collect",
-				"--config", configFile,
-			)
+			command := exec.Command(aqueductBinaryPath, "collect", "--config", configFile)
+			command.Env = os.Environ()
 			command.Env = append(command.Env, fmt.Sprintf("%s=%s", cmd.SkipTlsVerifyKey, "true"))
 
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
