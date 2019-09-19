@@ -12,10 +12,11 @@ import (
 )
 
 const (
-	DataTarFilePathFlag = "path"
-	DataTarFilePathKey  = "DATA_TAR_FILE_PATH"
-	ApiKeyFlag          = "api-key"
-	ApiKeyKey           = "API_KEY"
+	DataTarFilePathFlag   = "path"
+	DataTarFilePathKey    = "DATA_TAR_FILE_PATH"
+	ApiKeyFlag            = "api-key"
+	ApiKeyKey             = "API_KEY"
+	TelemetryEndpointFlag = "override-telemetry-endpoint"
 
 	SendFailureMessage      = "Failed to send data"
 	FileNotFoundErrorFormat = "File not found at: %s"
@@ -33,6 +34,11 @@ var sendCmd = &cobra.Command{
 func init() {
 	bindFlagAndEnvVar(sendCmd, ApiKeyFlag, "", fmt.Sprintf("``Telemetry Collector API Key used to authenticate with Pivotal [$%s]", ApiKeyKey), ApiKeyKey)
 	bindFlagAndEnvVar(sendCmd, DataTarFilePathFlag, "", fmt.Sprintf("``The path to the file with data from the 'collect' command [$%s]\n", DataTarFilePathKey), DataTarFilePathKey)
+
+	sendCmd.Flags().String(TelemetryEndpointFlag, dataLoaderURL, "``Telemetry Collector loader URL used to send to Pivotal endpoint")
+	viper.BindPFlag(TelemetryEndpointFlag, sendCmd.Flag(TelemetryEndpointFlag))
+
+	sendCmd.Flags().MarkHidden(TelemetryEndpointFlag)
 
 	sendCmd.Flags().BoolP("help", "h", false, "Help for the send command\n")
 	sendCmd.Flags().SortFlags = false
@@ -73,8 +79,8 @@ func send(c *cobra.Command, _ []string) error {
 
 	client := network.NewClient(false)
 
-	logger.Printf("Sending %s to Pivotal at %s\n", viper.GetString(DataTarFilePathFlag), dataLoaderURL)
-	err = sender.Send(client, tarFile.Name(), dataLoaderURL, viper.GetString(ApiKeyFlag), version)
+	logger.Printf("Sending %s to Pivotal at %s\n", viper.GetString(DataTarFilePathFlag), viper.GetString(TelemetryEndpointFlag))
+	err = sender.Send(client, tarFile.Name(), viper.GetString(TelemetryEndpointFlag), viper.GetString(ApiKeyFlag), version)
 	if err != nil {
 		return errors.Wrap(err, SendFailureMessage)
 	}

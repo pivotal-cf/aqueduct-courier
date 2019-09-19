@@ -190,6 +190,21 @@ var _ = Describe("Send", func() {
 				Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Sending %s to Pivotal at %s\n", escapeWindowsPathRegex(sourceDataTarFilePath), dataLoader.URL())))
 				Expect(session.Out).To(gbytes.Say("Success!\n"))
 			})
+
+			It("sends data to the newly configured endpoint with endpoint flag", func() {
+				otherLoader := ghttp.NewServer()
+				otherLoader.RouteToHandler(http.MethodPost, operations.PostPath, ghttp.CombineHandlers(
+					ghttp.RespondWith(http.StatusCreated, ""),
+				))
+				command := exec.Command(binaryPath, "send", "--path="+sourceDataTarFilePath, "--api-key="+validApiKey, "--override-telemetry-endpoint="+otherLoader.URL())
+				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+				Eventually(session).Should(gexec.Exit(0))
+				Expect(len(dataLoader.ReceivedRequests())).To(Equal(0))
+				Expect(len(otherLoader.ReceivedRequests())).To(Equal(1))
+				Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Sending %s to Pivotal at %s\n", escapeWindowsPathRegex(sourceDataTarFilePath), otherLoader.URL())))
+				Expect(session.Out).To(gbytes.Say("Success!\n"))
+			})
 		})
 
 		It("exits non-zero when sending to pivotal fails", func() {
