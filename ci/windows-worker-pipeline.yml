@@ -29,6 +29,7 @@ resources:
   type: bosh-deployment
   source:
     deployment: windows-worker
+    skip_check: true
 - name: windows-stemcell
   type: bosh-io-stemcell
   source:
