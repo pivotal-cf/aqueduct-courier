@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"io"
 	"io/ioutil"
-	"path/filepath"
+	"path"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -126,7 +126,7 @@ func (ce *CollectExecutor) Collect(envType, collectorVersion string) error {
 	if err != nil {
 		return err
 	}
-	err = ce.tarWriter.AddFile(metadataContents, filepath.Join(collector_tar.OpsManagerCollectorDataSetId, collector_tar.MetadataFileName))
+	err = ce.tarWriter.AddFile(metadataContents, path.Join(collector_tar.OpsManagerCollectorDataSetId, collector_tar.MetadataFileName))
 	if err != nil {
 		return errors.Wrap(err, DataWriteFailureMessage)
 	}
@@ -148,7 +148,7 @@ func (ce *CollectExecutor) Collect(envType, collectorVersion string) error {
 			return err
 		}
 
-		err = ce.tarWriter.AddFile(usageMetadataContents, filepath.Join(collector_tar.UsageServiceCollectorDataSetId, collector_tar.MetadataFileName))
+		err = ce.tarWriter.AddFile(usageMetadataContents, path.Join(collector_tar.UsageServiceCollectorDataSetId, collector_tar.MetadataFileName))
 		if err != nil {
 			return errors.Wrap(err, DataWriteFailureMessage)
 		}
@@ -163,7 +163,7 @@ func (ce *CollectExecutor) addData(collectedData collectedData, metadata *collec
 		return errors.Wrap(err, ContentReadingFailureMessage)
 	}
 
-	err = ce.tarWriter.AddFile(dataContents, filepath.Join(dataSetType, collectedData.Name()))
+	err = ce.tarWriter.AddFile(dataContents, path.Join(dataSetType, collectedData.Name()))
 	if err != nil {
 		return errors.Wrap(err, DataWriteFailureMessage)
 	}
