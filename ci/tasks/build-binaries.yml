@@ -14,8 +14,8 @@ inputs:
 - name: ci
 
 outputs:
-- name: aqueduct-binaries
-- name: linux-binary
+- name: binary-tar
+- name: binaries
 
 run:
   path: ci/ci/tasks/build-binaries
