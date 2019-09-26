@@ -58,6 +58,12 @@ resources:
     bucket: {{courier-staging-builds-bucket}}
     json_key: {{courier-gcp-service-account-key}}
     versioned_file: telemetry-collector-linux-amd64
+- name: staging-windows-binary
+  type: gcs-resource
+  source:
+    bucket: {{courier-staging-builds-bucket}}
+    json_key: {{courier-gcp-service-account-key}}
+    versioned_file: telemetry-collector-windows-amd64.exe
 - name: production-binaries
   type: gcs-resource
   source:
@@ -129,7 +135,10 @@ jobs:
       file: aqueduct-binaries/aqueduct-cli-*.tgz
   - put: staging-linux-binary
     params:
-      file: linux-binary/*linux*
+      file: binaries/*linux*
+  - put: staging-windows-binary
+    params:
+      file: windows-binary/*windows*
   - put: version
     params: {file: version/version}
 
@@ -216,15 +225,75 @@ jobs:
     params:
       API_KEY: {{loader-api-key}}
 
+- name: test-collect-and-send-windows
+  plan:
+    - in_parallel:
+      - get: version
+        passed: [build-staging-binaries]
+      - get: collection-timer
+        trigger: true
+      - get: aqueduct-courier
+        passed: [build-staging-binaries]
+        trigger: true
+      - get: staging-windows-binary
+        passed: [build-staging-binaries]
+      - get: platform-automation-image
+        params:
+          unpack: true
+          globs: ["*.tgz"]
+      - get: ci
+        passed: [build-staging-binaries]
+    - task: collect-with-opsmanager-user-creds
+      image: platform-automation-image
+      input_mapping:
+        binary: staging-windows-binary
+      file: ci/ci/tasks/collect-windows.yml
+      params:
+        OPS_MANAGER_URL: {{courier-ops-manager-url}}
+        OPS_MANAGER_USERNAME: {{courier-ops-manager-username}}
+        OPS_MANAGER_PASSWORD: {{courier-ops-manager-password}}
+        ENV_TYPE: development
+        INSECURE_SKIP_TLS_VERIFY: true
+        CF_API_URL: {{courier-cf-api-url}}
+        USAGE_SERVICE_URL: {{courier-usage-service-url}}
+        USAGE_SERVICE_CLIENT_ID: {{courier-usage-service-client-id}}
+        USAGE_SERVICE_CLIENT_SECRET: {{courier-usage-service-client-secret}}
+        USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
+    - task: collect-with-opsmanager-client-creds
+      image: platform-automation-image
+      input_mapping:
+        binary: staging-windows-binary
+      output_mapping:
+        collected-data: collected-data-with-client-creds
+      file: ci/ci/tasks/collect-windows.yml
+      params:
+        OPS_MANAGER_URL: {{courier-ops-manager-url}}
+        OPS_MANAGER_CLIENT_ID: {{courier-ops-manager-client-id}}
+        OPS_MANAGER_CLIENT_SECRET: {{courier-ops-manager-client-secret}}
+        ENV_TYPE: development
+        INSECURE_SKIP_TLS_VERIFY: true
+        CF_API_URL: {{courier-cf-api-url}}
+        USAGE_SERVICE_URL: {{courier-usage-service-url}}
+        USAGE_SERVICE_CLIENT_ID: {{courier-usage-service-client-id}}
+        USAGE_SERVICE_CLIENT_SECRET: {{courier-usage-service-client-secret}}
+        USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
+    - task: send
+      image: platform-automation-image
+      input_mapping:
+        binary: staging-windows-binary
+      file: ci/ci/tasks/send-windows.yml
+      params:
+        API_KEY: {{loader-api-key}}
+
 - name: build-production-binaries
   serial_groups: [version]
   plan:
   - in_parallel:
     - get: aqueduct-courier
-      passed: [test-collect-and-send, test-collect-credhub-info]
+      passed: [test-collect-and-send, test-collect-and-send-windows, test-collect-credhub-info]
     - get: version
       params: {bump: final}
-      passed: [test-collect-and-send, test-collect-credhub-info]
+      passed: [test-collect-and-send, test-collect-and-send-windows, test-collect-credhub-info]
     - get: ci
   - put: aqueduct-courier
     params:
@@ -241,7 +310,7 @@ jobs:
       file: aqueduct-binaries/aqueduct-cli-*.tgz
   - put: production-linux-binary
     params:
-      file: linux-binary/*linux*
+      file: binaries/*linux*
   - put: version
     params: {file: version/version}
 
@@ -430,7 +499,7 @@ jobs:
       file: aqueduct-binaries/aqueduct-cli-*.tgz
   - put: staging-linux-binary
     params:
-      file: linux-binary/*linux*
+      file: binaries/*linux*
 
 - name: lts-test-collect-credhub-info
   plan:
@@ -537,7 +606,7 @@ jobs:
       file: aqueduct-binaries/aqueduct-cli-*.tgz
   - put: production-linux-binary
     params:
-      file: linux-binary/*linux*
+      file: binaries/*linux*
 
 - name: lts-test-collect-and-send-production
   plan:

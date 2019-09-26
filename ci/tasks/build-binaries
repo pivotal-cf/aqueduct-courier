@@ -25,9 +25,10 @@ GOOS=linux go build -o "telemetry-collector-linux-$GOARCH" -ldflags "$LDFLAGS" g
 GOOS=darwin go build -o "telemetry-collector-darwin-$GOARCH" -ldflags "$LDFLAGS" github.com/pivotal-cf/aqueduct-courier
 GOOS=windows go build -o "telemetry-collector-windows-$GOARCH.exe" -ldflags "$LDFLAGS" github.com/pivotal-cf/aqueduct-courier
 
-tar czvf "aqueduct-binaries/aqueduct-cli-${RAW_VERSION}.tgz" \
+tar czvf "binary-tar/aqueduct-cli-${RAW_VERSION}.tgz" \
     "telemetry-collector-linux-$GOARCH" \
     "telemetry-collector-darwin-$GOARCH" \
     "telemetry-collector-windows-$GOARCH.exe"
 
-cp "telemetry-collector-linux-$GOARCH" "linux-binary/telemetry-collector-linux-$GOARCH"
+cp "telemetry-collector-linux-$GOARCH" "binaries/telemetry-collector-linux-$GOARCH"
+cp "telemetry-collector-windows-$GOARCH.exe" "binaries/telemetry-collector-windows-$GOARCH.exe"
