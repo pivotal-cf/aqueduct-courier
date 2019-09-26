@@ -1,5 +1,5 @@
 ---
-platform: linux
+platform: windows
 
 inputs:
 - name: binary
@@ -7,7 +7,7 @@ inputs:
 - name: ci
 
 run:
-  path: sh
+  path: powershell
   args:
   - "-ExecutionPolicy"
   - "Bypass"
