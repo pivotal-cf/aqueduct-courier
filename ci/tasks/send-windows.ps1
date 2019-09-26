@@ -6,7 +6,9 @@ if ($LastExitCode -ne 0) {
   Exit $LastExitCode
 }
 
-./binary/telemetry-collector-windows-amd64.exe send --path collected-data\*.tar
+$TAR_FILE = (dir collected-data\*.tar).Name
+
+./binary/telemetry-collector-windows-amd64.exe send --path collected-data\$TAR_FILE
 if ($LastExitCode -ne 0) {
   Exit $LastExitCode
 }
