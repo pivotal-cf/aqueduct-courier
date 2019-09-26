@@ -132,13 +132,13 @@ jobs:
       DATA_LOADER_URL: {{staging-data-loader-url}}
   - put: staging-binaries
     params:
-      file: aqueduct-binaries/aqueduct-cli-*.tgz
+      file: binary-tar/aqueduct-cli-*.tgz
   - put: staging-linux-binary
     params:
       file: binaries/*linux*
   - put: staging-windows-binary
     params:
-      file: windows-binary/*windows*
+      file: binaries/*windows*
   - put: version
     params: {file: version/version}
 
@@ -237,14 +237,8 @@ jobs:
         trigger: true
       - get: staging-windows-binary
         passed: [build-staging-binaries]
-      - get: platform-automation-image
-        params:
-          unpack: true
-          globs: ["*.tgz"]
       - get: ci
-        passed: [build-staging-binaries]
     - task: collect-with-opsmanager-user-creds
-      image: platform-automation-image
       input_mapping:
         binary: staging-windows-binary
       file: ci/ci/tasks/collect-windows.yml
@@ -260,7 +254,6 @@ jobs:
         USAGE_SERVICE_CLIENT_SECRET: {{courier-usage-service-client-secret}}
         USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
     - task: collect-with-opsmanager-client-creds
-      image: platform-automation-image
       input_mapping:
         binary: staging-windows-binary
       output_mapping:
@@ -278,7 +271,6 @@ jobs:
         USAGE_SERVICE_CLIENT_SECRET: {{courier-usage-service-client-secret}}
         USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
     - task: send
-      image: platform-automation-image
       input_mapping:
         binary: staging-windows-binary
       file: ci/ci/tasks/send-windows.yml
@@ -307,7 +299,7 @@ jobs:
       ENSURE_HTTPS: true
   - put: production-binaries
     params:
-      file: aqueduct-binaries/aqueduct-cli-*.tgz
+      file: binary-tar/aqueduct-cli-*.tgz
   - put: production-linux-binary
     params:
       file: binaries/*linux*
@@ -496,7 +488,7 @@ jobs:
       DATA_LOADER_URL: {{staging-data-loader-url}}
   - put: staging-binaries
     params:
-      file: aqueduct-binaries/aqueduct-cli-*.tgz
+      file: binary-tar/aqueduct-cli-*.tgz
   - put: staging-linux-binary
     params:
       file: binaries/*linux*
@@ -603,7 +595,7 @@ jobs:
       ENSURE_HTTPS: true
   - put: production-binaries
     params:
-      file: aqueduct-binaries/aqueduct-cli-*.tgz
+      file: binary-tar/aqueduct-cli-*.tgz
   - put: production-linux-binary
     params:
       file: binaries/*linux*
@@ -681,6 +673,7 @@ groups:
   - build-staging-binaries
   - test-collect-credhub-info
   - test-collect-and-send
+  - test-collect-and-send-windows
   - build-production-binaries
   - auto-patch
   - test-collect-and-send-production
