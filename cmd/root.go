@@ -1,19 +1,23 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/pkg/errors"
+
+	"github.com/pivotal-cf/aqueduct-courier/opsmanager"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 const (
-	RequiredConfigErrorFormat = "Missing required flags: %s"
-	toolName                  = "telemetry-collector"
+	RequiredConfigErrorFormat    = "Missing required flags: %s"
+	toolName                     = "telemetry-collector"
+	PendingChangesExistsExitCode = 3
 )
 
 var (
@@ -54,6 +58,9 @@ FLAGS
 	rootCmd.SetHelpTemplate(customHelpTextTemplate)
 
 	if err := rootCmd.Execute(); err != nil {
+		if errors.Cause(err) == opsmanager.PendingChangesExistsError {
+			os.Exit(PendingChangesExistsExitCode)
+		}
 		os.Exit(1)
 	}
 }

@@ -16,6 +16,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pivotal-cf/aqueduct-courier/opsmanager"
+
+	"github.com/pivotal-cf/om/api"
+
 	"github.com/pivotal-cf/aqueduct-courier/cf"
 
 	"github.com/elazarl/goproxy"
@@ -1023,6 +1027,25 @@ var _ = Describe("Collect", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(session).Should(gexec.Exit(1))
 		Expect(session.Err).To(gbytes.Say("protocol version not supported"))
+	})
+
+	It("exits with status 3 when there are ops manager pending changes", func() {
+		opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/staged/pending_changes", func(w http.ResponseWriter, r *http.Request) {
+			resp := api.PendingChangesOutput{
+				ChangeList: []api.ProductChange{
+					{
+						Action: "not-unchanged",
+					},
+				},
+			}
+			Expect(json.NewEncoder(w).Encode(&resp)).NotTo(HaveOccurred())
+		})
+
+		command := buildDefaultCommand(defaultEnvVars)
+		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+		Expect(err).NotTo(HaveOccurred())
+		Eventually(session).Should(gexec.Exit(cmd.PendingChangesExistsExitCode))
+		Expect(session.Err).To(gbytes.Say(opsmanager.PendingChangesExistsMessage))
 	})
 })
 

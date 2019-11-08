@@ -17,6 +17,8 @@ const (
 	RequestorFailureErrorFormat   = "Failed retrieving %s %s"
 )
 
+var PendingChangesExistsError = errors.New(PendingChangesExistsMessage)
+
 //go:generate counterfeiter . PendingChangesLister
 type PendingChangesLister interface {
 	ListStagedPendingChanges() (api.PendingChangesOutput, error)
@@ -69,7 +71,7 @@ func (dc *DataCollector) Collect() ([]Data, string, error) {
 	}
 
 	if hasPendingChanges(pc.ChangeList) {
-		return []Data{}, "", errors.New(PendingChangesExistsMessage)
+		return []Data{}, "", PendingChangesExistsError
 	}
 
 	pl, err := dc.deployProductsService.ListDeployedProducts()
