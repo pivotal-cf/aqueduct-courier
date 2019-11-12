@@ -27,7 +27,7 @@ resources:
     product_slug: pivotal-telemetry-collector
     copy_metadata: true
 - name: telemetry-utils
-  type: github
+  type: git
   source:
     branch: master
     uri: git@github.com:pivotal-cf/telemetry-utils
