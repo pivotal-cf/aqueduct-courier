@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+export GOPATH=${PWD}/go
+export PATH=${GOPATH}/bin:${PATH}:/usr/local/go/bin
+
+go get -u github.com/golang/dep/cmd/dep
+
+cat << EOF > "$HOME"/.netrc
+machine github.com login $GITHUB_ACCESS_TOKEN
+EOF
+
+pushd go/src/github.com/pivotal-cf/aqueduct-courier
+  dep ensure -v -update github.com/pivotal-cf/telemetry-utils
+  git add .
+  git config --global user.name "$GITHUB_NAME"
+  git config --global user.email "$GITHUB_EMAIL"
+  set +e
+  git commit -m "Update telemetry-utils dependency"
+
+  exit_code=$?
+
+  if [[ $exit_code -eq 1 ]]; then
+    echo "No changes to telemetry-utils"
+    exit 0
+  fi
+  set -e

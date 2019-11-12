@@ -1,0 +1,24 @@
+---
+platform: linux
+
+image_resource:
+  type: registry-image
+  source:
+    repository: golang
+    tag: latest
+
+inputs:
+- name: avro-mart
+  path: go/src/github.com/pivotal-cf/aqueduct-courier
+
+outputs:
+- name: aqueduct-courier
+  path: go/src/github.com/pivotal-cf/aqueduct-courier
+
+run:
+  path: go/src/github.com/pivotal-cf/aqueduct-courier/ci/tasks/update-utils
+
+params:
+  GITHUB_NAME:
+  GITHUB_EMAIL:
+  GITHUB_ACCESS_TOKEN:

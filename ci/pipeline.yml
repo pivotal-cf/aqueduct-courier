@@ -13,6 +13,12 @@ resource_types:
   source:
     repository: cfcommunity/slack-notification-resource
     tag: latest
+- name: telemetry-utils
+  type: github
+  source:
+    branch: master
+    uri: git@github.com:pivotal-cf/telemetry-utils
+    private_key: ((utils-git-deploy-private-key))
 
 resources:
 - name: platform-automation-image
@@ -98,6 +104,23 @@ resources:
     url: {{slack-webhook-url}}
 
 jobs:
+- name: update-telemetry-utils
+  plan:
+  - in_parallel:
+    - get: aqueduct-courier
+    - get: telemetry-utils
+      trigger: true
+  - task: update-utils
+    file: aqueduct-courier/ci/tasks/update-utils.yml
+    params:
+      GITHUB_NAME: {{github-name}}
+      GITHUB_EMAIL: {{github-email}}
+      GITHUB_ACCESS_TOKEN: {{github-access-token}}
+  - put: aqueduct-courier
+    params:
+      repository: aqueduct-courier
+      rebase: true
+
 - name: courier-tests
   serial_groups: [courier-tests]
   plan:
