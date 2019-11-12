@@ -13,12 +13,6 @@ resource_types:
   source:
     repository: cfcommunity/slack-notification-resource
     tag: latest
-- name: telemetry-utils
-  type: github
-  source:
-    branch: master
-    uri: git@github.com:pivotal-cf/telemetry-utils
-    private_key: ((utils-git-deploy-private-key))
 
 resources:
 - name: platform-automation-image
@@ -32,6 +26,12 @@ resources:
     api_token: {{pivnet-api-token}}
     product_slug: pivotal-telemetry-collector
     copy_metadata: true
+- name: telemetry-utils
+  type: github
+  source:
+    branch: master
+    uri: git@github.com:pivotal-cf/telemetry-utils
+    private_key: ((utils-git-deploy-private-key))
 - name: aqueduct-courier
   type: git
   source:
@@ -691,6 +691,7 @@ jobs:
 groups:
 - name: edge
   jobs:
+  - update-telemetry-utils
   - courier-tests
   - windows-courier-tests
   - build-staging-binaries
