@@ -107,11 +107,12 @@ jobs:
 - name: update-telemetry-utils
   plan:
   - in_parallel:
+    - get: ci
     - get: aqueduct-courier
     - get: telemetry-utils
       trigger: true
   - task: update-utils
-    file: aqueduct-courier/ci/tasks/update-utils.yml
+    file: ci/ci/tasks/update-utils.yml
     params:
       GITHUB_NAME: {{github-name}}
       GITHUB_EMAIL: {{github-email}}

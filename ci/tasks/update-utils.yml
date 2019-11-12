@@ -8,7 +8,8 @@ image_resource:
     tag: latest
 
 inputs:
-- name: avro-mart
+- name: ci
+- name: aqueduct-courier
   path: go/src/github.com/pivotal-cf/aqueduct-courier
 
 outputs:
@@ -16,7 +17,7 @@ outputs:
   path: go/src/github.com/pivotal-cf/aqueduct-courier
 
 run:
-  path: go/src/github.com/pivotal-cf/aqueduct-courier/ci/tasks/update-utils
+  path: ci/ci/tasks/update-utils
 
 params:
   GITHUB_NAME:
