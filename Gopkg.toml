@@ -1,4 +1,8 @@
 [[constraint]]
+  name = "github.com/pivotal-cf/telemetry-utils"
+  branch = "master"
+
+[[constraint]]
   name = "github.com/onsi/ginkgo"
   version = "1.4.0"
 
