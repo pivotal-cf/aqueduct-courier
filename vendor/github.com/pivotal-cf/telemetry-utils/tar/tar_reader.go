@@ -14,6 +14,7 @@ const (
 	UnableToFindFileFormat  = "Could not find file %s in tar archive"
 	UnexpectedFormatMessage = "Expected tar format"
 	UnableToReadFileFormat  = "Unable to read file %s from tar file %s"
+	UnableToReadTarFormat   = "Unable to read from tar file %s"
 )
 
 type TarReader struct {
@@ -75,4 +76,15 @@ func (tr *TarReader) FileMd5s() (map[string]string, error) {
 	}
 
 	return fileMd5s, nil
+}
+
+func (tr *TarReader) ReadAll() ([]byte, error) {
+	tr.sourceTar.Seek(0, 0)
+
+	contents, err := ioutil.ReadAll(tr.sourceTar)
+	if err != nil {
+		return nil, errors.Wrapf(err, UnableToReadTarFormat, tr.sourceTar)
+	}
+
+	return contents, nil
 }
