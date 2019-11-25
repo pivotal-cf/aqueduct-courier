@@ -329,7 +329,7 @@
     "tar",
   ]
   pruneopts = "UT"
-  revision = "75c569f66db658fb87a96ea32c04002c4c8cb018"
+  revision = "e2a69e2efc02c1096bffdfedb89f615771df009b"
 
 [[projects]]
   digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
