@@ -57,7 +57,7 @@ jobs:
       manifest: manifest/ci/manifest/windows-worker.yml
       source_file: bbl-state/bdr-source-file
       vars:
-        team: platform-insights
+        team: telemetry-and-insights
         tsa_host: {{tsa_host}}
         tsa_host_public_key: {{tsa_host_public_key}}
         worker_private_key: {{windows_worker_private_key}}
