@@ -26,16 +26,16 @@ var dataLoaderURL string
 
 var sendCmd = &cobra.Command{
 	Use:   "send",
-	Short: "Sends information to Pivotal",
-	Long:  `Sends specified file to Pivotal's secure data store at ` + dataLoaderURL,
+	Short: "Sends information to VMware",
+	Long:  `Sends specified file to VMware's secure data store at ` + dataLoaderURL,
 	RunE:  send,
 }
 
 func init() {
-	bindFlagAndEnvVar(sendCmd, ApiKeyFlag, "", fmt.Sprintf("``Telemetry Collector API Key used to authenticate with Pivotal [$%s]", ApiKeyKey), ApiKeyKey)
+	bindFlagAndEnvVar(sendCmd, ApiKeyFlag, "", fmt.Sprintf("``Telemetry Collector API Key used to authenticate with VMware [$%s]", ApiKeyKey), ApiKeyKey)
 	bindFlagAndEnvVar(sendCmd, DataTarFilePathFlag, "", fmt.Sprintf("``The path to the file with data from the 'collect' command [$%s]\n", DataTarFilePathKey), DataTarFilePathKey)
 
-	sendCmd.Flags().String(TelemetryEndpointFlag, dataLoaderURL, "``Telemetry Collector loader URL used to send to Pivotal endpoint")
+	sendCmd.Flags().String(TelemetryEndpointFlag, dataLoaderURL, "``Telemetry Collector loader URL used to send to VMware endpoint")
 	viper.BindPFlag(TelemetryEndpointFlag, sendCmd.Flag(TelemetryEndpointFlag))
 
 	sendCmd.Flags().MarkHidden(TelemetryEndpointFlag)
@@ -44,7 +44,7 @@ func init() {
 	sendCmd.Flags().SortFlags = false
 
 	sendCmd.Example = `
-      Send data to Pivotal:
+      Send data to VMware:
       telemetry-collector send --api-key --path`
 
 	customUsageTextTemplate := `
@@ -56,7 +56,7 @@ FLAGS
 {{.LocalFlags.FlagUsages}}`
 
 	customHelpTextTemplate := fmt.Sprintf(`
-Sends specified file to Pivotal's secure data store at %s
+Sends specified file to VMware's secure data store at %s
 %s`, dataLoaderURL, customUsageTextTemplate)
 
 	sendCmd.SetHelpTemplate(customHelpTextTemplate)
@@ -79,7 +79,7 @@ func send(c *cobra.Command, _ []string) error {
 
 	client := network.NewClient(false)
 
-	logger.Printf("Sending %s to Pivotal at %s\n", viper.GetString(DataTarFilePathFlag), viper.GetString(TelemetryEndpointFlag))
+	logger.Printf("Sending %s to VMware at %s\n", viper.GetString(DataTarFilePathFlag), viper.GetString(TelemetryEndpointFlag))
 	err = sender.Send(client, tarFile.Name(), viper.GetString(TelemetryEndpointFlag), viper.GetString(ApiKeyFlag), version)
 	if err != nil {
 		return errors.Wrap(err, SendFailureMessage)

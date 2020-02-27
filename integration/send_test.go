@@ -98,8 +98,8 @@ var _ = Describe("Send", func() {
 
 			dataLoader.RouteToHandler(http.MethodPost, operations.PostPath, ghttp.CombineHandlers(
 				ghttp.VerifyHeader(http.Header{
-					"Authorization": []string{fmt.Sprintf("Bearer %s", validApiKey)},
-					"Content-Type":  []string{operations.TarMimeType},
+					"Authorization":                           []string{fmt.Sprintf("Bearer %s", validApiKey)},
+					"Content-Type":                            []string{operations.TarMimeType},
 					operations.HTTPSenderVersionRequestHeader: []string{testVersion},
 				}),
 				ghttp.VerifyBody(srcContentBytes),
@@ -122,7 +122,7 @@ var _ = Describe("Send", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
 			Expect(len(dataLoader.ReceivedRequests())).To(Equal(1))
-			Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Sending %s to Pivotal at %s\n", escapeWindowsPathRegex(sourceDataTarFilePath), "http://telemetry.example.com")))
+			Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Sending %s to VMware at %s\n", escapeWindowsPathRegex(sourceDataTarFilePath), "http://telemetry.example.com")))
 			Expect(session.Out).To(gbytes.Say("Success!\n"))
 		})
 	})
@@ -161,8 +161,8 @@ var _ = Describe("Send", func() {
 
 				dataLoader.RouteToHandler(http.MethodPost, operations.PostPath, ghttp.CombineHandlers(
 					ghttp.VerifyHeader(http.Header{
-						"Authorization": []string{fmt.Sprintf("Bearer %s", validApiKey)},
-						"Content-Type":  []string{operations.TarMimeType},
+						"Authorization":                           []string{fmt.Sprintf("Bearer %s", validApiKey)},
+						"Content-Type":                            []string{operations.TarMimeType},
 						operations.HTTPSenderVersionRequestHeader: []string{testVersion},
 					}),
 					ghttp.VerifyBody(srcContentBytes),
@@ -176,7 +176,7 @@ var _ = Describe("Send", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Eventually(session).Should(gexec.Exit(0))
 				Expect(len(dataLoader.ReceivedRequests())).To(Equal(1))
-				Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Sending %s to Pivotal at %s\n", escapeWindowsPathRegex(sourceDataTarFilePath), dataLoader.URL())))
+				Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Sending %s to VMware at %s\n", escapeWindowsPathRegex(sourceDataTarFilePath), dataLoader.URL())))
 				Expect(session.Out).To(gbytes.Say("Success!\n"))
 			})
 
@@ -187,7 +187,7 @@ var _ = Describe("Send", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Eventually(session).Should(gexec.Exit(0))
 				Expect(len(dataLoader.ReceivedRequests())).To(Equal(1))
-				Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Sending %s to Pivotal at %s\n", escapeWindowsPathRegex(sourceDataTarFilePath), dataLoader.URL())))
+				Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Sending %s to VMware at %s\n", escapeWindowsPathRegex(sourceDataTarFilePath), dataLoader.URL())))
 				Expect(session.Out).To(gbytes.Say("Success!\n"))
 			})
 
@@ -202,7 +202,7 @@ var _ = Describe("Send", func() {
 				Eventually(session).Should(gexec.Exit(0))
 				Expect(len(dataLoader.ReceivedRequests())).To(Equal(0))
 				Expect(len(otherLoader.ReceivedRequests())).To(Equal(1))
-				Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Sending %s to Pivotal at %s\n", escapeWindowsPathRegex(sourceDataTarFilePath), otherLoader.URL())))
+				Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Sending %s to VMware at %s\n", escapeWindowsPathRegex(sourceDataTarFilePath), otherLoader.URL())))
 				Expect(session.Out).To(gbytes.Say("Success!\n"))
 			})
 		})

@@ -498,7 +498,7 @@ var _ = Describe("Service", func() {
 			body := &readerCloser{reader: strings.NewReader(`{
 "certificate_authorities":[{
 	"guid": "f7bc18f34f2a7a9403c3",
-	"issuer": "Pivotal",
+	"issuer": "VMware",
 	"created_on": "2017-02-09",
 	"expires_on": "2021-01-10",
 	"active": true,
@@ -517,7 +517,7 @@ var _ = Describe("Service", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(actualCertAuths["certificate_authorities"]).To(ConsistOf(map[string]interface{}{
 				"guid":       "f7bc18f34f2a7a9403c3",
-				"issuer":     "Pivotal",
+				"issuer":     "VMware",
 				"created_on": "2017-02-09",
 				"expires_on": "2021-01-10",
 				"active":     true,

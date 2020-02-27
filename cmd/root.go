@@ -49,7 +49,7 @@ USAGE EXAMPLES
 COMMANDS
 
   collect     Collects information from a PCF foundation
-  send        Sends information to Pivotal
+  send        Sends information to VMware
   help        Shows help about any command
 
 FLAGS
