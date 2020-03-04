@@ -43,6 +43,7 @@ type Metadata struct {
 	CollectedAt      string
 	CollectionId     string
 	FoundationId     string
+	FoundationNickname	string
 	FileDigests      []FileDigest
 	CollectorVersion string
 }
