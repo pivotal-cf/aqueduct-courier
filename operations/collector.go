@@ -74,7 +74,7 @@ func NewCollector(opsmanagerDC omDataCollector, credhubDC credhubDataCollector, 
 	return &CollectExecutor{opsmanagerDC: opsmanagerDC, credhubDC: credhubDC, consumptionDC: consumptionDC, tarWriter: tarWriter, uuidProvider: uuidProvider}
 }
 
-func (ce *CollectExecutor) Collect(envType, collectorVersion string) error {
+func (ce *CollectExecutor) Collect(envType, collectorVersion, foundationNickname string) error {
 	defer ce.tarWriter.Close()
 
 	collectionID, err := ce.uuidProvider.NewV4()
@@ -88,19 +88,21 @@ func (ce *CollectExecutor) Collect(envType, collectorVersion string) error {
 	}
 
 	opsManagerMetadata := collector_tar.Metadata{
-		CollectorVersion: collectorVersion,
-		EnvType:          envType,
-		CollectionId:     collectionID.String(),
-		FoundationId:     foundationId,
-		CollectedAt:      time.Now().UTC().Format(time.RFC3339),
+		CollectorVersion:   collectorVersion,
+		EnvType:            envType,
+		CollectionId:       collectionID.String(),
+		FoundationId:       foundationId,
+		FoundationNickname: foundationNickname,
+		CollectedAt:        time.Now().UTC().Format(time.RFC3339),
 	}
 
 	usageMetadata := collector_tar.Metadata{
-		CollectorVersion: collectorVersion,
-		EnvType:          envType,
-		CollectionId:     opsManagerMetadata.CollectionId,
-		FoundationId:     foundationId,
-		CollectedAt:      opsManagerMetadata.CollectedAt,
+		CollectorVersion:   collectorVersion,
+		EnvType:            envType,
+		CollectionId:       opsManagerMetadata.CollectionId,
+		FoundationId:       foundationId,
+		FoundationNickname: foundationNickname,
+		CollectedAt:        opsManagerMetadata.CollectedAt,
 	}
 
 	for _, omData := range omDatas {

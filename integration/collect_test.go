@@ -531,6 +531,64 @@ var _ = Describe("Collect", func() {
 		})
 	})
 
+	Context("specifying foundation nickname", func() {
+		It("succeeds with env variable configuration", func() {
+			defaultEnvVars[cmd.FoundationNicknameKey] = "some-nickname"
+			command := buildDefaultCommand(defaultEnvVars)
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+
+			tarFilePath := validatedTarFilePath(outputDirPath)
+			assertValidNickname(tarFilePath, collector_tar.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "some-nickname")
+		})
+
+		It("succeeds with flag configuration", func() {
+			flagValues := map[string]string{
+				cmd.OpsManagerURLFlag:      opsManagerServer.URL(),
+				cmd.OpsManagerUsernameFlag: "some-username",
+				cmd.OpsManagerPasswordFlag: "some-password",
+				cmd.EnvTypeFlag:            "Development",
+				cmd.FoundationNicknameFlag: "some-nickname",
+				cmd.SkipTlsVerifyFlag:      "true",
+				cmd.OutputPathFlag:         outputDirPath,
+			}
+			command := exec.Command(aqueductBinaryPath, "collect")
+			for k, v := range flagValues {
+				command.Args = append(command.Args, fmt.Sprintf("--%s=%s", k, v))
+			}
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+			tarFilePath := validatedTarFilePath(outputDirPath)
+			assertValidNickname(tarFilePath, collector_tar.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "some-nickname")
+		})
+
+		It("succeeds with config file configuration", func() {
+			config := fmt.Sprintf(`{
+				"url": "%s",
+				"username": "some-username",
+				"password": "some-password",
+				"env-type": "Development",
+				"foundation-nickname": "some-nickname",
+				"insecure-skip-tls-verify": "true",
+				"output-dir": "%s"
+			}`, opsManagerServer.URL(), escapeFilePathForWindows(outputDirPath))
+
+			configFile := filepath.Join(configDirPath, "config.yml")
+			err := ioutil.WriteFile(configFile, []byte(config), 0755)
+			Expect(err).ToNot(HaveOccurred())
+
+			command := exec.Command(aqueductBinaryPath, "collect", "--config", configFile)
+
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+			tarFilePath := validatedTarFilePath(outputDirPath)
+			assertValidNickname(tarFilePath, collector_tar.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "some-nickname")
+		})
+	})
+
 	Context("with usage service client/secret authentication", func() {
 		var (
 			usageService *ghttp.Server
@@ -1088,6 +1146,29 @@ func assertValidOutput(tarFilePath, dataSetType, filename, envType string) {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(json.Valid(content)).To(BeTrue(), fmt.Sprintf("Expected file %s to contain valid json", jsonFilePath))
 	assertMetadataFileIsCorrect(tmpDir, envType, dataSetType)
+}
+
+func assertValidNickname(tarFilePath, dataSetType, filename, foundationNickname string) {
+	tmpDir, err := ioutil.TempDir("", "")
+	Expect(err).NotTo(HaveOccurred())
+	defer os.RemoveAll(tmpDir)
+
+	tar := &archiver.Tar{}
+	err = tar.Unarchive(tarFilePath, tmpDir)
+	Expect(err).NotTo(HaveOccurred())
+
+	jsonFilePath := filepath.Join(tmpDir, dataSetType, filename)
+
+	Expect(jsonFilePath).To(BeAnExistingFile())
+	content, err := ioutil.ReadFile(jsonFilePath)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(json.Valid(content)).To(BeTrue(), fmt.Sprintf("Expected file %s to contain valid json", jsonFilePath))
+
+	content, err = ioutil.ReadFile(filepath.Join(tmpDir, dataSetType, collector_tar.MetadataFileName))
+	Expect(err).NotTo(HaveOccurred(), "Expected metadata file to exist but did not")
+	var metadata collector_tar.Metadata
+	Expect(json.Unmarshal(content, &metadata)).To(Succeed())
+	Expect(metadata.FoundationNickname).To(Equal(foundationNickname))
 }
 
 func assertLogging(session *gexec.Session, tarFilePath string, credHubEnabled, usageServiceEnabled bool) {

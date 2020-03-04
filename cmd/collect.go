@@ -51,6 +51,7 @@ const (
 	UsageServiceClientSecretKey  = "USAGE_SERVICE_CLIENT_SECRET"
 	CfApiURLKey                  = "CF_API_URL"
 	UsageServiceSkipTlsVerifyKey = "USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY"
+	FoundationNicknameKey        = "FOUNDATION_NICKNAME"
 
 	ConfigFlag                    = "config"
 	OpsManagerURLFlag             = "url"
@@ -70,6 +71,7 @@ const (
 	UsageServiceClientSecretFlag  = "usage-service-client-secret"
 	CfApiURLFlag                  = "cf-api-url"
 	UsageServiceSkipTlsVerifyFlag = "usage-service-insecure-skip-tls-verify"
+	FoundationNicknameFlag        = "foundation-nickname"
 
 	EnvTypeSandbox       = "sandbox"
 	EnvTypeDevelopment   = "development"
@@ -104,6 +106,7 @@ func init() {
 	bindFlagAndEnvVar(collectCmd, OpsManagerClientIdFlag, "", fmt.Sprintf("``Ops Manager client id [$%s]", OpsManagerClientIdKey), OpsManagerClientIdKey)
 	bindFlagAndEnvVar(collectCmd, OpsManagerClientSecretFlag, "", fmt.Sprintf("``Ops Manager client secret [$%s]", OpsManagerClientSecretKey), OpsManagerClientSecretKey)
 	bindFlagAndEnvVar(collectCmd, EnvTypeFlag, "", fmt.Sprintf("``Specify environment type (sandbox, development, qa, pre-production, production) [$%s]", EnvTypeKey), EnvTypeKey)
+	bindFlagAndEnvVar(collectCmd, FoundationNicknameFlag, "", fmt.Sprintf("``Specify foundation nickname [$%s]", FoundationNicknameKey), FoundationNicknameKey)
 	bindFlagAndEnvVar(collectCmd, OpsManagerTimeoutFlag, 30, fmt.Sprintf("``Ops Manager http request timeout in seconds [$%s]", OpsManagerTimeoutKey), OpsManagerTimeoutKey)
 	bindFlagAndEnvVar(collectCmd, SkipTlsVerifyFlag, false, fmt.Sprintf("``Skip TLS validation on http requests to Ops Manager [$%s]\n", SkipTlsVerifyKey), SkipTlsVerifyKey)
 	bindFlagAndEnvVar(collectCmd, SkipTlsVerifyAliasFlag, false, fmt.Sprintf("``Ops Manager URL [$%s]", SkipTlsVerifyKeyAlias), SkipTlsVerifyKeyAlias)
@@ -173,6 +176,11 @@ func collect(c *cobra.Command, _ []string) error {
 		return err
 	}
 
+	foundationNickname, err := validateAndNormalizeFoundationNickname()
+	if err != nil {
+		return err
+	}
+
 	c.SilenceUsage = true
 
 	tarFilePath := filepath.Join(
@@ -194,7 +202,7 @@ func collect(c *cobra.Command, _ []string) error {
 		return err
 	}
 
-	err = collectExecutor.Collect(envType, version)
+	err = collectExecutor.Collect(envType, version, foundationNickname)
 	if err != nil {
 		tarFile.Close()
 		os.Remove(tarFilePath)
@@ -267,6 +275,11 @@ func validateAndNormalizeEnvType() (string, error) {
 		}
 	}
 	return "", errors.Errorf(InvalidEnvTypeFailureFormat, envType)
+}
+
+func validateAndNormalizeFoundationNickname() (string, error) {
+	foundationNickname := viper.GetString(FoundationNicknameFlag)
+	return foundationNickname, nil
 }
 
 type consumptionDataCollector interface {

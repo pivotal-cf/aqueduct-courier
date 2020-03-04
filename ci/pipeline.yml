@@ -217,6 +217,7 @@ jobs:
       OPS_MANAGER_USERNAME: {{courier-ops-manager-username}}
       OPS_MANAGER_PASSWORD: {{courier-ops-manager-password}}
       ENV_TYPE: development
+      FOUNDATION_NICKNAME: telemetry-staging
       INSECURE_SKIP_TLS_VERIFY: true
       CF_API_URL: {{courier-cf-api-url}}
       USAGE_SERVICE_URL: {{courier-usage-service-url}}
@@ -235,6 +236,7 @@ jobs:
       OPS_MANAGER_CLIENT_ID: {{courier-ops-manager-client-id}}
       OPS_MANAGER_CLIENT_SECRET: {{courier-ops-manager-client-secret}}
       ENV_TYPE: development
+      FOUNDATION_NICKNAME: telemetry-staging
       INSECURE_SKIP_TLS_VERIFY: true
       CF_API_URL: {{courier-cf-api-url}}
       USAGE_SERVICE_URL: {{courier-usage-service-url}}
@@ -271,6 +273,7 @@ jobs:
         OPS_MANAGER_USERNAME: {{courier-ops-manager-username}}
         OPS_MANAGER_PASSWORD: {{courier-ops-manager-password}}
         ENV_TYPE: development
+        FOUNDATION_NICKNAME: telemetry-staging
         INSECURE_SKIP_TLS_VERIFY: true
         CF_API_URL: {{courier-cf-api-url}}
         USAGE_SERVICE_URL: {{courier-usage-service-url}}
@@ -288,6 +291,7 @@ jobs:
         OPS_MANAGER_CLIENT_ID: {{courier-ops-manager-client-id}}
         OPS_MANAGER_CLIENT_SECRET: {{courier-ops-manager-client-secret}}
         ENV_TYPE: development
+        FOUNDATION_NICKNAME: telemetry-staging
         INSECURE_SKIP_TLS_VERIFY: true
         CF_API_URL: {{courier-cf-api-url}}
         USAGE_SERVICE_URL: {{courier-usage-service-url}}

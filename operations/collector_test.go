@@ -11,11 +11,11 @@ import (
 	"time"
 
 	"github.com/pivotal-cf/aqueduct-courier/consumption"
-	"github.com/pivotal-cf/aqueduct-courier/operations"
 
 	"github.com/pivotal-cf/aqueduct-courier/credhub"
 
 	"github.com/gofrs/uuid"
+	"github.com/pivotal-cf/aqueduct-courier/operations"
 	. "github.com/pivotal-cf/aqueduct-courier/operations"
 	"github.com/pivotal-cf/telemetry-utils/collector_tar"
 
@@ -56,12 +56,13 @@ var _ = Describe("DataCollector", func() {
 		d2 := opsmanager.NewData(strings.NewReader(expectedD2Contents), "d2", "better-kind")
 		dataToWrite := []opsmanager.Data{d1, d2}
 		foundationId := "p-bosh-guid-of-some-sort"
+		foundationNickname := "some-nickname"
 		omDataCollector.CollectReturns(dataToWrite, foundationId, nil)
 
 		collectorVersion := "0.0.1-version"
 		envType := "most-production"
 
-		err := collector.Collect(envType, collectorVersion)
+		err := collector.Collect(envType, collectorVersion, foundationNickname)
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(tarWriter.AddFileCallCount()).To(Equal(3))
@@ -89,6 +90,7 @@ var _ = Describe("DataCollector", func() {
 			collector_tar.FileDigest{Name: d2.Name(), MimeType: d2.MimeType(), MD5Checksum: d2ContentMd5, ProductType: d2.Type(), DataType: d2.DataType()},
 		))
 		Expect(metadata.FoundationId).To(Equal(foundationId))
+		Expect(metadata.FoundationNickname).To(Equal(foundationNickname))
 		Expect(metadata.CollectionId).To(Equal(uuidString))
 		collectedAtTime, err := time.Parse(time.RFC3339, metadata.CollectedAt)
 		Expect(err).NotTo(HaveOccurred())
@@ -101,7 +103,7 @@ var _ = Describe("DataCollector", func() {
 	It("returns an error when the ops manager collection errors", func() {
 		omDataCollector.CollectReturns([]opsmanager.Data{}, "", errors.New("collecting is hard"))
 
-		err := collector.Collect("", "")
+		err := collector.Collect("", "", "")
 		Expect(tarWriter.CloseCallCount()).To(Equal(1))
 		Expect(err).To(MatchError(ContainSubstring(OpsManagerCollectFailureMessage)))
 		Expect(err).To(MatchError(ContainSubstring("collecting is hard")))
@@ -113,7 +115,7 @@ var _ = Describe("DataCollector", func() {
 		failingData := opsmanager.NewData(failingReader, "d1", "best-kind")
 		omDataCollector.CollectReturns([]opsmanager.Data{failingData}, "", nil)
 
-		err := collector.Collect("", "")
+		err := collector.Collect("", "", "")
 		Expect(tarWriter.CloseCallCount()).To(Equal(1))
 		Expect(err).To(MatchError(ContainSubstring(ContentReadingFailureMessage)))
 		Expect(err).To(MatchError(ContainSubstring("reading is hard")))
@@ -124,7 +126,7 @@ var _ = Describe("DataCollector", func() {
 		omDataCollector.CollectReturns([]opsmanager.Data{data}, "", nil)
 		tarWriter.AddFileReturnsOnCall(0, errors.New("tarring is hard"))
 
-		err := collector.Collect("", "")
+		err := collector.Collect("", "", "")
 		Expect(tarWriter.CloseCallCount()).To(Equal(1))
 		Expect(err).To(MatchError(ContainSubstring(DataWriteFailureMessage)))
 		Expect(err).To(MatchError(ContainSubstring("tarring is hard")))
@@ -137,7 +139,7 @@ var _ = Describe("DataCollector", func() {
 			}
 			return nil
 		}
-		err := collector.Collect("", "")
+		err := collector.Collect("", "", "")
 		Expect(tarWriter.CloseCallCount()).To(Equal(1))
 		Expect(err).To(MatchError(ContainSubstring(DataWriteFailureMessage)))
 		Expect(err).To(MatchError(ContainSubstring("tarring is hard")))
@@ -146,7 +148,7 @@ var _ = Describe("DataCollector", func() {
 	It("returns an error when a UUID cannot be generated", func() {
 		uuidProvider.NewV4Returns(uuid.UUID{}, errors.New("generating a UUID is hard"))
 
-		err := collector.Collect("", "")
+		err := collector.Collect("", "", "")
 		Expect(err).To(MatchError(ContainSubstring(operations.UUIDGenerationErrorMessage)))
 		Expect(err).To(MatchError(ContainSubstring("generating a UUID is hard")))
 	})
@@ -178,8 +180,9 @@ var _ = Describe("DataCollector", func() {
 
 			collectorVersion := "0.0.1-version"
 			envType := "most-production"
+			foundationNickname := "some-nickname"
 
-			err := collectorWithCredhub.Collect(envType, collectorVersion)
+			err := collectorWithCredhub.Collect(envType, collectorVersion, foundationNickname)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(tarWriter.AddFileCallCount()).To(Equal(3))
@@ -198,6 +201,7 @@ var _ = Describe("DataCollector", func() {
 			Expect(json.Unmarshal(metadataContents, &metadata)).To(Succeed())
 			Expect(metadata.CollectorVersion).To(Equal(collectorVersion))
 			Expect(metadata.EnvType).To(Equal(envType))
+			Expect(metadata.FoundationNickname).To(Equal(foundationNickname))
 			Expect(metadata.FileDigests).To(ConsistOf(
 				collector_tar.FileDigest{Name: d1.Name(), MimeType: d1.MimeType(), MD5Checksum: d1ContentMd5, ProductType: d1.Type(), DataType: d1.DataType()},
 				collector_tar.FileDigest{Name: chData.Name(), MimeType: chData.MimeType(), MD5Checksum: chContentMd5, ProductType: chData.Type(), DataType: chData.DataType()},
@@ -209,7 +213,7 @@ var _ = Describe("DataCollector", func() {
 		It("returns an error when the credhub collection errors", func() {
 			credhubDataCollector.CollectReturns(credhub.Data{}, errors.New("collecting is hard"))
 
-			err := collectorWithCredhub.Collect("", "")
+			err := collectorWithCredhub.Collect("", "", "")
 			Expect(tarWriter.CloseCallCount()).To(Equal(1))
 			Expect(err).To(MatchError(ContainSubstring(CredhubCollectFailureMessage)))
 			Expect(err).To(MatchError(ContainSubstring("collecting is hard")))
@@ -221,7 +225,7 @@ var _ = Describe("DataCollector", func() {
 			failingData := credhub.NewData(failingReader)
 			credhubDataCollector.CollectReturns(failingData, nil)
 
-			err := collectorWithCredhub.Collect("", "")
+			err := collectorWithCredhub.Collect("", "", "")
 			Expect(tarWriter.CloseCallCount()).To(Equal(1))
 			Expect(err).To(MatchError(ContainSubstring(ContentReadingFailureMessage)))
 			Expect(err).To(MatchError(ContainSubstring("reading is hard")))
@@ -237,7 +241,7 @@ var _ = Describe("DataCollector", func() {
 				return nil
 			}
 
-			err := collectorWithCredhub.Collect("", "")
+			err := collectorWithCredhub.Collect("", "", "")
 			Expect(tarWriter.CloseCallCount()).To(Equal(1))
 			Expect(err).To(MatchError(ContainSubstring(DataWriteFailureMessage)))
 			Expect(err).To(MatchError(ContainSubstring("tarring is hard")))
@@ -276,8 +280,9 @@ var _ = Describe("DataCollector", func() {
 
 			collectorVersion := "0.0.1-version"
 			envType := "most-production"
+			foundationNickname := "some-nickname"
 
-			err := collectorWithConsumption.Collect(envType, collectorVersion)
+			err := collectorWithConsumption.Collect(envType, collectorVersion, foundationNickname)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(tarWriter.AddFileCallCount()).To(Equal(5))
@@ -301,6 +306,7 @@ var _ = Describe("DataCollector", func() {
 			Expect(metadata.CollectorVersion).To(Equal(collectorVersion))
 			Expect(metadata.CollectionId).To(Equal(uuidString))
 			Expect(metadata.FoundationId).To(Equal(foundationId))
+			Expect(metadata.FoundationNickname).To(Equal(foundationNickname))
 			Expect(metadata.EnvType).To(Equal(envType))
 			Expect(metadata.FileDigests).To(ConsistOf(
 				collector_tar.FileDigest{Name: appUsageConsumptionData.Name(), MimeType: appUsageConsumptionData.MimeType(), MD5Checksum: appUsageContentMd5, ProductType: appUsageConsumptionData.Type(), DataType: appUsageConsumptionData.DataType()},
@@ -313,7 +319,7 @@ var _ = Describe("DataCollector", func() {
 		It("returns an error when the consumption collection errors", func() {
 			consumptionDataCollector.CollectReturns([]consumption.Data{}, errors.New("collecting is hard"))
 
-			err := collectorWithConsumption.Collect("", "")
+			err := collectorWithConsumption.Collect("", "", "")
 			Expect(tarWriter.CloseCallCount()).To(Equal(1))
 			Expect(err).To(MatchError(ContainSubstring(UsageCollectFailureMessage)))
 			Expect(err).To(MatchError(ContainSubstring("collecting is hard")))
@@ -325,7 +331,7 @@ var _ = Describe("DataCollector", func() {
 			failingData := consumption.NewData(failingReader, "app-instances")
 			consumptionDataCollector.CollectReturns([]consumption.Data{failingData}, nil)
 
-			err := collectorWithConsumption.Collect("", "")
+			err := collectorWithConsumption.Collect("", "", "")
 			Expect(tarWriter.CloseCallCount()).To(Equal(1))
 			Expect(err).To(MatchError(ContainSubstring(ContentReadingFailureMessage)))
 			Expect(err).To(MatchError(ContainSubstring("reading is hard")))
@@ -341,7 +347,7 @@ var _ = Describe("DataCollector", func() {
 				return nil
 			}
 
-			err := collectorWithConsumption.Collect("", "")
+			err := collectorWithConsumption.Collect("", "", "")
 			Expect(tarWriter.CloseCallCount()).To(Equal(1))
 			Expect(err).To(MatchError(ContainSubstring(DataWriteFailureMessage)))
 			Expect(err).To(MatchError(ContainSubstring("tarring is hard")))
@@ -356,7 +362,7 @@ var _ = Describe("DataCollector", func() {
 				return nil
 			}
 
-			err := collectorWithConsumption.Collect("", "")
+			err := collectorWithConsumption.Collect("", "", "")
 			Expect(tarWriter.CloseCallCount()).To(Equal(1))
 			Expect(err).To(MatchError(ContainSubstring(DataWriteFailureMessage)))
 			Expect(err).To(MatchError(ContainSubstring("tarring is hard")))
