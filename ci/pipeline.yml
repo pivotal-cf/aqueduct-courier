@@ -369,6 +369,7 @@ jobs:
       OPS_MANAGER_USERNAME: {{production-courier-ops-manager-username}}
       OPS_MANAGER_PASSWORD: {{production-courier-ops-manager-password}}
       ENV_TYPE: development
+      FOUNDATION_NICKNAME: telemetry-production
       INSECURE_SKIP_TLS_VERIFY: true
       CF_API_URL: {{production-courier-cf-api-url}}
       USAGE_SERVICE_URL: {{production-courier-usage-service-url}}
@@ -463,6 +464,7 @@ jobs:
       USAGE_SERVICE_CLIENT_SECRET: {{production-courier-usage-service-client-secret}}
       USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
       ENV_TYPE: development
+      FOUNDATION_NICKNAME: telemetry-production
       INSECURE_SKIP_TLS_VERIFY: true
   - task: send
     image: platform-automation-image
