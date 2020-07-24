@@ -322,14 +322,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:5e241d249248204c32492505ae0cb586292b48feaad731300ab2cbffa4775ae0"
+  digest = "1:2ca0c8caf8fd890f2d5b8eea53d30a7d5cf3de97f6171968132249d1cdced81b"
   name = "github.com/pivotal-cf/telemetry-utils"
   packages = [
     "collector_tar",
     "tar",
   ]
   pruneopts = "UT"
-  revision = "b99babd68013b9f614e2079c795c787ecfa53f02"
+  revision = "308d926219b3249aa950a13a8744fbf4369c230c"
 
 [[projects]]
   digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
