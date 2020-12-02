@@ -44,7 +44,11 @@ var _ = Describe("Service", func() {
 			Expect(content).To(Equal([]byte("deployed-products")))
 			Expect(requestor.CurlCallCount()).To(Equal(1))
 			input := requestor.CurlArgsForCall(0)
-			Expect(input).To(Equal(api.RequestServiceCurlInput{Path: DeployedProductsPath, Method: http.MethodGet}))
+			Expect(input).To(Equal(api.RequestServiceCurlInput{
+				Path: DeployedProductsPath,
+				Method: http.MethodGet,
+				Headers: make(http.Header),
+			}))
 		})
 
 		It("returns an error when requestor errors", func() {
@@ -94,7 +98,11 @@ var _ = Describe("Service", func() {
 
 			Expect(requestor.CurlCallCount()).To(Equal(1))
 			input := requestor.CurlArgsForCall(0)
-			Expect(input).To(Equal(api.RequestServiceCurlInput{Path: expectedProductPath, Method: http.MethodGet}))
+			Expect(input).To(Equal(api.RequestServiceCurlInput{
+				Path: expectedProductPath,
+				Method: http.MethodGet,
+				Headers: make(http.Header),
+			}))
 		})
 
 		It("returns an error when requestor errors", func() {
@@ -215,7 +223,11 @@ var _ = Describe("Service", func() {
 
 			Expect(requestor.CurlCallCount()).To(Equal(1))
 			input := requestor.CurlArgsForCall(0)
-			Expect(input).To(Equal(api.RequestServiceCurlInput{Path: expectedProductPropertiesPath, Method: http.MethodGet}))
+			Expect(input).To(Equal(api.RequestServiceCurlInput{
+				Path: expectedProductPropertiesPath,
+				Method: http.MethodGet,
+				Headers: make(http.Header),
+			}))
 		})
 
 		It("errors if the contents cannot be read from the response", func() {
@@ -282,7 +294,11 @@ var _ = Describe("Service", func() {
 			Expect(content).To(Equal([]byte("vm-types")))
 			Expect(requestor.CurlCallCount()).To(Equal(1))
 			input := requestor.CurlArgsForCall(0)
-			Expect(input).To(Equal(api.RequestServiceCurlInput{Path: VmTypesPath, Method: http.MethodGet}))
+			Expect(input).To(Equal(api.RequestServiceCurlInput{
+				Path: VmTypesPath,
+				Method: http.MethodGet,
+				Headers: make(http.Header),
+			}))
 		})
 
 		It("returns an error when requestor errors", func() {
@@ -349,7 +365,11 @@ var _ = Describe("Service", func() {
 
 			Expect(requestor.CurlCallCount()).To(Equal(1))
 			input := requestor.CurlArgsForCall(0)
-			Expect(input).To(Equal(api.RequestServiceCurlInput{Path: DiagnosticReportPath, Method: http.MethodGet}))
+			Expect(input).To(Equal(api.RequestServiceCurlInput{
+				Path: DiagnosticReportPath,
+				Method: http.MethodGet,
+				Headers: make(http.Header),
+			}))
 		})
 
 		It("returns an error when unmarshalling the response errors", func() {
@@ -400,7 +420,11 @@ var _ = Describe("Service", func() {
 			Expect(string(actualContent)).To(Equal(`{"installations":[{"other":42},{"other":24}]}`))
 			Expect(requestor.CurlCallCount()).To(Equal(1))
 			input := requestor.CurlArgsForCall(0)
-			Expect(input).To(Equal(api.RequestServiceCurlInput{Path: InstallationsPath, Method: http.MethodGet}))
+			Expect(input).To(Equal(api.RequestServiceCurlInput{
+				Path: InstallationsPath,
+				Method: http.MethodGet,
+				Headers: make(http.Header),
+			}))
 		})
 
 		It("errors if the contents cannot be read from the response", func() {
@@ -466,7 +490,11 @@ var _ = Describe("Service", func() {
 			Expect(string(actualContent)).To(Equal(`{"certificates":[{"keys": "for-certs"}]}`))
 			Expect(requestor.CurlCallCount()).To(Equal(1))
 			input := requestor.CurlArgsForCall(0)
-			Expect(input).To(Equal(api.RequestServiceCurlInput{Path: CertificatesPath, Method: http.MethodGet}))
+			Expect(input).To(Equal(api.RequestServiceCurlInput{
+				Path: CertificatesPath,
+				Method: http.MethodGet,
+				Headers: make(http.Header),
+			}))
 		})
 
 		It("returns an error when requestor errors", func() {
@@ -524,7 +552,11 @@ var _ = Describe("Service", func() {
 			}))
 			Expect(requestor.CurlCallCount()).To(Equal(1))
 			input := requestor.CurlArgsForCall(0)
-			Expect(input).To(Equal(api.RequestServiceCurlInput{Path: CertificateAuthoritiesPath, Method: http.MethodGet}))
+			Expect(input).To(Equal(api.RequestServiceCurlInput{
+				Path: CertificateAuthoritiesPath,
+				Method: http.MethodGet,
+				Headers: make(http.Header),
+			}))
 		})
 
 		It("errors if the contents cannot be read from the response", func() {
@@ -591,7 +623,11 @@ var _ = Describe("Service", func() {
 
 			Expect(requestor.CurlCallCount()).To(Equal(1))
 			input := requestor.CurlArgsForCall(0)
-			Expect(input).To(Equal(api.RequestServiceCurlInput{Path: BoshCredentialsPath, Method: http.MethodGet}))
+			Expect(input).To(Equal(api.RequestServiceCurlInput{
+				Path: BoshCredentialsPath,
+				Method: http.MethodGet,
+				Headers: make(http.Header),
+			}))
 		})
 
 		It("errors if the contents cannot be read from the response", func() {

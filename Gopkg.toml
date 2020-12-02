@@ -12,7 +12,7 @@
 
 [[constraint]]
   name = "github.com/pivotal-cf/om"
-  version = "=7.0.0"
+  version = "=7.1.0"
 
 [[override]]
   name = "gopkg.in/fsnotify.v1"

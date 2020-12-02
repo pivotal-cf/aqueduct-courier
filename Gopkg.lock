@@ -47,6 +47,17 @@
   version = "v3.0.5"
 
 [[projects]]
+  digest = "1:8a3820b2c47a7467f61beef1bdfcc40021745a568e56ae7f42413b818f01b08a"
+  name = "github.com/cloudfoundry-community/go-uaa"
+  packages = [
+    ".",
+    "passwordcredentials",
+  ]
+  pruneopts = "UT"
+  revision = "a69cc41e1e0e828930135461b9d831df0cc39c4e"
+  version = "v0.3.1"
+
+[[projects]]
   branch = "master"
   digest = "1:a8022e3b5ae297d4c99a589b772c607a15284107fc037127142e177ac16b30a0"
   name = "github.com/cloudfoundry/go-socks5"
@@ -352,15 +363,15 @@
   version = "v2.2.4"
 
 [[projects]]
-  digest = "1:df5ceb0f3c7e088d120b07d53d5ee63cb819530e74e53e8a705cac1bf8b3c11f"
+  digest = "1:48a5657edfa1cd61b28eaa8512f1a9bb7c59dd476d55307bde227716f43e2c81"
   name = "github.com/pivotal-cf/om"
   packages = [
     "api",
     "network",
   ]
   pruneopts = "UT"
-  revision = "6982c49db02d87e6c4d122a139e8808bcfb7a102"
-  version = "7.0.0"
+  revision = "9f713158cee14cb8bf023633b26ff9a7491f3e88"
+  version = "7.1.0"
 
 [[projects]]
   branch = "master"
