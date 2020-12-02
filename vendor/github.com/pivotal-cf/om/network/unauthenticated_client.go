@@ -1,9 +1,7 @@
 package network
 
 import (
-	"crypto/tls"
 	"fmt"
-	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -15,28 +13,16 @@ type UnauthenticatedClient struct {
 	client *http.Client
 }
 
-func NewUnauthenticatedClient(target string, insecureSkipVerify bool, requestTimeout time.Duration, connectTimeout time.Duration) UnauthenticatedClient {
-	return UnauthenticatedClient{
-		target: target,
-		client: &http.Client{
-			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				return http.ErrUseLastResponse
-			},
-			Transport: &http.Transport{
-				Proxy: http.ProxyFromEnvironment,
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: insecureSkipVerify,
-					MinVersion:         tls.VersionTLS12,
-				},
-				Dial: (&net.Dialer{
-					Timeout:   connectTimeout,
-					KeepAlive: 30 * time.Second,
-				}).Dial,
-			},
-			Timeout: requestTimeout,
-		},
+func NewUnauthenticatedClient(target string, insecureSkipVerify bool, caCert string, connectTimeout time.Duration, requestTimeout time.Duration) (UnauthenticatedClient, error) {
+	client, err := newHTTPClient(insecureSkipVerify, caCert, requestTimeout, connectTimeout)
+	if err != nil {
+		return UnauthenticatedClient{}, err
 	}
 
+	return UnauthenticatedClient{
+		target: target,
+		client: client,
+	}, nil
 }
 
 func (c UnauthenticatedClient) Do(request *http.Request) (*http.Response, error) {

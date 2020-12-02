@@ -364,7 +364,7 @@ func makeCollector(tarWriter *tar.TarWriter) (*operations.CollectExecutor, error
 		viper.GetString(OpsManagerClientIdFlag),
 		viper.GetString(OpsManagerClientSecretFlag),
 		viper.GetBool(SkipTlsVerifyFlag),
-		false,
+		"",
 		time.Duration(viper.GetInt(OpsManagerTimeoutFlag))*time.Second,
 		5*time.Second,
 	)

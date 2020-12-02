@@ -2,17 +2,16 @@ package network
 
 import (
 	"context"
-	"crypto/tls"
+	"errors"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
-	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 )
@@ -30,7 +29,14 @@ type OAuthClient struct {
 	timeout       time.Duration
 }
 
-func NewOAuthClient(target, username, password string, clientID, clientSecret string, insecureSkipVerify bool, includeCookies bool, requestTimeout time.Duration, connectTimeout time.Duration) (OAuthClient, error) {
+func NewOAuthClient(
+	target, username, password string,
+	clientID, clientSecret string,
+	insecureSkipVerify bool,
+	caCert string,
+	connectTimeout time.Duration,
+	requestTimeout time.Duration,
+) (OAuthClient, error) {
 	conf := &oauth2.Config{
 		ClientID:     "opsman",
 		ClientSecret: "",
@@ -42,27 +48,9 @@ func NewOAuthClient(target, username, password string, clientID, clientSecret st
 		ClientSecret: clientSecret,
 	}
 
-	httpclient := &http.Client{
-		Transport: &http.Transport{
-			Proxy: http.ProxyFromEnvironment,
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: insecureSkipVerify,
-				MinVersion:         tls.VersionTLS12,
-			},
-			Dial: (&net.Dialer{
-				Timeout:   connectTimeout,
-				KeepAlive: 30 * time.Second,
-			}).Dial,
-		},
-	}
-
-	var jar *cookiejar.Jar
-	if includeCookies {
-		var err error
-		jar, err = cookiejar.New(nil)
-		if err != nil {
-			return OAuthClient{}, fmt.Errorf("could not create cookie jar")
-		}
+	httpclient, err := newHTTPClient(insecureSkipVerify, caCert, requestTimeout, connectTimeout)
+	if err != nil {
+		return OAuthClient{}, err
 	}
 
 	insecureContext := context.Background()
@@ -71,7 +59,6 @@ func NewOAuthClient(target, username, password string, clientID, clientSecret st
 	return OAuthClient{
 		oauthConfig:   conf,
 		oauthConfigCC: confCC,
-		jar:           jar,
 		context:       insecureContext,
 		username:      username,
 		password:      password,
@@ -179,7 +166,10 @@ retry:
 
 func CanRetry(err error) bool {
 	if err != nil {
-		err = errors.Cause(err)
+		for errors.Unwrap(err) != nil {
+			err = errors.Unwrap(err)
+		}
+
 		if IsTemporary(err) {
 			return true
 		}
@@ -188,7 +178,7 @@ func CanRetry(err error) bool {
 			err = ue.Err
 		}
 
-		if err == io.EOF {
+		if err == io.EOF || strings.Contains(err.Error(), "use of closed connection") {
 			return true
 		}
 

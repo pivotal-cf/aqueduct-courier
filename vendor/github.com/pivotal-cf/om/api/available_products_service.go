@@ -1,14 +1,13 @@
 package api
 
 import (
-	"context"
 	"encoding/json"
+	"fmt"
+	"github.com/hashicorp/go-version"
 	"io"
 	"net/http"
 	"net/url"
-	"time"
-
-	"github.com/pkg/errors"
+	"sort"
 )
 
 const availableProductsEndpoint = "/api/v0/available_products"
@@ -46,11 +45,9 @@ func (a Api) UploadAvailableProduct(input UploadAvailableProductInput) (UploadAv
 	req.Header.Set("Content-Type", input.ContentType)
 	req.ContentLength = input.ContentLength
 
-	req = req.WithContext(context.WithValue(req.Context(), "polling-interval", time.Duration(input.PollingInterval)*time.Second))
-
 	resp, err := a.progressClient.Do(req)
 	if err != nil {
-		return UploadAvailableProductOutput{}, errors.Wrap(err, "could not make api request to available_products endpoint")
+		return UploadAvailableProductOutput{}, fmt.Errorf("could not make api request to available_products endpoint: %w", err)
 	}
 
 	defer resp.Body.Close()
@@ -65,7 +62,7 @@ func (a Api) UploadAvailableProduct(input UploadAvailableProductInput) (UploadAv
 func (a Api) ListAvailableProducts() (AvailableProductsOutput, error) {
 	resp, err := a.sendAPIRequest("GET", availableProductsEndpoint, nil)
 	if err != nil {
-		return AvailableProductsOutput{}, errors.Wrap(err, "could not make api request to available_products endpoint")
+		return AvailableProductsOutput{}, fmt.Errorf("could not make api request to available_products endpoint: %w", err)
 	}
 
 	defer resp.Body.Close()
@@ -76,14 +73,14 @@ func (a Api) ListAvailableProducts() (AvailableProductsOutput, error) {
 
 	var availableProducts []ProductInfo
 	if err := json.NewDecoder(resp.Body).Decode(&availableProducts); err != nil {
-		return AvailableProductsOutput{}, errors.Wrap(err, "could not unmarshal available_products response")
+		return AvailableProductsOutput{}, fmt.Errorf("could not unmarshal available_products response: %w", err)
 	}
 
 	return AvailableProductsOutput{ProductsList: availableProducts}, nil
 }
 
 func (a Api) DeleteAvailableProducts(input DeleteAvailableProductsInput) error {
-	req, err := http.NewRequest("DELETE", availableProductsEndpoint, nil)
+	req, _ := http.NewRequest("DELETE", availableProductsEndpoint, nil)
 
 	if !input.ShouldDeleteAllProducts {
 		query := url.Values{}
@@ -95,7 +92,7 @@ func (a Api) DeleteAvailableProducts(input DeleteAvailableProductsInput) error {
 
 	resp, err := a.client.Do(req)
 	if err != nil {
-		return errors.Wrap(err, "could not make api request to available_products endpoint")
+		return fmt.Errorf("could not make api request to available_products endpoint: %w", err)
 	}
 
 	defer resp.Body.Close()
@@ -105,4 +102,30 @@ func (a Api) DeleteAvailableProducts(input DeleteAvailableProductsInput) error {
 	}
 
 	return nil
+}
+
+func (a Api) GetLatestAvailableVersion(productName string) (string, error) {
+	products, err := a.ListAvailableProducts()
+	if err != nil {
+		return "", fmt.Errorf("could not retrieve product list from Ops Manager: %w", err)
+	}
+
+	var versions version.Collection
+	for _, product := range products.ProductsList {
+		if productName == product.Name {
+			v, err := version.NewVersion(product.Version)
+			if err != nil {
+				continue
+			}
+			versions = append(versions, v)
+		}
+	}
+
+	if len(versions) == 0 {
+		return "", fmt.Errorf("no versions available for the product '%s'", productName)
+	}
+
+	sort.Sort(sort.Reverse(versions))
+
+	return versions[0].String(), nil
 }
