@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
 
@@ -39,6 +38,15 @@ type UpdateStagedProductPropertiesInput struct {
 type UpdateStagedProductNetworksAndAZsInput struct {
 	GUID           string
 	NetworksAndAZs string
+}
+
+type SyslogConfiguration struct {
+	SyslogConfiguration map[string]interface{} `json:"syslog_configuration"`
+}
+
+type UpdateSyslogConfigurationInput struct {
+	GUID                string
+	SyslogConfiguration string
 }
 
 type ResponseProperty struct {
@@ -113,7 +121,7 @@ func (a Api) Stage(input StageProductInput, deployedGUID string) error {
 	stReq.Header.Set("Content-Type", "application/json")
 	stResp, err := a.client.Do(stReq)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("could not make %s api request to staged products endpoint", stReq.Method))
+		return fmt.Errorf("could not make %s api request to staged products endpoint: %w", stReq.Method, err)
 	}
 	defer stResp.Body.Close()
 
@@ -133,7 +141,7 @@ func (a Api) DeleteStagedProduct(input UnstageProductInput) error {
 		return fmt.Errorf("product is not staged: %s", input.ProductName)
 	}
 
-	resp, err := a.sendAPIRequest("DELETE", fmt.Sprintf("/api/v0/staged/products/%s", stagedGUID), []byte("{}"))
+	resp, err := a.sendAPIRequest("DELETE", fmt.Sprintf("/api/v0/staged/products/%s", stagedGUID), []byte(`{}`))
 	if err != nil {
 		return err
 	}
@@ -148,7 +156,7 @@ func (a Api) DeleteStagedProduct(input UnstageProductInput) error {
 func (a Api) ListStagedProducts() (StagedProductsOutput, error) {
 	resp, err := a.sendAPIRequest("GET", "/api/v0/staged/products", nil)
 	if err != nil {
-		return StagedProductsOutput{}, errors.Wrap(err, "could not make request to staged-products endpoint")
+		return StagedProductsOutput{}, fmt.Errorf("could not make request to staged-products endpoint: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -159,12 +167,37 @@ func (a Api) ListStagedProducts() (StagedProductsOutput, error) {
 	var stagedProducts []StagedProduct
 	err = json.NewDecoder(resp.Body).Decode(&stagedProducts)
 	if err != nil {
-		return StagedProductsOutput{}, errors.Wrap(err, "could not unmarshal staged products response")
+		return StagedProductsOutput{}, fmt.Errorf("could not unmarshal staged products response: %w", err)
 	}
 
 	return StagedProductsOutput{
 		Products: stagedProducts,
 	}, nil
+}
+
+func (a Api) GetStagedProductSyslogConfiguration(product string) (map[string]interface{}, error) {
+	req := fmt.Sprintf("/api/v0/staged/products/%s/syslog_configuration", product)
+	resp, err := a.sendAPIRequest("GET", req, nil)
+	if err != nil {
+		return nil, fmt.Errorf("could not make api request to staged product syslog_configuration endpoint: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusUnprocessableEntity {
+		return nil, nil
+	}
+
+	if err = validateStatusOK(resp); err != nil {
+		return nil, err
+	}
+
+	var syslogConfig SyslogConfiguration
+	err = json.NewDecoder(resp.Body).Decode(&syslogConfig)
+	if err != nil {
+		return nil, fmt.Errorf("could not unmarshal staged product syslog_configuration response: %w", err)
+	}
+
+	return syslogConfig.SyslogConfiguration, nil
 }
 
 var errNotFound = fmt.Errorf("element not found")
@@ -239,7 +272,7 @@ func collectionElementGUID(propertyName, elementName string, configuredPropertie
 }
 
 func (a Api) UpdateStagedProductProperties(input UpdateStagedProductPropertiesInput) error {
-	currentConfiguredProperties, err := a.GetStagedProductProperties(input.GUID)
+	currentConfiguredProperties, err := a.GetStagedProductProperties(input.GUID, false)
 	if err != nil {
 		return err
 	}
@@ -289,7 +322,7 @@ func (a Api) UpdateStagedProductProperties(input UpdateStagedProductPropertiesIn
 
 	resp, err := a.client.Do(req)
 	if err != nil {
-		return errors.Wrap(err, "could not make api request to staged product properties endpoint")
+		return fmt.Errorf("could not make api request to staged product properties endpoint: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -306,7 +339,23 @@ func (a Api) UpdateStagedProductNetworksAndAZs(input UpdateStagedProductNetworks
 		[]byte(fmt.Sprintf(`{"networks_and_azs": %s}`, input.NetworksAndAZs)),
 	)
 	if err != nil {
-		return errors.Wrap(err, "could not make api request to staged product networks_and_azs endpoint")
+		return fmt.Errorf("could not make api request to staged product networks_and_azs endpoint: %w", err)
+	}
+
+	if err = validateStatusOK(resp); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a Api) UpdateSyslogConfiguration(input UpdateSyslogConfigurationInput) error {
+	resp, err := a.sendAPIRequest("PUT",
+		fmt.Sprintf("/api/v0/staged/products/%s/syslog_configuration", input.GUID),
+		[]byte(fmt.Sprintf(`{"syslog_configuration": %s}`, input.SyslogConfiguration)),
+	)
+	if err != nil {
+		return fmt.Errorf("could not make api request to staged product syslog_configuration endpoint: %w", err)
 	}
 
 	if err = validateStatusOK(resp); err != nil {
@@ -320,7 +369,7 @@ func (a Api) UpdateStagedProductNetworksAndAZs(input UpdateStagedProductNetworks
 func (a Api) GetStagedProductManifest(guid string) (string, error) {
 	resp, err := a.sendAPIRequest("GET", fmt.Sprintf("/api/v0/staged/products/%s/manifest", guid), nil)
 	if err != nil {
-		return "", errors.Wrap(err, "could not make api request to staged products manifest endpoint")
+		return "", fmt.Errorf("could not make api request to staged products manifest endpoint: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -333,7 +382,7 @@ func (a Api) GetStagedProductManifest(guid string) (string, error) {
 	}
 	err = yaml.NewDecoder(resp.Body).Decode(&contents)
 	if err != nil {
-		return "", errors.Wrap(err, "could not parse json")
+		return "", fmt.Errorf("could not parse json: %w", err)
 	}
 
 	manifest, err := yaml.Marshal(contents.Manifest)
@@ -344,8 +393,12 @@ func (a Api) GetStagedProductManifest(guid string) (string, error) {
 	return string(manifest), nil
 }
 
-func (a Api) GetStagedProductProperties(product string) (map[string]ResponseProperty, error) {
-	resp, err := a.fetchProductResource(product, "properties")
+func (a Api) GetStagedProductProperties(product string, redact bool) (map[string]ResponseProperty, error) {
+	endpoint := "properties?redact=false"
+	if redact {
+		endpoint = "properties?redact=true"
+	}
+	resp, err := a.fetchProductResource(product, endpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -360,7 +413,7 @@ func (a Api) GetStagedProductProperties(product string) (map[string]ResponseProp
 	}
 	err = yaml.NewDecoder(resp.Body).Decode(&propertiesResponse)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not parse json")
+		return nil, fmt.Errorf("could not parse json: %w", err)
 	}
 
 	return propertiesResponse.Properties, nil
@@ -373,7 +426,7 @@ func (a Api) GetStagedProductNetworksAndAZs(product string) (map[string]interfac
 
 	resp, err := a.sendAPIRequest("GET", fmt.Sprintf("/api/v0/staged/products/%s/networks_and_azs", product), nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not make api request to staged product properties endpoint")
+		return nil, fmt.Errorf("could not make api request to staged product properties endpoint: %w", err)
 	}
 
 	if resp.StatusCode == http.StatusNotFound {
@@ -387,7 +440,7 @@ func (a Api) GetStagedProductNetworksAndAZs(product string) (map[string]interfac
 	}
 
 	if err = json.NewDecoder(resp.Body).Decode(&networksResponse); err != nil {
-		return nil, errors.Wrap(err, "could not parse json")
+		return nil, fmt.Errorf("could not parse json: %w", err)
 	}
 
 	return networksResponse.Networks, nil
@@ -396,7 +449,7 @@ func (a Api) GetStagedProductNetworksAndAZs(product string) (map[string]interfac
 func (a Api) fetchProductResource(guid, endpoint string) (*http.Response, error) {
 	resp, err := a.sendAPIRequest("GET", fmt.Sprintf("/api/v0/staged/products/%s/%s", guid, endpoint), nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not make api request to staged product properties endpoint")
+		return nil, fmt.Errorf("could not make api request to staged product properties endpoint: %w", err)
 	}
 
 	return resp, nil
@@ -470,7 +523,7 @@ func (a Api) UpdateStagedProductJobMaxInFlight(productGUID string, jobsToMaxInFl
 		[]byte(fmt.Sprintf(`{"max_in_flight": %s}`, payload)),
 	)
 	if err != nil {
-		return errors.Wrap(err, "could not make api request to staged product networks_and_azs endpoint")
+		return fmt.Errorf("could not make api request to staged product networks_and_azs endpoint: %w", err)
 	}
 
 	if err = validateStatusOK(resp); err != nil {

@@ -3,8 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-
-	"github.com/pkg/errors"
+	"path/filepath"
 )
 
 type ProductStemcells struct {
@@ -23,7 +22,7 @@ type ProductStemcell struct {
 func (a Api) ListStemcells() (ProductStemcells, error) {
 	resp, err := a.sendAPIRequest("GET", "/api/v0/stemcell_assignments", nil)
 	if err != nil {
-		return ProductStemcells{}, errors.Wrap(err, "could not make api request to list stemcells")
+		return ProductStemcells{}, fmt.Errorf("could not make api request to list stemcells: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -43,7 +42,7 @@ func (a Api) ListStemcells() (ProductStemcells, error) {
 func (a Api) AssignStemcell(input ProductStemcells) error {
 	jsonData, err := json.Marshal(&input)
 	if err != nil {
-		return errors.Wrap(err, "could not marshal json")
+		return fmt.Errorf("could not marshal json: %w", err)
 	}
 
 	resp, err := a.sendAPIRequest("PATCH", "/api/v0/stemcell_assignments", jsonData)
@@ -56,4 +55,37 @@ func (a Api) AssignStemcell(input ProductStemcells) error {
 	}
 
 	return nil
+}
+
+func (a Api) CheckStemcellAvailability(stemcellFilename string) (bool, error) {
+	report, err := a.GetDiagnosticReport()
+	if err != nil {
+		return false, fmt.Errorf("failed to get diagnostic report: %s", err)
+	}
+
+	info, err := a.Info()
+	if err != nil {
+		return false, fmt.Errorf("cannot retrieve version of Ops Manager")
+	}
+
+	validVersion, err := info.VersionAtLeast(2, 6)
+	if err != nil {
+		return false, fmt.Errorf("could not determine version was 2.6+ compatible: %s", err)
+	}
+
+	if validVersion {
+		for _, stemcell := range report.AvailableStemcells {
+			if stemcell.Filename == filepath.Base(stemcellFilename) {
+				return true, nil
+			}
+		}
+	}
+
+	for _, stemcell := range report.Stemcells {
+		if stemcell == filepath.Base(stemcellFilename) {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }

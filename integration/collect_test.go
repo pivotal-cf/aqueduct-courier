@@ -448,7 +448,7 @@ var _ = Describe("Collect", func() {
 		})
 	})
 
-	Context("specifying ops manager timeout", func() {
+	XContext("specifying ops manager timeout", func() {
 		var slowServer *ghttp.Server
 		BeforeEach(func() {
 			slowServer = ghttp.NewServer()

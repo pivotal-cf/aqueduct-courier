@@ -20,12 +20,42 @@
   version = "2.5.2"
 
 [[projects]]
+  digest = "1:e626376fab8608a972d47e91b3c1bbbddaecaf1d42b82be6dcc52d10a7557893"
+  name = "github.com/VividCortex/ewma"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "b24eb346a94c3ba12c1da1e564dbac1b498a77ce"
+  version = "v1.1.1"
+
+[[projects]]
   branch = "master"
   digest = "1:ef09c94a4b7a61b41034d03a885b1c1e87bf544bcd78a8784c3c0b36e8d00e2e"
   name = "github.com/andybalholm/brotli"
   packages = ["."]
   pruneopts = "UT"
   revision = "ed0fd649404dcdcdae403d0e62b555889ee4e6b9"
+
+[[projects]]
+  digest = "1:a9f7bf27c4a27a0f996fe95043eca423a960c63dce6d9b5a3c5aea8597938beb"
+  name = "github.com/cheggaaa/pb"
+  packages = [
+    "v3",
+    "v3/termutil",
+  ]
+  pruneopts = "UT"
+  revision = "5784bcc95a1741c2ca2b46b19f1f3d398557300c"
+  version = "v3.0.5"
+
+[[projects]]
+  digest = "1:8a3820b2c47a7467f61beef1bdfcc40021745a568e56ae7f42413b818f01b08a"
+  name = "github.com/cloudfoundry-community/go-uaa"
+  packages = [
+    ".",
+    "passwordcredentials",
+  ]
+  pruneopts = "UT"
+  revision = "a69cc41e1e0e828930135461b9d831df0cc39c4e"
+  version = "v0.3.1"
 
 [[projects]]
   branch = "master"
@@ -65,6 +95,14 @@
   pruneopts = "UT"
   revision = "947c36da3153ff334e74d9d980de341d25f358ba"
   version = "v1.1"
+
+[[projects]]
+  digest = "1:6e6a015e8e8fa80006309826c6129b59341c56103245da051f206b1b3605f0bb"
+  name = "github.com/fatih/color"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "bc2269661d49c6c9d0e514eef49710556883f3fa"
+  version = "v1.10.0"
 
 [[projects]]
   digest = "1:abeb38ade3f32a92943e5be54f55ed6d6e3b6602761d74b4aab4c9dd45c18abd"
@@ -206,6 +244,22 @@
   version = "v1.8.1"
 
 [[projects]]
+  digest = "1:304d25ecc3f4ca39f894c959254d3f5fc6176276ccf1f874ded0cd441e2f964f"
+  name = "github.com/mattn/go-colorable"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "2e1b0c1546e0173c0907cf05c67b8ba29ed8b4d1"
+  version = "v0.1.8"
+
+[[projects]]
+  digest = "1:0c58d31abe2a2ccb429c559b6292e7df89dcda675456fecc282fa90aa08273eb"
+  name = "github.com/mattn/go-isatty"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "7b513a986450394f7bbf1476909911b3aa3a55ce"
+  version = "v0.0.12"
+
+[[projects]]
   digest = "1:0356f3312c9bd1cbeda81505b7fd437501d8e778ab66998ef69f00d7f9b3a0d7"
   name = "github.com/mattn/go-runewidth"
   packages = ["."]
@@ -309,16 +363,15 @@
   version = "v2.2.4"
 
 [[projects]]
-  digest = "1:0ea01cb86ab3e7c607870a7879f30ba3c96a62e4b0d4b16e20e8800407e10411"
+  digest = "1:48a5657edfa1cd61b28eaa8512f1a9bb7c59dd476d55307bde227716f43e2c81"
   name = "github.com/pivotal-cf/om"
   packages = [
     "api",
     "network",
-    "progress",
   ]
   pruneopts = "UT"
-  revision = "26fc4eb4ce55306c360a6926a8ea62309c6c41c6"
-  version = "3.1.0"
+  revision = "9f713158cee14cb8bf023633b26ff9a7491f3e88"
+  version = "7.1.0"
 
 [[projects]]
   branch = "master"
@@ -512,14 +565,6 @@
   pruneopts = "UT"
   revision = "b2f4a3cf3c67576a2ee09e1fe62656a5086ce880"
   version = "v1.6.1"
-
-[[projects]]
-  digest = "1:d219400f09c151f0ada918bab650ef46f7ebdb1ff4fea923fdcb839481ec7ec1"
-  name = "gopkg.in/cheggaaa/pb.v1"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "f907f6f5dd81f77c2bbc1cde92e4c5a04720cb11"
-  version = "v1.0.28"
 
 [[projects]]
   digest = "1:abeb38ade3f32a92943e5be54f55ed6d6e3b6602761d74b4aab4c9dd45c18abd"

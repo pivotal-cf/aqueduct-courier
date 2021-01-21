@@ -223,6 +223,7 @@ func (s *Service) makeRequest(path string) ([]byte, error) {
 	input := api.RequestServiceCurlInput{
 		Path:   path,
 		Method: http.MethodGet,
+		Headers: make(http.Header),
 	}
 	resp, err := s.Requestor.Curl(input)
 	if err != nil {
