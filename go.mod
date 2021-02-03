@@ -1,4 +1,4 @@
-module github.com/pivotal-cf/aqueduct-courie
+module github.com/pivotal-cf/aqueduct-courier
 
 go 1.15
 
@@ -11,7 +11,6 @@ require (
 	github.com/onsi/ginkgo v1.14.2
 	github.com/onsi/gomega v1.10.3
 	github.com/pelletier/go-toml v1.4.0 // indirect
-	github.com/pivotal-cf/aqueduct-courier v0.0.0-20210121181627-2f7cc4f96e1c
 	github.com/pivotal-cf/om v0.0.0-20201130223943-9f713158cee1
 	github.com/pivotal-cf/telemetry-utils v0.0.0-20200724175842-308d926219b3
 	github.com/pkg/errors v0.9.1
