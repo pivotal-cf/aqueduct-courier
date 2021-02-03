@@ -14,7 +14,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/pivotal-cf/aqueduct-courier/opsmanager"
 
@@ -445,89 +444,6 @@ var _ = Describe("Collect", func() {
 			tarFilePath := validatedTarFilePath(outputDirPath)
 			assertValidOutput(tarFilePath, collector_tar.OpsManagerCollectorDataSetId, "ops_manager_vm_types", "development")
 			assertLogging(session, tarFilePath, false, false)
-		})
-	})
-
-	XContext("specifying ops manager timeout", func() {
-		var slowServer *ghttp.Server
-		BeforeEach(func() {
-			slowServer = ghttp.NewServer()
-			slowServer.AppendHandlers(
-				func(w http.ResponseWriter, req *http.Request) {
-					w.Header().Set("Content-Type", "application/json")
-
-					w.Write([]byte(`{
-					"access_token": "some-opsman-token",
-					"token_type": "bearer",
-					"expires_in": 3600
-					}`))
-				},
-				func(w http.ResponseWriter, req *http.Request) {
-					time.Sleep(3 * time.Second)
-				},
-			)
-		})
-
-		AfterEach(func() {
-			slowServer.Close()
-		})
-
-		It("uses the timeout specified with env variable", func() {
-			defaultEnvVars[cmd.OpsManagerURLKey] = slowServer.URL()
-			defaultEnvVars[cmd.OpsManagerTimeoutKey] = "1"
-			command := buildDefaultCommand(defaultEnvVars)
-			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-			Expect(err).NotTo(HaveOccurred())
-			Eventually(session).Should(gexec.Exit(1))
-			Eventually(session.Err).Should(gbytes.Say("Timeout exceeded"))
-			Expect(session.Err).NotTo(gbytes.Say("USAGE EXAMPLES"))
-			assertOutputDirEmpty(outputDirPath)
-		})
-
-		It("uses the timeout specified by flag configuration", func() {
-			flagValues := map[string]string{
-				cmd.OpsManagerTimeoutFlag:      "1",
-				cmd.OpsManagerURLFlag:          slowServer.URL(),
-				cmd.OpsManagerClientIdFlag:     "whatever",
-				cmd.OpsManagerClientSecretFlag: "whatever",
-				cmd.EnvTypeFlag:                "Development",
-				cmd.OutputPathFlag:             outputDirPath,
-			}
-			command := exec.Command(aqueductBinaryPath, "collect")
-			for k, v := range flagValues {
-				command.Args = append(command.Args, fmt.Sprintf("--%s=%s", k, v))
-			}
-			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-			Expect(err).NotTo(HaveOccurred())
-			Eventually(session).Should(gexec.Exit(1))
-			Eventually(session.Err).Should(gbytes.Say("Timeout exceeded"))
-			Expect(session.Err).NotTo(gbytes.Say("USAGE EXAMPLES"))
-			assertOutputDirEmpty(outputDirPath)
-		})
-
-		It("uses the timeout specified by config file configuration", func() {
-			config := fmt.Sprintf(`{
-				"ops-manager-timeout": 1,
-				"url": "%s",
-				"client-id": "whatever",
-				"client-secret": "whatever",
-				"env-type": "Development",
-				"insecure-skip-tls-verify": "true",
-				"output-dir": "%s"
-			}`, slowServer.URL(), escapeFilePathForWindows(outputDirPath))
-
-			configFile := filepath.Join(configDirPath, "config.yml")
-			err := ioutil.WriteFile(configFile, []byte(config), 0755)
-			Expect(err).ToNot(HaveOccurred())
-
-			command := exec.Command(aqueductBinaryPath, "collect", "--config", configFile)
-
-			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-			Expect(err).NotTo(HaveOccurred())
-			Eventually(session).Should(gexec.Exit(1))
-			Eventually(session.Err).Should(gbytes.Say("Timeout exceeded"))
-			Expect(session.Err).NotTo(gbytes.Say("USAGE EXAMPLES"))
-			assertOutputDirEmpty(outputDirPath)
 		})
 	})
 
