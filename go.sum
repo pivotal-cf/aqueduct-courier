@@ -329,8 +329,6 @@ github.com/pelletier/go-toml v1.4.0/go.mod h1:PN7xzY2wHTK0K9p34ErDQMlFxa51Fk0OUr
 github.com/pierrec/lz4 v2.6.0+incompatible h1:Ix9yFKn1nSPBLFl/yZknTp8TU5G4Ps0JDmguYK6iH1A=
 github.com/pierrec/lz4 v2.6.0+incompatible/go.mod h1:pdkljMzZIN41W+lC3N2tnIh5sFi+IEE17M5jbnwPHcY=
 github.com/pivotal-cf-experimental/gomegamatchers v0.0.0-20180326192815-e36bfcc98c3a/go.mod h1:HdFegZwXOoRNyrqaOX6FC1zMkbA2k1/ktb2anj1E0K8=
-github.com/pivotal-cf/aqueduct-courier v0.0.0-20210121181627-2f7cc4f96e1c h1:PoOcPtexZDdEfwljjz4iPhKf/gQ4jgMlZJjrfmKPdQE=
-github.com/pivotal-cf/aqueduct-courier v0.0.0-20210121181627-2f7cc4f96e1c/go.mod h1:ncirNACJk4+XCJ3dLTdl8Ins2PZjpkM8MMAZoAmRdMA=
 github.com/pivotal-cf/go-pivnet v1.0.3/go.mod h1:rvEzWli4NJQhX7Z3z0DiEQXsPwC+uE//eIKcpl7S1as=
 github.com/pivotal-cf/go-pivnet/v6 v6.0.2/go.mod h1:ymI4gZvp8lf3GNaf1Re+JRV18zU0w8TLBDQB/t8SaFs=
 github.com/pivotal-cf/jhanda v0.0.0-20200619200912-8de8eb943a43/go.mod h1:UXciri1Yqno0IdXxEzwMF91nnwYMPoN95goHWxVtWq8=
