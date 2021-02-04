@@ -12,7 +12,8 @@ machine github.com login $GITHUB_ACCESS_TOKEN
 EOF
 
 pushd go/src/github.com/pivotal-cf/aqueduct-courier
-  dep ensure -v -update github.com/pivotal-cf/telemetry-utils
+  go get -v -u github.com/pivotal-cf/telemetry-utils
+  go mod vendor -v
   git add .
   git config --global user.name "$GITHUB_NAME"
   git config --global user.email "$GITHUB_EMAIL"
