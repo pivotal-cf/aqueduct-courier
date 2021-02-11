@@ -2,16 +2,16 @@ resource_types:
 - name: gcs-resource
   type: registry-image
   source:
-    repository: frodenas/gcs-resource
+    repository: harbor-repo.vmware.com/dockerhub-proxy-cache/frodenas/gcs-resource
 - name: pivnet
   type: registry-image
   source:
-    repository: pivotalcf/pivnet-resource
+    repository: harbor-repo.vmware.com/dockerhub-proxy-cache/pivotalcf/pivnet-resource
     tag: latest-final
 - name: slack-notification
   type: registry-image
   source:
-    repository: cfcommunity/slack-notification-resource
+    repository: harbor-repo.vmware.com/dockerhub-proxy-cache/cfcommunity/slack-notification-resource
     tag: latest
 
 resources:
@@ -145,7 +145,7 @@ jobs:
   plan:
   - in_parallel:
     - get: aqueduct-courier
-      passed: [courier-tests, windows-courier-tests]
+      passed: [courier-tests]
       trigger: true
     - get: version
       params: {pre: build}
@@ -310,10 +310,10 @@ jobs:
   plan:
   - in_parallel:
     - get: aqueduct-courier
-      passed: [test-collect-and-send, test-collect-and-send-windows, test-collect-credhub-info]
+      passed: [test-collect-and-send, test-collect-credhub-info]
     - get: version
       params: {bump: final}
-      passed: [test-collect-and-send, test-collect-and-send-windows, test-collect-credhub-info]
+      passed: [test-collect-and-send, test-collect-credhub-info]
     - get: ci
   - put: aqueduct-courier
     params:
@@ -505,7 +505,7 @@ jobs:
   - in_parallel:
     - get: aqueduct-courier
       resource: lts-aqueduct-courier
-      passed: [lts-courier-tests, lts-windows-courier-tests]
+      passed: [lts-courier-tests]
       trigger: true
     - get: ci
   - task: generate-version-file
