@@ -11,6 +11,7 @@ GOPATH=${PWD}/go
 GOARCH=amd64
 
 go version
+go env -w GO111MODULE=auto
 
 RAW_VERSION=$(cat version/version)
 pushd "$PWD/go/src/github.com/pivotal-cf/aqueduct-courier"
