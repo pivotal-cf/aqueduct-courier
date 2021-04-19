@@ -126,7 +126,7 @@ github.com/pelletier/go-toml
 # github.com/pierrec/lz4 v2.6.0+incompatible
 github.com/pierrec/lz4
 github.com/pierrec/lz4/internal/xxh32
-# github.com/pivotal-cf/om v0.0.0-20201130223943-9f713158cee1
+# github.com/pivotal-cf/om v0.0.0-20201202231400-e396ae78e754
 ## explicit
 github.com/pivotal-cf/om/api
 github.com/pivotal-cf/om/network

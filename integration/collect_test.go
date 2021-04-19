@@ -541,6 +541,7 @@ var _ = Describe("Collect", func() {
 		It("succeeds with flag configuration", func() {
 			flagValues := map[string]string{
 				cmd.OpsManagerTimeoutFlag:         "1",
+				cmd.OpsManagerRequestTimeoutFlag:  "10",
 				cmd.OpsManagerURLFlag:             opsManagerServer.URL(),
 				cmd.OpsManagerClientIdFlag:        "whatever",
 				cmd.OpsManagerClientSecretFlag:    "whatever",
@@ -570,6 +571,7 @@ var _ = Describe("Collect", func() {
 		It("uses the usage service client credentials specified by config file configuration", func() {
 			config := fmt.Sprintf(`{
 				"ops-manager-timeout": 1,
+				"ops-manager-request-timeout": 10,
 				"url": "%s",
 				"client-id": "whatever",
 				"client-secret": "whatever",
@@ -689,12 +691,13 @@ var _ = Describe("Collect", func() {
 			"returns an error when one but not all Usage Service required configs are provided",
 			func(configName, configValue string) {
 				flagValues := map[string]string{
-					cmd.OpsManagerTimeoutFlag:      "1",
-					cmd.OpsManagerURLFlag:          opsManagerServer.URL(),
-					cmd.OpsManagerClientIdFlag:     "whatever",
-					cmd.OpsManagerClientSecretFlag: "whatever",
-					cmd.EnvTypeFlag:                "Development",
-					cmd.OutputPathFlag:             outputDirPath,
+					cmd.OpsManagerTimeoutFlag: 			"1",
+					cmd.OpsManagerRequestTimeoutFlag: 	"10",
+					cmd.OpsManagerURLFlag:          	opsManagerServer.URL(),
+					cmd.OpsManagerClientIdFlag:     	"whatever",
+					cmd.OpsManagerClientSecretFlag: 	"whatever",
+					cmd.EnvTypeFlag:                	"Development",
+					cmd.OutputPathFlag:             	outputDirPath,
 				}
 				flagValues[configName] = configValue
 				command := exec.Command(aqueductBinaryPath, "collect")

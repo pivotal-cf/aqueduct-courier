@@ -11,7 +11,7 @@ require (
 	github.com/onsi/ginkgo v1.14.2
 	github.com/onsi/gomega v1.10.3
 	github.com/pelletier/go-toml v1.4.0 // indirect
-	github.com/pivotal-cf/om v0.0.0-20201130223943-9f713158cee1
+	github.com/pivotal-cf/om v0.0.0-20201202231400-e396ae78e754
 	github.com/pivotal-cf/telemetry-utils v0.0.0-20210210215248-9fe81f80cb4b
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/afero v1.2.2 // indirect

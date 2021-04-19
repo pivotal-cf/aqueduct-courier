@@ -41,6 +41,7 @@ const (
 	OpsManagerClientIdKey        = "OPS_MANAGER_CLIENT_ID"
 	OpsManagerClientSecretKey    = "OPS_MANAGER_CLIENT_SECRET"
 	OpsManagerTimeoutKey         = "OPS_MANAGER_TIMEOUT"
+	OpsManagerRequestTimeoutKey  = "OPS_MANAGER_REQUEST_TIMEOUT"
 	EnvTypeKey                   = "ENV_TYPE"
 	OutputPathKey                = "OUTPUT_DIR"
 	SkipTlsVerifyKey             = "INSECURE_SKIP_TLS_VERIFY"
@@ -61,6 +62,7 @@ const (
 	OpsManagerClientIdFlag        = "client-id"
 	OpsManagerClientSecretFlag    = "client-secret"
 	OpsManagerTimeoutFlag         = "ops-manager-timeout"
+	OpsManagerRequestTimeoutFlag  = "ops-manager-request-timeout"
 	CollectFromCredhubFlag        = "with-credhub-info"
 	EnvTypeFlag                   = "env-type"
 	OutputPathFlag                = "output-dir"
@@ -107,7 +109,8 @@ func init() {
 	bindFlagAndEnvVar(collectCmd, OpsManagerClientSecretFlag, "", fmt.Sprintf("``Ops Manager client secret [$%s]", OpsManagerClientSecretKey), OpsManagerClientSecretKey)
 	bindFlagAndEnvVar(collectCmd, EnvTypeFlag, "", fmt.Sprintf("``Specify environment type (sandbox, development, qa, pre-production, production) [$%s]", EnvTypeKey), EnvTypeKey)
 	bindFlagAndEnvVar(collectCmd, FoundationNicknameFlag, "", fmt.Sprintf("``Specify foundation nickname used in reporting by VMware [$%s]", FoundationNicknameKey), FoundationNicknameKey)
-	bindFlagAndEnvVar(collectCmd, OpsManagerTimeoutFlag, 30, fmt.Sprintf("``Ops Manager http request timeout in seconds [$%s]", OpsManagerTimeoutKey), OpsManagerTimeoutKey)
+	bindFlagAndEnvVar(collectCmd, OpsManagerTimeoutFlag, 30, fmt.Sprintf("``Timeout on network connection to Ops Manager in seconds [$%s]", OpsManagerTimeoutKey), OpsManagerTimeoutKey)
+	bindFlagAndEnvVar(collectCmd, OpsManagerRequestTimeoutFlag, 30, fmt.Sprintf("``Timeout on request fulfillment from Ops Manager in seconds [$%s]", OpsManagerRequestTimeoutKey), OpsManagerRequestTimeoutKey)
 	bindFlagAndEnvVar(collectCmd, SkipTlsVerifyFlag, false, fmt.Sprintf("``Skip TLS validation on http requests to Ops Manager [$%s]\n", SkipTlsVerifyKey), SkipTlsVerifyKey)
 	bindFlagAndEnvVar(collectCmd, SkipTlsVerifyAliasFlag, false, fmt.Sprintf("``Ops Manager URL [$%s]", SkipTlsVerifyKeyAlias), SkipTlsVerifyKeyAlias)
 	collectCmd.Flags().MarkHidden(SkipTlsVerifyAliasFlag)
@@ -366,7 +369,7 @@ func makeCollector(tarWriter *tar.TarWriter) (*operations.CollectExecutor, error
 		viper.GetBool(SkipTlsVerifyFlag),
 		"",
 		time.Duration(viper.GetInt(OpsManagerTimeoutFlag))*time.Second,
-		5*time.Second,
+		time.Duration(viper.GetInt(OpsManagerRequestTimeoutFlag))*time.Second,
 	)
 
 	apiService := api.New(api.ApiInput{Client: authedClient})
