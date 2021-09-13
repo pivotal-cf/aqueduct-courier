@@ -2,12 +2,12 @@ package opsmanager
 
 import (
 	"fmt"
-	"io"
-	"log"
-
 	"github.com/pivotal-cf/om/api"
 	"github.com/pivotal-cf/telemetry-utils/collector_tar"
 	"github.com/pkg/errors"
+	"io"
+	"log"
+	"strings"
 )
 
 const (
@@ -15,6 +15,7 @@ const (
 	PendingChangesFailedMessage   = "Failed to retrieve pending change list from Operations Manager"
 	DeployedProductsFailedMessage = "Failed to retrieve deployed products list from Operations Manager"
 	RequestorFailureErrorFormat   = "Failed retrieving %s %s"
+	PendingChangesExistsFormat    = "Warning: This foundation has pending changes. The collector will continue to collect but reports from the Tanzu team may represent products with pending changes and therefore staged data, rather than deployed data. List of changes: %s"
 )
 
 var PendingChangesExistsError = errors.New(PendingChangesExistsMessage)
@@ -71,7 +72,7 @@ func (dc *DataCollector) Collect() ([]Data, string, error) {
 	}
 
 	if hasPendingChanges(pc.ChangeList) {
-		return []Data{}, "", PendingChangesExistsError
+		dc.logger.Print(createPendingChangesWarningMessage(pc.ChangeList))
 	}
 
 	pl, err := dc.deployProductsService.ListDeployedProducts()
@@ -149,6 +150,16 @@ func hasPendingChanges(changeList []api.ProductChange) bool {
 		}
 	}
 	return false
+}
+
+func createPendingChangesWarningMessage(changeList []api.ProductChange) string{
+	var changesList []string
+	for _, change := range changeList {
+		if change.Action != "unchanged" {
+			changesList = append(changesList, fmt.Sprintf("%s: %s", change.GUID, change.Action))
+		}
+	}
+	return fmt.Sprintf(PendingChangesExistsFormat, strings.Join(changesList, "\n"))
 }
 
 func appendRetrievedData(d []Data, retriever dataRetriever, productType, dataType string) ([]Data, error) {

@@ -15,8 +15,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/pivotal-cf/aqueduct-courier/opsmanager"
-
 	"github.com/pivotal-cf/om/api"
 
 	"github.com/pivotal-cf/aqueduct-courier/cf"
@@ -1006,7 +1004,8 @@ var _ = Describe("Collect", func() {
 		Expect(session.Err).To(gbytes.Say("protocol version not supported"))
 	})
 
-	It("exits with status 3 when there are ops manager pending changes", func() {
+	It("exits with success status when there are ops manager pending changes", func() {
+		// This test exists because we used to error with a separate error code for pending changes
 		opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/staged/pending_changes", func(w http.ResponseWriter, r *http.Request) {
 			resp := api.PendingChangesOutput{
 				ChangeList: []api.ProductChange{
@@ -1021,8 +1020,7 @@ var _ = Describe("Collect", func() {
 		command := buildDefaultCommand(defaultEnvVars)
 		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
-		Eventually(session).Should(gexec.Exit(cmd.PendingChangesExistsExitCode))
-		Expect(session.Err).To(gbytes.Say(opsmanager.PendingChangesExistsMessage))
+		Eventually(session).Should(gexec.Exit(0))
 	})
 })
 

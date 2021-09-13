@@ -42,16 +42,34 @@ var _ = Describe("DataCollector", func() {
 		dataCollector = NewDataCollector(*logger, omService, omURL, pendingChangesLister, deployedProductsLister)
 	})
 
-	It("returns an error if there are pending changes with an action other than unchanged", func() {
+	It("does not return an error if there are pending changes with an action other than unchanged", func() {
 		nonEmptyPendingChanges := api.PendingChangesOutput{
-			ChangeList: []api.ProductChange{{Action: "unchanged"}, {Action: "totally-changed"}},
+			ChangeList: []api.ProductChange{
+				{
+					Action: "unchanged",
+					GUID: "some-guid",
+				},
+				{
+					Action: "totally-changed",
+					GUID: "some-changed-guid",
+				},
+			},
 		}
 		pendingChangesLister.ListStagedPendingChangesReturns(nonEmptyPendingChanges, nil)
 
 		data, foundationId, err := dataCollector.Collect()
-		Expect(data).To(BeEmpty())
+		Expect(data).To(ConsistOf(
+			NewData(nil, collector_tar.OpsManagerProductType, collector_tar.DeployedProductsDataType),
+			NewData(nil, collector_tar.OpsManagerProductType, collector_tar.VmTypesDataType),
+			NewData(nil, collector_tar.OpsManagerProductType, collector_tar.DiagnosticReportDataType),
+			NewData(nil, collector_tar.OpsManagerProductType, collector_tar.InstallationsDataType),
+			NewData(nil, collector_tar.OpsManagerProductType, collector_tar.CertificatesDataType),
+			NewData(nil, collector_tar.OpsManagerProductType, collector_tar.CertificateAuthoritiesDataType),
+		))
 		Expect(foundationId).To(BeEmpty())
-		Expect(err).To(MatchError(PendingChangesExistsMessage))
+		Expect(err).ToNot(HaveOccurred())
+		Eventually(bufferedOutput).Should(gbytes.Say(fmt.Sprintf(PendingChangesExistsFormat, "")))
+		Eventually(bufferedOutput).Should(gbytes.Say("some-changed-guid: totally-changed"))
 	})
 
 	It("returns an error if listing pending changes errors", func() {

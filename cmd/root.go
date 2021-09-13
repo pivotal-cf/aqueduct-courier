@@ -8,8 +8,6 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/pivotal-cf/aqueduct-courier/opsmanager"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -58,9 +56,6 @@ FLAGS
 	rootCmd.SetHelpTemplate(customHelpTextTemplate)
 
 	if err := rootCmd.Execute(); err != nil {
-		if errors.Cause(err) == opsmanager.PendingChangesExistsError {
-			os.Exit(PendingChangesExistsExitCode)
-		}
 		os.Exit(1)
 	}
 }
