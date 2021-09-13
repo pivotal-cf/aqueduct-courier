@@ -4,7 +4,7 @@ platform: linux
 image_resource:
   type: registry-image
   source:
-    repository: platforminsightsteam/base-ci-image
+    repository: harbor-repo.vmware.com/dockerhub-proxy-cache/platforminsightsteam/base-ci-image
 
 inputs:
 - name: binary

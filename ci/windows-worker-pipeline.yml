@@ -2,12 +2,12 @@ resource_types:
 - name: bbl-state-resource
   type: registry-image
   source:
-    repository: cfinfrastructure/bbl-state-resource
+    repository: harbor-repo.vmware.com/dockerhub-proxy-cache/cfinfrastructure/bbl-state-resource
     tag: latest
 - name: bosh-deployment
   type: registry-image
   source:
-    repository: cloudfoundry/bosh-deployment-resource
+    repository: harbor-repo.vmware.com/dockerhub-proxy-cache/cloudfoundry/bosh-deployment-resource
 
 resources:
 - name: bbl-state
