@@ -15,7 +15,7 @@ const (
 	PendingChangesFailedMessage   = "Failed to retrieve pending change list from Operations Manager"
 	DeployedProductsFailedMessage = "Failed to retrieve deployed products list from Operations Manager"
 	RequestorFailureErrorFormat   = "Failed retrieving %s %s"
-	PendingChangesExistsFormat    = "Warning: This foundation has pending changes. The collector will continue to collect but reports from the Tanzu team may represent products with pending changes and therefore staged data, rather than deployed data. List of changes: %s"
+	PendingChangesExistsFormat    = "Warning: This foundation has pending changes. The collector will continue to collect but reports from the Tanzu team may represent products with pending changes and therefore staged data, rather than deployed data. List of changes:\n%s"
 )
 
 var PendingChangesExistsError = errors.New(PendingChangesExistsMessage)
