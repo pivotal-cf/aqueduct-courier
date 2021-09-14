@@ -6,8 +6,6 @@ export GOPATH=${PWD}/go
 export PATH=${GOPATH}/bin:${PATH}:/usr/local/go/bin
 export GOPRIVATE=github.com/pivotal-cf
 
-go get -u github.com/golang/dep/cmd/dep
-
 cat << EOF > "$HOME"/.netrc
 machine github.com login $GITHUB_ACCESS_TOKEN
 EOF
