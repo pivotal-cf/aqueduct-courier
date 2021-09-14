@@ -8,14 +8,14 @@ import (
 )
 
 type FakeCredhubRequestor struct {
-	RequestStub        func(method string, pathStr string, query url.Values, body interface{}, checkServerErr bool) (*http.Response, error)
+	RequestStub        func(string, string, url.Values, interface{}, bool) (*http.Response, error)
 	requestMutex       sync.RWMutex
 	requestArgsForCall []struct {
-		method         string
-		pathStr        string
-		query          url.Values
-		body           interface{}
-		checkServerErr bool
+		arg1 string
+		arg2 string
+		arg3 url.Values
+		arg4 interface{}
+		arg5 bool
 	}
 	requestReturns struct {
 		result1 *http.Response
@@ -29,25 +29,27 @@ type FakeCredhubRequestor struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeCredhubRequestor) Request(method string, pathStr string, query url.Values, body interface{}, checkServerErr bool) (*http.Response, error) {
+func (fake *FakeCredhubRequestor) Request(arg1 string, arg2 string, arg3 url.Values, arg4 interface{}, arg5 bool) (*http.Response, error) {
 	fake.requestMutex.Lock()
 	ret, specificReturn := fake.requestReturnsOnCall[len(fake.requestArgsForCall)]
 	fake.requestArgsForCall = append(fake.requestArgsForCall, struct {
-		method         string
-		pathStr        string
-		query          url.Values
-		body           interface{}
-		checkServerErr bool
-	}{method, pathStr, query, body, checkServerErr})
-	fake.recordInvocation("Request", []interface{}{method, pathStr, query, body, checkServerErr})
+		arg1 string
+		arg2 string
+		arg3 url.Values
+		arg4 interface{}
+		arg5 bool
+	}{arg1, arg2, arg3, arg4, arg5})
+	stub := fake.RequestStub
+	fakeReturns := fake.requestReturns
+	fake.recordInvocation("Request", []interface{}{arg1, arg2, arg3, arg4, arg5})
 	fake.requestMutex.Unlock()
-	if fake.RequestStub != nil {
-		return fake.RequestStub(method, pathStr, query, body, checkServerErr)
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4, arg5)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.requestReturns.result1, fake.requestReturns.result2
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeCredhubRequestor) RequestCallCount() int {
@@ -56,13 +58,22 @@ func (fake *FakeCredhubRequestor) RequestCallCount() int {
 	return len(fake.requestArgsForCall)
 }
 
+func (fake *FakeCredhubRequestor) RequestCalls(stub func(string, string, url.Values, interface{}, bool) (*http.Response, error)) {
+	fake.requestMutex.Lock()
+	defer fake.requestMutex.Unlock()
+	fake.RequestStub = stub
+}
+
 func (fake *FakeCredhubRequestor) RequestArgsForCall(i int) (string, string, url.Values, interface{}, bool) {
 	fake.requestMutex.RLock()
 	defer fake.requestMutex.RUnlock()
-	return fake.requestArgsForCall[i].method, fake.requestArgsForCall[i].pathStr, fake.requestArgsForCall[i].query, fake.requestArgsForCall[i].body, fake.requestArgsForCall[i].checkServerErr
+	argsForCall := fake.requestArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5
 }
 
 func (fake *FakeCredhubRequestor) RequestReturns(result1 *http.Response, result2 error) {
+	fake.requestMutex.Lock()
+	defer fake.requestMutex.Unlock()
 	fake.RequestStub = nil
 	fake.requestReturns = struct {
 		result1 *http.Response
@@ -71,6 +82,8 @@ func (fake *FakeCredhubRequestor) RequestReturns(result1 *http.Response, result2
 }
 
 func (fake *FakeCredhubRequestor) RequestReturnsOnCall(i int, result1 *http.Response, result2 error) {
+	fake.requestMutex.Lock()
+	defer fake.requestMutex.Unlock()
 	fake.RequestStub = nil
 	if fake.requestReturnsOnCall == nil {
 		fake.requestReturnsOnCall = make(map[int]struct {

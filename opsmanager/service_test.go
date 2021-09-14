@@ -679,6 +679,51 @@ var _ = Describe("Service", func() {
 			)))
 		})
 	})
+
+	Describe("PendingChanges", func() {
+		It("returns product resources content", func() {
+			body := &readerCloser{reader: strings.NewReader("pending_changes")}
+
+			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
+
+			actual, err := service.PendingChanges()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(body.isClosed).To(BeTrue())
+			content, err := ioutil.ReadAll(actual)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(content).To(Equal([]byte("pending_changes")))
+			Expect(requestor.CurlCallCount()).To(Equal(1))
+			input := requestor.CurlArgsForCall(0)
+			Expect(input).To(Equal(api.RequestServiceCurlInput{
+				Path: PendingChangesPath,
+				Method: http.MethodGet,
+				Headers: make(http.Header),
+			}))
+		})
+
+		It("returns an error when requestor errors", func() {
+			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusOK}, errors.New("I had trouble detecting stuff"))
+
+			actual, err := service.PendingChanges()
+			Expect(actual).To(BeNil())
+			Expect(err).To(MatchError(ContainSubstring(
+				fmt.Sprintf(RequestFailureErrorFormat, http.MethodGet, PendingChangesPath),
+			)))
+			Expect(err).To(MatchError(ContainSubstring("I had trouble detecting stuff")))
+		})
+
+		It("returns an error when requestor returns a non 200 status code", func() {
+			body := &readerCloser{}
+			requestor.CurlReturns(api.RequestServiceCurlOutput{StatusCode: http.StatusBadGateway, Body: body}, nil)
+
+			actual, err := service.PendingChanges()
+			Expect(actual).To(BeNil())
+			Expect(body.isClosed).To(BeTrue())
+			Expect(err).To(MatchError(fmt.Sprintf(
+				RequestUnexpectedStatusErrorFormat, http.MethodGet, PendingChangesPath, http.StatusBadGateway,
+			)))
+		})
+	})
 })
 
 //go:generate counterfeiter . reader

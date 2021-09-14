@@ -9,10 +9,10 @@ import (
 )
 
 type FakeRequestor struct {
-	CurlStub        func(input api.RequestServiceCurlInput) (api.RequestServiceCurlOutput, error)
+	CurlStub        func(api.RequestServiceCurlInput) (api.RequestServiceCurlOutput, error)
 	curlMutex       sync.RWMutex
 	curlArgsForCall []struct {
-		input api.RequestServiceCurlInput
+		arg1 api.RequestServiceCurlInput
 	}
 	curlReturns struct {
 		result1 api.RequestServiceCurlOutput
@@ -26,21 +26,23 @@ type FakeRequestor struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeRequestor) Curl(input api.RequestServiceCurlInput) (api.RequestServiceCurlOutput, error) {
+func (fake *FakeRequestor) Curl(arg1 api.RequestServiceCurlInput) (api.RequestServiceCurlOutput, error) {
 	fake.curlMutex.Lock()
 	ret, specificReturn := fake.curlReturnsOnCall[len(fake.curlArgsForCall)]
 	fake.curlArgsForCall = append(fake.curlArgsForCall, struct {
-		input api.RequestServiceCurlInput
-	}{input})
-	fake.recordInvocation("Curl", []interface{}{input})
+		arg1 api.RequestServiceCurlInput
+	}{arg1})
+	stub := fake.CurlStub
+	fakeReturns := fake.curlReturns
+	fake.recordInvocation("Curl", []interface{}{arg1})
 	fake.curlMutex.Unlock()
-	if fake.CurlStub != nil {
-		return fake.CurlStub(input)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.curlReturns.result1, fake.curlReturns.result2
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeRequestor) CurlCallCount() int {
@@ -49,13 +51,22 @@ func (fake *FakeRequestor) CurlCallCount() int {
 	return len(fake.curlArgsForCall)
 }
 
+func (fake *FakeRequestor) CurlCalls(stub func(api.RequestServiceCurlInput) (api.RequestServiceCurlOutput, error)) {
+	fake.curlMutex.Lock()
+	defer fake.curlMutex.Unlock()
+	fake.CurlStub = stub
+}
+
 func (fake *FakeRequestor) CurlArgsForCall(i int) api.RequestServiceCurlInput {
 	fake.curlMutex.RLock()
 	defer fake.curlMutex.RUnlock()
-	return fake.curlArgsForCall[i].input
+	argsForCall := fake.curlArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *FakeRequestor) CurlReturns(result1 api.RequestServiceCurlOutput, result2 error) {
+	fake.curlMutex.Lock()
+	defer fake.curlMutex.Unlock()
 	fake.CurlStub = nil
 	fake.curlReturns = struct {
 		result1 api.RequestServiceCurlOutput
@@ -64,6 +75,8 @@ func (fake *FakeRequestor) CurlReturns(result1 api.RequestServiceCurlOutput, res
 }
 
 func (fake *FakeRequestor) CurlReturnsOnCall(i int, result1 api.RequestServiceCurlOutput, result2 error) {
+	fake.curlMutex.Lock()
+	defer fake.curlMutex.Unlock()
 	fake.CurlStub = nil
 	if fake.curlReturnsOnCall == nil {
 		fake.curlReturnsOnCall = make(map[int]struct {

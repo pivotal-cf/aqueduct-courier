@@ -18,6 +18,7 @@ const (
 	ProductPropertiesPathFormat = "/api/v0/staged/products/%s/properties"
 	InstallationsPath           = "/api/v0/installations"
 	DeployedProductsPath        = "/api/v0/deployed/products"
+	PendingChangesPath			= "/api/v0/staged/pending_changes"
 	VmTypesPath                 = "/api/v0/vm_types"
 	DiagnosticReportPath        = "/api/v0/diagnostic_report"
 	CertificatesPath            = "/api/v0/deployed/certificates"
@@ -120,6 +121,10 @@ func (s *Service) Certificates() (io.Reader, error) {
 
 func (s *Service) DeployedProducts() (io.Reader, error) {
 	return s.makeRequestReader(DeployedProductsPath)
+}
+
+func (s *Service) PendingChanges() (io.Reader, error) {
+	return s.makeRequestReader(PendingChangesPath)
 }
 
 func (s *Service) ProductResources(guid string) (io.Reader, error) {

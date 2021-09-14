@@ -29,15 +29,16 @@ func (fake *FakeUuidProvider) NewV4() (uuid.UUID, error) {
 	ret, specificReturn := fake.newV4ReturnsOnCall[len(fake.newV4ArgsForCall)]
 	fake.newV4ArgsForCall = append(fake.newV4ArgsForCall, struct {
 	}{})
+	stub := fake.NewV4Stub
+	fakeReturns := fake.newV4Returns
 	fake.recordInvocation("NewV4", []interface{}{})
 	fake.newV4Mutex.Unlock()
-	if fake.NewV4Stub != nil {
-		return fake.NewV4Stub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.newV4Returns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

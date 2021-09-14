@@ -9,8 +9,9 @@ import (
 type FakeConsumptionService struct {
 	AppUsagesStub        func() (io.Reader, error)
 	appUsagesMutex       sync.RWMutex
-	appUsagesArgsForCall []struct{}
-	appUsagesReturns     struct {
+	appUsagesArgsForCall []struct {
+	}
+	appUsagesReturns struct {
 		result1 io.Reader
 		result2 error
 	}
@@ -20,8 +21,9 @@ type FakeConsumptionService struct {
 	}
 	ServiceUsagesStub        func() (io.Reader, error)
 	serviceUsagesMutex       sync.RWMutex
-	serviceUsagesArgsForCall []struct{}
-	serviceUsagesReturns     struct {
+	serviceUsagesArgsForCall []struct {
+	}
+	serviceUsagesReturns struct {
 		result1 io.Reader
 		result2 error
 	}
@@ -31,8 +33,9 @@ type FakeConsumptionService struct {
 	}
 	TaskUsagesStub        func() (io.Reader, error)
 	taskUsagesMutex       sync.RWMutex
-	taskUsagesArgsForCall []struct{}
-	taskUsagesReturns     struct {
+	taskUsagesArgsForCall []struct {
+	}
+	taskUsagesReturns struct {
 		result1 io.Reader
 		result2 error
 	}
@@ -47,16 +50,19 @@ type FakeConsumptionService struct {
 func (fake *FakeConsumptionService) AppUsages() (io.Reader, error) {
 	fake.appUsagesMutex.Lock()
 	ret, specificReturn := fake.appUsagesReturnsOnCall[len(fake.appUsagesArgsForCall)]
-	fake.appUsagesArgsForCall = append(fake.appUsagesArgsForCall, struct{}{})
+	fake.appUsagesArgsForCall = append(fake.appUsagesArgsForCall, struct {
+	}{})
+	stub := fake.AppUsagesStub
+	fakeReturns := fake.appUsagesReturns
 	fake.recordInvocation("AppUsages", []interface{}{})
 	fake.appUsagesMutex.Unlock()
-	if fake.AppUsagesStub != nil {
-		return fake.AppUsagesStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.appUsagesReturns.result1, fake.appUsagesReturns.result2
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeConsumptionService) AppUsagesCallCount() int {
@@ -65,7 +71,15 @@ func (fake *FakeConsumptionService) AppUsagesCallCount() int {
 	return len(fake.appUsagesArgsForCall)
 }
 
+func (fake *FakeConsumptionService) AppUsagesCalls(stub func() (io.Reader, error)) {
+	fake.appUsagesMutex.Lock()
+	defer fake.appUsagesMutex.Unlock()
+	fake.AppUsagesStub = stub
+}
+
 func (fake *FakeConsumptionService) AppUsagesReturns(result1 io.Reader, result2 error) {
+	fake.appUsagesMutex.Lock()
+	defer fake.appUsagesMutex.Unlock()
 	fake.AppUsagesStub = nil
 	fake.appUsagesReturns = struct {
 		result1 io.Reader
@@ -74,6 +88,8 @@ func (fake *FakeConsumptionService) AppUsagesReturns(result1 io.Reader, result2 
 }
 
 func (fake *FakeConsumptionService) AppUsagesReturnsOnCall(i int, result1 io.Reader, result2 error) {
+	fake.appUsagesMutex.Lock()
+	defer fake.appUsagesMutex.Unlock()
 	fake.AppUsagesStub = nil
 	if fake.appUsagesReturnsOnCall == nil {
 		fake.appUsagesReturnsOnCall = make(map[int]struct {
@@ -90,16 +106,19 @@ func (fake *FakeConsumptionService) AppUsagesReturnsOnCall(i int, result1 io.Rea
 func (fake *FakeConsumptionService) ServiceUsages() (io.Reader, error) {
 	fake.serviceUsagesMutex.Lock()
 	ret, specificReturn := fake.serviceUsagesReturnsOnCall[len(fake.serviceUsagesArgsForCall)]
-	fake.serviceUsagesArgsForCall = append(fake.serviceUsagesArgsForCall, struct{}{})
+	fake.serviceUsagesArgsForCall = append(fake.serviceUsagesArgsForCall, struct {
+	}{})
+	stub := fake.ServiceUsagesStub
+	fakeReturns := fake.serviceUsagesReturns
 	fake.recordInvocation("ServiceUsages", []interface{}{})
 	fake.serviceUsagesMutex.Unlock()
-	if fake.ServiceUsagesStub != nil {
-		return fake.ServiceUsagesStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.serviceUsagesReturns.result1, fake.serviceUsagesReturns.result2
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeConsumptionService) ServiceUsagesCallCount() int {
@@ -108,7 +127,15 @@ func (fake *FakeConsumptionService) ServiceUsagesCallCount() int {
 	return len(fake.serviceUsagesArgsForCall)
 }
 
+func (fake *FakeConsumptionService) ServiceUsagesCalls(stub func() (io.Reader, error)) {
+	fake.serviceUsagesMutex.Lock()
+	defer fake.serviceUsagesMutex.Unlock()
+	fake.ServiceUsagesStub = stub
+}
+
 func (fake *FakeConsumptionService) ServiceUsagesReturns(result1 io.Reader, result2 error) {
+	fake.serviceUsagesMutex.Lock()
+	defer fake.serviceUsagesMutex.Unlock()
 	fake.ServiceUsagesStub = nil
 	fake.serviceUsagesReturns = struct {
 		result1 io.Reader
@@ -117,6 +144,8 @@ func (fake *FakeConsumptionService) ServiceUsagesReturns(result1 io.Reader, resu
 }
 
 func (fake *FakeConsumptionService) ServiceUsagesReturnsOnCall(i int, result1 io.Reader, result2 error) {
+	fake.serviceUsagesMutex.Lock()
+	defer fake.serviceUsagesMutex.Unlock()
 	fake.ServiceUsagesStub = nil
 	if fake.serviceUsagesReturnsOnCall == nil {
 		fake.serviceUsagesReturnsOnCall = make(map[int]struct {
@@ -133,16 +162,19 @@ func (fake *FakeConsumptionService) ServiceUsagesReturnsOnCall(i int, result1 io
 func (fake *FakeConsumptionService) TaskUsages() (io.Reader, error) {
 	fake.taskUsagesMutex.Lock()
 	ret, specificReturn := fake.taskUsagesReturnsOnCall[len(fake.taskUsagesArgsForCall)]
-	fake.taskUsagesArgsForCall = append(fake.taskUsagesArgsForCall, struct{}{})
+	fake.taskUsagesArgsForCall = append(fake.taskUsagesArgsForCall, struct {
+	}{})
+	stub := fake.TaskUsagesStub
+	fakeReturns := fake.taskUsagesReturns
 	fake.recordInvocation("TaskUsages", []interface{}{})
 	fake.taskUsagesMutex.Unlock()
-	if fake.TaskUsagesStub != nil {
-		return fake.TaskUsagesStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.taskUsagesReturns.result1, fake.taskUsagesReturns.result2
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeConsumptionService) TaskUsagesCallCount() int {
@@ -151,7 +183,15 @@ func (fake *FakeConsumptionService) TaskUsagesCallCount() int {
 	return len(fake.taskUsagesArgsForCall)
 }
 
+func (fake *FakeConsumptionService) TaskUsagesCalls(stub func() (io.Reader, error)) {
+	fake.taskUsagesMutex.Lock()
+	defer fake.taskUsagesMutex.Unlock()
+	fake.TaskUsagesStub = stub
+}
+
 func (fake *FakeConsumptionService) TaskUsagesReturns(result1 io.Reader, result2 error) {
+	fake.taskUsagesMutex.Lock()
+	defer fake.taskUsagesMutex.Unlock()
 	fake.TaskUsagesStub = nil
 	fake.taskUsagesReturns = struct {
 		result1 io.Reader
@@ -160,6 +200,8 @@ func (fake *FakeConsumptionService) TaskUsagesReturns(result1 io.Reader, result2
 }
 
 func (fake *FakeConsumptionService) TaskUsagesReturnsOnCall(i int, result1 io.Reader, result2 error) {
+	fake.taskUsagesMutex.Lock()
+	defer fake.taskUsagesMutex.Unlock()
 	fake.TaskUsagesStub = nil
 	if fake.taskUsagesReturnsOnCall == nil {
 		fake.taskUsagesReturnsOnCall = make(map[int]struct {

@@ -11,8 +11,9 @@ import (
 type FakePendingChangesLister struct {
 	ListStagedPendingChangesStub        func() (api.PendingChangesOutput, error)
 	listStagedPendingChangesMutex       sync.RWMutex
-	listStagedPendingChangesArgsForCall []struct{}
-	listStagedPendingChangesReturns     struct {
+	listStagedPendingChangesArgsForCall []struct {
+	}
+	listStagedPendingChangesReturns struct {
 		result1 api.PendingChangesOutput
 		result2 error
 	}
@@ -27,16 +28,19 @@ type FakePendingChangesLister struct {
 func (fake *FakePendingChangesLister) ListStagedPendingChanges() (api.PendingChangesOutput, error) {
 	fake.listStagedPendingChangesMutex.Lock()
 	ret, specificReturn := fake.listStagedPendingChangesReturnsOnCall[len(fake.listStagedPendingChangesArgsForCall)]
-	fake.listStagedPendingChangesArgsForCall = append(fake.listStagedPendingChangesArgsForCall, struct{}{})
+	fake.listStagedPendingChangesArgsForCall = append(fake.listStagedPendingChangesArgsForCall, struct {
+	}{})
+	stub := fake.ListStagedPendingChangesStub
+	fakeReturns := fake.listStagedPendingChangesReturns
 	fake.recordInvocation("ListStagedPendingChanges", []interface{}{})
 	fake.listStagedPendingChangesMutex.Unlock()
-	if fake.ListStagedPendingChangesStub != nil {
-		return fake.ListStagedPendingChangesStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.listStagedPendingChangesReturns.result1, fake.listStagedPendingChangesReturns.result2
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakePendingChangesLister) ListStagedPendingChangesCallCount() int {
@@ -45,7 +49,15 @@ func (fake *FakePendingChangesLister) ListStagedPendingChangesCallCount() int {
 	return len(fake.listStagedPendingChangesArgsForCall)
 }
 
+func (fake *FakePendingChangesLister) ListStagedPendingChangesCalls(stub func() (api.PendingChangesOutput, error)) {
+	fake.listStagedPendingChangesMutex.Lock()
+	defer fake.listStagedPendingChangesMutex.Unlock()
+	fake.ListStagedPendingChangesStub = stub
+}
+
 func (fake *FakePendingChangesLister) ListStagedPendingChangesReturns(result1 api.PendingChangesOutput, result2 error) {
+	fake.listStagedPendingChangesMutex.Lock()
+	defer fake.listStagedPendingChangesMutex.Unlock()
 	fake.ListStagedPendingChangesStub = nil
 	fake.listStagedPendingChangesReturns = struct {
 		result1 api.PendingChangesOutput
@@ -54,6 +66,8 @@ func (fake *FakePendingChangesLister) ListStagedPendingChangesReturns(result1 ap
 }
 
 func (fake *FakePendingChangesLister) ListStagedPendingChangesReturnsOnCall(i int, result1 api.PendingChangesOutput, result2 error) {
+	fake.listStagedPendingChangesMutex.Lock()
+	defer fake.listStagedPendingChangesMutex.Unlock()
 	fake.ListStagedPendingChangesStub = nil
 	if fake.listStagedPendingChangesReturnsOnCall == nil {
 		fake.listStagedPendingChangesReturnsOnCall = make(map[int]struct {

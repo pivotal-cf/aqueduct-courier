@@ -44,15 +44,16 @@ func (fake *FakeTarWriter) AddFile(arg1 []byte, arg2 string) error {
 		arg1 []byte
 		arg2 string
 	}{arg1Copy, arg2})
+	stub := fake.AddFileStub
+	fakeReturns := fake.addFileReturns
 	fake.recordInvocation("AddFile", []interface{}{arg1Copy, arg2})
 	fake.addFileMutex.Unlock()
-	if fake.AddFileStub != nil {
-		return fake.AddFileStub(arg1, arg2)
+	if stub != nil {
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.addFileReturns
 	return fakeReturns.result1
 }
 
@@ -103,15 +104,16 @@ func (fake *FakeTarWriter) Close() error {
 	ret, specificReturn := fake.closeReturnsOnCall[len(fake.closeArgsForCall)]
 	fake.closeArgsForCall = append(fake.closeArgsForCall, struct {
 	}{})
+	stub := fake.CloseStub
+	fakeReturns := fake.closeReturns
 	fake.recordInvocation("Close", []interface{}{})
 	fake.closeMutex.Unlock()
-	if fake.CloseStub != nil {
-		return fake.CloseStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.closeReturns
 	return fakeReturns.result1
 }
 

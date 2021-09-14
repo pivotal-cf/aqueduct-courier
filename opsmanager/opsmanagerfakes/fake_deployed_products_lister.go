@@ -11,8 +11,9 @@ import (
 type FakeDeployedProductsLister struct {
 	ListDeployedProductsStub        func() ([]api.DeployedProductOutput, error)
 	listDeployedProductsMutex       sync.RWMutex
-	listDeployedProductsArgsForCall []struct{}
-	listDeployedProductsReturns     struct {
+	listDeployedProductsArgsForCall []struct {
+	}
+	listDeployedProductsReturns struct {
 		result1 []api.DeployedProductOutput
 		result2 error
 	}
@@ -27,16 +28,19 @@ type FakeDeployedProductsLister struct {
 func (fake *FakeDeployedProductsLister) ListDeployedProducts() ([]api.DeployedProductOutput, error) {
 	fake.listDeployedProductsMutex.Lock()
 	ret, specificReturn := fake.listDeployedProductsReturnsOnCall[len(fake.listDeployedProductsArgsForCall)]
-	fake.listDeployedProductsArgsForCall = append(fake.listDeployedProductsArgsForCall, struct{}{})
+	fake.listDeployedProductsArgsForCall = append(fake.listDeployedProductsArgsForCall, struct {
+	}{})
+	stub := fake.ListDeployedProductsStub
+	fakeReturns := fake.listDeployedProductsReturns
 	fake.recordInvocation("ListDeployedProducts", []interface{}{})
 	fake.listDeployedProductsMutex.Unlock()
-	if fake.ListDeployedProductsStub != nil {
-		return fake.ListDeployedProductsStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.listDeployedProductsReturns.result1, fake.listDeployedProductsReturns.result2
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeDeployedProductsLister) ListDeployedProductsCallCount() int {
@@ -45,7 +49,15 @@ func (fake *FakeDeployedProductsLister) ListDeployedProductsCallCount() int {
 	return len(fake.listDeployedProductsArgsForCall)
 }
 
+func (fake *FakeDeployedProductsLister) ListDeployedProductsCalls(stub func() ([]api.DeployedProductOutput, error)) {
+	fake.listDeployedProductsMutex.Lock()
+	defer fake.listDeployedProductsMutex.Unlock()
+	fake.ListDeployedProductsStub = stub
+}
+
 func (fake *FakeDeployedProductsLister) ListDeployedProductsReturns(result1 []api.DeployedProductOutput, result2 error) {
+	fake.listDeployedProductsMutex.Lock()
+	defer fake.listDeployedProductsMutex.Unlock()
 	fake.ListDeployedProductsStub = nil
 	fake.listDeployedProductsReturns = struct {
 		result1 []api.DeployedProductOutput
@@ -54,6 +66,8 @@ func (fake *FakeDeployedProductsLister) ListDeployedProductsReturns(result1 []ap
 }
 
 func (fake *FakeDeployedProductsLister) ListDeployedProductsReturnsOnCall(i int, result1 []api.DeployedProductOutput, result2 error) {
+	fake.listDeployedProductsMutex.Lock()
+	defer fake.listDeployedProductsMutex.Unlock()
 	fake.ListDeployedProductsStub = nil
 	if fake.listDeployedProductsReturnsOnCall == nil {
 		fake.listDeployedProductsReturnsOnCall = make(map[int]struct {

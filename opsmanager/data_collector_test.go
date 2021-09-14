@@ -65,6 +65,7 @@ var _ = Describe("DataCollector", func() {
 			NewData(nil, collector_tar.OpsManagerProductType, collector_tar.InstallationsDataType),
 			NewData(nil, collector_tar.OpsManagerProductType, collector_tar.CertificatesDataType),
 			NewData(nil, collector_tar.OpsManagerProductType, collector_tar.CertificateAuthoritiesDataType),
+			NewData(nil, collector_tar.OpsManagerProductType, collector_tar.PendingChangesDataType),
 		))
 		Expect(foundationId).To(BeEmpty())
 		Expect(err).ToNot(HaveOccurred())
@@ -169,6 +170,7 @@ var _ = Describe("DataCollector", func() {
 		installationsReader := strings.NewReader("installations data")
 		certificatesReader := strings.NewReader("certificates data")
 		certificateAuthoritiesReader := strings.NewReader("certificate authorities data")
+		pendingChangesReader := strings.NewReader("pending_changes")
 		directorProduct := api.DeployedProductOutput{Type: collector_tar.DirectorProductType, GUID: "p-bosh-always-first"}
 		deployedProducts := []api.DeployedProductOutput{
 			{Type: "best-product-1", GUID: "p1-guid"},
@@ -187,6 +189,7 @@ var _ = Describe("DataCollector", func() {
 		omService.InstallationsReturns(installationsReader, nil)
 		omService.CertificatesReturns(certificatesReader, nil)
 		omService.CertificateAuthoritiesReturns(certificateAuthoritiesReader, nil)
+		omService.PendingChangesReturns(pendingChangesReader, nil)
 
 		collectedData, foundationId, err := dataCollector.Collect()
 		Expect(err).ToNot(HaveOccurred())
@@ -243,6 +246,11 @@ var _ = Describe("DataCollector", func() {
 				collector_tar.OpsManagerProductType,
 				collector_tar.CertificateAuthoritiesDataType,
 			),
+			NewData(
+				pendingChangesReader,
+				collector_tar.OpsManagerProductType,
+				collector_tar.PendingChangesDataType,
+			),
 		))
 	})
 
@@ -257,7 +265,14 @@ var _ = Describe("DataCollector", func() {
 			NewData(nil, collector_tar.OpsManagerProductType, collector_tar.InstallationsDataType),
 			NewData(nil, collector_tar.OpsManagerProductType, collector_tar.CertificatesDataType),
 			NewData(nil, collector_tar.OpsManagerProductType, collector_tar.CertificateAuthoritiesDataType),
+			NewData(nil, collector_tar.OpsManagerProductType, collector_tar.PendingChangesDataType),
 		))
+	})
+
+	It("returns an error when omService.PendingChanges errors", func() {
+		omService.PendingChangesReturns(nil, errors.New("I broke when detecting stuff I should have detected"))
+		collectedData, foundationId, err := dataCollector.Collect()
+		assertOmServiceFailure(collectedData, foundationId, err, collector_tar.OpsManagerProductType, collector_tar.PendingChangesDataType, "I broke when detecting stuff I should have detected")
 	})
 })
 

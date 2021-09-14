@@ -11,8 +11,9 @@ import (
 type FakeCredhubService struct {
 	CertificatesStub        func() (io.Reader, error)
 	certificatesMutex       sync.RWMutex
-	certificatesArgsForCall []struct{}
-	certificatesReturns     struct {
+	certificatesArgsForCall []struct {
+	}
+	certificatesReturns struct {
 		result1 io.Reader
 		result2 error
 	}
@@ -27,16 +28,19 @@ type FakeCredhubService struct {
 func (fake *FakeCredhubService) Certificates() (io.Reader, error) {
 	fake.certificatesMutex.Lock()
 	ret, specificReturn := fake.certificatesReturnsOnCall[len(fake.certificatesArgsForCall)]
-	fake.certificatesArgsForCall = append(fake.certificatesArgsForCall, struct{}{})
+	fake.certificatesArgsForCall = append(fake.certificatesArgsForCall, struct {
+	}{})
+	stub := fake.CertificatesStub
+	fakeReturns := fake.certificatesReturns
 	fake.recordInvocation("Certificates", []interface{}{})
 	fake.certificatesMutex.Unlock()
-	if fake.CertificatesStub != nil {
-		return fake.CertificatesStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.certificatesReturns.result1, fake.certificatesReturns.result2
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeCredhubService) CertificatesCallCount() int {
@@ -45,7 +49,15 @@ func (fake *FakeCredhubService) CertificatesCallCount() int {
 	return len(fake.certificatesArgsForCall)
 }
 
+func (fake *FakeCredhubService) CertificatesCalls(stub func() (io.Reader, error)) {
+	fake.certificatesMutex.Lock()
+	defer fake.certificatesMutex.Unlock()
+	fake.CertificatesStub = stub
+}
+
 func (fake *FakeCredhubService) CertificatesReturns(result1 io.Reader, result2 error) {
+	fake.certificatesMutex.Lock()
+	defer fake.certificatesMutex.Unlock()
 	fake.CertificatesStub = nil
 	fake.certificatesReturns = struct {
 		result1 io.Reader
@@ -54,6 +66,8 @@ func (fake *FakeCredhubService) CertificatesReturns(result1 io.Reader, result2 e
 }
 
 func (fake *FakeCredhubService) CertificatesReturnsOnCall(i int, result1 io.Reader, result2 error) {
+	fake.certificatesMutex.Lock()
+	defer fake.certificatesMutex.Unlock()
 	fake.CertificatesStub = nil
 	if fake.certificatesReturnsOnCall == nil {
 		fake.certificatesReturnsOnCall = make(map[int]struct {

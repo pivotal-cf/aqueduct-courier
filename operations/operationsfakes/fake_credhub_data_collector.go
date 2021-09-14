@@ -29,15 +29,16 @@ func (fake *FakeCredhubDataCollector) Collect() (credhub.Data, error) {
 	ret, specificReturn := fake.collectReturnsOnCall[len(fake.collectArgsForCall)]
 	fake.collectArgsForCall = append(fake.collectArgsForCall, struct {
 	}{})
+	stub := fake.CollectStub
+	fakeReturns := fake.collectReturns
 	fake.recordInvocation("Collect", []interface{}{})
 	fake.collectMutex.Unlock()
-	if fake.CollectStub != nil {
-		return fake.CollectStub()
+	if stub != nil {
+		return stub()
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.collectReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 

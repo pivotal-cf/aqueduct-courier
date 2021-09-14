@@ -40,6 +40,7 @@ type OmService interface {
 	Installations() (io.Reader, error)
 	Certificates() (io.Reader, error)
 	CertificateAuthorities() (io.Reader, error)
+	PendingChanges() (io.Reader, error)
 }
 
 type dataRetriever func() (io.Reader, error)
@@ -124,6 +125,11 @@ func (dc *DataCollector) Collect() ([]Data, string, error) {
 	}
 
 	d, err = appendRetrievedData(d, dc.omService.CertificateAuthorities, collector_tar.OpsManagerProductType, collector_tar.CertificateAuthoritiesDataType)
+	if err != nil {
+		return []Data{}, "", err
+	}
+
+	d, err = appendRetrievedData(d, dc.omService.PendingChanges, collector_tar.OpsManagerProductType, collector_tar.PendingChangesDataType)
 	if err != nil {
 		return []Data{}, "", err
 	}
