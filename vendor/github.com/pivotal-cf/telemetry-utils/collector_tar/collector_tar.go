@@ -20,6 +20,7 @@ const (
 	PropertiesDataType             = "properties"
 	CertificatesDataType           = "certificates"
 	CertificateAuthoritiesDataType = "certificate_authorities"
+	PendingChangesDataType         = "pending_changes"
 	AppUsageDataType               = "app_usage"
 	ServiceUsageDataType           = "service_usage"
 	TaskUsageDataType              = "task_usage"
@@ -39,13 +40,13 @@ const (
 )
 
 type Metadata struct {
-	EnvType          string
-	CollectedAt      string
-	CollectionId     string
-	FoundationId     string
-	FoundationNickname	string
-	FileDigests      []FileDigest
-	CollectorVersion string
+	EnvType            string
+	CollectedAt        string
+	CollectionId       string
+	FoundationId       string
+	FoundationNickname string
+	FileDigests        []FileDigest
+	CollectorVersion   string
 }
 type FileDigest struct {
 	Name        string
