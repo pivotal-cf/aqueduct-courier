@@ -20,7 +20,7 @@ const (
 	PropertiesDataType             = "properties"
 	CertificatesDataType           = "certificates"
 	CertificateAuthoritiesDataType = "certificate_authorities"
-	PendingChangesDataType         = "pending_changes"
+	PendingChangesDataType         = "product_changes"
 	AppUsageDataType               = "app_usage"
 	ServiceUsageDataType           = "service_usage"
 	TaskUsageDataType              = "task_usage"

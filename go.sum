@@ -359,6 +359,8 @@ github.com/pivotal-cf/telemetry-utils v0.0.0-20210210215248-9fe81f80cb4b h1:AHIF
 github.com/pivotal-cf/telemetry-utils v0.0.0-20210210215248-9fe81f80cb4b/go.mod h1:siNV3JoMs5is80vOGanQq+wMipWdW7ZxiLc7p4s38ps=
 github.com/pivotal-cf/telemetry-utils v0.0.0-20210914184252-72da99d0ae1e h1:MV55ZseQrUADqdqK87v7MiCxxey7/202W+zh+8FdEBk=
 github.com/pivotal-cf/telemetry-utils v0.0.0-20210914184252-72da99d0ae1e/go.mod h1:lwc8gM83OSiNH0o9W45iuQjbanWW8k7Maxi55qFItKo=
+github.com/pivotal-cf/telemetry-utils v0.0.0-20210915161113-e124bba22ca6 h1:zRS7Kx8xcOxaSv88KJ3pipJOsjU9+Om7javqNrNk4mM=
+github.com/pivotal-cf/telemetry-utils v0.0.0-20210915161113-e124bba22ca6/go.mod h1:lwc8gM83OSiNH0o9W45iuQjbanWW8k7Maxi55qFItKo=
 github.com/pivotal-cf/winfs-injector v0.0.0-20200827170301-91411420d92f/go.mod h1:erXKE+60j2kKsZcz7tU+4ymwK3DCDYBTUIesne5h25E=
 github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
