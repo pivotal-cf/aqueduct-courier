@@ -8,6 +8,8 @@ PATH=${GOPATH}/bin:${PATH}
 go version
 go env -w GO111MODULE=auto
 
-go get github.com/onsi/ginkgo/ginkgo
+go install github.com/onsi/ginkgo/ginkgo@latest
 
-ginkgo -failOnPending -race -randomizeAllSpecs -randomizeSuites -r go/src/github.com/pivotal-cf/aqueduct-courier
+pushd go/src/github.com/pivotal-cf/aqueduct-courier
+  ginkgo -failOnPending -race -randomizeAllSpecs -randomizeSuites -r .
+popd

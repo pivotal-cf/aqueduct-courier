@@ -9,12 +9,14 @@ if ($LastExitCode -ne 0) {
   Exit $LastExitCode
 }
 
-go get github.com/onsi/ginkgo/ginkgo
+go install github.com/onsi/ginkgo/ginkgo@latest
 if ($LastExitCode -ne 0) {
   Exit $LastExitCode
 }
 
-ginkgo -failOnPending -race -randomizeAllSpecs -randomizeSuites -r go/src/github.com/pivotal-cf/aqueduct-courier
+pushd go/src/github.com/pivotal-cf/aqueduct-courier
+  ginkgo -failOnPending -race -randomizeAllSpecs -randomizeSuites -r .
+popd
 if ($LastExitCode -ne 0) {
   Exit $LastExitCode
 }
