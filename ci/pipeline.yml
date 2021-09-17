@@ -29,13 +29,13 @@ resources:
 - name: telemetry-utils
   type: git
   source:
-    branch: master
+    branch: main
     uri: git@github.com:pivotal-cf/telemetry-utils
     private_key: ((utils-git-deploy-private-key))
 - name: aqueduct-courier
   type: git
   source:
-    branch: master
+    branch: main
     uri: git@github.com:pivotal-cf/aqueduct-courier
     private_key: {{courier-git-deploy-private-key}}
     ignore_paths: [ci]

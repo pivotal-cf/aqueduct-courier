@@ -20,7 +20,7 @@ resources:
 - name: manifest
   type: git
   source:
-    branch: master
+    branch: main
     uri: git@github.com:pivotal-cf/aqueduct-courier
     private_key: {{courier-git-deploy-private-key}}
     paths:
