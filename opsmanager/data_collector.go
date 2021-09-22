@@ -2,12 +2,13 @@ package opsmanager
 
 import (
 	"fmt"
-	"github.com/pivotal-cf/om/api"
-	"github.com/pivotal-cf/telemetry-utils/collector_tar"
-	"github.com/pkg/errors"
 	"io"
 	"log"
 	"strings"
+
+	"github.com/pivotal-cf/om/api"
+	"github.com/pivotal-cf/telemetry-utils/collector_tar"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -76,6 +77,8 @@ func (dc *DataCollector) Collect() ([]Data, string, error) {
 		dc.logger.Print(createPendingChangesWarningMessage(pc.ChangeList))
 	}
 
+	deletedPendingChanges := getDeletedPendingChanges(pc.ChangeList)
+
 	pl, err := dc.deployProductsService.ListDeployedProducts()
 	if err != nil {
 		return []Data{}, "", errors.Wrap(err, DeployedProductsFailedMessage)
@@ -89,6 +92,9 @@ func (dc *DataCollector) Collect() ([]Data, string, error) {
 	}
 
 	for _, product := range pl {
+		if sliceContains(deletedPendingChanges, product.GUID) {
+			continue
+		}
 		if product.Type != collector_tar.DirectorProductType {
 			d, err = appendRetrievedData(d, dc.productResourcesCaller(product.GUID), product.Type, collector_tar.ResourcesDataType)
 			if err != nil {
@@ -158,7 +164,26 @@ func hasPendingChanges(changeList []api.ProductChange) bool {
 	return false
 }
 
-func createPendingChangesWarningMessage(changeList []api.ProductChange) string{
+func getDeletedPendingChanges(changeList []api.ProductChange) []string {
+	deletedChanges := []string{}
+	for _, change := range changeList {
+		if change.Action == "delete" {
+			deletedChanges = append(deletedChanges, change.GUID)
+		}
+	}
+	return deletedChanges
+}
+
+func sliceContains(s []string, test string) bool {
+	for _, str := range s {
+		if str == test {
+			return true
+		}
+	}
+	return false
+}
+
+func createPendingChangesWarningMessage(changeList []api.ProductChange) string {
 	var changesList []string
 	for _, change := range changeList {
 		if change.Action != "unchanged" {

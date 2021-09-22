@@ -47,11 +47,11 @@ var _ = Describe("DataCollector", func() {
 			ChangeList: []api.ProductChange{
 				{
 					Action: "unchanged",
-					GUID: "some-guid",
+					GUID:   "some-guid",
 				},
 				{
 					Action: "totally-changed",
-					GUID: "some-changed-guid",
+					GUID:   "some-changed-guid",
 				},
 			},
 		}
@@ -175,6 +175,125 @@ var _ = Describe("DataCollector", func() {
 		deployedProducts := []api.DeployedProductOutput{
 			{Type: "best-product-1", GUID: "p1-guid"},
 			{Type: "best-product-2", GUID: "p2-guid"},
+		}
+		deployedProductsLister.ListDeployedProductsReturns(append([]api.DeployedProductOutput{directorProduct}, deployedProducts...), nil)
+		for i, r := range resourcesReaders {
+			omService.ProductResourcesReturnsOnCall(i, r, nil)
+		}
+		for i, r := range propertiesReaders {
+			omService.ProductPropertiesReturnsOnCall(i, r, nil)
+		}
+		omService.VmTypesReturns(vmTypesReader, nil)
+		omService.DiagnosticReportReturns(diagnosticReportReader, nil)
+		omService.DeployedProductsReturns(deployedProductsReader, nil)
+		omService.InstallationsReturns(installationsReader, nil)
+		omService.CertificatesReturns(certificatesReader, nil)
+		omService.CertificateAuthoritiesReturns(certificateAuthoritiesReader, nil)
+		omService.PendingChangesReturns(pendingChangesReader, nil)
+
+		collectedData, foundationId, err := dataCollector.Collect()
+		Expect(err).ToNot(HaveOccurred())
+		Expect(bufferedOutput).To(gbytes.Say("Collecting data from Operations Manager at some-opsmanager-url"))
+		Expect(foundationId).To(Equal("p-bosh-always-first"))
+		Expect(collectedData).To(ConsistOf(
+			NewData(
+				deployedProductsReader,
+				collector_tar.OpsManagerProductType,
+				collector_tar.DeployedProductsDataType,
+			),
+			NewData(
+				resourcesReaders[0],
+				deployedProducts[0].Type,
+				collector_tar.ResourcesDataType,
+			),
+			NewData(
+				resourcesReaders[1],
+				deployedProducts[1].Type,
+				collector_tar.ResourcesDataType,
+			),
+			NewData(
+				propertiesReaders[0],
+				deployedProducts[0].Type,
+				collector_tar.PropertiesDataType,
+			),
+			NewData(
+				propertiesReaders[1],
+				deployedProducts[1].Type,
+				collector_tar.PropertiesDataType,
+			),
+			NewData(
+				vmTypesReader,
+				collector_tar.OpsManagerProductType,
+				collector_tar.VmTypesDataType,
+			),
+			NewData(
+				diagnosticReportReader,
+				collector_tar.OpsManagerProductType,
+				collector_tar.DiagnosticReportDataType,
+			),
+			NewData(
+				installationsReader,
+				collector_tar.OpsManagerProductType,
+				collector_tar.InstallationsDataType,
+			),
+			NewData(
+				certificatesReader,
+				collector_tar.OpsManagerProductType,
+				collector_tar.CertificatesDataType,
+			),
+			NewData(
+				certificateAuthoritiesReader,
+				collector_tar.OpsManagerProductType,
+				collector_tar.CertificateAuthoritiesDataType,
+			),
+			NewData(
+				pendingChangesReader,
+				collector_tar.OpsManagerProductType,
+				collector_tar.PendingChangesDataType,
+			),
+		))
+	})
+
+	It("succeeds when there is a deployed product in a delete state", func() {
+		//If the product is in a delete state, there will be no properties or resources, but there will be a deployed product
+		deletePendingChanges := api.PendingChangesOutput{
+			ChangeList: []api.ProductChange{
+				{
+					Action: "unchanged",
+					GUID:   "p1-guid",
+				},
+				{
+					Action: "unchanged",
+					GUID:   "p2-guid",
+				},
+				{
+					Action: "delete",
+					GUID:   "p3-guid",
+				},
+			},
+		}
+		pendingChangesLister.ListStagedPendingChangesReturns(deletePendingChanges, nil)
+
+		resourcesReaders := []io.Reader{
+			strings.NewReader("r1 data"),
+			strings.NewReader("r2 data"),
+		}
+		propertiesReaders := []io.Reader{
+			strings.NewReader("p1 data"),
+			strings.NewReader("p2 data"),
+		}
+		vmTypesReader := strings.NewReader("vm_types data")
+		diagnosticReportReader := strings.NewReader("diagnostic data")
+		deployedProductsReader := strings.NewReader("deployed products data")
+		installationsReader := strings.NewReader("installations data")
+		certificatesReader := strings.NewReader("certificates data")
+		certificateAuthoritiesReader := strings.NewReader("certificate authorities data")
+		pendingChangesReader := strings.NewReader("pending_changes")
+		directorProduct := api.DeployedProductOutput{Type: collector_tar.DirectorProductType, GUID: "p-bosh-always-first"}
+		deployedProducts := []api.DeployedProductOutput{
+			{Type: "best-product-1", GUID: "p1-guid"},
+			{Type: "best-product-2", GUID: "p2-guid"},
+			{Type: "deleted-product", GUID: "p3-guid"},
 		}
 		deployedProductsLister.ListDeployedProductsReturns(append([]api.DeployedProductOutput{directorProduct}, deployedProducts...), nil)
 		for i, r := range resourcesReaders {
