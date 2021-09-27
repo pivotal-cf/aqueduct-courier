@@ -468,4 +468,4 @@ jobs:
       put: prod-slack-notification
       params:
         text: |
-          Failed to send OpsManager dataset to production. Build: https://hush-house.pivotal.io/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+          Failed to send OpsManager dataset to production. Build: https://runway-ci.eng.vmware.com/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
