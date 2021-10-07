@@ -124,15 +124,6 @@ jobs:
   - task: run-tests
     file: ci/ci/tasks/courier-tests.yml
 
-- name: windows-courier-tests
-  serial_groups: [windows-courier-tests]
-  plan:
-  - get: aqueduct-courier
-    trigger: true
-  - get: ci
-  - task: run-tests
-    file: ci/ci/tasks/courier-tests-windows.yml
-
 - name: build-staging-binaries
   serial_groups: [version]
   plan:
@@ -243,60 +234,6 @@ jobs:
     file: ci/ci/tasks/send.yml
     params:
       API_KEY: {{loader-api-key}}
-
-- name: test-collect-and-send-windows
-  plan:
-    - in_parallel:
-      - get: version
-        passed: [build-staging-binaries]
-      - get: collection-timer
-        trigger: true
-      - get: aqueduct-courier
-        passed: [build-staging-binaries]
-        trigger: true
-      - get: staging-windows-binary
-        passed: [build-staging-binaries]
-      - get: ci
-    - task: collect-with-opsmanager-user-creds
-      input_mapping:
-        binary: staging-windows-binary
-      file: ci/ci/tasks/collect-windows.yml
-      params:
-        OPS_MANAGER_URL: {{courier-ops-manager-url}}
-        OPS_MANAGER_USERNAME: {{courier-ops-manager-username}}
-        OPS_MANAGER_PASSWORD: {{courier-ops-manager-password}}
-        ENV_TYPE: development
-        FOUNDATION_NICKNAME: telemetry-staging
-        INSECURE_SKIP_TLS_VERIFY: true
-        CF_API_URL: {{courier-cf-api-url}}
-        USAGE_SERVICE_URL: {{courier-usage-service-url}}
-        USAGE_SERVICE_CLIENT_ID: {{courier-usage-service-client-id}}
-        USAGE_SERVICE_CLIENT_SECRET: {{courier-usage-service-client-secret}}
-        USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
-    - task: collect-with-opsmanager-client-creds
-      input_mapping:
-        binary: staging-windows-binary
-      output_mapping:
-        collected-data: collected-data-with-client-creds
-      file: ci/ci/tasks/collect-windows.yml
-      params:
-        OPS_MANAGER_URL: {{courier-ops-manager-url}}
-        OPS_MANAGER_CLIENT_ID: {{courier-ops-manager-client-id}}
-        OPS_MANAGER_CLIENT_SECRET: {{courier-ops-manager-client-secret}}
-        ENV_TYPE: development
-        FOUNDATION_NICKNAME: telemetry-staging
-        INSECURE_SKIP_TLS_VERIFY: true
-        CF_API_URL: {{courier-cf-api-url}}
-        USAGE_SERVICE_URL: {{courier-usage-service-url}}
-        USAGE_SERVICE_CLIENT_ID: {{courier-usage-service-client-id}}
-        USAGE_SERVICE_CLIENT_SECRET: {{courier-usage-service-client-secret}}
-        USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
-    - task: send
-      input_mapping:
-        binary: staging-windows-binary
-      file: ci/ci/tasks/send-windows.yml
-      params:
-        API_KEY: {{loader-api-key}}
 
 - name: build-production-binaries
   serial_groups: [version]
