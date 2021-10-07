@@ -420,12 +420,6 @@ github.com/pivotal-cf/om v0.0.0-20210916143113-77d5793155d1/go.mod h1:LrzEQz7lfn
 github.com/pivotal-cf/paraphernalia v0.0.0-20180203224945-a64ae2051c20/go.mod h1:Y3IqE20LKprEpLkXb7gXinJf4vvDdQe/BS8E4kL/dgE=
 github.com/pivotal-cf/pivnet-cli/v2 v2.0.2/go.mod h1:uIR4ymPiy/UdCKmjuQFBD2HTQBI7CqKr3qF9RHig91s=
 github.com/pivotal-cf/replicator v0.0.0-20181127185712-7c58987ce14b/go.mod h1:IeOwGZZpRMYRgeY7Aghsg0nN7KopqUx6A0S/iNJkSRY=
-github.com/pivotal-cf/telemetry-utils v0.0.0-20210917173208-55c59db55393 h1:wHQ37doxEUs6ccC/fM4EeTLEcm1Et2fmC7dyv6/8Wqo=
-github.com/pivotal-cf/telemetry-utils v0.0.0-20210917173208-55c59db55393/go.mod h1:9sEHDTrQmnQS4wxUs3wY9gLSBMBP/CPaEclePOKtf6c=
-github.com/pivotal-cf/telemetry-utils v0.0.0-20211007154634-c0ec7977f36a h1:5F7tmLJjqYQMNU3z/pGE7s3DbeDMDTJhfRKkUqcckH4=
-github.com/pivotal-cf/telemetry-utils v0.0.0-20211007154634-c0ec7977f36a/go.mod h1:9sEHDTrQmnQS4wxUs3wY9gLSBMBP/CPaEclePOKtf6c=
-github.com/pivotal-cf/telemetry-utils v0.0.0-20211007191437-c941cf64b074 h1:aBQHFb620d+pTkc1Y398krZxyOqfm1KB36kexPxItC0=
-github.com/pivotal-cf/telemetry-utils v0.0.0-20211007191437-c941cf64b074/go.mod h1:9sEHDTrQmnQS4wxUs3wY9gLSBMBP/CPaEclePOKtf6c=
 github.com/pivotal-cf/telemetry-utils v0.0.0-20211007203537-a94d0f39e496 h1:1yh4SpmaKtPKIK12o731wdtEifv6DkAd/edf3wetAn0=
 github.com/pivotal-cf/telemetry-utils v0.0.0-20211007203537-a94d0f39e496/go.mod h1:9sEHDTrQmnQS4wxUs3wY9gLSBMBP/CPaEclePOKtf6c=
 github.com/pivotal-cf/winfs-injector v0.0.0-20200827170301-91411420d92f/go.mod h1:erXKE+60j2kKsZcz7tU+4ymwK3DCDYBTUIesne5h25E=
