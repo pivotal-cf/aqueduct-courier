@@ -316,7 +316,7 @@ func makeConsumptionCollector() (consumptionDataCollector, error) {
 			uaaURL,
 			viper.GetString(UsageServiceClientIDFlag),
 			viper.GetString(UsageServiceClientSecretFlag),
-			time.Duration(viper.GetInt(OpsManagerTimeoutFlag))*time.Second,
+			time.Duration(viper.GetInt(UsageServiceTimeoutFlag))*time.Second,
 			client,
 		)
 
