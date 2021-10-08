@@ -50,6 +50,7 @@ const (
 	UsageServiceURLKey           = "USAGE_SERVICE_URL"
 	UsageServiceClientIDKey      = "USAGE_SERVICE_CLIENT_ID"
 	UsageServiceClientSecretKey  = "USAGE_SERVICE_CLIENT_SECRET"
+	UsageServiceTimeoutKey       = "USAGE_SERVICE_TIMEOUT"
 	CfApiURLKey                  = "CF_API_URL"
 	UsageServiceSkipTlsVerifyKey = "USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY"
 	FoundationNicknameKey        = "FOUNDATION_NICKNAME"
@@ -71,6 +72,7 @@ const (
 	UsageServiceURLFlag           = "usage-service-url"
 	UsageServiceClientIDFlag      = "usage-service-client-id"
 	UsageServiceClientSecretFlag  = "usage-service-client-secret"
+	UsageServiceTimeoutFlag       = "usage-service-timeout"
 	CfApiURLFlag                  = "cf-api-url"
 	UsageServiceSkipTlsVerifyFlag = "usage-service-insecure-skip-tls-verify"
 	FoundationNicknameFlag        = "foundation-nickname"
@@ -120,6 +122,7 @@ func init() {
 	bindFlagAndEnvVar(collectCmd, UsageServiceClientIDFlag, "", fmt.Sprintf("``Usage Service client id [$%s]", UsageServiceClientIDKey), UsageServiceClientIDKey)
 	bindFlagAndEnvVar(collectCmd, UsageServiceClientSecretFlag, "", fmt.Sprintf("``Usage Service client secret [$%s]", UsageServiceClientSecretKey), UsageServiceClientSecretKey)
 	bindFlagAndEnvVar(collectCmd, UsageServiceSkipTlsVerifyFlag, false, fmt.Sprintf("``Skip TLS validation for Usage Service components [$%s]\n", UsageServiceSkipTlsVerifyKey), UsageServiceSkipTlsVerifyKey)
+	bindFlagAndEnvVar(collectCmd, UsageServiceTimeoutFlag, 30, fmt.Sprintf("``Timeout on request connection and fulfillment to Usage Service in seconds [$%s]", UsageServiceTimeoutKey), UsageServiceTimeoutKey)
 
 	bindFlagAndEnvVar(collectCmd, CollectFromCredhubFlag, false, fmt.Sprintf("Include CredHub certificate expiry information [$%s]\n", WithCredhubInfoKey), WithCredhubInfoKey)
 	bindFlagAndEnvVar(collectCmd, OutputPathFlag, "", fmt.Sprintf("``Local directory to write data [$%s]\n", OutputPathKey), OutputPathKey)
@@ -313,7 +316,7 @@ func makeConsumptionCollector() (consumptionDataCollector, error) {
 			uaaURL,
 			viper.GetString(UsageServiceClientIDFlag),
 			viper.GetString(UsageServiceClientSecretFlag),
-			30*time.Second,
+			time.Duration(viper.GetInt(OpsManagerTimeoutFlag))*time.Second,
 			client,
 		)
 

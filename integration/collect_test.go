@@ -551,6 +551,7 @@ var _ = Describe("Collect", func() {
 				cmd.UsageServiceClientIDFlag:      "best-usage-service-client-id",
 				cmd.UsageServiceClientSecretFlag:  "best-usage-service-client-secret",
 				cmd.UsageServiceSkipTlsVerifyFlag: "true",
+				cmd.UsageServiceTimeoutFlag:       "10",
 			}
 			command := exec.Command(aqueductBinaryPath, "collect")
 			for k, v := range flagValues {
@@ -580,7 +581,8 @@ var _ = Describe("Collect", func() {
 				"usage-service-url": "%s",
 				"usage-service-client-id": "best-usage-service-client-id",
 				"usage-service-client-secret": "best-usage-service-client-secret",
-				"usage-service-insecure-skip-tls-verify": true
+				"usage-service-insecure-skip-tls-verify": true,
+				"usage-service-timeout": 10
 			}`, opsManagerServer.URL(), escapeFilePathForWindows(outputDirPath), cfService.URL(), usageService.URL())
 			configFile := filepath.Join(configDirPath, "config.yml")
 			err := ioutil.WriteFile(configFile, []byte(config), 0755)
@@ -689,13 +691,13 @@ var _ = Describe("Collect", func() {
 			"returns an error when one but not all Usage Service required configs are provided",
 			func(configName, configValue string) {
 				flagValues := map[string]string{
-					cmd.OpsManagerTimeoutFlag: 			"1",
-					cmd.OpsManagerRequestTimeoutFlag: 	"10",
-					cmd.OpsManagerURLFlag:          	opsManagerServer.URL(),
-					cmd.OpsManagerClientIdFlag:     	"whatever",
-					cmd.OpsManagerClientSecretFlag: 	"whatever",
-					cmd.EnvTypeFlag:                	"Development",
-					cmd.OutputPathFlag:             	outputDirPath,
+					cmd.OpsManagerTimeoutFlag:        "1",
+					cmd.OpsManagerRequestTimeoutFlag: "10",
+					cmd.OpsManagerURLFlag:            opsManagerServer.URL(),
+					cmd.OpsManagerClientIdFlag:       "whatever",
+					cmd.OpsManagerClientSecretFlag:   "whatever",
+					cmd.EnvTypeFlag:                  "Development",
+					cmd.OutputPathFlag:               outputDirPath,
 				}
 				flagValues[configName] = configValue
 				command := exec.Command(aqueductBinaryPath, "collect")
