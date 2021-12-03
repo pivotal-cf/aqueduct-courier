@@ -149,7 +149,7 @@ github.com/pierrec/lz4/internal/xxh32
 ## explicit; go 1.16
 github.com/pivotal-cf/om/api
 github.com/pivotal-cf/om/network
-# github.com/pivotal-cf/telemetry-utils v0.0.0-20211202213006-89cba0a1034a
+# github.com/pivotal-cf/telemetry-utils v0.0.0-20211203174201-4bc4671adde6
 ## explicit; go 1.17
 github.com/pivotal-cf/telemetry-utils/collector_tar
 github.com/pivotal-cf/telemetry-utils/tar
