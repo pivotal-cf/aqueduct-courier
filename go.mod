@@ -1,6 +1,6 @@
 module github.com/pivotal-cf/aqueduct-courier
 
-go 1.17
+go 1.19
 
 require (
 	code.cloudfoundry.org/credhub-cli v0.0.0-20210802130126-03ba1c405d5e
@@ -12,7 +12,7 @@ require (
 	github.com/onsi/gomega v1.16.0
 	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/pivotal-cf/om v0.0.0-20210916143113-77d5793155d1
-	github.com/pivotal-cf/telemetry-utils v0.0.0-20211206235614-0023df096a27
+	github.com/pivotal-cf/telemetry-utils v0.0.0-20220926203024-ce47a2a9d996
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/afero v1.6.0 // indirect
 	github.com/spf13/cobra v1.2.1

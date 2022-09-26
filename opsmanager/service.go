@@ -18,7 +18,7 @@ const (
 	ProductPropertiesPathFormat = "/api/v0/staged/products/%s/properties"
 	InstallationsPath           = "/api/v0/installations"
 	DeployedProductsPath        = "/api/v0/deployed/products"
-	PendingChangesPath			= "/api/v0/staged/pending_changes"
+	PendingChangesPath          = "/api/v0/staged/pending_changes"
 	VmTypesPath                 = "/api/v0/vm_types"
 	DiagnosticReportPath        = "/api/v0/diagnostic_report"
 	CertificatesPath            = "/api/v0/deployed/certificates"
@@ -226,8 +226,8 @@ func (s *Service) makeRequestReader(path string) (io.Reader, error) {
 
 func (s *Service) makeRequest(path string) ([]byte, error) {
 	input := api.RequestServiceCurlInput{
-		Path:   path,
-		Method: http.MethodGet,
+		Path:    path,
+		Method:  http.MethodGet,
 		Headers: make(http.Header),
 	}
 	resp, err := s.Requestor.Curl(input)

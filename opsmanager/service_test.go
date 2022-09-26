@@ -45,8 +45,8 @@ var _ = Describe("Service", func() {
 			Expect(requestor.CurlCallCount()).To(Equal(1))
 			input := requestor.CurlArgsForCall(0)
 			Expect(input).To(Equal(api.RequestServiceCurlInput{
-				Path: DeployedProductsPath,
-				Method: http.MethodGet,
+				Path:    DeployedProductsPath,
+				Method:  http.MethodGet,
 				Headers: make(http.Header),
 			}))
 		})
@@ -99,8 +99,8 @@ var _ = Describe("Service", func() {
 			Expect(requestor.CurlCallCount()).To(Equal(1))
 			input := requestor.CurlArgsForCall(0)
 			Expect(input).To(Equal(api.RequestServiceCurlInput{
-				Path: expectedProductPath,
-				Method: http.MethodGet,
+				Path:    expectedProductPath,
+				Method:  http.MethodGet,
 				Headers: make(http.Header),
 			}))
 		})
@@ -224,8 +224,8 @@ var _ = Describe("Service", func() {
 			Expect(requestor.CurlCallCount()).To(Equal(1))
 			input := requestor.CurlArgsForCall(0)
 			Expect(input).To(Equal(api.RequestServiceCurlInput{
-				Path: expectedProductPropertiesPath,
-				Method: http.MethodGet,
+				Path:    expectedProductPropertiesPath,
+				Method:  http.MethodGet,
 				Headers: make(http.Header),
 			}))
 		})
@@ -295,8 +295,8 @@ var _ = Describe("Service", func() {
 			Expect(requestor.CurlCallCount()).To(Equal(1))
 			input := requestor.CurlArgsForCall(0)
 			Expect(input).To(Equal(api.RequestServiceCurlInput{
-				Path: VmTypesPath,
-				Method: http.MethodGet,
+				Path:    VmTypesPath,
+				Method:  http.MethodGet,
 				Headers: make(http.Header),
 			}))
 		})
@@ -366,8 +366,8 @@ var _ = Describe("Service", func() {
 			Expect(requestor.CurlCallCount()).To(Equal(1))
 			input := requestor.CurlArgsForCall(0)
 			Expect(input).To(Equal(api.RequestServiceCurlInput{
-				Path: DiagnosticReportPath,
-				Method: http.MethodGet,
+				Path:    DiagnosticReportPath,
+				Method:  http.MethodGet,
 				Headers: make(http.Header),
 			}))
 		})
@@ -421,8 +421,8 @@ var _ = Describe("Service", func() {
 			Expect(requestor.CurlCallCount()).To(Equal(1))
 			input := requestor.CurlArgsForCall(0)
 			Expect(input).To(Equal(api.RequestServiceCurlInput{
-				Path: InstallationsPath,
-				Method: http.MethodGet,
+				Path:    InstallationsPath,
+				Method:  http.MethodGet,
 				Headers: make(http.Header),
 			}))
 		})
@@ -491,8 +491,8 @@ var _ = Describe("Service", func() {
 			Expect(requestor.CurlCallCount()).To(Equal(1))
 			input := requestor.CurlArgsForCall(0)
 			Expect(input).To(Equal(api.RequestServiceCurlInput{
-				Path: CertificatesPath,
-				Method: http.MethodGet,
+				Path:    CertificatesPath,
+				Method:  http.MethodGet,
 				Headers: make(http.Header),
 			}))
 		})
@@ -553,8 +553,8 @@ var _ = Describe("Service", func() {
 			Expect(requestor.CurlCallCount()).To(Equal(1))
 			input := requestor.CurlArgsForCall(0)
 			Expect(input).To(Equal(api.RequestServiceCurlInput{
-				Path: CertificateAuthoritiesPath,
-				Method: http.MethodGet,
+				Path:    CertificateAuthoritiesPath,
+				Method:  http.MethodGet,
 				Headers: make(http.Header),
 			}))
 		})
@@ -624,8 +624,8 @@ var _ = Describe("Service", func() {
 			Expect(requestor.CurlCallCount()).To(Equal(1))
 			input := requestor.CurlArgsForCall(0)
 			Expect(input).To(Equal(api.RequestServiceCurlInput{
-				Path: BoshCredentialsPath,
-				Method: http.MethodGet,
+				Path:    BoshCredentialsPath,
+				Method:  http.MethodGet,
 				Headers: make(http.Header),
 			}))
 		})
@@ -695,8 +695,8 @@ var _ = Describe("Service", func() {
 			Expect(requestor.CurlCallCount()).To(Equal(1))
 			input := requestor.CurlArgsForCall(0)
 			Expect(input).To(Equal(api.RequestServiceCurlInput{
-				Path: PendingChangesPath,
-				Method: http.MethodGet,
+				Path:    PendingChangesPath,
+				Method:  http.MethodGet,
 				Headers: make(http.Header),
 			}))
 		})
