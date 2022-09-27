@@ -42,7 +42,7 @@ var _ = Describe("Client", func() {
 
 				_, err = client.Do(req)
 
-				Expect(err.Error()).To(HaveSuffix("certificate is not trusted"))
+				Expect(err.Error()).To(HaveSuffix("certificate signed by unknown authority"))
 			})
 		})
 
