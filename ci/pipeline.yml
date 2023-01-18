@@ -31,7 +31,7 @@ resources:
   source:
     branch: main
     uri: git@github.com:pivotal-cf/telemetry-utils
-    private_key: ((utils-git-deploy-private-key))
+    private_key: ((github.utils-git-deploy-private-key))
 - name: aqueduct-courier
   type: git
   source:
