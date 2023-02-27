@@ -12,7 +12,7 @@ require (
 	github.com/onsi/gomega v1.16.0
 	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/pivotal-cf/om v0.0.0-20210916143113-77d5793155d1
-	github.com/pivotal-cf/telemetry-utils v0.0.0-20230227185507-666a6f0735c7
+	github.com/pivotal-cf/telemetry-utils v0.0.0-20230227214349-da2f08ba19cd
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/afero v1.6.0 // indirect
 	github.com/spf13/cobra v1.2.1
@@ -51,8 +51,8 @@ require (
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
 	golang.org/x/net v0.0.0-20210913180222-943fd674d43e // indirect
-	golang.org/x/sys v0.0.0-20210910150752-751e447fb3d0 // indirect
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f // indirect
+	golang.org/x/text v0.3.8 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/ini.v1 v1.63.2 // indirect
