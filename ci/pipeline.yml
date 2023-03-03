@@ -18,12 +18,12 @@ resources:
 - name: platform-automation-image
   type: pivnet
   source:
-    api_token: {{pivnet-api-token}}
+    api_token: ((pivnet.api-token))
     product_slug: platform-automation
 - name: pivotal-telemetry-collector
   type: pivnet
   source:
-    api_token: {{pivnet-api-token}}
+    api_token: ((pivnet.api-token))
     product_slug: pivotal-telemetry-collector
     copy_metadata: true
 - name: telemetry-utils
@@ -37,43 +37,43 @@ resources:
   source:
     branch: main
     uri: git@github.com:pivotal-cf/aqueduct-courier
-    private_key: {{courier-git-deploy-private-key}}
+    private_key: ((github.courier-git-deploy-private-key))
     ignore_paths: [ci]
 - name: ci
   type: git
   source:
     uri: git@github.com:pivotal-cf/aqueduct-courier
-    private_key: {{courier-git-deploy-private-key}}
+    private_key: ((github.courier-git-deploy-private-key))
     paths: [ci]
 - name: staging-binaries
   type: gcs-resource
   source:
-    bucket: {{courier-staging-builds-bucket}}
-    json_key: {{courier-gcp-service-account-key}}
+    bucket: ((aqueduct-courier-repo.courier-staging-builds-bucket))
+    json_key: ((service-accounts/gcp.ci-759-gcp-service-account-key))
     regexp: aqueduct-cli-(.*).tgz
 - name: staging-linux-binary
   type: gcs-resource
   source:
-    bucket: {{courier-staging-builds-bucket}}
-    json_key: {{courier-gcp-service-account-key}}
+    bucket: ((aqueduct-courier-repo.courier-staging-builds-bucket))
+    json_key: ((service-accounts/gcp.ci-759-gcp-service-account-key))
     versioned_file: telemetry-collector-linux-amd64
 - name: staging-windows-binary
   type: gcs-resource
   source:
-    bucket: {{courier-staging-builds-bucket}}
-    json_key: {{courier-gcp-service-account-key}}
+    bucket: ((aqueduct-courier-repo.courier-staging-builds-bucket))
+    json_key: ((service-accounts/gcp.ci-759-gcp-service-account-key))
     versioned_file: telemetry-collector-windows-amd64.exe
 - name: production-binaries
   type: gcs-resource
   source:
-    bucket: {{courier-production-builds-bucket}}
-    json_key: {{courier-gcp-service-account-key}}
+    bucket: ((aqueduct-courier-repo.courier-production-builds-bucket))
+    json_key: ((service-accounts/gcp.ci-759-gcp-service-account-key))
     regexp: aqueduct-cli-(.*).tgz
 - name: production-linux-binary
   type: gcs-resource
   source:
-    bucket: {{courier-production-builds-bucket}}
-    json_key: {{courier-gcp-service-account-key}}
+    bucket: ((aqueduct-courier-repo.courier-production-builds-bucket))
+    json_key: ((service-accounts/gcp.ci-759-gcp-service-account-key))
     versioned_file: telemetry-collector-linux-amd64
 - name: version
   type: semver
@@ -82,7 +82,7 @@ resources:
     uri: git@github.com:pivotal-cf/aqueduct-courier
     branch: version
     file: VERSION
-    private_key: {{courier-git-deploy-private-key}}
+    private_key: ((github.courier-git-deploy-private-key))
 - name: collection-timer
   type: time
   source:
@@ -94,7 +94,7 @@ resources:
 - name: prod-slack-notification
   type: slack-notification
   source:
-    url: {{slack-webhook-url}}
+    url: ((slack.webhook-url))
 
 jobs:
 - name: update-telemetry-utils
@@ -107,9 +107,9 @@ jobs:
   - task: update-utils
     file: ci/ci/tasks/update-utils.yml
     params:
-      GITHUB_NAME: {{github-name}}
-      GITHUB_EMAIL: {{github-email}}
-      GITHUB_ACCESS_TOKEN: {{github-access-token}}
+      GITHUB_NAME: ((github.github-email))
+      GITHUB_EMAIL: ((github.github-name))
+      GITHUB_ACCESS_TOKEN: ((github.github-access-token))
   - put: aqueduct-courier
     params:
       repository: aqueduct-courier
@@ -137,7 +137,7 @@ jobs:
   - task: build-binaries
     file: ci/ci/tasks/build-binaries.yml
     params:
-      DATA_LOADER_URL: {{staging-data-loader-url}}
+      DATA_LOADER_URL: ((aqueduct-courier-repo.staging-data-loader-url))
   - put: staging-binaries
     params:
       file: binary-tar/aqueduct-cli-*.tgz
@@ -166,13 +166,13 @@ jobs:
     input_mapping:
       binary: staging-linux-binary
     params:
-      GCP_SERVICE_ACCOUNT_KEY: {{courier-gcp-service-account-key}}
-      GCP_PROJECT_ID: {{courier-gcp-project-id}}
-      GCP_INSTANCE_NAME: {{courier-opsman-gcp-instance-name}}
-      GCP_ZONE: {{courier-gcp-zone}}
-      OPS_MANAGER_URL: {{courier-ops-manager-url}}
-      OPS_MANAGER_USERNAME: {{courier-ops-manager-username}}
-      OPS_MANAGER_PASSWORD: {{courier-ops-manager-password}}
+      GCP_INSTANCE_NAME: ((toolsmiths/acceptance.opsman-instance-name))
+      GCP_PROJECT_ID: ((toolsmiths/acceptance.gcp-project-id))
+      GCP_SERVICE_ACCOUNT_KEY: ((service-accounts/gcp.ci-759-gcp-service-account-key))
+      GCP_ZONE: ((toolsmiths/acceptance.gcp-zone))
+      OPS_MANAGER_PASSWORD: ((toolsmiths/acceptance.opsman-password))
+      OPS_MANAGER_URL: ((toolsmiths/acceptance.ops-manager-url))
+      OPS_MANAGER_USERNAME: ((toolsmiths/acceptance.opsman-username))
 
 - name: test-collect-and-send
   plan:
@@ -192,48 +192,48 @@ jobs:
         globs: ["*.tgz"]
     - get: ci
   - task: collect-with-opsmanager-user-creds
+    file: ci/ci/tasks/collect.yml
     image: platform-automation-image
     input_mapping:
       binary: staging-linux-binary
-    file: ci/ci/tasks/collect.yml
     params:
-      OPS_MANAGER_URL: {{courier-ops-manager-url}}
-      OPS_MANAGER_USERNAME: {{courier-ops-manager-username}}
-      OPS_MANAGER_PASSWORD: {{courier-ops-manager-password}}
+      CF_API_URL: ((toolsmiths/acceptance.cf-api-url))
       ENV_TYPE: development
       FOUNDATION_NICKNAME: telemetry-staging
       INSECURE_SKIP_TLS_VERIFY: true
-      CF_API_URL: {{courier-cf-api-url}}
-      USAGE_SERVICE_URL: {{courier-usage-service-url}}
-      USAGE_SERVICE_CLIENT_ID: {{courier-usage-service-client-id}}
-      USAGE_SERVICE_CLIENT_SECRET: {{courier-usage-service-client-secret}}
+      OPS_MANAGER_PASSWORD: ((toolsmiths/acceptance.opsman-password))
+      OPS_MANAGER_URL: ((toolsmiths/acceptance.ops-manager-url))
+      OPS_MANAGER_USERNAME: ((toolsmiths/acceptance.opsman-username))
+      USAGE_SERVICE_URL: ((toolsmiths/acceptance.usage-service-url))
+      USAGE_SERVICE_CLIENT_ID: ((toolsmiths/acceptance.usage-service-client-id))
+      USAGE_SERVICE_CLIENT_SECRET: ((toolsmiths/acceptance.telemetry-usage-service-password))
       USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
   - task: collect-with-opsmanager-client-creds
+    file: ci/ci/tasks/collect.yml
     image: platform-automation-image
     input_mapping:
       binary: staging-linux-binary
     output_mapping:
       collected-data: collected-data-with-client-creds
-    file: ci/ci/tasks/collect.yml
     params:
-      OPS_MANAGER_URL: {{courier-ops-manager-url}}
-      OPS_MANAGER_CLIENT_ID: {{courier-ops-manager-client-id}}
-      OPS_MANAGER_CLIENT_SECRET: {{courier-ops-manager-client-secret}}
+      CF_API_URL: ((toolsmiths/acceptance.cf-api-url))
       ENV_TYPE: development
       FOUNDATION_NICKNAME: telemetry-staging
       INSECURE_SKIP_TLS_VERIFY: true
-      CF_API_URL: {{courier-cf-api-url}}
-      USAGE_SERVICE_URL: {{courier-usage-service-url}}
-      USAGE_SERVICE_CLIENT_ID: {{courier-usage-service-client-id}}
-      USAGE_SERVICE_CLIENT_SECRET: {{courier-usage-service-client-secret}}
+      OPS_MANAGER_URL: ((toolsmiths/acceptance.ops-manager-url))
+      OPS_MANAGER_CLIENT_ID: ((toolsmiths/acceptance.opsman-client-id))
+      OPS_MANAGER_CLIENT_SECRET: ((toolsmiths/acceptance.opsman-uaa-client-secret))
+      USAGE_SERVICE_URL: ((toolsmiths/acceptance.usage-service-url))
+      USAGE_SERVICE_CLIENT_ID: ((toolsmiths/acceptance.usage-service-client-id))
+      USAGE_SERVICE_CLIENT_SECRET: ((toolsmiths/acceptance.telemetry-usage-service-password))
       USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
   - task: send
+    file: ci/ci/tasks/send.yml
     image: platform-automation-image
     input_mapping:
       binary: staging-linux-binary
-    file: ci/ci/tasks/send.yml
     params:
-      API_KEY: {{loader-api-key}}
+      API_KEY: ((aqueduct-courier-repo.loader-api-key))
 
 - name: build-production-binaries
   serial_groups: [version]
@@ -253,7 +253,7 @@ jobs:
   - task: build-binaries
     file: ci/ci/tasks/build-binaries.yml
     params:
-      DATA_LOADER_URL: {{production-data-loader-url}}
+      DATA_LOADER_URL: ((aqueduct-courier-repo.production-data-loader-url))
       ENSURE_HTTPS: true
   - put: production-binaries
     params:
@@ -295,16 +295,16 @@ jobs:
       binary: production-linux-binary
     file: ci/ci/tasks/collect.yml
     params:
-      OPS_MANAGER_URL: {{production-courier-ops-manager-url}}
-      OPS_MANAGER_USERNAME: {{production-courier-ops-manager-username}}
-      OPS_MANAGER_PASSWORD: {{production-courier-ops-manager-password}}
+      CF_API_URL: ((toolsmiths/production.cf-api-url))
       ENV_TYPE: development
       FOUNDATION_NICKNAME: telemetry-production
       INSECURE_SKIP_TLS_VERIFY: true
-      CF_API_URL: {{production-courier-cf-api-url}}
-      USAGE_SERVICE_URL: {{production-courier-usage-service-url}}
-      USAGE_SERVICE_CLIENT_ID: {{production-courier-usage-service-client-id}}
-      USAGE_SERVICE_CLIENT_SECRET: {{production-courier-usage-service-client-secret}}
+      OPS_MANAGER_URL: ((toolsmiths/production.ops-manager-url))
+      OPS_MANAGER_USERNAME: ((toolsmiths/production.opsman-username))
+      OPS_MANAGER_PASSWORD: ((toolsmiths/production.opsman-password))
+      USAGE_SERVICE_URL: ((toolsmiths/production.usage-service-url))
+      USAGE_SERVICE_CLIENT_ID: ((toolsmiths/production.usage-service-client-id))
+      USAGE_SERVICE_CLIENT_SECRET: ((toolsmiths/production.telemetry-usage-service-password))
       USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
   - task: send
     image: platform-automation-image
@@ -312,7 +312,7 @@ jobs:
       binary: production-linux-binary
     file: ci/ci/tasks/send.yml
     params:
-      API_KEY: {{production-loader-api-key}}
+      API_KEY: ((aqueduct-courier-repo.production-loader-api-key))
 
 - name: release-to-pivnet
   plan:
@@ -385,22 +385,22 @@ jobs:
     image: platform-automation-image
     file: tasks/collect.yml
     params:
-      OPS_MANAGER_URL: {{production-courier-ops-manager-url}}
-      OPS_MANAGER_USERNAME: {{production-courier-ops-manager-username}}
-      OPS_MANAGER_PASSWORD: {{production-courier-ops-manager-password}}
-      CF_API_URL: {{production-courier-cf-api-url}}
-      USAGE_SERVICE_URL: {{production-courier-usage-service-url}}
-      USAGE_SERVICE_CLIENT_ID: {{production-courier-usage-service-client-id}}
-      USAGE_SERVICE_CLIENT_SECRET: {{production-courier-usage-service-client-secret}}
-      USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
+      CF_API_URL: ((toolsmiths/production.cf-api-url))
       ENV_TYPE: development
       FOUNDATION_NICKNAME: telemetry-production
       INSECURE_SKIP_TLS_VERIFY: true
+      OPS_MANAGER_PASSWORD: ((toolsmiths/production.opsman-password))
+      OPS_MANAGER_USERNAME: ((toolsmiths/production.opsman-username))
+      OPS_MANAGER_URL: ((toolsmiths/production.ops-manager-url))
+      USAGE_SERVICE_CLIENT_ID: ((toolsmiths/production.usage-service-client-id))
+      USAGE_SERVICE_CLIENT_SECRET: ((toolsmiths/production.telemetry-usage-service-password))
+      USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
+      USAGE_SERVICE_URL: ((toolsmiths/production.usage-service-url))
   - task: send
     image: platform-automation-image
     file: tasks/send.yml
     params:
-      API_KEY: {{production-loader-api-key}}
+      API_KEY: ((aqueduct-courier-repo.production-loader-api-key))
     on_failure:
       put: prod-slack-notification
       params:
