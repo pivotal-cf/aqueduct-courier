@@ -383,7 +383,7 @@ jobs:
     - get: ci
   - task: collect
     image: platform-automation-image
-    file: tasks/collect.yml
+    file: ci/ci/tasks/collect.yml
     params:
       CF_API_URL: ((toolsmiths/production.cf-api-url))
       ENV_TYPE: development
