@@ -3,6 +3,7 @@ resource_types:
   type: registry-image
   source:
     repository: harbor-repo.vmware.com/dockerhub-proxy-cache/frodenas/gcs-resource
+    tag: 'v0.6.0'
 - name: pivnet
   type: registry-image
   source:
