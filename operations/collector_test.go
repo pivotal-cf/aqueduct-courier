@@ -27,11 +27,12 @@ import (
 
 var _ = Describe("DataCollector", func() {
 	var (
-		omDataCollector *operationsfakes.FakeOmDataCollector
-		tarWriter       *operationsfakes.FakeTarWriter
-		uuidProvider    *operationsfakes.FakeUuidProvider
-		uuidString      = "cf736154-6fd5-47f4-8ca9-1b4a6fe451ad"
-		collector       *CollectExecutor
+		omDataCollector              *operationsfakes.FakeOmDataCollector
+		tarWriter                    *operationsfakes.FakeTarWriter
+		uuidProvider                 *operationsfakes.FakeUuidProvider
+		uuidString                   = "cf736154-6fd5-47f4-8ca9-1b4a6fe451ad"
+		collector                    *CollectExecutor
+		collectorOperationalDataOnly *CollectExecutor
 	)
 
 	BeforeEach(func() {
@@ -42,7 +43,8 @@ var _ = Describe("DataCollector", func() {
 			return uuid.FromString(uuidString)
 		}
 
-		collector = NewCollector(omDataCollector, nil, nil, tarWriter, uuidProvider)
+		collector = NewCollector(omDataCollector, nil, nil, tarWriter, uuidProvider, false)
+		collectorOperationalDataOnly = NewCollector(omDataCollector, nil, nil, tarWriter, uuidProvider, true)
 	})
 
 	It("collects opsmanager data and writes it", func() {
@@ -100,6 +102,35 @@ var _ = Describe("DataCollector", func() {
 		Expect(tarWriter.CloseCallCount()).To(Equal(1))
 	})
 
+	It("does not collect opsmanager data when --operational-data-only flag is passed", func() {
+		expectedD1Contents := "d1-content"
+		expectedD2Contents := "d2-content"
+		d1 := opsmanager.NewData(strings.NewReader(expectedD1Contents), "d1", "best-kind")
+		d2 := opsmanager.NewData(strings.NewReader(expectedD2Contents), "d2", "better-kind")
+		dataToWrite := []opsmanager.Data{d1, d2}
+		foundationId := "p-bosh-guid-of-some-sort"
+		foundationNickname := "some-nickname"
+		omDataCollector.CollectReturns(dataToWrite, foundationId, nil)
+
+		collectorVersion := "0.0.1-version"
+		envType := "most-production"
+
+		err := collectorOperationalDataOnly.Collect(envType, collectorVersion, foundationNickname)
+		Expect(err).NotTo(HaveOccurred())
+
+		Expect(tarWriter.AddFileCallCount()).To(Equal(2))
+
+		expectedD1Path := path.Join(collector_tar.OpsManagerCollectorDataSetId, d1.Name())
+		d1Contents, d1Path := tarWriter.AddFileArgsForCall(0)
+		expectedD2Path := path.Join(collector_tar.OpsManagerCollectorDataSetId, d2.Name())
+		d2Contents, d2Path := tarWriter.AddFileArgsForCall(1)
+
+		Expect(string(d1Contents)).To(Equal(expectedD1Contents))
+		Expect(d1Path).To(Equal(expectedD1Path))
+		Expect(string(d2Contents)).To(Equal(expectedD2Contents))
+		Expect(d2Path).To(Equal(expectedD2Path))
+	})
+
 	It("returns an error when the ops manager collection errors", func() {
 		omDataCollector.CollectReturns([]opsmanager.Data{}, "", errors.New("collecting is hard"))
 
@@ -155,13 +186,15 @@ var _ = Describe("DataCollector", func() {
 
 	Describe("credhub collection", func() {
 		var (
-			collectorWithCredhub *CollectExecutor
-			credhubDataCollector *operationsfakes.FakeCredhubDataCollector
+			collectorWithCredhub                    *CollectExecutor
+			collectorWithCredhubOperationalDataOnly *CollectExecutor
+			credhubDataCollector                    *operationsfakes.FakeCredhubDataCollector
 		)
 
 		BeforeEach(func() {
 			credhubDataCollector = new(operationsfakes.FakeCredhubDataCollector)
-			collectorWithCredhub = NewCollector(omDataCollector, credhubDataCollector, nil, tarWriter, uuidProvider)
+			collectorWithCredhub = NewCollector(omDataCollector, credhubDataCollector, nil, tarWriter, uuidProvider, false)
+			collectorWithCredhubOperationalDataOnly = NewCollector(omDataCollector, credhubDataCollector, nil, tarWriter, uuidProvider, true)
 		})
 
 		It("collects credhub data and writes it", func() {
@@ -210,6 +243,33 @@ var _ = Describe("DataCollector", func() {
 			Expect(tarWriter.CloseCallCount()).To(Equal(1))
 		})
 
+		It("does not collect opsmanager data when --operational-data-only flag is passed", func() {
+			expectedD1Contents := "d1-content"
+			d1 := opsmanager.NewData(strings.NewReader(expectedD1Contents), "d1", "best-kind")
+			dataToWrite := []opsmanager.Data{d1}
+			omDataCollector.CollectReturns(dataToWrite, "", nil)
+
+			expectedCHContents := "ch-content"
+			chData := credhub.NewData(strings.NewReader(expectedCHContents))
+			credhubDataCollector.CollectReturns(chData, nil)
+
+			collectorVersion := "0.0.1-version"
+			envType := "most-production"
+			foundationNickname := "some-nickname"
+
+			err := collectorWithCredhubOperationalDataOnly.Collect(envType, collectorVersion, foundationNickname)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(tarWriter.AddFileCallCount()).To(Equal(2))
+
+			chContents, credhubDataPath := tarWriter.AddFileArgsForCall(1)
+			Expect(string(chContents)).To(Equal(expectedCHContents))
+
+			expectedCredhubDataPath := path.Join(collector_tar.OpsManagerCollectorDataSetId, chData.Name())
+			Expect(credhubDataPath).To(Equal(expectedCredhubDataPath))
+			Expect(tarWriter.CloseCallCount()).To(Equal(1))
+		})
+
 		It("returns an error when the credhub collection errors", func() {
 			credhubDataCollector.CollectReturns(credhub.Data{}, errors.New("collecting is hard"))
 
@@ -250,13 +310,15 @@ var _ = Describe("DataCollector", func() {
 
 	Describe("consumption collection", func() {
 		var (
-			collectorWithConsumption *CollectExecutor
-			consumptionDataCollector *operationsfakes.FakeConsumptionDataCollector
+			collectorWithConsumption                    *CollectExecutor
+			consumptionDataCollector                    *operationsfakes.FakeConsumptionDataCollector
+			collectorWithConsumptionOperationalDataOnly *CollectExecutor
 		)
 
 		BeforeEach(func() {
 			consumptionDataCollector = new(operationsfakes.FakeConsumptionDataCollector)
-			collectorWithConsumption = NewCollector(omDataCollector, nil, consumptionDataCollector, tarWriter, uuidProvider)
+			collectorWithConsumption = NewCollector(omDataCollector, nil, consumptionDataCollector, tarWriter, uuidProvider, false)
+			collectorWithConsumptionOperationalDataOnly = NewCollector(omDataCollector, nil, consumptionDataCollector, tarWriter, uuidProvider, true)
 		})
 
 		It("collects consumption data and writes it", func() {
@@ -299,6 +361,63 @@ var _ = Describe("DataCollector", func() {
 
 			expectedMetadataPath := path.Join(collector_tar.UsageServiceCollectorDataSetId, collector_tar.MetadataFileName)
 			metadataContents, metadataPath := tarWriter.AddFileArgsForCall(4)
+			Expect(metadataPath).To(Equal(expectedMetadataPath))
+
+			var metadata collector_tar.Metadata
+			Expect(json.Unmarshal(metadataContents, &metadata)).To(Succeed())
+			Expect(metadata.CollectorVersion).To(Equal(collectorVersion))
+			Expect(metadata.CollectionId).To(Equal(uuidString))
+			Expect(metadata.FoundationId).To(Equal(foundationId))
+			Expect(metadata.FoundationNickname).To(Equal(foundationNickname))
+			Expect(metadata.EnvType).To(Equal(envType))
+			Expect(metadata.FileDigests).To(ConsistOf(
+				collector_tar.FileDigest{Name: appUsageConsumptionData.Name(), MimeType: appUsageConsumptionData.MimeType(), MD5Checksum: appUsageContentMd5, ProductType: appUsageConsumptionData.Type(), DataType: appUsageConsumptionData.DataType()},
+				collector_tar.FileDigest{Name: serviceUsageConsumptionData.Name(), MimeType: serviceUsageConsumptionData.MimeType(), MD5Checksum: serviceUsageContentMd5, ProductType: serviceUsageConsumptionData.Type(), DataType: serviceUsageConsumptionData.DataType()},
+			))
+
+			Expect(tarWriter.CloseCallCount()).To(Equal(1))
+		})
+
+		It("does not collect opsmanager data when --operational-data-only flag is passed", func() {
+			expectedD1Contents := "d1-content"
+			d1 := opsmanager.NewData(strings.NewReader(expectedD1Contents), "d1", "best-kind")
+			dataToWrite := []opsmanager.Data{d1}
+			foundationId := "p-bosh-guid-of-some-sort"
+			omDataCollector.CollectReturns(dataToWrite, foundationId, nil)
+
+			expectedAppUsageConsumptionContents := "consumption-app-usage-content"
+			md5sum := md5.Sum([]byte(expectedAppUsageConsumptionContents))
+			appUsageContentMd5 := base64.StdEncoding.EncodeToString(md5sum[:])
+			appUsageConsumptionData := consumption.NewData(strings.NewReader(expectedAppUsageConsumptionContents), "app-instances")
+
+			expectedServiceUsageConsumptionContents := "consumption-service-usage-content"
+			md5sum = md5.Sum([]byte(expectedServiceUsageConsumptionContents))
+			serviceUsageContentMd5 := base64.StdEncoding.EncodeToString(md5sum[:])
+			serviceUsageConsumptionData := consumption.NewData(strings.NewReader(expectedServiceUsageConsumptionContents), "service-instances")
+
+			consumptionDataCollector.CollectReturns([]consumption.Data{appUsageConsumptionData, serviceUsageConsumptionData}, nil)
+
+			collectorVersion := "0.0.1-version"
+			envType := "most-production"
+			foundationNickname := "some-nickname"
+
+			err := collectorWithConsumptionOperationalDataOnly.Collect(envType, collectorVersion, foundationNickname)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(tarWriter.AddFileCallCount()).To(Equal(4))
+
+			expectedAppUsageConsumptionDataPath := path.Join(collector_tar.UsageServiceCollectorDataSetId, appUsageConsumptionData.Name())
+			appUsageConsumptionContents, appUsageConsumptionDataPath := tarWriter.AddFileArgsForCall(1)
+			Expect(string(appUsageConsumptionContents)).To(Equal(expectedAppUsageConsumptionContents))
+			Expect(appUsageConsumptionDataPath).To(Equal(expectedAppUsageConsumptionDataPath))
+
+			expectedServiceUsageConsumptionDataPath := path.Join(collector_tar.UsageServiceCollectorDataSetId, serviceUsageConsumptionData.Name())
+			serviceUsageConsumptionContents, serviceConsumptionDataPath := tarWriter.AddFileArgsForCall(2)
+			Expect(string(serviceUsageConsumptionContents)).To(Equal(expectedServiceUsageConsumptionContents))
+			Expect(serviceConsumptionDataPath).To(Equal(expectedServiceUsageConsumptionDataPath))
+
+			expectedMetadataPath := path.Join(collector_tar.UsageServiceCollectorDataSetId, collector_tar.MetadataFileName)
+			metadataContents, metadataPath := tarWriter.AddFileArgsForCall(3)
 			Expect(metadataPath).To(Equal(expectedMetadataPath))
 
 			var metadata collector_tar.Metadata
@@ -368,6 +487,64 @@ var _ = Describe("DataCollector", func() {
 			Expect(err).To(MatchError(ContainSubstring("tarring is hard")))
 		})
 
+		Describe("--operational-data-only flag", func() {
+			It("does not collect opsmanager data", func() {
+				expectedD1Contents := "d1-content"
+				d1 := opsmanager.NewData(strings.NewReader(expectedD1Contents), "d1", "best-kind")
+				dataToWrite := []opsmanager.Data{d1}
+				foundationId := "p-bosh-guid-of-some-sort"
+				omDataCollector.CollectReturns(dataToWrite, foundationId, nil)
+
+				expectedAppUsageConsumptionContents := "consumption-app-usage-content"
+				md5sum := md5.Sum([]byte(expectedAppUsageConsumptionContents))
+				appUsageContentMd5 := base64.StdEncoding.EncodeToString(md5sum[:])
+				appUsageConsumptionData := consumption.NewData(strings.NewReader(expectedAppUsageConsumptionContents), "app-instances")
+
+				expectedServiceUsageConsumptionContents := "consumption-service-usage-content"
+				md5sum = md5.Sum([]byte(expectedServiceUsageConsumptionContents))
+				serviceUsageContentMd5 := base64.StdEncoding.EncodeToString(md5sum[:])
+				serviceUsageConsumptionData := consumption.NewData(strings.NewReader(expectedServiceUsageConsumptionContents), "service-instances")
+
+				consumptionDataCollector.CollectReturns([]consumption.Data{appUsageConsumptionData, serviceUsageConsumptionData}, nil)
+
+				collectorVersion := "0.0.1-version"
+				envType := "most-production"
+				foundationNickname := "some-nickname"
+
+				err := collectorWithConsumption.Collect(envType, collectorVersion, foundationNickname)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(tarWriter.AddFileCallCount()).To(Equal(5))
+
+				expectedAppUsageConsumptionDataPath := path.Join(collector_tar.UsageServiceCollectorDataSetId, appUsageConsumptionData.Name())
+				appUsageConsumptionContents, appUsageConsumptionDataPath := tarWriter.AddFileArgsForCall(2)
+				Expect(string(appUsageConsumptionContents)).To(Equal(expectedAppUsageConsumptionContents))
+				Expect(appUsageConsumptionDataPath).To(Equal(expectedAppUsageConsumptionDataPath))
+
+				expectedServiceUsageConsumptionDataPath := path.Join(collector_tar.UsageServiceCollectorDataSetId, serviceUsageConsumptionData.Name())
+				serviceUsageConsumptionContents, serviceConsumptionDataPath := tarWriter.AddFileArgsForCall(3)
+				Expect(string(serviceUsageConsumptionContents)).To(Equal(expectedServiceUsageConsumptionContents))
+				Expect(serviceConsumptionDataPath).To(Equal(expectedServiceUsageConsumptionDataPath))
+
+				expectedMetadataPath := path.Join(collector_tar.UsageServiceCollectorDataSetId, collector_tar.MetadataFileName)
+				metadataContents, metadataPath := tarWriter.AddFileArgsForCall(4)
+				Expect(metadataPath).To(Equal(expectedMetadataPath))
+
+				var metadata collector_tar.Metadata
+				Expect(json.Unmarshal(metadataContents, &metadata)).To(Succeed())
+				Expect(metadata.CollectorVersion).To(Equal(collectorVersion))
+				Expect(metadata.CollectionId).To(Equal(uuidString))
+				Expect(metadata.FoundationId).To(Equal(foundationId))
+				Expect(metadata.FoundationNickname).To(Equal(foundationNickname))
+				Expect(metadata.EnvType).To(Equal(envType))
+				Expect(metadata.FileDigests).To(ConsistOf(
+					collector_tar.FileDigest{Name: appUsageConsumptionData.Name(), MimeType: appUsageConsumptionData.MimeType(), MD5Checksum: appUsageContentMd5, ProductType: appUsageConsumptionData.Type(), DataType: appUsageConsumptionData.DataType()},
+					collector_tar.FileDigest{Name: serviceUsageConsumptionData.Name(), MimeType: serviceUsageConsumptionData.MimeType(), MD5Checksum: serviceUsageContentMd5, ProductType: serviceUsageConsumptionData.Type(), DataType: serviceUsageConsumptionData.DataType()},
+				))
+
+				Expect(tarWriter.CloseCallCount()).To(Equal(1))
+			})
+		})
 	})
 
 })

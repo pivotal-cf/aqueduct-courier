@@ -63,15 +63,16 @@ type collectedData interface {
 }
 
 type CollectExecutor struct {
-	opsmanagerDC  omDataCollector
-	credhubDC     credhubDataCollector
-	consumptionDC consumptionDataCollector
-	tarWriter     tarWriter
-	uuidProvider  uuidProvider
+	opsmanagerDC        omDataCollector
+	credhubDC           credhubDataCollector
+	consumptionDC       consumptionDataCollector
+	tarWriter           tarWriter
+	uuidProvider        uuidProvider
+	operationalDataOnly bool
 }
 
-func NewCollector(opsmanagerDC omDataCollector, credhubDC credhubDataCollector, consumptionDC consumptionDataCollector, tarWriter tarWriter, uuidProvider uuidProvider) *CollectExecutor {
-	return &CollectExecutor{opsmanagerDC: opsmanagerDC, credhubDC: credhubDC, consumptionDC: consumptionDC, tarWriter: tarWriter, uuidProvider: uuidProvider}
+func NewCollector(opsmanagerDC omDataCollector, credhubDC credhubDataCollector, consumptionDC consumptionDataCollector, tarWriter tarWriter, uuidProvider uuidProvider, operationalDataOnly bool) *CollectExecutor {
+	return &CollectExecutor{opsmanagerDC: opsmanagerDC, credhubDC: credhubDC, consumptionDC: consumptionDC, tarWriter: tarWriter, uuidProvider: uuidProvider, operationalDataOnly: operationalDataOnly}
 }
 
 func (ce *CollectExecutor) Collect(envType, collectorVersion, foundationNickname string) error {
@@ -128,9 +129,12 @@ func (ce *CollectExecutor) Collect(envType, collectorVersion, foundationNickname
 	if err != nil {
 		return err
 	}
-	err = ce.tarWriter.AddFile(metadataContents, path.Join(collector_tar.OpsManagerCollectorDataSetId, collector_tar.MetadataFileName))
-	if err != nil {
-		return errors.Wrap(err, DataWriteFailureMessage)
+
+	if !ce.operationalDataOnly {
+		err = ce.tarWriter.AddFile(metadataContents, path.Join(collector_tar.OpsManagerCollectorDataSetId, collector_tar.MetadataFileName))
+		if err != nil {
+			return errors.Wrap(err, DataWriteFailureMessage)
+		}
 	}
 
 	if ce.consumptionDC != nil {

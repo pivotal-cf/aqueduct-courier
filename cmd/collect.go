@@ -54,6 +54,7 @@ const (
 	CfApiURLKey                  = "CF_API_URL"
 	UsageServiceSkipTlsVerifyKey = "USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY"
 	FoundationNicknameKey        = "FOUNDATION_NICKNAME"
+	OperationalDataOnlyKey       = "OPERATIONAL_DATA_ONLY"
 
 	ConfigFlag                    = "config"
 	OpsManagerURLFlag             = "url"
@@ -76,6 +77,7 @@ const (
 	CfApiURLFlag                  = "cf-api-url"
 	UsageServiceSkipTlsVerifyFlag = "usage-service-insecure-skip-tls-verify"
 	FoundationNicknameFlag        = "foundation-nickname"
+	OperationalDataOnlyFlag       = "operational-data-only"
 
 	EnvTypeSandbox       = "sandbox"
 	EnvTypeDevelopment   = "development"
@@ -111,6 +113,7 @@ func init() {
 	bindFlagAndEnvVar(collectCmd, OpsManagerClientSecretFlag, "", fmt.Sprintf("``Ops Manager client secret [$%s]", OpsManagerClientSecretKey), OpsManagerClientSecretKey)
 	bindFlagAndEnvVar(collectCmd, EnvTypeFlag, "", fmt.Sprintf("``Specify environment type (sandbox, development, qa, pre-production, production) [$%s]", EnvTypeKey), EnvTypeKey)
 	bindFlagAndEnvVar(collectCmd, FoundationNicknameFlag, "", fmt.Sprintf("``Specify foundation nickname used in reporting by VMware [$%s]", FoundationNicknameKey), FoundationNicknameKey)
+	bindFlagAndEnvVar(collectCmd, OperationalDataOnlyFlag, false, fmt.Sprintf("``Collect only operational data [$%s]", OperationalDataOnlyKey), OperationalDataOnlyKey)
 	bindFlagAndEnvVar(collectCmd, OpsManagerTimeoutFlag, 30, fmt.Sprintf("``Timeout on network connection to Ops Manager in seconds [$%s]", OpsManagerTimeoutKey), OpsManagerTimeoutKey)
 	bindFlagAndEnvVar(collectCmd, OpsManagerRequestTimeoutFlag, 30, fmt.Sprintf("``Timeout on request fulfillment from Ops Manager in seconds [$%s]", OpsManagerRequestTimeoutKey), OpsManagerRequestTimeoutKey)
 	bindFlagAndEnvVar(collectCmd, SkipTlsVerifyFlag, false, fmt.Sprintf("``Skip TLS validation on http requests to Ops Manager [$%s]\n", SkipTlsVerifyKey), SkipTlsVerifyKey)
@@ -133,14 +136,20 @@ func init() {
 	collectCmd.Flags().SortFlags = false
 
 	collectCmd.Example = `
-      Collect data from Ops Manager only:
+      Collect Telemetry data from Ops Manager only:
       telemetry-collector collect --url --username --password [or --client-id and
       --client-secret] --env-type --output-dir
 
-      Collect data from Ops Manager and Usage Service:
+      Collect Telemetry and Operational data:
       telemetry-collector collect --url --username --password [or --client-id and
       --client-secret] --usage-service-url --usage-service-client-id
-      --usage-service-client-secret --cf-api-url --env-type --output-dir`
+      --usage-service-client-secret --cf-api-url --env-type --output-dir
+
+      Collect Operational Data only:
+      telemetry-collector collect --url --username --password [or --client-id and
+      --client-secret] --usage-service-url --usage-service-client-id
+      --usage-service-client-secret --cf-api-url --env-type --output-dir
+      --operational-data-only`
 
 	customUsageTextTemplate := `
 USAGE EXAMPLES
@@ -201,7 +210,8 @@ func collect(c *cobra.Command, _ []string) error {
 
 	tarWriter := tar.NewTarWriter(tarFile)
 
-	collectExecutor, err := makeCollector(tarWriter)
+	operationalDataOnly := viper.GetBool(OperationalDataOnlyFlag)
+	collectExecutor, err := makeCollector(tarWriter, operationalDataOnly)
 	if err != nil {
 		tarFile.Close()
 		os.Remove(tarFilePath)
@@ -362,7 +372,7 @@ func makeCredhubCollector(omService *opsmanager.Service, credhubCollectionEnable
 	}
 }
 
-func makeCollector(tarWriter *tar.TarWriter) (*operations.CollectExecutor, error) {
+func makeCollector(tarWriter *tar.TarWriter, operationalDataOnly bool) (*operations.CollectExecutor, error) {
 	authedClient, _ := omNetwork.NewOAuthClient(
 		viper.GetString(OpsManagerURLFlag),
 		viper.GetString(OpsManagerUsernameFlag),
@@ -386,6 +396,7 @@ func makeCollector(tarWriter *tar.TarWriter) (*operations.CollectExecutor, error
 		viper.GetString(OpsManagerURLFlag),
 		apiService,
 		apiService,
+		operationalDataOnly,
 	)
 
 	consumptionCollector, err := makeConsumptionCollector()
@@ -398,5 +409,5 @@ func makeCollector(tarWriter *tar.TarWriter) (*operations.CollectExecutor, error
 		return nil, err
 	}
 
-	return operations.NewCollector(omCollector, credhubCollector, consumptionCollector, tarWriter, uuid.DefaultGenerator), nil
+	return operations.NewCollector(omCollector, credhubCollector, consumptionCollector, tarWriter, uuid.DefaultGenerator, operationalDataOnly), nil
 }

@@ -52,15 +52,17 @@ type DataCollector struct {
 	opsManagerURL         string
 	pendingChangesService PendingChangesLister
 	deployProductsService DeployedProductsLister
+	operationalDataOnly   bool
 }
 
-func NewDataCollector(logger log.Logger, oms OmService, omURL string, pcs PendingChangesLister, dps DeployedProductsLister) *DataCollector {
+func NewDataCollector(logger log.Logger, oms OmService, omURL string, pcs PendingChangesLister, dps DeployedProductsLister, operationalDataOnly bool) *DataCollector {
 	return &DataCollector{
 		logger:                logger,
 		omService:             oms,
 		opsManagerURL:         omURL,
 		pendingChangesService: pcs,
 		deployProductsService: dps,
+		operationalDataOnly:   operationalDataOnly,
 	}
 }
 
@@ -86,9 +88,11 @@ func (dc *DataCollector) Collect() ([]Data, string, error) {
 
 	var d []Data
 
-	d, err = appendRetrievedData(d, dc.omService.DeployedProducts, collector_tar.OpsManagerProductType, collector_tar.DeployedProductsDataType)
-	if err != nil {
-		return []Data{}, "", err
+	if !dc.operationalDataOnly {
+		d, err = appendRetrievedData(d, dc.omService.DeployedProducts, collector_tar.OpsManagerProductType, collector_tar.DeployedProductsDataType)
+		if err != nil {
+			return []Data{}, "", err
+		}
 	}
 
 	for _, product := range pl {
@@ -110,37 +114,44 @@ func (dc *DataCollector) Collect() ([]Data, string, error) {
 		}
 	}
 
-	d, err = appendRetrievedData(d, dc.omService.VmTypes, collector_tar.OpsManagerProductType, collector_tar.VmTypesDataType)
-	if err != nil {
-		return []Data{}, "", err
+	if !dc.operationalDataOnly {
+		d, err = appendRetrievedData(d, dc.omService.VmTypes, collector_tar.OpsManagerProductType, collector_tar.VmTypesDataType)
+		if err != nil {
+			return []Data{}, "", err
+		}
+
+		d, err = appendRetrievedData(d, dc.omService.DiagnosticReport, collector_tar.OpsManagerProductType, collector_tar.DiagnosticReportDataType)
+		if err != nil {
+			return []Data{}, "", err
+		}
+
+		d, err = appendRetrievedData(d, dc.omService.Installations, collector_tar.OpsManagerProductType, collector_tar.InstallationsDataType)
+		if err != nil {
+			return []Data{}, "", err
+		}
+
+		d, err = appendRetrievedData(d, dc.omService.Certificates, collector_tar.OpsManagerProductType, collector_tar.CertificatesDataType)
+		if err != nil {
+			return []Data{}, "", err
+		}
+
+		d, err = appendRetrievedData(d, dc.omService.CertificateAuthorities, collector_tar.OpsManagerProductType, collector_tar.CertificateAuthoritiesDataType)
+		if err != nil {
+			return []Data{}, "", err
+		}
+
+		d, err = appendRetrievedData(d, dc.omService.PendingChanges, collector_tar.OpsManagerProductType, collector_tar.PendingChangesDataType)
+		if err != nil {
+			return []Data{}, "", err
+		}
 	}
 
-	d, err = appendRetrievedData(d, dc.omService.DiagnosticReport, collector_tar.OpsManagerProductType, collector_tar.DiagnosticReportDataType)
-	if err != nil {
-		return []Data{}, "", err
+	if !dc.operationalDataOnly {
+		return d, foundationId, nil
+	} else {
+		return []Data{}, foundationId, nil
 	}
 
-	d, err = appendRetrievedData(d, dc.omService.Installations, collector_tar.OpsManagerProductType, collector_tar.InstallationsDataType)
-	if err != nil {
-		return []Data{}, "", err
-	}
-
-	d, err = appendRetrievedData(d, dc.omService.Certificates, collector_tar.OpsManagerProductType, collector_tar.CertificatesDataType)
-	if err != nil {
-		return []Data{}, "", err
-	}
-
-	d, err = appendRetrievedData(d, dc.omService.CertificateAuthorities, collector_tar.OpsManagerProductType, collector_tar.CertificateAuthoritiesDataType)
-	if err != nil {
-		return []Data{}, "", err
-	}
-
-	d, err = appendRetrievedData(d, dc.omService.PendingChanges, collector_tar.OpsManagerProductType, collector_tar.PendingChangesDataType)
-	if err != nil {
-		return []Data{}, "", err
-	}
-
-	return d, foundationId, nil
 }
 
 func (dc DataCollector) productResourcesCaller(guid string) dataRetriever {

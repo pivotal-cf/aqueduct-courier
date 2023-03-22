@@ -28,7 +28,8 @@ var _ = Describe("DataCollector", func() {
 		pendingChangesLister   *opsmanagerfakes.FakePendingChangesLister
 		deployedProductsLister *opsmanagerfakes.FakeDeployedProductsLister
 
-		dataCollector *DataCollector
+		dataCollector                *DataCollector
+		dataCollectorOperationalOnly *DataCollector
 	)
 
 	BeforeEach(func() {
@@ -39,7 +40,8 @@ var _ = Describe("DataCollector", func() {
 		pendingChangesLister = new(opsmanagerfakes.FakePendingChangesLister)
 		deployedProductsLister = new(opsmanagerfakes.FakeDeployedProductsLister)
 
-		dataCollector = NewDataCollector(*logger, omService, omURL, pendingChangesLister, deployedProductsLister)
+		dataCollector = NewDataCollector(*logger, omService, omURL, pendingChangesLister, deployedProductsLister, false)
+		dataCollectorOperationalOnly = NewDataCollector(*logger, omService, omURL, pendingChangesLister, deployedProductsLister, true)
 	})
 
 	It("does not return an error if there are pending changes with an action other than unchanged", func() {
@@ -252,6 +254,49 @@ var _ = Describe("DataCollector", func() {
 				collector_tar.PendingChangesDataType,
 			),
 		))
+	})
+
+	It("only collects foundationId when --operational-data-only flag is passed", func() {
+		resourcesReaders := []io.Reader{
+			strings.NewReader("r1 data"),
+			strings.NewReader("r2 data"),
+		}
+		propertiesReaders := []io.Reader{
+			strings.NewReader("p1 data"),
+			strings.NewReader("p2 data"),
+		}
+		vmTypesReader := strings.NewReader("vm_types data")
+		diagnosticReportReader := strings.NewReader("diagnostic data")
+		deployedProductsReader := strings.NewReader("deployed products data")
+		installationsReader := strings.NewReader("installations data")
+		certificatesReader := strings.NewReader("certificates data")
+		certificateAuthoritiesReader := strings.NewReader("certificate authorities data")
+		pendingChangesReader := strings.NewReader("pending_changes")
+		directorProduct := api.DeployedProductOutput{Type: collector_tar.DirectorProductType, GUID: "p-bosh-always-first"}
+		deployedProducts := []api.DeployedProductOutput{
+			{Type: "best-product-1", GUID: "p1-guid"},
+			{Type: "best-product-2", GUID: "p2-guid"},
+		}
+		deployedProductsLister.ListDeployedProductsReturns(append([]api.DeployedProductOutput{directorProduct}, deployedProducts...), nil)
+		for i, r := range resourcesReaders {
+			omService.ProductResourcesReturnsOnCall(i, r, nil)
+		}
+		for i, r := range propertiesReaders {
+			omService.ProductPropertiesReturnsOnCall(i, r, nil)
+		}
+		omService.VmTypesReturns(vmTypesReader, nil)
+		omService.DiagnosticReportReturns(diagnosticReportReader, nil)
+		omService.DeployedProductsReturns(deployedProductsReader, nil)
+		omService.InstallationsReturns(installationsReader, nil)
+		omService.CertificatesReturns(certificatesReader, nil)
+		omService.CertificateAuthoritiesReturns(certificateAuthoritiesReader, nil)
+		omService.PendingChangesReturns(pendingChangesReader, nil)
+
+		collectedData, foundationId, err := dataCollectorOperationalOnly.Collect()
+		Expect(err).ToNot(HaveOccurred())
+		Expect(bufferedOutput).To(gbytes.Say("Collecting data from Operations Manager at some-opsmanager-url"))
+		Expect(foundationId).To(Equal("p-bosh-always-first"))
+		Expect(collectedData).To(Equal([]Data{}))
 	})
 
 	It("succeeds when there is a deployed product in a delete state", func() {
