@@ -12,6 +12,7 @@ EOF
 
 pushd go/src/github.com/pivotal-cf/aqueduct-courier
   go get -v -u github.com/pivotal-cf/telemetry-utils
+  go mod tidy
   go mod vendor -v
   git add .
   git config --global user.name "$GITHUB_NAME"
