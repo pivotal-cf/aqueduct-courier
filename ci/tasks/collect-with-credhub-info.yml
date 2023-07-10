@@ -5,8 +5,6 @@ image_resource:
   type: registry-image
   source:
     repository: harbor-repo.vmware.com/dockerhub-proxy-cache/platforminsightsteam/base-ci-image
-  version:
-    digest: 'sha256:7d78959069516f585dc47284cea916267c80d5db1d22abaff81a68e36b63b038'
 
 inputs:
 - name: binary
