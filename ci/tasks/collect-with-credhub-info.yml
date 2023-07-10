@@ -24,12 +24,12 @@ run:
     gcloud auth activate-service-account --key-file <(echo "$GCP_SERVICE_ACCOUNT_KEY")
     gcloud config set project "$GCP_PROJECT_ID"
 
-    gcloud compute scp binary/telemetry-collector-linux-amd64 not-root@"$GCP_INSTANCE_NAME":/tmp --zone "$GCP_ZONE" --quiet
+    gcloud compute scp binary/telemetry-collector-linux-amd64 not-root@"$GCP_INSTANCE_NAME":~ --zone "$GCP_ZONE" --quiet
 
-    command_string="cd /tmp &&
-      rm -rf /tmp/foundation_collection &&
-      mkdir /tmp/foundation_collection &&
-      ./telemetry-collector-linux-amd64 collect --env-type development --with-credhub-info --url $OPS_MANAGER_URL --username $OPS_MANAGER_USERNAME --password $OPS_MANAGER_PASSWORD --insecure-skip-tls-verify --output-dir /tmp/foundation_collection"
+    command_string="cd ~ &&
+      rm -rf ~/foundation_collection &&
+      mkdir ~/foundation_collection &&
+      ./telemetry-collector-linux-amd64 collect --env-type development --with-credhub-info --url $OPS_MANAGER_URL --username $OPS_MANAGER_USERNAME --password $OPS_MANAGER_PASSWORD --insecure-skip-tls-verify --output-dir ~/foundation_collection"
     gcloud compute ssh not-root@"$GCP_INSTANCE_NAME" --zone "$GCP_ZONE" --command "$command_string" --quiet
 
 
