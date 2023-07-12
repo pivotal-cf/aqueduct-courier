@@ -36,7 +36,7 @@ resources:
 - name: aqueduct-courier
   type: git
   source:
-    branch: main
+    branch: ((version))
     uri: git@github.com:pivotal-cf/aqueduct-courier
     private_key: ((github.courier-git-deploy-private-key))
     ignore_paths: [ci]
@@ -81,7 +81,7 @@ resources:
   source:
     driver: git
     uri: git@github.com:pivotal-cf/aqueduct-courier
-    branch: main
+    branch: ((version))
     file: ci/VERSION
     private_key: ((github.courier-git-deploy-private-key))
 - name: collection-timer
