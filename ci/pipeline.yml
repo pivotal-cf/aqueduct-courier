@@ -167,13 +167,13 @@ jobs:
     input_mapping:
       binary: staging-linux-binary
     params:
-      GCP_INSTANCE_NAME: ((toolsmiths/acceptance.opsman-instance-name))
-      GCP_PROJECT_ID: ((toolsmiths/acceptance.gcp-project-id))
+      GCP_INSTANCE_NAME: ((toolsmiths/((vault-acceptance-prefix)).opsman-instance-name))
+      GCP_PROJECT_ID: ((toolsmiths/((vault-acceptance-prefix)).gcp-project-id))
       GCP_SERVICE_ACCOUNT_KEY: ((service-accounts/gcp.ci-759-gcp-service-account-key))
-      GCP_ZONE: ((toolsmiths/acceptance.gcp-zone))
-      OPS_MANAGER_PASSWORD: ((toolsmiths/acceptance.opsman-password))
-      OPS_MANAGER_URL: ((toolsmiths/acceptance.ops-manager-url))
-      OPS_MANAGER_USERNAME: ((toolsmiths/acceptance.opsman-username))
+      GCP_ZONE: ((toolsmiths/((vault-acceptance-prefix)).gcp-zone))
+      OPS_MANAGER_PASSWORD: ((toolsmiths/((vault-acceptance-prefix)).opsman-password))
+      OPS_MANAGER_URL: ((toolsmiths/((vault-acceptance-prefix)).ops-manager-url))
+      OPS_MANAGER_USERNAME: ((toolsmiths/((vault-acceptance-prefix)).opsman-username))
 
 - name: test-collect-and-send
   plan:
@@ -198,16 +198,16 @@ jobs:
     input_mapping:
       binary: staging-linux-binary
     params:
-      CF_API_URL: ((toolsmiths/acceptance.cf-api-url))
+      CF_API_URL: ((toolsmiths/((vault-acceptance-prefix)).cf-api-url))
       ENV_TYPE: development
       FOUNDATION_NICKNAME: telemetry-staging
       INSECURE_SKIP_TLS_VERIFY: true
-      OPS_MANAGER_PASSWORD: ((toolsmiths/acceptance.opsman-password))
-      OPS_MANAGER_URL: ((toolsmiths/acceptance.ops-manager-url))
-      OPS_MANAGER_USERNAME: ((toolsmiths/acceptance.opsman-username))
-      USAGE_SERVICE_URL: ((toolsmiths/acceptance.usage-service-url))
-      USAGE_SERVICE_CLIENT_ID: ((toolsmiths/acceptance.usage-service-client-id))
-      USAGE_SERVICE_CLIENT_SECRET: ((toolsmiths/acceptance.telemetry-usage-service-password))
+      OPS_MANAGER_PASSWORD: ((toolsmiths/((vault-acceptance-prefix)).opsman-password))
+      OPS_MANAGER_URL: ((toolsmiths/((vault-acceptance-prefix)).ops-manager-url))
+      OPS_MANAGER_USERNAME: ((toolsmiths/((vault-acceptance-prefix)).opsman-username))
+      USAGE_SERVICE_URL: ((toolsmiths/((vault-acceptance-prefix)).usage-service-url))
+      USAGE_SERVICE_CLIENT_ID: ((toolsmiths/((vault-acceptance-prefix)).usage-service-client-id))
+      USAGE_SERVICE_CLIENT_SECRET: ((toolsmiths/((vault-acceptance-prefix)).telemetry-usage-service-password))
       USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
   - task: collect-with-opsmanager-client-creds
     file: ci/ci/tasks/collect.yml
@@ -217,16 +217,16 @@ jobs:
     output_mapping:
       collected-data: collected-data-with-client-creds
     params:
-      CF_API_URL: ((toolsmiths/acceptance.cf-api-url))
+      CF_API_URL: ((toolsmiths/((vault-acceptance-prefix)).cf-api-url))
       ENV_TYPE: development
       FOUNDATION_NICKNAME: telemetry-staging
       INSECURE_SKIP_TLS_VERIFY: true
-      OPS_MANAGER_URL: ((toolsmiths/acceptance.ops-manager-url))
-      OPS_MANAGER_CLIENT_ID: ((toolsmiths/acceptance.opsman-client-id))
-      OPS_MANAGER_CLIENT_SECRET: ((toolsmiths/acceptance.opsman-uaa-client-secret))
-      USAGE_SERVICE_URL: ((toolsmiths/acceptance.usage-service-url))
-      USAGE_SERVICE_CLIENT_ID: ((toolsmiths/acceptance.usage-service-client-id))
-      USAGE_SERVICE_CLIENT_SECRET: ((toolsmiths/acceptance.telemetry-usage-service-password))
+      OPS_MANAGER_URL: ((toolsmiths/((vault-acceptance-prefix)).ops-manager-url))
+      OPS_MANAGER_CLIENT_ID: ((toolsmiths/((vault-acceptance-prefix)).opsman-client-id))
+      OPS_MANAGER_CLIENT_SECRET: ((toolsmiths/((vault-acceptance-prefix)).opsman-uaa-client-secret))
+      USAGE_SERVICE_URL: ((toolsmiths/((vault-acceptance-prefix)).usage-service-url))
+      USAGE_SERVICE_CLIENT_ID: ((toolsmiths/((vault-acceptance-prefix)).usage-service-client-id))
+      USAGE_SERVICE_CLIENT_SECRET: ((toolsmiths/((vault-acceptance-prefix)).telemetry-usage-service-password))
       USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
   - task: send
     file: ci/ci/tasks/send.yml
@@ -296,16 +296,16 @@ jobs:
       binary: production-linux-binary
     file: ci/ci/tasks/collect.yml
     params:
-      CF_API_URL: ((toolsmiths/production.cf-api-url))
+      CF_API_URL: ((toolsmiths/((vault-production-prefix)).cf-api-url))
       ENV_TYPE: development
       FOUNDATION_NICKNAME: telemetry-production
       INSECURE_SKIP_TLS_VERIFY: true
-      OPS_MANAGER_URL: ((toolsmiths/production.ops-manager-url))
-      OPS_MANAGER_USERNAME: ((toolsmiths/production.opsman-username))
-      OPS_MANAGER_PASSWORD: ((toolsmiths/production.opsman-password))
-      USAGE_SERVICE_URL: ((toolsmiths/production.usage-service-url))
-      USAGE_SERVICE_CLIENT_ID: ((toolsmiths/production.usage-service-client-id))
-      USAGE_SERVICE_CLIENT_SECRET: ((toolsmiths/production.telemetry-usage-service-password))
+      OPS_MANAGER_URL: ((toolsmiths/((vault-production-prefix)).ops-manager-url))
+      OPS_MANAGER_USERNAME: ((toolsmiths/((vault-production-prefix)).opsman-username))
+      OPS_MANAGER_PASSWORD: ((toolsmiths/((vault-production-prefix)).opsman-password))
+      USAGE_SERVICE_URL: ((toolsmiths/((vault-production-prefix)).usage-service-url))
+      USAGE_SERVICE_CLIENT_ID: ((toolsmiths/((vault-production-prefix)).usage-service-client-id))
+      USAGE_SERVICE_CLIENT_SECRET: ((toolsmiths/((vault-production-prefix)).telemetry-usage-service-password))
       USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
   - task: send
     image: platform-automation-image
@@ -386,17 +386,17 @@ jobs:
     image: platform-automation-image
     file: ci/ci/tasks/collect.yml
     params:
-      CF_API_URL: ((toolsmiths/production.cf-api-url))
+      CF_API_URL: ((toolsmiths/((vault-production-prefix)).cf-api-url))
       ENV_TYPE: development
       FOUNDATION_NICKNAME: telemetry-production
       INSECURE_SKIP_TLS_VERIFY: true
-      OPS_MANAGER_PASSWORD: ((toolsmiths/production.opsman-password))
-      OPS_MANAGER_USERNAME: ((toolsmiths/production.opsman-username))
-      OPS_MANAGER_URL: ((toolsmiths/production.ops-manager-url))
-      USAGE_SERVICE_CLIENT_ID: ((toolsmiths/production.usage-service-client-id))
-      USAGE_SERVICE_CLIENT_SECRET: ((toolsmiths/production.telemetry-usage-service-password))
+      OPS_MANAGER_PASSWORD: ((toolsmiths/((vault-production-prefix)).opsman-password))
+      OPS_MANAGER_USERNAME: ((toolsmiths/((vault-production-prefix)).opsman-username))
+      OPS_MANAGER_URL: ((toolsmiths/((vault-production-prefix)).ops-manager-url))
+      USAGE_SERVICE_CLIENT_ID: ((toolsmiths/((vault-production-prefix)).usage-service-client-id))
+      USAGE_SERVICE_CLIENT_SECRET: ((toolsmiths/((vault-production-prefix)).telemetry-usage-service-password))
       USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
-      USAGE_SERVICE_URL: ((toolsmiths/production.usage-service-url))
+      USAGE_SERVICE_URL: ((toolsmiths/((vault-production-prefix)).usage-service-url))
   - task: send
     image: platform-automation-image
     file: tasks/send.yml
