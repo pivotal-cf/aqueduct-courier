@@ -43,8 +43,8 @@ var _ = Describe("DataCollector", func() {
 			return uuid.FromString(uuidString)
 		}
 
-		collector = NewCollector(omDataCollector, nil, nil, tarWriter, uuidProvider, false)
-		collectorOperationalDataOnly = NewCollector(omDataCollector, nil, nil, tarWriter, uuidProvider, true)
+		collector = NewCollector(omDataCollector, nil, nil, nil, tarWriter, uuidProvider, false)
+		collectorOperationalDataOnly = NewCollector(omDataCollector, nil, nil, nil, tarWriter, uuidProvider, true)
 	})
 
 	It("collects opsmanager data and writes it", func() {
@@ -193,8 +193,8 @@ var _ = Describe("DataCollector", func() {
 
 		BeforeEach(func() {
 			credhubDataCollector = new(operationsfakes.FakeCredhubDataCollector)
-			collectorWithCredhub = NewCollector(omDataCollector, credhubDataCollector, nil, tarWriter, uuidProvider, false)
-			collectorWithCredhubOperationalDataOnly = NewCollector(omDataCollector, credhubDataCollector, nil, tarWriter, uuidProvider, true)
+			collectorWithCredhub = NewCollector(omDataCollector, credhubDataCollector, nil, nil, tarWriter, uuidProvider, false)
+			collectorWithCredhubOperationalDataOnly = NewCollector(omDataCollector, credhubDataCollector, nil, nil, tarWriter, uuidProvider, true)
 		})
 
 		It("collects credhub data and writes it", func() {
@@ -317,8 +317,8 @@ var _ = Describe("DataCollector", func() {
 
 		BeforeEach(func() {
 			consumptionDataCollector = new(operationsfakes.FakeConsumptionDataCollector)
-			collectorWithConsumption = NewCollector(omDataCollector, nil, consumptionDataCollector, tarWriter, uuidProvider, false)
-			collectorWithConsumptionOperationalDataOnly = NewCollector(omDataCollector, nil, consumptionDataCollector, tarWriter, uuidProvider, true)
+			collectorWithConsumption = NewCollector(omDataCollector, nil, consumptionDataCollector, nil, tarWriter, uuidProvider, false)
+			collectorWithConsumptionOperationalDataOnly = NewCollector(omDataCollector, nil, consumptionDataCollector, nil, tarWriter, uuidProvider, true)
 		})
 
 		It("collects consumption data and writes it", func() {

@@ -10,7 +10,6 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/big"
 	"net"
 	"net/http"
@@ -85,7 +84,7 @@ var _ = Describe("Service", func() {
 		reader, err := service.Certificates()
 		Expect(err).NotTo(HaveOccurred())
 
-		certContent, err := ioutil.ReadAll(reader)
+		certContent, err := io.ReadAll(reader)
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(certificatesBody.isClosed).To(BeTrue())

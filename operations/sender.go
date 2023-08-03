@@ -1,9 +1,9 @@
 package operations
 
 import (
+	"compress/gzip"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 
@@ -13,7 +13,7 @@ import (
 const (
 	AuthorizationHeaderKey         = "Authorization"
 	PostPath                       = "/collections/batch"
-	TarMimeType                    = "application/tar"
+	TarMimeType                    = "application/tar+gzip"
 	HTTPSenderVersionRequestHeader = "Pivotal-Telemetry-Sender-Version"
 
 	RequestCreationFailureMessage = "Failed make request object"
@@ -31,13 +31,13 @@ type httpClient interface {
 }
 
 func (s SendExecutor) Send(client httpClient, tarFilePath, dataLoaderURL, apiToken, senderVersion string) error {
-	file, err := os.Open(tarFilePath)
+	fileReader, err := gzipOnTheFlyFileReader(tarFilePath)
 	if err != nil {
 		return errors.Wrap(err, ReadDataFileError)
 	}
-	defer file.Close()
+	defer fileReader.Close()
 
-	req, err := makeFileUploadRequest(file, apiToken, dataLoaderURL+PostPath, senderVersion)
+	req, err := makeFileUploadRequest(fileReader, apiToken, dataLoaderURL+PostPath, senderVersion)
 	if err != nil {
 		return errors.Wrap(err, RequestCreationFailureMessage)
 	}
@@ -62,6 +62,35 @@ func makeFileUploadRequest(bodyReader io.Reader, apiToken, uploadURL, senderVers
 	return req, nil
 }
 
+func gzipOnTheFlyFileReader(fname string) (io.ReadCloser, error) {
+	f, err := os.Open(fname)
+	if err != nil {
+		return nil, err
+	}
+
+	// Use io.Pipe and a goroutine to create reader
+	r, w := io.Pipe()
+	go func() {
+		// Always close the file.
+		defer f.Close()
+
+		// Copy file through gzip to pipe writer.
+		gzw := gzip.NewWriter(w)
+		_, err := io.Copy(gzw, f)
+
+		// Use CloseWithError to propagate errors back to
+		// the main goroutine.
+		if err != nil {
+			w.CloseWithError(err)
+			return
+		}
+
+		// Flush the gzip writer.
+		w.CloseWithError(gzw.Close())
+	}()
+	return r, nil
+}
+
 func checkStatusCode(resp *http.Response) error {
 	switch statusCode := resp.StatusCode; statusCode {
 	case http.StatusCreated:
@@ -69,7 +98,7 @@ func checkStatusCode(resp *http.Response) error {
 	case http.StatusUnauthorized:
 		return errors.New(UnauthorizedErrorMessage)
 	default:
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return errors.Errorf(UnexpectedServerErrorFormat, "unknown")
 		}

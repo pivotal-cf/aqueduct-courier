@@ -23,6 +23,7 @@ import (
 	"github.com/pivotal-cf/aqueduct-courier/cf"
 	"github.com/pivotal-cf/aqueduct-courier/credhub"
 
+	"github.com/pivotal-cf/aqueduct-courier/coreconsumption"
 	"github.com/pivotal-cf/aqueduct-courier/operations"
 	"github.com/pivotal-cf/aqueduct-courier/opsmanager"
 	omNetwork "github.com/pivotal-cf/om/network"
@@ -302,6 +303,10 @@ type consumptionDataCollector interface {
 	Collect() ([]consumption.Data, error)
 }
 
+type coreConsumptionDataCollector interface {
+	Collect() ([]coreconsumption.Data, error)
+}
+
 func makeConsumptionCollector() (consumptionDataCollector, error) {
 	if anyUsageServiceConfigsProvided() {
 		err := validateUsageServiceConfig()
@@ -404,10 +409,21 @@ func makeCollector(tarWriter *tar.TarWriter, operationalDataOnly bool) (*operati
 		return nil, err
 	}
 
+	// collect data from api/v0/download_core_consumption
+	ccOmService := &coreconsumption.Service{
+		Requestor: apiService,
+	}
+
+	coreConsumptionCollector := coreconsumption.NewDataCollector(
+		*logger,
+		ccOmService,
+		viper.GetString(OpsManagerURLFlag),
+	)
+
 	credhubCollector, err := makeCredhubCollector(omService, viper.GetBool(CollectFromCredhubFlag))
 	if err != nil {
 		return nil, err
 	}
 
-	return operations.NewCollector(omCollector, credhubCollector, consumptionCollector, tarWriter, uuid.DefaultGenerator, operationalDataOnly), nil
+	return operations.NewCollector(omCollector, credhubCollector, consumptionCollector, coreConsumptionCollector, tarWriter, uuid.DefaultGenerator, operationalDataOnly), nil
 }

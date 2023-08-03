@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -46,7 +45,7 @@ var _ = Describe("Collect", func() {
 
 	BeforeEach(func() {
 		var err error
-		outputDirPath, err = ioutil.TempDir("", "")
+		outputDirPath, err = os.MkdirTemp("", "")
 		Expect(err).NotTo(HaveOccurred())
 
 		opsManagerServer = setupOpsManagerServer()
@@ -58,7 +57,7 @@ var _ = Describe("Collect", func() {
 			cmd.OutputPathKey:         outputDirPath,
 		}
 
-		configDirPath, err = ioutil.TempDir("", "")
+		configDirPath, err = os.MkdirTemp("", "")
 		Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -92,7 +91,7 @@ var _ = Describe("Collect", func() {
 				"output-dir": "%s"
 			}`, opsManagerServer.URL(), escapeFilePathForWindows(outputDirPath))
 			configFile := filepath.Join(configDirPath, "config.yml")
-			err := ioutil.WriteFile(configFile, []byte(config), 0755)
+			err := os.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
 
 			command := exec.Command(aqueductBinaryPath, "collect", "--config", configFile)
@@ -115,7 +114,7 @@ var _ = Describe("Collect", func() {
 				"output-dir": "%s"
 			}`, escapeFilePathForWindows(outputDirPath)))
 			configFile := filepath.Join(configDirPath, "config.yml")
-			err := ioutil.WriteFile(configFile, []byte(config), 0755)
+			err := os.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
 
 			command := exec.Command(aqueductBinaryPath, "collect",
@@ -141,7 +140,7 @@ var _ = Describe("Collect", func() {
 				"output-dir": "%s"
 			}`, escapeFilePathForWindows(outputDirPath))
 			configFile := filepath.Join(configDirPath, "config.yml")
-			err := ioutil.WriteFile(configFile, []byte(config), 0755)
+			err := os.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
 
 			command := exec.Command(aqueductBinaryPath, "collect", "--config", configFile)
@@ -166,7 +165,7 @@ var _ = Describe("Collect", func() {
 				"output-dir": "%s"
 			}`, opsManagerServer.URL(), escapeFilePathForWindows(outputDirPath))
 			configFile := filepath.Join(configDirPath, "config.yml")
-			err := ioutil.WriteFile(configFile, []byte(config), 0755)
+			err := os.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
 
 			command := exec.Command(aqueductBinaryPath, "collect", "--config", configFile)
@@ -190,7 +189,7 @@ var _ = Describe("Collect", func() {
 				"output-dir": "%s"
 			}`, opsManagerServer.URL(), escapeFilePathForWindows(outputDirPath))
 			configFile := filepath.Join(configDirPath, "config.yml")
-			err := ioutil.WriteFile(configFile, []byte(config), 0755)
+			err := os.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
 
 			command := exec.Command(aqueductBinaryPath, "collect",
@@ -216,7 +215,7 @@ var _ = Describe("Collect", func() {
 				"output-dir": "%s"
 			}`, opsManagerServer.URL(), escapeFilePathForWindows(outputDirPath))
 			configFile := filepath.Join(configDirPath, "config.yml")
-			err := ioutil.WriteFile(configFile, []byte(config), 0755)
+			err := os.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
 
 			command := exec.Command(aqueductBinaryPath, "collect", "--config", configFile)
@@ -284,7 +283,7 @@ var _ = Describe("Collect", func() {
 			}`, envType, opsManagerServer.URL(), escapeFilePathForWindows(outputDirPath))
 
 			configFile := filepath.Join(configDirPath, "config.yml")
-			err := ioutil.WriteFile(configFile, []byte(config), 0755)
+			err := os.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
 
 			command := exec.Command(aqueductBinaryPath, "collect", "--config", configFile)
@@ -369,7 +368,7 @@ var _ = Describe("Collect", func() {
 			}`, opsManagerServer.URL(), escapeFilePathForWindows(outputDirPath))
 
 			configFile := filepath.Join(configDirPath, "config.yml")
-			err := ioutil.WriteFile(configFile, []byte(config), 0755)
+			err := os.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
 
 			command := exec.Command(aqueductBinaryPath, "collect", "--config", configFile)
@@ -431,7 +430,7 @@ var _ = Describe("Collect", func() {
 			}`, opsManagerServer.URL(), escapeFilePathForWindows(outputDirPath))
 
 			configFile := filepath.Join(configDirPath, "config.yml")
-			err := ioutil.WriteFile(configFile, []byte(config), 0755)
+			err := os.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
 
 			command := exec.Command(aqueductBinaryPath, "collect", "--config", configFile)
@@ -490,7 +489,7 @@ var _ = Describe("Collect", func() {
 			}`, opsManagerServer.URL(), escapeFilePathForWindows(outputDirPath))
 
 			configFile := filepath.Join(configDirPath, "config.yml")
-			err := ioutil.WriteFile(configFile, []byte(config), 0755)
+			err := os.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
 
 			command := exec.Command(aqueductBinaryPath, "collect", "--config", configFile)
@@ -585,7 +584,7 @@ var _ = Describe("Collect", func() {
 				"usage-service-timeout": 10
 			}`, opsManagerServer.URL(), escapeFilePathForWindows(outputDirPath), cfService.URL(), usageService.URL())
 			configFile := filepath.Join(configDirPath, "config.yml")
-			err := ioutil.WriteFile(configFile, []byte(config), 0755)
+			err := os.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
 
 			command := exec.Command(aqueductBinaryPath, "collect", "--config", configFile)
@@ -779,7 +778,7 @@ var _ = Describe("Collect", func() {
 				"with-credhub-info": "true"
 			}`, opsManagerServer.URL(), escapeFilePathForWindows(outputDirPath))
 			configFile := filepath.Join(configDirPath, "config.yml")
-			err := ioutil.WriteFile(configFile, []byte(config), 0755)
+			err := os.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
 
 			command := exec.Command(aqueductBinaryPath, "collect", "--config", configFile)
@@ -1027,7 +1026,7 @@ var _ = Describe("Collect", func() {
 })
 
 func validatedTarFilePath(outputDirPath string) string {
-	fileInfos, err := ioutil.ReadDir(outputDirPath)
+	fileInfos, err := os.ReadDir(outputDirPath)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(len(fileInfos)).To(Equal(1), fmt.Sprintf("Expected output dir %s to include a single file", outputDirPath))
 	Expect(fileInfos[0].Name()).To(MatchRegexp(fmt.Sprintf(`%s%s.tar$`, cmd.OutputFilePrefix, UnixTimestampRegexp)))
@@ -1035,7 +1034,7 @@ func validatedTarFilePath(outputDirPath string) string {
 }
 
 func assertMetadataFileIsCorrect(contentDir, expectedEnvType, dataSetType string) {
-	content, err := ioutil.ReadFile(filepath.Join(contentDir, dataSetType, collector_tar.MetadataFileName))
+	content, err := os.ReadFile(filepath.Join(contentDir, dataSetType, collector_tar.MetadataFileName))
 	Expect(err).NotTo(HaveOccurred(), "Expected metadata file to exist but did not")
 	var metadata collector_tar.Metadata
 	Expect(json.Unmarshal(content, &metadata)).To(Succeed())
@@ -1044,13 +1043,13 @@ func assertMetadataFileIsCorrect(contentDir, expectedEnvType, dataSetType string
 }
 
 func assertOutputDirEmpty(outputDirPath string) {
-	fileInfos, err := ioutil.ReadDir(outputDirPath)
+	fileInfos, err := os.ReadDir(outputDirPath)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(len(fileInfos)).To(Equal(0), fmt.Sprintf("Expected output dir %s to be empty", outputDirPath))
 }
 
 func assertValidOutput(tarFilePath, dataSetType, filename, envType string) {
-	tmpDir, err := ioutil.TempDir("", "")
+	tmpDir, err := os.MkdirTemp("", "")
 	Expect(err).NotTo(HaveOccurred())
 	defer os.RemoveAll(tmpDir)
 
@@ -1061,14 +1060,14 @@ func assertValidOutput(tarFilePath, dataSetType, filename, envType string) {
 	jsonFilePath := filepath.Join(tmpDir, dataSetType, filename)
 
 	Expect(jsonFilePath).To(BeAnExistingFile())
-	content, err := ioutil.ReadFile(jsonFilePath)
+	content, err := os.ReadFile(jsonFilePath)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(json.Valid(content)).To(BeTrue(), fmt.Sprintf("Expected file %s to contain valid json", jsonFilePath))
 	assertMetadataFileIsCorrect(tmpDir, envType, dataSetType)
 }
 
 func assertValidNickname(tarFilePath, dataSetType, filename, foundationNickname string) {
-	tmpDir, err := ioutil.TempDir("", "")
+	tmpDir, err := os.MkdirTemp("", "")
 	Expect(err).NotTo(HaveOccurred())
 	defer os.RemoveAll(tmpDir)
 
@@ -1079,11 +1078,11 @@ func assertValidNickname(tarFilePath, dataSetType, filename, foundationNickname 
 	jsonFilePath := filepath.Join(tmpDir, dataSetType, filename)
 
 	Expect(jsonFilePath).To(BeAnExistingFile())
-	content, err := ioutil.ReadFile(jsonFilePath)
+	content, err := os.ReadFile(jsonFilePath)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(json.Valid(content)).To(BeTrue(), fmt.Sprintf("Expected file %s to contain valid json", jsonFilePath))
 
-	content, err = ioutil.ReadFile(filepath.Join(tmpDir, dataSetType, collector_tar.MetadataFileName))
+	content, err = os.ReadFile(filepath.Join(tmpDir, dataSetType, collector_tar.MetadataFileName))
 	Expect(err).NotTo(HaveOccurred(), "Expected metadata file to exist but did not")
 	var metadata collector_tar.Metadata
 	Expect(json.Unmarshal(content, &metadata)).To(Succeed())
@@ -1130,6 +1129,11 @@ func setupOpsManagerServer() *ghttp.Server {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(`[]`))
 	}
+	emptyCSVResponse := func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "text/csv")
+		w.Write([]byte(``))
+	}
+
 	opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/staged/pending_changes", emptyObjectResponse)
 	opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/deployed/products", emptyArrayResponse)
 	opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/vm_types", emptyArrayResponse)
@@ -1137,6 +1141,8 @@ func setupOpsManagerServer() *ghttp.Server {
 	opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/installations", emptyObjectResponse)
 	opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/deployed/certificates", emptyObjectResponse)
 	opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/certificate_authorities", emptyObjectResponse)
+	opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/certificate_authorities", emptyObjectResponse)
+	opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/download_core_consumption", emptyCSVResponse)
 
 	return opsManagerServer
 }

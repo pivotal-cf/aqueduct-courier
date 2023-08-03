@@ -1,12 +1,14 @@
 package integration
 
 import (
+	"bytes"
+	"compress/gzip"
 	"crypto/md5"
 	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -56,7 +58,7 @@ var _ = Describe("Send", func() {
 			)
 			Expect(err).NotTo(HaveOccurred())
 
-			tempDir, err = ioutil.TempDir("", "")
+			tempDir, err = os.MkdirTemp("", "")
 			Expect(err).NotTo(HaveOccurred())
 
 			sourceDataTarFilePath = generateValidDataTarFile(tempDir)
@@ -93,8 +95,10 @@ var _ = Describe("Send", func() {
 			Expect(err).NotTo(HaveOccurred())
 			defer srcDataTarFile.Close()
 
-			srcContentBytes, err := ioutil.ReadAll(srcDataTarFile)
+			srcContentBytes, err := io.ReadAll(srcDataTarFile)
 			Expect(err).NotTo(HaveOccurred())
+
+			srcGzippedContentBytes := getGzippedContentBytes(srcContentBytes)
 
 			dataLoader.RouteToHandler(http.MethodPost, operations.PostPath, ghttp.CombineHandlers(
 				ghttp.VerifyHeader(http.Header{
@@ -102,7 +106,7 @@ var _ = Describe("Send", func() {
 					"Content-Type":  []string{operations.TarMimeType},
 					operations.HTTPSenderVersionRequestHeader: []string{testVersion},
 				}),
-				ghttp.VerifyBody(srcContentBytes),
+				ghttp.VerifyBody(srcGzippedContentBytes),
 				ghttp.RespondWith(http.StatusCreated, ""),
 			))
 		})
@@ -139,7 +143,7 @@ var _ = Describe("Send", func() {
 			)
 			Expect(err).NotTo(HaveOccurred())
 
-			tempDir, err = ioutil.TempDir("", "")
+			tempDir, err = os.MkdirTemp("", "")
 			Expect(err).NotTo(HaveOccurred())
 
 			sourceDataTarFilePath = generateValidDataTarFile(tempDir)
@@ -156,8 +160,9 @@ var _ = Describe("Send", func() {
 				Expect(err).NotTo(HaveOccurred())
 				defer srcDataTarFile.Close()
 
-				srcContentBytes, err := ioutil.ReadAll(srcDataTarFile)
+				srcContentBytes, err := io.ReadAll(srcDataTarFile)
 				Expect(err).NotTo(HaveOccurred())
+				srcGzippedContentBytes := getGzippedContentBytes(srcContentBytes)
 
 				dataLoader.RouteToHandler(http.MethodPost, operations.PostPath, ghttp.CombineHandlers(
 					ghttp.VerifyHeader(http.Header{
@@ -165,7 +170,7 @@ var _ = Describe("Send", func() {
 						"Content-Type":  []string{operations.TarMimeType},
 						operations.HTTPSenderVersionRequestHeader: []string{testVersion},
 					}),
-					ghttp.VerifyBody(srcContentBytes),
+					ghttp.VerifyBody(srcGzippedContentBytes),
 					ghttp.RespondWith(http.StatusCreated, ""),
 				))
 			})
@@ -253,7 +258,7 @@ var _ = Describe("Send", func() {
 			)
 			Expect(err).NotTo(HaveOccurred())
 
-			tempDir, err = ioutil.TempDir("", "")
+			tempDir, err = os.MkdirTemp("", "")
 			Expect(err).NotTo(HaveOccurred())
 
 			sourceDataTarFilePath = generateValidDataTarFile(tempDir)
@@ -310,4 +315,13 @@ func generateValidDataTarFile(destinationDir string) string {
 	Expect(writer.AddFile(metadataContents, filepath.Join("some-data-set-name1", collector_tar.MetadataFileName))).To(Succeed())
 
 	return tarFilePath
+}
+
+func getGzippedContentBytes(src []byte) []byte {
+	var b bytes.Buffer
+	w := gzip.NewWriter(&b)
+	_, err := w.Write(src)
+	Expect(err).NotTo(HaveOccurred())
+	w.Close()
+	return b.Bytes()
 }

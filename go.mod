@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	code.cloudfoundry.org/credhub-cli v0.0.0-20210802130126-03ba1c405d5e
-	github.com/elazarl/goproxy v0.0.0-20210801061803-8e322dfb79c4
+	github.com/elazarl/goproxy v0.0.0-20230808193330-2592e75ae04a
 	github.com/gofrs/uuid v4.0.0+incompatible
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/mholt/archiver v3.1.1+incompatible

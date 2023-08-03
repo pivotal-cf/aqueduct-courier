@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -240,7 +239,7 @@ func (s *Service) makeRequest(path string) ([]byte, error) {
 		return nil, errors.New(fmt.Sprintf(RequestUnexpectedStatusErrorFormat, http.MethodGet, path, resp.StatusCode))
 	}
 
-	contents, err := ioutil.ReadAll(resp.Body)
+	contents, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, errors.Wrapf(err, ReadResponseBodyFailureFormat, input.Path)
 	}

@@ -2,7 +2,7 @@ package cf
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"path"
@@ -56,7 +56,7 @@ func (cl *Client) GetUAAURL() (string, error) {
 		return "", errors.Errorf(CFApiUnexpectedResponseStatusErrorFormat, resp.StatusCode)
 	}
 
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", errors.Wrapf(err, CFApiReadResponseError, cfApiURL.String())
 	}

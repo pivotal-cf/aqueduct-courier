@@ -1,7 +1,10 @@
 package operations_test
 
 import (
+	"bytes"
+	"compress/gzip"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -41,7 +44,7 @@ var _ = Describe("Sender", func() {
 
 		client.DoStub = func(request *http.Request) (response *http.Response, e error) {
 			var err error
-			doBodyContents, err = ioutil.ReadAll(request.Body)
+			doBodyContents, err = io.ReadAll(request.Body)
 			Expect(err).NotTo(HaveOccurred())
 
 			return &http.Response{StatusCode: http.StatusCreated, Body: emptyBody}, nil
@@ -60,14 +63,24 @@ var _ = Describe("Sender", func() {
 		req := client.DoArgsForCall(0)
 		Expect(req.URL.String()).To(Equal(fmt.Sprintf("http://example.com%s", PostPath)))
 
+		gzipReader, err := gzip.NewReader(bytes.NewReader(doBodyContents))
 		Expect(err).ToNot(HaveOccurred())
-		Expect(string(doBodyContents)).To(Equal(tarContent))
+		gunzippedTarContent, err := io.ReadAll(gzipReader)
+		Expect(err).ToNot(HaveOccurred())
+
+		Expect(string(gunzippedTarContent)).To(Equal(tarContent))
 	})
 
 	It("posts to the data loader with the correct API key in the header", func() {
 		Expect(sender.Send(client, tmpFile.Name(), "http://example.com", "some-key", "")).To(Succeed())
 		req := client.DoArgsForCall(0)
 		Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-key"))
+	})
+
+	It("posts to the data loader with the correct Content-Type header", func() {
+		Expect(sender.Send(client, tmpFile.Name(), "http://example.com", "some-key", "")).To(Succeed())
+		req := client.DoArgsForCall(0)
+		Expect(req.Header.Get("Content-Type")).To(Equal("application/tar+gzip"))
 	})
 
 	It("fails if the request object cannot be created", func() {

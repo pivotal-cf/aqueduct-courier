@@ -32,14 +32,17 @@ var _ = Describe("Service", func() {
 
 	Describe("DeployedProducts", func() {
 		It("returns deployed products content", func() {
+			// GIVEN
 			body := &readerCloser{reader: strings.NewReader("deployed-products")}
-
 			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
+			// WHEN
 			actual, err := service.DeployedProducts()
+
+			// THEN
 			Expect(err).NotTo(HaveOccurred())
 			Expect(body.isClosed).To(BeTrue())
-			content, err := ioutil.ReadAll(actual)
+			content, err := io.ReadAll(actual)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(content).To(Equal([]byte("deployed-products")))
 			Expect(requestor.CurlCallCount()).To(Equal(1))
@@ -92,7 +95,7 @@ var _ = Describe("Service", func() {
 			actual, err := service.ProductResources(productGUID)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(body.isClosed).To(BeTrue())
-			content, err := ioutil.ReadAll(actual)
+			content, err := io.ReadAll(actual)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(content).To(Equal([]byte("product-resources")))
 
@@ -214,7 +217,7 @@ var _ = Describe("Service", func() {
 
 			actual, err := service.ProductProperties(productGUID)
 			Expect(err).NotTo(HaveOccurred())
-			actualContent, err := ioutil.ReadAll(actual)
+			actualContent, err := io.ReadAll(actual)
 			Expect(err).NotTo(HaveOccurred())
 
 			var actualProperties map[string]map[string]map[string]interface{}
@@ -289,7 +292,7 @@ var _ = Describe("Service", func() {
 			actual, err := service.VmTypes()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(body.isClosed).To(BeTrue())
-			content, err := ioutil.ReadAll(actual)
+			content, err := io.ReadAll(actual)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(content).To(Equal([]byte("vm-types")))
 			Expect(requestor.CurlCallCount()).To(Equal(1))
@@ -356,7 +359,7 @@ var _ = Describe("Service", func() {
 			actual, err := service.DiagnosticReport()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(body.isClosed).To(BeTrue())
-			actualContent, err := ioutil.ReadAll(actual)
+			actualContent, err := io.ReadAll(actual)
 			Expect(err).NotTo(HaveOccurred())
 
 			var actualDiagnosticReport map[string]interface{}
@@ -414,7 +417,7 @@ var _ = Describe("Service", func() {
 
 			actual, err := service.Installations()
 			Expect(err).NotTo(HaveOccurred())
-			actualContent, err := ioutil.ReadAll(actual)
+			actualContent, err := io.ReadAll(actual)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(string(actualContent)).To(Equal(`{"installations":[{"other":42},{"other":24}]}`))
@@ -485,7 +488,7 @@ var _ = Describe("Service", func() {
 
 			actual, err := service.Certificates()
 			Expect(err).NotTo(HaveOccurred())
-			actualContent, err := ioutil.ReadAll(actual)
+			actualContent, err := io.ReadAll(actual)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(actualContent)).To(Equal(`{"certificates":[{"keys": "for-certs"}]}`))
 			Expect(requestor.CurlCallCount()).To(Equal(1))
@@ -538,7 +541,7 @@ var _ = Describe("Service", func() {
 
 			actual, err := service.CertificateAuthorities()
 			Expect(err).NotTo(HaveOccurred())
-			actualContent, err := ioutil.ReadAll(actual)
+			actualContent, err := io.ReadAll(actual)
 			Expect(err).NotTo(HaveOccurred())
 			var actualCertAuths map[string][]interface{}
 			err = json.Unmarshal(actualContent, &actualCertAuths)
@@ -689,7 +692,7 @@ var _ = Describe("Service", func() {
 			actual, err := service.PendingChanges()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(body.isClosed).To(BeTrue())
-			content, err := ioutil.ReadAll(actual)
+			content, err := io.ReadAll(actual)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(content).To(Equal([]byte("pending_changes")))
 			Expect(requestor.CurlCallCount()).To(Equal(1))

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"time"
@@ -45,7 +44,7 @@ func (s *Service) Certificates() (io.Reader, error) {
 
 	defer resp.Body.Close()
 
-	certificatesContent, err := ioutil.ReadAll(resp.Body)
+	certificatesContent, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, errors.Wrap(err, ListCertificatesReadError)
 	}
@@ -85,7 +84,7 @@ func (s *Service) Certificates() (io.Reader, error) {
 }
 
 func parseCertFromDataResponse(body io.Reader) (*x509.Certificate, error) {
-	dataContent, err := ioutil.ReadAll(body)
+	dataContent, err := io.ReadAll(body)
 	if err != nil {
 		return nil, err
 	}

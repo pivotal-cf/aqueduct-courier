@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"path"
@@ -57,7 +56,7 @@ var _ = Describe("Service", func() {
 			Expect(req.URL).To(Equal(usageURL))
 
 			Expect(body.isClosed).To(BeTrue())
-			content, err := ioutil.ReadAll(respBody)
+			content, err := io.ReadAll(respBody)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(content).To(Equal([]byte(expectedBody)))
 		})
@@ -149,7 +148,7 @@ var _ = Describe("Service", func() {
 			Expect(req.URL).To(Equal(usageURL))
 
 			Expect(body.isClosed).To(BeTrue())
-			content, err := ioutil.ReadAll(respBody)
+			content, err := io.ReadAll(respBody)
 			Expect(err).NotTo(HaveOccurred())
 
 			var actualResults map[string]interface{}
@@ -268,7 +267,7 @@ var _ = Describe("Service", func() {
 			Expect(req.URL).To(Equal(usageURL))
 
 			Expect(body.isClosed).To(BeTrue())
-			content, err := ioutil.ReadAll(respBody)
+			content, err := io.ReadAll(respBody)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(content).To(Equal(expectedBody))
 		})

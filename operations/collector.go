@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"path"
 	"time"
 
@@ -14,6 +13,7 @@ import (
 
 	"github.com/pivotal-cf/aqueduct-courier/credhub"
 
+	"github.com/pivotal-cf/aqueduct-courier/coreconsumption"
 	"github.com/pivotal-cf/aqueduct-courier/opsmanager"
 	"github.com/pivotal-cf/telemetry-utils/collector_tar"
 	"github.com/pkg/errors"
@@ -26,6 +26,7 @@ const (
 	DataWriteFailureMessage         = "Failed writing data"
 	ContentReadingFailureMessage    = "Failed to read content"
 	UUIDGenerationErrorMessage      = "unable to generate UUID"
+	CoreCountsCollectFailureMessage = "Failed collecting from Core Counting API"
 )
 
 //go:generate counterfeiter . omDataCollector
@@ -41,6 +42,11 @@ type credhubDataCollector interface {
 //go:generate counterfeiter . consumptionDataCollector
 type consumptionDataCollector interface {
 	Collect() ([]consumption.Data, error)
+}
+
+//go:generate counterfeiter . coreConsumptionDataCollector
+type coreConsumptionDataCollector interface {
+	Collect() ([]coreconsumption.Data, error)
 }
 
 //go:generate counterfeiter . tarWriter
@@ -66,13 +72,14 @@ type CollectExecutor struct {
 	opsmanagerDC        omDataCollector
 	credhubDC           credhubDataCollector
 	consumptionDC       consumptionDataCollector
+	coreConsumptionDC   coreConsumptionDataCollector
 	tarWriter           tarWriter
 	uuidProvider        uuidProvider
 	operationalDataOnly bool
 }
 
-func NewCollector(opsmanagerDC omDataCollector, credhubDC credhubDataCollector, consumptionDC consumptionDataCollector, tarWriter tarWriter, uuidProvider uuidProvider, operationalDataOnly bool) *CollectExecutor {
-	return &CollectExecutor{opsmanagerDC: opsmanagerDC, credhubDC: credhubDC, consumptionDC: consumptionDC, tarWriter: tarWriter, uuidProvider: uuidProvider, operationalDataOnly: operationalDataOnly}
+func NewCollector(opsmanagerDC omDataCollector, credhubDC credhubDataCollector, consumptionDC consumptionDataCollector, coreConsumptionDC coreConsumptionDataCollector, tarWriter tarWriter, uuidProvider uuidProvider, operationalDataOnly bool) *CollectExecutor {
+	return &CollectExecutor{opsmanagerDC: opsmanagerDC, credhubDC: credhubDC, consumptionDC: consumptionDC, coreConsumptionDC: coreConsumptionDC, tarWriter: tarWriter, uuidProvider: uuidProvider, operationalDataOnly: operationalDataOnly}
 }
 
 func (ce *CollectExecutor) Collect(envType, collectorVersion, foundationNickname string) error {
@@ -82,28 +89,39 @@ func (ce *CollectExecutor) Collect(envType, collectorVersion, foundationNickname
 	if err != nil {
 		return errors.Wrap(err, UUIDGenerationErrorMessage)
 	}
+	collectionIDAsString := collectionID.String()
 
 	omDatas, foundationId, err := ce.opsmanagerDC.Collect()
 	if err != nil {
 		return errors.Wrap(err, OpsManagerCollectFailureMessage)
 	}
 
+	collectedAtTime := time.Now().UTC().Format(time.RFC3339)
 	opsManagerMetadata := collector_tar.Metadata{
 		CollectorVersion:   collectorVersion,
 		EnvType:            envType,
-		CollectionId:       collectionID.String(),
+		CollectionId:       collectionIDAsString,
 		FoundationId:       foundationId,
 		FoundationNickname: foundationNickname,
-		CollectedAt:        time.Now().UTC().Format(time.RFC3339),
+		CollectedAt:        collectedAtTime,
 	}
 
 	usageMetadata := collector_tar.Metadata{
 		CollectorVersion:   collectorVersion,
 		EnvType:            envType,
-		CollectionId:       opsManagerMetadata.CollectionId,
+		CollectionId:       collectionIDAsString,
 		FoundationId:       foundationId,
 		FoundationNickname: foundationNickname,
-		CollectedAt:        opsManagerMetadata.CollectedAt,
+		CollectedAt:        collectedAtTime,
+	}
+
+	coreCountsMetadata := collector_tar.Metadata{
+		CollectorVersion:   collectorVersion,
+		EnvType:            envType,
+		CollectionId:       collectionIDAsString,
+		FoundationId:       foundationId,
+		FoundationNickname: foundationNickname,
+		CollectedAt:        collectedAtTime,
 	}
 
 	for _, omData := range omDatas {
@@ -160,11 +178,35 @@ func (ce *CollectExecutor) Collect(envType, collectorVersion, foundationNickname
 		}
 	}
 
+	if ce.coreConsumptionDC != nil {
+		coreCountsData, err := ce.coreConsumptionDC.Collect()
+		if err != nil {
+			return errors.Wrap(err, CoreCountsCollectFailureMessage)
+		}
+
+		for _, coreConsumptionData := range coreCountsData {
+			err = ce.addData(coreConsumptionData, &coreCountsMetadata, collector_tar.CoreConsumptionCollectorDataSetId)
+			if err != nil {
+				return err
+			}
+		}
+
+		coreCountsMetadataContents, err := json.Marshal(coreCountsMetadata)
+		if err != nil {
+			return err
+		}
+
+		err = ce.tarWriter.AddFile(coreCountsMetadataContents, path.Join(collector_tar.CoreConsumptionCollectorDataSetId, collector_tar.MetadataFileName))
+		if err != nil {
+			return errors.Wrap(err, DataWriteFailureMessage)
+		}
+	}
+
 	return nil
 }
 
 func (ce *CollectExecutor) addData(collectedData collectedData, metadata *collector_tar.Metadata, dataSetType string) error {
-	dataContents, err := ioutil.ReadAll(collectedData.Content())
+	dataContents, err := io.ReadAll(collectedData.Content())
 	if err != nil {
 		return errors.Wrap(err, ContentReadingFailureMessage)
 	}
