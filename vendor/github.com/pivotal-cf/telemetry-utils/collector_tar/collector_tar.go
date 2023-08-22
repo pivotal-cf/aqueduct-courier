@@ -24,9 +24,11 @@ const (
 	AppUsageDataType               = "app_usage"
 	ServiceUsageDataType           = "service_usage"
 	TaskUsageDataType              = "task_usage"
+	CoreCountsDataType             = "core_counts"
 
-	OpsManagerCollectorDataSetId   = "opsmanager"
-	UsageServiceCollectorDataSetId = "usage_service"
+	OpsManagerCollectorDataSetId      = "opsmanager"
+	UsageServiceCollectorDataSetId    = "usage_service"
+	CoreConsumptionCollectorDataSetId = "core_consumption"
 
 	MetadataFileName = "metadata"
 
