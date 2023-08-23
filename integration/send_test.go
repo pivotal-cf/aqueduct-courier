@@ -102,8 +102,9 @@ var _ = Describe("Send", func() {
 
 			dataLoader.RouteToHandler(http.MethodPost, operations.PostPath, ghttp.CombineHandlers(
 				ghttp.VerifyHeader(http.Header{
-					"Authorization": []string{fmt.Sprintf("Bearer %s", validApiKey)},
-					"Content-Type":  []string{operations.TarMimeType},
+					"Authorization":    []string{fmt.Sprintf("Bearer %s", validApiKey)},
+					"Content-Type":     []string{operations.TarContentType},
+					"Content-Encoding": []string{operations.GzipContentEncoding},
 					operations.HTTPSenderVersionRequestHeader: []string{testVersion},
 				}),
 				ghttp.VerifyBody(srcGzippedContentBytes),
@@ -166,8 +167,9 @@ var _ = Describe("Send", func() {
 
 				dataLoader.RouteToHandler(http.MethodPost, operations.PostPath, ghttp.CombineHandlers(
 					ghttp.VerifyHeader(http.Header{
-						"Authorization": []string{fmt.Sprintf("Bearer %s", validApiKey)},
-						"Content-Type":  []string{operations.TarMimeType},
+						"Authorization":    []string{fmt.Sprintf("Bearer %s", validApiKey)},
+						"Content-Type":     []string{operations.TarContentType},
+						"Content-Encoding": []string{operations.GzipContentEncoding},
 						operations.HTTPSenderVersionRequestHeader: []string{testVersion},
 					}),
 					ghttp.VerifyBody(srcGzippedContentBytes),

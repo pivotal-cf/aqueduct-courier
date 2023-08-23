@@ -13,7 +13,8 @@ import (
 const (
 	AuthorizationHeaderKey         = "Authorization"
 	PostPath                       = "/collections/batch"
-	TarMimeType                    = "application/tar+gzip"
+	TarContentType                 = "application/tar"
+	GzipContentEncoding            = "gzip"
 	HTTPSenderVersionRequestHeader = "Pivotal-Telemetry-Sender-Version"
 
 	RequestCreationFailureMessage = "Failed make request object"
@@ -57,7 +58,8 @@ func makeFileUploadRequest(bodyReader io.Reader, apiToken, uploadURL, senderVers
 	}
 	req.Header.Set(AuthorizationHeaderKey, "Bearer "+apiToken)
 	req.Header.Set(HTTPSenderVersionRequestHeader, senderVersion)
-	req.Header.Set("Content-Type", TarMimeType)
+	req.Header.Set("Content-Type", TarContentType)
+	req.Header.Set("Content-Encoding", GzipContentEncoding)
 
 	return req, nil
 }

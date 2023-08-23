@@ -80,7 +80,8 @@ var _ = Describe("Sender", func() {
 	It("posts to the data loader with the correct Content-Type header", func() {
 		Expect(sender.Send(client, tmpFile.Name(), "http://example.com", "some-key", "")).To(Succeed())
 		req := client.DoArgsForCall(0)
-		Expect(req.Header.Get("Content-Type")).To(Equal("application/tar+gzip"))
+		Expect(req.Header.Get("Content-Type")).To(Equal(TarContentType))
+		Expect(req.Header.Get("Content-Encoding")).To(Equal(GzipContentEncoding))
 	})
 
 	It("fails if the request object cannot be created", func() {
