@@ -11,12 +11,12 @@ type CredhubService interface {
 }
 
 type DataCollector struct {
-	logger         log.Logger
+	logger         *log.Logger
 	credhubService CredhubService
 	credHubURL     string
 }
 
-func NewDataCollector(logger log.Logger, cs CredhubService, credHubURL string) *DataCollector {
+func NewDataCollector(logger *log.Logger, cs CredhubService, credHubURL string) *DataCollector {
 	return &DataCollector{
 		logger:         logger,
 		credhubService: cs,

@@ -27,7 +27,7 @@ var _ = Describe("DataCollector", func() {
 		logger = log.New(bufferedOutput, "", 0)
 		omURL = "some-opsmanager-url"
 		omService = new(coreconsumptionfakes.FakeOmService)
-		collector = NewDataCollector(*logger, omService, omURL)
+		collector = NewDataCollector(logger, omService, omURL)
 	})
 
 	It("retriever succeeds", func() {

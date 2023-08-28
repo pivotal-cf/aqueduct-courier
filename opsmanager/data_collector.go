@@ -47,7 +47,7 @@ type OmService interface {
 type dataRetriever func() (io.Reader, error)
 
 type DataCollector struct {
-	logger                log.Logger
+	logger                *log.Logger
 	omService             OmService
 	opsManagerURL         string
 	pendingChangesService PendingChangesLister
@@ -55,7 +55,7 @@ type DataCollector struct {
 	operationalDataOnly   bool
 }
 
-func NewDataCollector(logger log.Logger, oms OmService, omURL string, pcs PendingChangesLister, dps DeployedProductsLister, operationalDataOnly bool) *DataCollector {
+func NewDataCollector(logger *log.Logger, oms OmService, omURL string, pcs PendingChangesLister, dps DeployedProductsLister, operationalDataOnly bool) *DataCollector {
 	return &DataCollector{
 		logger:                logger,
 		omService:             oms,

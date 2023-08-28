@@ -20,12 +20,12 @@ type OmService interface {
 type dataRetriever func() (io.Reader, error)
 
 type DataCollector struct {
-	logger        log.Logger
+	logger        *log.Logger
 	omService     OmService
 	opsManagerURL string
 }
 
-func NewDataCollector(logger log.Logger, oms OmService, omURL string) *DataCollector {
+func NewDataCollector(logger *log.Logger, oms OmService, omURL string) *DataCollector {
 	return &DataCollector{
 		logger:        logger,
 		omService:     oms,

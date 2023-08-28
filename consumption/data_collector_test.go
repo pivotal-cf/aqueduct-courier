@@ -29,7 +29,7 @@ var _ = Describe("DataCollector", func() {
 		bufferedOutput = gbytes.NewBuffer()
 		logger = log.New(bufferedOutput, "", 0)
 		consumptionService = new(consumptionfakes.FakeConsumptionService)
-		dataCollector = NewDataCollector(*logger, consumptionService, "some-usage-url")
+		dataCollector = NewDataCollector(logger, consumptionService, "some-usage-url")
 	})
 
 	Describe("collect", func() {

@@ -30,7 +30,7 @@ var _ = Describe("DataCollector", func() {
 		certificatesReader := strings.NewReader("certificates data reader")
 		credHubService := new(credhubfakes.FakeCredhubService)
 		credHubService.CertificatesReturns(certificatesReader, nil)
-		collector := NewDataCollector(*logger, credHubService, credHubURL)
+		collector := NewDataCollector(logger, credHubService, credHubURL)
 
 		data, err := collector.Collect()
 		Expect(err).NotTo(HaveOccurred())
@@ -41,7 +41,7 @@ var _ = Describe("DataCollector", func() {
 	It("returns an error when collecting certificates fails", func() {
 		credHubService := new(credhubfakes.FakeCredhubService)
 		credHubService.CertificatesReturns(nil, errors.New("collecting certificates is hard"))
-		collector := NewDataCollector(*logger, credHubService, credHubURL)
+		collector := NewDataCollector(logger, credHubService, credHubURL)
 
 		_, err := collector.Collect()
 		Expect(err).To(HaveOccurred())

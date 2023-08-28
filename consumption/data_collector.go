@@ -23,12 +23,12 @@ type consumptionService interface {
 }
 
 type DataCollector struct {
-	logger             log.Logger
+	logger             *log.Logger
 	consumptionService consumptionService
 	usageServiceURL    string
 }
 
-func NewDataCollector(logger log.Logger, cs consumptionService, usageServiceURL string) *DataCollector {
+func NewDataCollector(logger *log.Logger, cs consumptionService, usageServiceURL string) *DataCollector {
 	return &DataCollector{
 		logger:             logger,
 		consumptionService: cs,

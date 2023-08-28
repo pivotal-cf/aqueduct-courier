@@ -40,8 +40,8 @@ var _ = Describe("DataCollector", func() {
 		pendingChangesLister = new(opsmanagerfakes.FakePendingChangesLister)
 		deployedProductsLister = new(opsmanagerfakes.FakeDeployedProductsLister)
 
-		dataCollector = NewDataCollector(*logger, omService, omURL, pendingChangesLister, deployedProductsLister, false)
-		dataCollectorOperationalOnly = NewDataCollector(*logger, omService, omURL, pendingChangesLister, deployedProductsLister, true)
+		dataCollector = NewDataCollector(logger, omService, omURL, pendingChangesLister, deployedProductsLister, false)
+		dataCollectorOperationalOnly = NewDataCollector(logger, omService, omURL, pendingChangesLister, deployedProductsLister, true)
 	})
 
 	It("does not return an error if there are pending changes with an action other than unchanged", func() {

@@ -341,7 +341,7 @@ func makeConsumptionCollector() (consumptionDataCollector, error) {
 		}
 
 		consumptionCollector := consumption.NewDataCollector(
-			*logger,
+			logger,
 			consumptionService,
 			viper.GetString(UsageServiceURLFlag),
 		)
@@ -371,7 +371,7 @@ func makeCredhubCollector(omService *opsmanager.Service, credhubCollectionEnable
 			return nil, errors.Wrap(err, CredhubClientError)
 		}
 		credhubService := credhub.NewCredhubService(requestor)
-		return credhub.NewDataCollector(*logger, credhubService, credHubURL), nil
+		return credhub.NewDataCollector(logger, credhubService, credHubURL), nil
 	} else {
 		return nil, nil
 	}
@@ -396,7 +396,7 @@ func makeCollector(tarWriter *tar.TarWriter, operationalDataOnly bool) (*operati
 	}
 
 	omCollector := opsmanager.NewDataCollector(
-		*logger,
+		logger,
 		omService,
 		viper.GetString(OpsManagerURLFlag),
 		apiService,
@@ -415,7 +415,7 @@ func makeCollector(tarWriter *tar.TarWriter, operationalDataOnly bool) (*operati
 	}
 
 	coreConsumptionCollector := coreconsumption.NewDataCollector(
-		*logger,
+		logger,
 		ccOmService,
 		viper.GetString(OpsManagerURLFlag),
 	)

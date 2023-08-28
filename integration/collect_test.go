@@ -277,7 +277,6 @@ var _ = Describe("Collect", func() {
 				"url": "%s",
 				"username": "some-username",
 				"password": "some-password",
-				"env-type": "Development",
 				"insecure-skip-tls-verify": "true",
 				"output-dir": "%s"
 			}`, envType, opsManagerServer.URL(), escapeFilePathForWindows(outputDirPath))

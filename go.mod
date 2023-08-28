@@ -1,6 +1,6 @@
 module github.com/pivotal-cf/aqueduct-courier
 
-go 1.19
+go 1.21
 
 require (
 	code.cloudfoundry.org/credhub-cli v0.0.0-20210802130126-03ba1c405d5e
