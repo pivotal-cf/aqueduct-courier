@@ -22,6 +22,8 @@ VERSION_FLAG="-X=github.com/pivotal-cf/aqueduct-courier/cmd.version=$VERSION"
 DATA_LOADER_FLAG="-X=github.com/pivotal-cf/aqueduct-courier/cmd.dataLoaderURL=$DATA_LOADER_URL"
 LDFLAGS="$VERSION_FLAG $DATA_LOADER_FLAG"
 
+export CGO_ENABLED=0
+
 GOOS=linux go build -o "telemetry-collector-linux-$GOARCH" -ldflags "$LDFLAGS" github.com/pivotal-cf/aqueduct-courier
 GOOS=darwin go build -o "telemetry-collector-darwin-$GOARCH" -ldflags "$LDFLAGS" github.com/pivotal-cf/aqueduct-courier
 GOOS=windows go build -o "telemetry-collector-windows-$GOARCH.exe" -ldflags "$LDFLAGS" github.com/pivotal-cf/aqueduct-courier
