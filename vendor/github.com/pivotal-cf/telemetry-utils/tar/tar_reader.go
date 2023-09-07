@@ -4,10 +4,8 @@ import (
 	"archive/tar"
 	"crypto/md5"
 	"encoding/base64"
-	"io"
-	"io/ioutil"
-
 	"github.com/pkg/errors"
+	"io"
 )
 
 const (
@@ -26,7 +24,7 @@ func NewTarReader(sourceTar io.ReadSeeker) *TarReader {
 }
 
 func (tr *TarReader) ReadFile(fileName string) ([]byte, error) {
-	tr.sourceTar.Seek(0, 0)
+	_, _ = tr.sourceTar.Seek(0, 0)
 	reader := tar.NewReader(tr.sourceTar)
 
 	for {
@@ -43,7 +41,7 @@ func (tr *TarReader) ReadFile(fileName string) ([]byte, error) {
 		}
 	}
 
-	contents, err := ioutil.ReadAll(reader)
+	contents, err := io.ReadAll(reader)
 	if err != nil {
 		return []byte{}, errors.Wrapf(err, UnableToReadFileFormat, fileName, tr.sourceTar)
 	}
@@ -52,7 +50,7 @@ func (tr *TarReader) ReadFile(fileName string) ([]byte, error) {
 }
 
 func (tr *TarReader) FileMd5s() (map[string]string, error) {
-	tr.sourceTar.Seek(0, 0)
+	_, _ = tr.sourceTar.Seek(0, 0)
 	reader := tar.NewReader(tr.sourceTar)
 
 	fileMd5s := map[string]string{}
@@ -66,7 +64,7 @@ func (tr *TarReader) FileMd5s() (map[string]string, error) {
 			return map[string]string{}, errors.Wrap(err, UnexpectedFormatMessage)
 		}
 
-		contents, err := ioutil.ReadAll(reader)
+		contents, err := io.ReadAll(reader)
 		if err != nil {
 			return map[string]string{}, errors.Wrapf(err, UnableToReadFileFormat, hdr.Name, tr.sourceTar)
 		}
@@ -79,9 +77,9 @@ func (tr *TarReader) FileMd5s() (map[string]string, error) {
 }
 
 func (tr *TarReader) ReadAll() ([]byte, error) {
-	tr.sourceTar.Seek(0, 0)
+	_, _ = tr.sourceTar.Seek(0, 0)
 
-	contents, err := ioutil.ReadAll(tr.sourceTar)
+	contents, err := io.ReadAll(tr.sourceTar)
 	if err != nil {
 		return nil, errors.Wrapf(err, UnableToReadTarFormat, tr.sourceTar)
 	}
