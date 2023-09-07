@@ -303,10 +303,6 @@ type consumptionDataCollector interface {
 	Collect() ([]consumption.Data, error)
 }
 
-type coreConsumptionDataCollector interface {
-	Collect() ([]coreconsumption.Data, error)
-}
-
 func makeConsumptionCollector() (consumptionDataCollector, error) {
 	if anyUsageServiceConfigsProvided() {
 		err := validateUsageServiceConfig()

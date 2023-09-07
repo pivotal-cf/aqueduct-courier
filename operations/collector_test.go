@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"io"
 	"path"
 	"strings"
 	"time"
@@ -560,10 +559,6 @@ var _ = Describe("DataCollector", func() {
 			collectorOldOpsMan = NewCollector(omDataCollector, nil, nil, coreConsumptionDC, tarWriter, uuidProvider, false)
 		})
 
-//go:generate counterfeiter . reader
-type reader interface {
-	io.Reader
-}
 		It("Does not fail when collect fails", func() {
 			err := collectorOldOpsMan.Collect("", "", "")
 			Expect(err).To(BeNil())

@@ -728,11 +728,6 @@ var _ = Describe("Service", func() {
 	})
 })
 
-//go:generate counterfeiter . reader
-type reader interface {
-	io.Reader
-}
-
 type readerCloser struct {
 	reader   io.Reader
 	isClosed bool
