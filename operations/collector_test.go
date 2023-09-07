@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/pivotal-cf/aqueduct-courier/consumption"
+	"github.com/pivotal-cf/aqueduct-courier/coreconsumption"
 
 	"github.com/pivotal-cf/aqueduct-courier/credhub"
 
@@ -547,9 +548,26 @@ var _ = Describe("DataCollector", func() {
 		})
 	})
 
-})
+	Describe("core consumption collection", func() {
+		var (
+			coreConsumptionDC  *operationsfakes.FakeCoreConsumptionDataCollector
+			collectorOldOpsMan *CollectExecutor
+		)
+
+		BeforeEach(func() {
+			coreConsumptionDC = new(operationsfakes.FakeCoreConsumptionDataCollector)
+			coreConsumptionDC.CollectReturns([]coreconsumption.Data{}, errors.New("Can't collect Core Consumption"))
+			collectorOldOpsMan = NewCollector(omDataCollector, nil, nil, coreConsumptionDC, tarWriter, uuidProvider, false)
+		})
 
 //go:generate counterfeiter . reader
 type reader interface {
 	io.Reader
 }
+		It("Does not fail when collect fails", func() {
+			err := collectorOldOpsMan.Collect("", "", "")
+			Expect(err).To(BeNil())
+		})
+	})
+
+})

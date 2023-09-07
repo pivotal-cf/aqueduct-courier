@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"io"
+	"log"
 	"path"
 	"time"
 
@@ -181,24 +182,26 @@ func (ce *CollectExecutor) Collect(envType, collectorVersion, foundationNickname
 	if ce.coreConsumptionDC != nil {
 		coreCountsData, err := ce.coreConsumptionDC.Collect()
 		if err != nil {
-			return errors.Wrap(err, CoreCountsCollectFailureMessage)
-		}
+			// Do not fail when we are unable to collect Core Consumption data
+			// This API is only supported in Ops Manager 2.10.58+ and 3.0.10+
+			log.Println(errors.Wrap(err, CoreCountsCollectFailureMessage))
+		} else {
+			for _, coreConsumptionData := range coreCountsData {
+				err = ce.addData(coreConsumptionData, &coreCountsMetadata, collector_tar.CoreConsumptionCollectorDataSetId)
+				if err != nil {
+					return err
+				}
+			}
 
-		for _, coreConsumptionData := range coreCountsData {
-			err = ce.addData(coreConsumptionData, &coreCountsMetadata, collector_tar.CoreConsumptionCollectorDataSetId)
+			coreCountsMetadataContents, err := json.Marshal(coreCountsMetadata)
 			if err != nil {
 				return err
 			}
-		}
 
-		coreCountsMetadataContents, err := json.Marshal(coreCountsMetadata)
-		if err != nil {
-			return err
-		}
-
-		err = ce.tarWriter.AddFile(coreCountsMetadataContents, path.Join(collector_tar.CoreConsumptionCollectorDataSetId, collector_tar.MetadataFileName))
-		if err != nil {
-			return errors.Wrap(err, DataWriteFailureMessage)
+			err = ce.tarWriter.AddFile(coreCountsMetadataContents, path.Join(collector_tar.CoreConsumptionCollectorDataSetId, collector_tar.MetadataFileName))
+			if err != nil {
+				return errors.Wrap(err, DataWriteFailureMessage)
+			}
 		}
 	}
 
