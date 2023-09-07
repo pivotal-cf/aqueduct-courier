@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -206,7 +205,7 @@ var _ = Describe("Service", func() {
 			}
 			propertiesJson, err := json.Marshal(properties)
 			Expect(err).NotTo(HaveOccurred())
-			body := ioutil.NopCloser(bytes.NewReader(propertiesJson))
+			body := io.NopCloser(bytes.NewReader(propertiesJson))
 
 			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
@@ -237,7 +236,7 @@ var _ = Describe("Service", func() {
 			badReader := new(opsmanagerfakes.FakeReader)
 			badReader.ReadReturns(0, errors.New("Reading things is hard"))
 
-			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: ioutil.NopCloser(badReader), StatusCode: http.StatusOK}, nil)
+			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: io.NopCloser(badReader), StatusCode: http.StatusOK}, nil)
 
 			actual, err := service.ProductProperties(productGUID)
 			Expect(actual).To(BeNil())
@@ -248,7 +247,7 @@ var _ = Describe("Service", func() {
 		})
 
 		It("errors if the contents are not json", func() {
-			body := ioutil.NopCloser(strings.NewReader(`you-thought-this-was-json`))
+			body := io.NopCloser(strings.NewReader(`you-thought-this-was-json`))
 
 			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: body, StatusCode: http.StatusOK}, nil)
 
@@ -434,7 +433,7 @@ var _ = Describe("Service", func() {
 			badReader := new(opsmanagerfakes.FakeReader)
 			badReader.ReadReturns(0, errors.New("Reading things is hard"))
 
-			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: ioutil.NopCloser(badReader), StatusCode: http.StatusOK}, nil)
+			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: io.NopCloser(badReader), StatusCode: http.StatusOK}, nil)
 
 			actual, err := service.Installations()
 			Expect(actual).To(BeNil())
@@ -566,7 +565,7 @@ var _ = Describe("Service", func() {
 			badReader := new(opsmanagerfakes.FakeReader)
 			badReader.ReadReturns(0, errors.New("Reading things is hard"))
 
-			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: ioutil.NopCloser(badReader), StatusCode: http.StatusOK}, nil)
+			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: io.NopCloser(badReader), StatusCode: http.StatusOK}, nil)
 
 			actual, err := service.CertificateAuthorities()
 			Expect(actual).To(BeNil())
@@ -637,7 +636,7 @@ var _ = Describe("Service", func() {
 			badReader := new(opsmanagerfakes.FakeReader)
 			badReader.ReadReturns(0, errors.New("Reading things is hard"))
 
-			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: ioutil.NopCloser(badReader), StatusCode: http.StatusOK}, nil)
+			requestor.CurlReturns(api.RequestServiceCurlOutput{Body: io.NopCloser(badReader), StatusCode: http.StatusOK}, nil)
 
 			actual, err := service.BoshCredentials()
 			Expect(actual).To(Equal(BoshCredential{}))

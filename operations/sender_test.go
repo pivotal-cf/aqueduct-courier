@@ -5,7 +5,6 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 
@@ -32,7 +31,7 @@ var _ = Describe("Sender", func() {
 		sender = SendExecutor{}
 		client = new(operationsfakes.FakeHttpClient)
 
-		tmpFile, err = ioutil.TempFile("", "")
+		tmpFile, err = os.CreateTemp("", "")
 		Expect(err).NotTo(HaveOccurred())
 
 		tarContent = "tar-content"
@@ -40,7 +39,7 @@ var _ = Describe("Sender", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(tmpFile.Close()).To(Succeed())
 
-		emptyBody := ioutil.NopCloser(strings.NewReader(""))
+		emptyBody := io.NopCloser(strings.NewReader(""))
 
 		client.DoStub = func(request *http.Request) (response *http.Response, e error) {
 			var err error
@@ -97,7 +96,7 @@ var _ = Describe("Sender", func() {
 	})
 
 	It("errors when the response code is not StatusCreated", func() {
-		emptyBody := ioutil.NopCloser(strings.NewReader(""))
+		emptyBody := io.NopCloser(strings.NewReader(""))
 		client.DoReturns(&http.Response{StatusCode: http.StatusUnauthorized, Body: emptyBody}, nil)
 
 		err := sender.Send(client, tmpFile.Name(), "http://example.com", "invalid-key", "")
@@ -105,20 +104,20 @@ var _ = Describe("Sender", func() {
 	})
 
 	It("errors if the error response cannot be read", func() {
-		client.DoReturns(&http.Response{StatusCode: http.StatusExpectationFailed, Body: ioutil.NopCloser(&badReader{})}, nil)
+		client.DoReturns(&http.Response{StatusCode: http.StatusExpectationFailed, Body: io.NopCloser(&badReader{})}, nil)
 		err := sender.Send(client, tmpFile.Name(), "http://example.com", "invalid-key", "")
 		Expect(err).To(MatchError(fmt.Sprintf(UnexpectedServerErrorFormat, "unknown")))
 	})
 
 	It("errors if the error response cannot be read into the expected structure", func() {
-		badBody := ioutil.NopCloser(strings.NewReader(`{not json`))
+		badBody := io.NopCloser(strings.NewReader(`{not json`))
 		client.DoReturns(&http.Response{StatusCode: http.StatusExpectationFailed, Body: badBody}, nil)
 		err := sender.Send(client, tmpFile.Name(), "http://example.com", "invalid-key", "")
 		Expect(err).To(MatchError(fmt.Sprintf(UnexpectedServerErrorFormat, "unknown")))
 	})
 
 	It("errors when the response code is not 201/401", func() {
-		emptyBody := ioutil.NopCloser(strings.NewReader(`{"error": {"uuid": "error-uuid"}}`))
+		emptyBody := io.NopCloser(strings.NewReader(`{"error": {"uuid": "error-uuid"}}`))
 		client.DoReturns(&http.Response{StatusCode: http.StatusExpectationFailed, Body: emptyBody}, nil)
 
 		err := sender.Send(client, tmpFile.Name(), "http://example.com", "invalid-key", "")
