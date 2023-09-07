@@ -105,14 +105,14 @@ var _ = Describe("Collect", func() {
 		})
 
 		It("does not accept an aliased url in config file configuration if url is defined as a flag", func() {
-			config := fmt.Sprintf(fmt.Sprintf(`{
+			config := fmt.Sprintf(`{
 				"target": "invalid.url.example.com",
 				"username": "some-username",
 				"password": "some-password",
 				"env-type": "Development",
 				"insecure-skip-tls-verify": true,
 				"output-dir": "%s"
-			}`, escapeFilePathForWindows(outputDirPath)))
+			}`, escapeFilePathForWindows(outputDirPath))
 			configFile := filepath.Join(configDirPath, "config.yml")
 			err := os.WriteFile(configFile, []byte(config), 0755)
 			Expect(err).ToNot(HaveOccurred())
@@ -723,7 +723,7 @@ var _ = Describe("Collect", func() {
 
 			boshCredentialsResponse := func(w http.ResponseWriter, req *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.Write([]byte(`{ "credential": "BOSH_CLIENT=best_client BOSH_CLIENT_SECRET=best_secret BOSH_CA_CERT=/cool/path BOSH_ENVIRONMENT=127.0.0.1 bosh "}`))
+				_, _ = w.Write([]byte(`{ "credential": "BOSH_CLIENT=best_client BOSH_CLIENT_SECRET=best_secret BOSH_CA_CERT=/cool/path BOSH_ENVIRONMENT=127.0.0.1 bosh "}`))
 			}
 			opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/deployed/director/credentials/bosh_commandline_credentials", boshCredentialsResponse)
 		})
@@ -860,7 +860,7 @@ var _ = Describe("Collect", func() {
 				base64credentials := base64.StdEncoding.EncodeToString(credentialBytes)
 				Expect(req.Header.Get("authorization")).To(Equal("Basic " + base64credentials))
 
-				w.Write([]byte(`{
+				_, _ = w.Write([]byte(`{
 					"access_token": "some-uaa-token",
 					"token_type": "bearer",
 					"expires_in": 3600
@@ -870,7 +870,7 @@ var _ = Describe("Collect", func() {
 			credhubServer = setupCredHubServer()
 			boshCredentialsResponse := func(w http.ResponseWriter, req *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				w.Write([]byte(`{ "credential": "BOSH_CLIENT=best_client BOSH_CLIENT_SECRET=best_secret BOSH_CA_CERT=/cool/path BOSH_ENVIRONMENT=credhub.example.com bosh "}`))
+				_, _ = w.Write([]byte(`{ "credential": "BOSH_CLIENT=best_client BOSH_CLIENT_SECRET=best_secret BOSH_CA_CERT=/cool/path BOSH_ENVIRONMENT=credhub.example.com bosh "}`))
 			}
 			opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/deployed/director/credentials/bosh_commandline_credentials", boshCredentialsResponse)
 
@@ -907,7 +907,7 @@ var _ = Describe("Collect", func() {
 			listenerPort = listener.Addr().(*net.TCPAddr).Port
 			proxyServer = &http.Server{Handler: proxy}
 			go func() {
-				proxyServer.Serve(listener)
+				_ = proxyServer.Serve(listener)
 			}()
 		})
 
@@ -994,7 +994,7 @@ var _ = Describe("Collect", func() {
 		opsManagerServer := serverWithMaxTLSVersion(tls.VersionTLS11)
 		opsManagerServer.RouteToHandler(http.MethodPost, "/uaa/oauth/token", func(w http.ResponseWriter, req *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(`{}`))
+			_, _ = w.Write([]byte(`{}`))
 		})
 		defaultEnvVars[cmd.OpsManagerURLKey] = opsManagerServer.URL()
 		command := buildDefaultCommand(defaultEnvVars)
@@ -1089,12 +1089,12 @@ func assertValidNickname(tarFilePath, dataSetType, filename, foundationNickname 
 }
 
 func assertLogging(session *gexec.Session, tarFilePath string, credHubEnabled, usageServiceEnabled bool) {
-	Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Collecting data from Operations Manager")))
+	Expect(session.Out).To(gbytes.Say("Collecting data from Operations Manager"))
 	if credHubEnabled {
-		Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Collecting data from CredHub")))
+		Expect(session.Out).To(gbytes.Say("Collecting data from CredHub"))
 	}
 	if usageServiceEnabled {
-		Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Collecting data from Usage Service")))
+		Expect(session.Out).To(gbytes.Say("Collecting data from Usage Service"))
 	}
 	Expect(session.Out).To(gbytes.Say(fmt.Sprintf("Wrote output to %s\n", escapeWindowsPathRegex(tarFilePath))))
 	Expect(session.Out).To(gbytes.Say("Success!\n"))
@@ -1114,7 +1114,7 @@ func setupOpsManagerServer() *ghttp.Server {
 	opsManagerServer.RouteToHandler(http.MethodPost, "/uaa/oauth/token", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
-		w.Write([]byte(`{
+		_, _ = w.Write([]byte(`{
 					"access_token": "some-opsman-token",
 					"token_type": "bearer",
 					"expires_in": 3600
@@ -1122,15 +1122,15 @@ func setupOpsManagerServer() *ghttp.Server {
 	})
 	emptyObjectResponse := func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{}`))
+		_, _ = w.Write([]byte(`{}`))
 	}
 	emptyArrayResponse := func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`[]`))
+		_, _ = w.Write([]byte(`[]`))
 	}
 	emptyCSVResponse := func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "text/csv")
-		w.Write([]byte(``))
+		_, _ = w.Write([]byte(``))
 	}
 
 	opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/staged/pending_changes", emptyObjectResponse)
@@ -1155,12 +1155,12 @@ func setupCredHubServer() *ghttp.Server {
 	credhubServer.HTTPTestServer.StartTLS()
 	credhubServer.RouteToHandler(http.MethodGet, "/info", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{ "auth-server": {"url": "https://127.0.0.1:8844"}}`))
+		_, _ = w.Write([]byte(`{ "auth-server": {"url": "https://127.0.0.1:8844"}}`))
 	})
 
 	credhubServer.RouteToHandler(http.MethodPost, "/oauth/token", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{
+		_, _ = w.Write([]byte(`{
 					"access_token": "some-credhub-token",
 					"token_type": "bearer",
 					"expires_in": 3600
@@ -1168,7 +1168,7 @@ func setupCredHubServer() *ghttp.Server {
 	})
 	credhubServer.RouteToHandler(http.MethodGet, "/api/v1/certificates", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{}`))
+		_, _ = w.Write([]byte(`{}`))
 	})
 
 	return credhubServer
@@ -1191,7 +1191,7 @@ func setupUsageServerServiceHandlers(uaaService, cfService, usageService *ghttp.
 		base64credentials := base64.StdEncoding.EncodeToString(credentialBytes)
 		Expect(req.Header.Get("authorization")).To(Equal("Basic " + base64credentials))
 
-		w.Write([]byte(`{
+		_, _ = w.Write([]byte(`{
 					"access_token": "some-uaa-token",
 					"token_type": "bearer",
 					"expires_in": 3600
@@ -1201,25 +1201,25 @@ func setupUsageServerServiceHandlers(uaaService, cfService, usageService *ghttp.
 	cfService.RouteToHandler(http.MethodGet, "/v2/info", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if uaaServiceURLOverride != "" {
-			w.Write([]byte(`{ "token_endpoint": "` + uaaServiceURLOverride + `" }`))
+			_, _ = w.Write([]byte(`{ "token_endpoint": "` + uaaServiceURLOverride + `" }`))
 		} else {
-			w.Write([]byte(`{ "token_endpoint": "` + uaaService.URL() + `" }`))
+			_, _ = w.Write([]byte(`{ "token_endpoint": "` + uaaService.URL() + `" }`))
 		}
 	})
 
 	usageService.RouteToHandler(http.MethodGet, "/system_report/app_usages", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{}`))
+		_, _ = w.Write([]byte(`{}`))
 		Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
 	})
 	usageService.RouteToHandler(http.MethodGet, "/system_report/service_usages", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{}`))
+		_, _ = w.Write([]byte(`{}`))
 		Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
 	})
 	usageService.RouteToHandler(http.MethodGet, "/system_report/task_usages", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{}`))
+		_, _ = w.Write([]byte(`{}`))
 		Expect(req.Header.Get("Authorization")).To(Equal("Bearer some-uaa-token"))
 	})
 }

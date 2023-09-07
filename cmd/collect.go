@@ -106,7 +106,7 @@ var collectCmd = &cobra.Command{
 func init() {
 	bindFlagAndEnvVar(collectCmd, OpsManagerURLFlag, "", fmt.Sprintf("``Ops Manager URL [$%s]", OpsManagerURLKey), OpsManagerURLKey)
 	bindFlagAndEnvVar(collectCmd, OpsManagerURLAliasFlag, "", fmt.Sprintf("``Ops Manager URL [$%s]", OpsManagerURLAliasKey), OpsManagerURLAliasKey)
-	collectCmd.Flags().MarkHidden(OpsManagerURLAliasFlag)
+	_ = collectCmd.Flags().MarkHidden(OpsManagerURLAliasFlag)
 
 	bindFlagAndEnvVar(collectCmd, OpsManagerUsernameFlag, "", fmt.Sprintf("``Ops Manager username [$%s]", OpsManagerUsernameKey), OpsManagerUsernameKey)
 	bindFlagAndEnvVar(collectCmd, OpsManagerPasswordFlag, "", fmt.Sprintf("``Ops Manager password [$%s]", OpsManagerPasswordKey), OpsManagerPasswordKey)
@@ -119,7 +119,7 @@ func init() {
 	bindFlagAndEnvVar(collectCmd, OpsManagerRequestTimeoutFlag, 30, fmt.Sprintf("``Timeout on request fulfillment from Ops Manager in seconds [$%s]", OpsManagerRequestTimeoutKey), OpsManagerRequestTimeoutKey)
 	bindFlagAndEnvVar(collectCmd, SkipTlsVerifyFlag, false, fmt.Sprintf("``Skip TLS validation on http requests to Ops Manager [$%s]\n", SkipTlsVerifyKey), SkipTlsVerifyKey)
 	bindFlagAndEnvVar(collectCmd, SkipTlsVerifyAliasFlag, false, fmt.Sprintf("``Ops Manager URL [$%s]", SkipTlsVerifyKeyAlias), SkipTlsVerifyKeyAlias)
-	collectCmd.Flags().MarkHidden(SkipTlsVerifyAliasFlag)
+	_ = collectCmd.Flags().MarkHidden(SkipTlsVerifyAliasFlag)
 
 	bindFlagAndEnvVar(collectCmd, CfApiURLFlag, "", fmt.Sprintf("``CF API URL for UAA authentication to access Usage Service [$%s]", CfApiURLKey), CfApiURLKey)
 	bindFlagAndEnvVar(collectCmd, UsageServiceURLFlag, "", fmt.Sprintf("``Usage Service URL [$%s]", UsageServiceURLKey), UsageServiceURLKey)

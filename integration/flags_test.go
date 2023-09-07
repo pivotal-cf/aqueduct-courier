@@ -29,7 +29,7 @@ var _ = Describe("Flags", func() {
 		})
 
 		It("prints 'dev' as the version when not compiled with a version value", func() {
-			binaryWithoutVersion, err := gexec.Build(
+			binaryWithoutVersion, _ := gexec.Build(
 				"github.com/pivotal-cf/aqueduct-courier",
 			)
 			command := exec.Command(binaryWithoutVersion, "--version")

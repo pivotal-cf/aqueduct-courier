@@ -269,7 +269,7 @@ var _ = Describe("Service", func() {
 		Expect(pem.Encode(buffer, &pem.Block{Type: "CERTIFICATE", Bytes: []byte("invalid-cert-content")})).To(Succeed())
 
 		parsedDataResponseStruct := map[string][]map[string]map[string]string{
-			"data": {{"value": {"certificate": string(buffer.Bytes())}}},
+			"data": {{"value": {"certificate": buffer.String()}}},
 		}
 		parsedDataResponse, err := json.Marshal(parsedDataResponseStruct)
 		Expect(err).NotTo(HaveOccurred())
@@ -359,7 +359,7 @@ func makeCert(notBefore, notAfter time.Time, issuingOrg string) string {
 	certOut := bytes.NewBuffer([]byte{})
 	Expect(pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes})).To(Succeed())
 
-	return string(certOut.Bytes())
+	return certOut.String()
 }
 
 type readerCloser struct {

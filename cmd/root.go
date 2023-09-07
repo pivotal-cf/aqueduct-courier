@@ -84,6 +84,6 @@ func bindFlagAndEnvVar(cmd *cobra.Command, flagName string, defaultValue interfa
 	case bool:
 		cmd.Flags().Bool(flagName, val, usageText)
 	}
-	viper.BindPFlag(flagName, cmd.Flag(flagName))
-	viper.BindEnv(flagName, flagKey)
+	_ = viper.BindPFlag(flagName, cmd.Flag(flagName))
+	_ = viper.BindEnv(flagName, flagKey)
 }

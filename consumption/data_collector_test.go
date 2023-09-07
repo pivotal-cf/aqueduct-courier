@@ -58,7 +58,7 @@ var _ = Describe("DataCollector", func() {
 			collectedData, err := dataCollector.Collect()
 
 			Expect(collectedData).To(BeEmpty())
-			Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(AppUsageRequestError))))
+			Expect(err).To(MatchError(ContainSubstring(fmt.Sprint(AppUsageRequestError))))
 			Expect(err).To(MatchError(ContainSubstring("Requesting things is hard")))
 		})
 
@@ -67,7 +67,7 @@ var _ = Describe("DataCollector", func() {
 			collectedData, err := dataCollector.Collect()
 
 			Expect(collectedData).To(BeEmpty())
-			Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(ServiceUsageRequestError))))
+			Expect(err).To(MatchError(ContainSubstring(fmt.Sprint(ServiceUsageRequestError))))
 			Expect(err).To(MatchError(ContainSubstring("Requesting things is hard")))
 		})
 
@@ -76,7 +76,7 @@ var _ = Describe("DataCollector", func() {
 			collectedData, err := dataCollector.Collect()
 
 			Expect(collectedData).To(BeEmpty())
-			Expect(err).To(MatchError(ContainSubstring(fmt.Sprintf(TaskUsageRequestError))))
+			Expect(err).To(MatchError(ContainSubstring(fmt.Sprint(TaskUsageRequestError))))
 			Expect(err).To(MatchError(ContainSubstring("Requesting things is hard")))
 		})
 	})

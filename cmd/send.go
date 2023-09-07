@@ -36,9 +36,9 @@ func init() {
 	bindFlagAndEnvVar(sendCmd, DataTarFilePathFlag, "", fmt.Sprintf("``The path to the file with data from the 'collect' command [$%s]\n", DataTarFilePathKey), DataTarFilePathKey)
 
 	sendCmd.Flags().String(TelemetryEndpointFlag, dataLoaderURL, "``Telemetry Collector loader URL used to send to VMware endpoint")
-	viper.BindPFlag(TelemetryEndpointFlag, sendCmd.Flag(TelemetryEndpointFlag))
+	_ = viper.BindPFlag(TelemetryEndpointFlag, sendCmd.Flag(TelemetryEndpointFlag))
 
-	sendCmd.Flags().MarkHidden(TelemetryEndpointFlag)
+	_ = sendCmd.Flags().MarkHidden(TelemetryEndpointFlag)
 
 	sendCmd.Flags().BoolP("help", "h", false, "Help for the send command\n")
 	sendCmd.Flags().SortFlags = false

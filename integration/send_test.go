@@ -88,7 +88,7 @@ var _ = Describe("Send", func() {
 
 			proxyServer = &http.Server{Handler: proxy}
 			go func() {
-				proxyServer.Serve(listener)
+				_ = proxyServer.Serve(listener)
 			}()
 
 			srcDataTarFile, err := os.Open(sourceDataTarFilePath)

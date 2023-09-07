@@ -79,7 +79,7 @@ func (s *Service) Certificates() (io.Reader, error) {
 		})
 	}
 
-	jsonBytes, err := json.Marshal(map[string][]map[string]string{"credhub_certificates": certificateInfos})
+	jsonBytes, _ := json.Marshal(map[string][]map[string]string{"credhub_certificates": certificateInfos})
 	return bytes.NewReader(jsonBytes), nil
 }
 
