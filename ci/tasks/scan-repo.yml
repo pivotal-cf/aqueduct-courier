@@ -11,6 +11,7 @@ image_resource:
 
 inputs:
   - name: aqueduct-courier
+  - name: ci
 
 run:
-  path: aqueduct-courier/ci/tasks/scan-repo.sh
+  path: ci/ci/tasks/scan-repo.sh
