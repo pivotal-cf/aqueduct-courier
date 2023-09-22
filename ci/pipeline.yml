@@ -96,6 +96,11 @@ resources:
   type: slack-notification
   source:
     url: ((slack.webhook-url))
+- name: every-24h
+  type: time
+  icon: clock-outline
+  source:
+    interval: 24h
 
 jobs:
 - name: update-telemetry-utils
@@ -407,3 +412,12 @@ jobs:
       params:
         text: |
           Failed to send OpsManager dataset to production. Build: https://runway-ci.eng.vmware.com/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+- name: scan-for-cves
+  plan:
+    - get: aqueduct-courier
+      trigger: true
+      passed: [courier-tests]
+    - get: every-24h
+      trigger: true
+    - task: run-scan
+      file: aqueduct-courier/ci/tasks/scan-repo.yml
