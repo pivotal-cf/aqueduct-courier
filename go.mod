@@ -12,7 +12,7 @@ require (
 	github.com/onsi/gomega v1.16.0
 	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/pivotal-cf/om v0.0.0-20210916143113-77d5793155d1
-	github.com/pivotal-cf/telemetry-utils v0.0.0-20231010164028-9404ba604e68
+	github.com/pivotal-cf/telemetry-utils v0.0.0-20231012135730-797d95b59b8d
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/afero v1.6.0 // indirect
 	github.com/spf13/cobra v1.2.1

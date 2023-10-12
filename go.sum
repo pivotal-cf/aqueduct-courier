@@ -222,8 +222,8 @@ github.com/google/go-cmp v0.5.2/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/
 github.com/google/go-cmp v0.5.3/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/go-cmp v0.5.4/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/go-cmp v0.5.5/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
-github.com/google/go-cmp v0.5.9 h1:O2Tfq5qg4qc4AmwVlvv0oLiVAGB7enBSJ2x2DqQFi38=
-github.com/google/go-cmp v0.5.9/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
+github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=
+github.com/google/go-cmp v0.6.0/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
 github.com/google/gofuzz v1.0.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=
 github.com/google/martian v2.1.0+incompatible/go.mod h1:9I4somxYTbIHy5NJKHRl3wXiIaQGbYVAs8BPL6v8lEs=
 github.com/google/martian/v3 v3.0.0/go.mod h1:y5Zk1BBys9G+gd6Jrk0W3cC1+ELVxBWuIGO+w/tUAp0=
@@ -397,8 +397,8 @@ github.com/pivotal-cf/om v0.0.0-20210916143113-77d5793155d1/go.mod h1:LrzEQz7lfn
 github.com/pivotal-cf/paraphernalia v0.0.0-20180203224945-a64ae2051c20/go.mod h1:Y3IqE20LKprEpLkXb7gXinJf4vvDdQe/BS8E4kL/dgE=
 github.com/pivotal-cf/pivnet-cli/v2 v2.0.2/go.mod h1:uIR4ymPiy/UdCKmjuQFBD2HTQBI7CqKr3qF9RHig91s=
 github.com/pivotal-cf/replicator v0.0.0-20181127185712-7c58987ce14b/go.mod h1:IeOwGZZpRMYRgeY7Aghsg0nN7KopqUx6A0S/iNJkSRY=
-github.com/pivotal-cf/telemetry-utils v0.0.0-20231010164028-9404ba604e68 h1:Krh6MmDiMSZOcOo6b8MGTHGNOlYQYfXsebM9wgCGdBQ=
-github.com/pivotal-cf/telemetry-utils v0.0.0-20231010164028-9404ba604e68/go.mod h1:6rHB/M7zypg5R7XbwtBCmMNL/51GEypYmfM+hXDY8fs=
+github.com/pivotal-cf/telemetry-utils v0.0.0-20231012135730-797d95b59b8d h1:c7WtlKz9wwP1Gr2npLUdqI31TAKp8/0JF7aYRXkhT3g=
+github.com/pivotal-cf/telemetry-utils v0.0.0-20231012135730-797d95b59b8d/go.mod h1:l0TpnVsnPhkSNqKrxH/yRjxu0qeOe3bKUuLaidgYzeE=
 github.com/pivotal-cf/winfs-injector v0.0.0-20200827170301-91411420d92f/go.mod h1:erXKE+60j2kKsZcz7tU+4ymwK3DCDYBTUIesne5h25E=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
