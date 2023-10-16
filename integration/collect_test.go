@@ -19,7 +19,7 @@ import (
 	"github.com/pivotal-cf/aqueduct-courier/cf"
 
 	"github.com/elazarl/goproxy"
-	"github.com/mholt/archiver"
+	"github.com/mholt/archiver/v3"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
