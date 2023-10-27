@@ -1140,7 +1140,6 @@ func setupOpsManagerServer() *ghttp.Server {
 	opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/installations", emptyObjectResponse)
 	opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/deployed/certificates", emptyObjectResponse)
 	opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/certificate_authorities", emptyObjectResponse)
-	opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/certificate_authorities", emptyObjectResponse)
 	opsManagerServer.RouteToHandler(http.MethodGet, "/api/v0/download_core_consumption", emptyCSVResponse)
 
 	return opsManagerServer
