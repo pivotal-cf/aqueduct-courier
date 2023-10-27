@@ -8,9 +8,9 @@ require (
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.28.0
+	github.com/onsi/gomega v1.29.0
 	github.com/pivotal-cf/om v0.0.0-20230906164640-f12a92d2f80b
-	github.com/pivotal-cf/telemetry-utils v0.0.0-20231016171215-d72154b2528b
+	github.com/pivotal-cf/telemetry-utils v0.0.0-20231027145100-a4af47a434f1
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/afero v1.10.0 // indirect
 	github.com/spf13/cobra v1.7.0
@@ -30,7 +30,7 @@ require (
 	github.com/cloudfoundry/socks5-proxy v0.2.101 // indirect
 	github.com/dsnet/compress v0.0.2-0.20210315054119-f66993602bf5 // indirect
 	github.com/fatih/color v1.15.0 // indirect
-	github.com/fsnotify/fsnotify v1.6.0 // indirect
+	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
