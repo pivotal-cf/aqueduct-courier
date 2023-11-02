@@ -9,8 +9,8 @@ GOARCH=amd64
 go version
 go env -w GO111MODULE=auto
 
-RAW_VERSION="1.3.2-build.2"
-VERSION="1.3.2-build.2+2096d48"
+RAW_VERSION="1.3.99-build.1"
+VERSION="1.3.99-build.1+1000a99"
 VERSION_FLAG="-X=github.com/pivotal-cf/aqueduct-courier/cmd.version=$VERSION"
 DATA_LOADER_FLAG="-X=github.com/pivotal-cf/aqueduct-courier/cmd.dataLoaderURL=$DATA_LOADER_URL"
 LDFLAGS="$VERSION_FLAG $DATA_LOADER_FLAG"
