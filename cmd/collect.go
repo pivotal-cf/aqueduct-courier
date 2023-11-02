@@ -56,6 +56,7 @@ const (
 	UsageServiceSkipTlsVerifyKey = "USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY"
 	FoundationNicknameKey        = "FOUNDATION_NICKNAME"
 	OperationalDataOnlyKey       = "OPERATIONAL_DATA_ONLY"
+	CoreConsumptionKey           = "CORE_CONSUMPTION"
 
 	ConfigFlag                    = "config"
 	OpsManagerURLFlag             = "url"
@@ -79,6 +80,7 @@ const (
 	UsageServiceSkipTlsVerifyFlag = "usage-service-insecure-skip-tls-verify"
 	FoundationNicknameFlag        = "foundation-nickname"
 	OperationalDataOnlyFlag       = "operational-data-only"
+	CoreConsumptionFlag           = "core-consumption"
 
 	EnvTypeSandbox       = "sandbox"
 	EnvTypeDevelopment   = "development"
@@ -115,6 +117,7 @@ func init() {
 	bindFlagAndEnvVar(collectCmd, EnvTypeFlag, "", fmt.Sprintf("``Specify environment type (sandbox, development, qa, pre-production, production) [$%s]", EnvTypeKey), EnvTypeKey)
 	bindFlagAndEnvVar(collectCmd, FoundationNicknameFlag, "", fmt.Sprintf("``Specify foundation nickname used in reporting by VMware [$%s]", FoundationNicknameKey), FoundationNicknameKey)
 	bindFlagAndEnvVar(collectCmd, OperationalDataOnlyFlag, false, fmt.Sprintf("``Collect only operational data [$%s]", OperationalDataOnlyKey), OperationalDataOnlyKey)
+	bindFlagAndEnvVar(collectCmd, CoreConsumptionFlag, false, fmt.Sprintf("``Collect core consumption data [$%s]", CoreConsumptionKey), CoreConsumptionKey)
 	bindFlagAndEnvVar(collectCmd, OpsManagerTimeoutFlag, 30, fmt.Sprintf("``Timeout on network connection to Ops Manager in seconds [$%s]", OpsManagerTimeoutKey), OpsManagerTimeoutKey)
 	bindFlagAndEnvVar(collectCmd, OpsManagerRequestTimeoutFlag, 30, fmt.Sprintf("``Timeout on request fulfillment from Ops Manager in seconds [$%s]", OpsManagerRequestTimeoutKey), OpsManagerRequestTimeoutKey)
 	bindFlagAndEnvVar(collectCmd, SkipTlsVerifyFlag, false, fmt.Sprintf("``Skip TLS validation on http requests to Ops Manager [$%s]\n", SkipTlsVerifyKey), SkipTlsVerifyKey)
@@ -138,18 +141,22 @@ func init() {
 
 	collectCmd.Example = `
       Collect Telemetry data from Ops Manager only:
-      telemetry-collector collect --url --username --password [or --client-id and
-      --client-secret] --env-type --output-dir
+      telemetry-collector collect --url <url> --username <name> --password <pw> [or --client-id <id> and
+      --client-secret <secret>] --env-type <env> --output-dir <dir>
+
+      Collect Telemetry data from Ops Manager as well as Core Consumption Data:
+      telemetry-collector collect --url <url> --username <name> --password <pw> [or --client-id <id> and
+      --client-secret <secret>] --env-type <env> --output-dir <dir> --core-consumption
 
       Collect Telemetry and Operational data:
-      telemetry-collector collect --url --username --password [or --client-id and
-      --client-secret] --usage-service-url --usage-service-client-id
-      --usage-service-client-secret --cf-api-url --env-type --output-dir
+      telemetry-collector collect --url <url> --username <name> --password <pw> [or --client-id <id> and
+      --client-secret <secret>] --usage-service-url <url> --usage-service-client-id <id>
+      --usage-service-client-secret <secret> --cf-api-url <url> --env-type <env> --output-dir <dir>
 
       Collect Operational Data only:
-      telemetry-collector collect --url --username --password [or --client-id and
-      --client-secret] --usage-service-url --usage-service-client-id
-      --usage-service-client-secret --cf-api-url --env-type --output-dir
+      telemetry-collector collect --url <url> --username <name> --password <pw> [or --client-id <id> and
+      --client-secret <secret>] --usage-service-url <url> --usage-service-client-id <id>
+      --usage-service-client-secret <secret> --cf-api-url <url> --env-type <env> --output-dir <dir>
       --operational-data-only`
 
 	customUsageTextTemplate := `
