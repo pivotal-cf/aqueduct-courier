@@ -3,8 +3,8 @@ module github.com/pivotal-cf/aqueduct-courier
 go 1.21
 
 require (
-	code.cloudfoundry.org/credhub-cli v0.0.0-20231023130441-09cc92dff9cb
-	github.com/elazarl/goproxy v0.0.0-20231017160920-1fe6677f404d
+	code.cloudfoundry.org/credhub-cli v0.0.0-20231106140258-a8b206456cb2
+	github.com/elazarl/goproxy v0.0.0-20231031074852-3ec07828be7a
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/onsi/ginkgo v1.16.5
@@ -13,7 +13,7 @@ require (
 	github.com/pivotal-cf/telemetry-utils v0.0.0-20231107165754-b1207734d33d
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/afero v1.10.0 // indirect
-	github.com/spf13/cobra v1.7.0
+	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.17.0
 	golang.org/x/oauth2 v0.13.0
@@ -27,9 +27,9 @@ require (
 	github.com/cheggaaa/pb/v3 v3.1.4 // indirect
 	github.com/cloudfoundry-community/go-uaa v0.3.2 // indirect
 	github.com/cloudfoundry/go-socks5 v0.0.0-20180221174514-54f73bdb8a8e // indirect
-	github.com/cloudfoundry/socks5-proxy v0.2.101 // indirect
+	github.com/cloudfoundry/socks5-proxy v0.2.102 // indirect
 	github.com/dsnet/compress v0.0.2-0.20230904184137-39efe44ab707 // indirect
-	github.com/fatih/color v1.15.0 // indirect
+	github.com/fatih/color v1.16.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect

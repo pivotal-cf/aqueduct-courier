@@ -1,4 +1,4 @@
-# code.cloudfoundry.org/credhub-cli v0.0.0-20231023130441-09cc92dff9cb
+# code.cloudfoundry.org/credhub-cli v0.0.0-20231106140258-a8b206456cb2
 ## explicit; go 1.21
 code.cloudfoundry.org/credhub-cli/credhub
 code.cloudfoundry.org/credhub-cli/credhub/auth
@@ -26,7 +26,7 @@ github.com/cloudfoundry-community/go-uaa/passwordcredentials
 # github.com/cloudfoundry/go-socks5 v0.0.0-20180221174514-54f73bdb8a8e
 ## explicit
 github.com/cloudfoundry/go-socks5
-# github.com/cloudfoundry/socks5-proxy v0.2.101
+# github.com/cloudfoundry/socks5-proxy v0.2.102
 ## explicit; go 1.21
 github.com/cloudfoundry/socks5-proxy
 # github.com/dsnet/compress v0.0.2-0.20230904184137-39efe44ab707
@@ -37,10 +37,10 @@ github.com/dsnet/compress/bzip2/internal/sais
 github.com/dsnet/compress/internal
 github.com/dsnet/compress/internal/errors
 github.com/dsnet/compress/internal/prefix
-# github.com/elazarl/goproxy v0.0.0-20231017160920-1fe6677f404d
+# github.com/elazarl/goproxy v0.0.0-20231031074852-3ec07828be7a
 ## explicit
 github.com/elazarl/goproxy
-# github.com/fatih/color v1.15.0
+# github.com/fatih/color v1.16.0
 ## explicit; go 1.17
 github.com/fatih/color
 # github.com/fsnotify/fsnotify v1.7.0
@@ -212,7 +212,7 @@ github.com/spf13/afero/mem
 # github.com/spf13/cast v1.5.1
 ## explicit; go 1.18
 github.com/spf13/cast
-# github.com/spf13/cobra v1.7.0
+# github.com/spf13/cobra v1.8.0
 ## explicit; go 1.15
 github.com/spf13/cobra
 # github.com/spf13/pflag v1.0.5
