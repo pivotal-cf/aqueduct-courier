@@ -10,13 +10,13 @@ require (
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.30.0
 	github.com/pivotal-cf/om v0.0.0-20230906164640-f12a92d2f80b
-	github.com/pivotal-cf/telemetry-utils v0.0.0-20231108175706-bbb3ede4f766
+	github.com/pivotal-cf/telemetry-utils v0.0.0-20231109182059-088cd13febaa
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/afero v1.10.0 // indirect
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.17.0
-	golang.org/x/oauth2 v0.13.0
+	golang.org/x/oauth2 v0.14.0
 )
 
 require github.com/mholt/archiver/v3 v3.5.1
@@ -57,9 +57,9 @@ require (
 	github.com/ulikunitz/xz v0.5.11 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.14.0 // indirect
+	golang.org/x/crypto v0.15.0 // indirect
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
-	golang.org/x/net v0.17.0 // indirect
+	golang.org/x/net v0.18.0 // indirect
 	golang.org/x/sys v0.14.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
