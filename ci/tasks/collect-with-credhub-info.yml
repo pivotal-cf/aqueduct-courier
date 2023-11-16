@@ -10,6 +10,7 @@ image_resource:
 
 inputs:
 - name: binary
+- name: smith
 
 run:
   path: bash
@@ -18,26 +19,38 @@ run:
   - |
     set -eu
 
-    chmod +x ./binary/telemetry-collector-linux-amd64
-    ./binary/telemetry-collector-linux-amd64 --version
+    export ACCEPTANCE_ENV_NAME="$ACCEPTANCE_ENV_NAME"
+    export OPS_MANAGER_PASSWORD="$OPS_MANAGER_PASSWORD"
+    export OPS_MANAGER_URL="$OPS_MANAGER_URL"
+    export OPS_MANAGER_USERNAME="$OPS_MANAGER_USERNAME"
+    export TELEMETRY_TILE_GUID="$TELEMETRY_TILE_GUID"
+    export TOOLSMITHS_API_TOKEN="$TOOLSMITHS_API_TOKEN"
 
-    gcloud auth activate-service-account --key-file <(echo "$GCP_SERVICE_ACCOUNT_KEY")
-    gcloud config set project "$GCP_PROJECT_ID"
+    tar -C /usr/local/bin -xf smith/*.tar.gz
 
-    gcloud compute scp binary/telemetry-collector-linux-amd64 not-root@"$GCP_INSTANCE_NAME":~ --zone "$GCP_ZONE" --quiet
+    # Switch to expect
+    expect <<'EOF'
+    set timeout -1
 
-    command_string="cd ~ &&
-      rm -rf ~/foundation_collection &&
-      mkdir ~/foundation_collection &&
-      ./telemetry-collector-linux-amd64 collect --env-type development --with-credhub-info --url $OPS_MANAGER_URL --username $OPS_MANAGER_USERNAME --password $OPS_MANAGER_PASSWORD --insecure-skip-tls-verify --output-dir ~/foundation_collection"
-    gcloud compute ssh not-root@"$GCP_INSTANCE_NAME" --zone "$GCP_ZONE" --command "$command_string" --quiet
+    spawn smith -e $::env(ACCEPTANCE_ENV_NAME) bosh ssh -- -d $::env(TELEMETRY_TILE_GUID)
 
+    expect "\$ "
+
+    send -- "cd ~\r"
+    send -- "rm -rf ~/foundation_collection\r"
+    send -- "mkdir -p ~/foundation_collection\r"
+    send -- "/var/vcap/packages/telemetry-collector/telemetry-collector-linux collect --env-type development --with-credhub-info --url $::env(OPS_MANAGER_URL) --username $::env(OPS_MANAGER_USERNAME) --password $::env(OPS_MANAGER_PASSWORD) --insecure-skip-tls-verify --output-dir ~/foundation_collection\r"
+
+    expect {
+        "Success!"  { exit 0 }
+        "Error"   { send_user "\nError collecting data\n"; exit 1 }
+    }
+
+    EOF
 
 params:
-  GCP_SERVICE_ACCOUNT_KEY:
-  GCP_PROJECT_ID:
-  GCP_INSTANCE_NAME:
-  GCP_ZONE:
+  ACCEPTANCE_ENV_NAME:
+  OPS_MANAGER_PASSWORD:
   OPS_MANAGER_URL:
   OPS_MANAGER_USERNAME:
-  OPS_MANAGER_PASSWORD:
+  TOOLSMITHS_API_TOKEN:

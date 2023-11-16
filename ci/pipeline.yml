@@ -101,6 +101,14 @@ resources:
   icon: clock-outline
   source:
     interval: 24h
+- name: smith-cli-github-release
+  type: github-release
+  version:
+    tag: 'v2.3.0'
+  source:
+    owner: pivotal
+    repository: smith
+    access_token: ((github.pivotal-cf-access-token))
 
 jobs:
 - name: update-telemetry-utils
@@ -167,18 +175,21 @@ jobs:
     - get: staging-linux-binary
       passed: [build-staging-binaries]
     - get: ci
+    - get: smith
+      resource: smith-cli-github-release
+      params:
+        globs: ["*linux*"]
   - task: collect-credhub-info
     file: ci/ci/tasks/collect-with-credhub-info.yml
     input_mapping:
       binary: staging-linux-binary
     params:
-      GCP_INSTANCE_NAME: ((toolsmiths/((vault-acceptance-prefix)).opsman-instance-name))
-      GCP_PROJECT_ID: ((toolsmiths/((vault-acceptance-prefix)).gcp-project-id))
-      GCP_SERVICE_ACCOUNT_KEY: ((service-accounts/gcp.ci-759-gcp-service-account-key))
-      GCP_ZONE: ((toolsmiths/((vault-acceptance-prefix)).gcp-zone))
+      ACCEPTANCE_ENV_NAME: ((toolsmiths/((vault-acceptance-prefix)).env-name))
       OPS_MANAGER_PASSWORD: ((toolsmiths/((vault-acceptance-prefix)).opsman-password))
       OPS_MANAGER_URL: ((toolsmiths/((vault-acceptance-prefix)).ops-manager-url))
       OPS_MANAGER_USERNAME: ((toolsmiths/((vault-acceptance-prefix)).opsman-username))
+      TELEMETRY_TILE_GUID: ((toolsmiths/((vault-acceptance-prefix)).telemetry-tile-guid))
+      TOOLSMITHS_API_TOKEN: ((toolsmiths/auth.api-token))
 
 - name: test-collect-and-send
   plan:
