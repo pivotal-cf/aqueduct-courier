@@ -11,6 +11,8 @@ image_resource:
 inputs:
 - name: binary
 - name: smith
+- name: om
+- name: bosh
 
 run:
   path: bash
@@ -25,6 +27,14 @@ run:
     export OPS_MANAGER_USERNAME="$OPS_MANAGER_USERNAME"
     export TELEMETRY_TILE_GUID="$TELEMETRY_TILE_GUID"
     export TOOLSMITHS_API_TOKEN="$TOOLSMITHS_API_TOKEN"
+
+    om_cli="om/om-linux-amd64-$(cat om/version)"
+    chmod 755 "$om_cli"
+    cp "$om_cli" /usr/local/bin/om
+
+    BOSH_CLI=("$PWD"/bosh/bosh-cli-*-linux-amd64)
+    chmod 755 "$BOSH_CLI"
+    cp "$BOSH_CLI" /usr/local/bin/bosh
 
     tar -C /usr/local/bin -xf smith/*.tar.gz
 
