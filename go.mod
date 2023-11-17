@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	code.cloudfoundry.org/credhub-cli v0.0.0-20231113140620-f30160402bd4
-	github.com/elazarl/goproxy v0.0.0-20231031074852-3ec07828be7a
+	github.com/elazarl/goproxy v0.0.0-20231117061959-7cc037d33fb5
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/onsi/ginkgo v1.16.5
