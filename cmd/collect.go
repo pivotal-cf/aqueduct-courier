@@ -303,6 +303,10 @@ type consumptionDataCollector interface {
 	Collect() ([]consumption.Data, error)
 }
 
+type coreConsumptionDataCollector interface {
+	Collect() ([]coreconsumption.Data, error)
+}
+
 func makeConsumptionCollector() (consumptionDataCollector, error) {
 	if anyUsageServiceConfigsProvided() {
 		err := validateUsageServiceConfig()
@@ -343,6 +347,24 @@ func makeConsumptionCollector() (consumptionDataCollector, error) {
 		)
 
 		return consumptionCollector, nil
+	}
+	return nil, nil
+}
+
+func makeCoreConsumptionCollector(operationalDataOnly bool, apiService api.Api) (coreConsumptionDataCollector, error) {
+	if anyUsageServiceConfigsProvided() || operationalDataOnly {
+		// collect data from api/v0/download_core_consumption
+		ccOmService := &coreconsumption.Service{
+			Requestor: apiService,
+		}
+
+		coreConsumptionCollector := coreconsumption.NewDataCollector(
+			logger,
+			ccOmService,
+			viper.GetString(OpsManagerURLFlag),
+		)
+
+		return coreConsumptionCollector, nil
 	}
 	return nil, nil
 }
@@ -405,16 +427,10 @@ func makeCollector(tarWriter *tar.TarWriter, operationalDataOnly bool) (*operati
 		return nil, err
 	}
 
-	// collect data from api/v0/download_core_consumption
-	ccOmService := &coreconsumption.Service{
-		Requestor: apiService,
+	coreConsumptionCollector, err := makeCoreConsumptionCollector(operationalDataOnly, apiService)
+	if err != nil {
+		return nil, err
 	}
-
-	coreConsumptionCollector := coreconsumption.NewDataCollector(
-		logger,
-		ccOmService,
-		viper.GetString(OpsManagerURLFlag),
-	)
 
 	credhubCollector, err := makeCredhubCollector(omService, viper.GetBool(CollectFromCredhubFlag))
 	if err != nil {
