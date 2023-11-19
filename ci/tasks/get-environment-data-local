@@ -1,0 +1,206 @@
+#!/usr/bin/env bash
+
+# Check if an environment name is passed
+if [ "$#" -ne 1 ]; then
+    echo "You must pass an environment name"
+    exit 1
+fi
+
+ENVIRONMENT_NAME=$1
+
+# Check that we own passed in environment
+ENV_EXISTS=$(smith list --json | jq -r --arg env "$ENVIRONMENT_NAME" '.[] | select(.name == $env)')
+
+# Bash reminder
+# -z returns true if variable is empty
+# -n returns true if variable is NOT empty
+if [ -z "$ENV_EXISTS" ]; then
+    echo -e "Environment \"${ENVIRONMENT_NAME}\" does not exist"
+    exit 1
+fi
+
+# Print environment name
+echo -e "\n********** ENVIRONMENT NAME VARIABLES **********"
+echo -e "\nENVIRONMENT:\t\t\t\t${ENVIRONMENT_NAME}"
+
+
+# Make directories for data output
+mkdir -p ${PWD}/smith-data/$ENVIRONMENT_NAME
+mkdir -p ${PWD}/smith-data/$ENVIRONMENT_NAME/username-password
+mkdir -p ${PWD}/smith-data/$ENVIRONMENT_NAME/client-id-client-secret
+
+
+
+
+# Function to get ops_manager password
+fetch_ops_manager_pw() {
+    OPS_MANAGER_PASSWORD=$(smith read -e ${ENVIRONMENT_NAME} | jq -r .ops_manager.password)
+    echo -e "OPS_MANAGER_PASSWORD:\t\t\t$OPS_MANAGER_PASSWORD"
+}
+
+# Function to get p_bosh_id
+fetch_p_bosh_id() {
+    P_BOSH_ID=$(smith -e ${ENVIRONMENT_NAME} om -- curl -s --path=/api/v0/deployed/products | jq -r ".[].guid" | grep bosh)
+    echo -e "P_BOSH_ID:\t\t\t\t$P_BOSH_ID"
+}
+
+# Function to get Telemetry Tile guid
+fetch_telemetry_tile_guid() {
+    TELEMETRY_TILE_GUID=$(smith -e ${ENVIRONMENT_NAME} om -- curl -s --path /api/v0/deployed/products | jq -r '.[] | select(.type == "pivotal-telemetry-om").guid')
+    echo -e "TELEMETRY_TILE_GUID:\t\t\t$TELEMETRY_TILE_GUID"
+}
+
+# Function to get uaa_client_secret
+fetch_uaa_client_secret() {
+    UAA_CLIENT_SECRET=$(smith -e ${ENVIRONMENT_NAME} om -- curl -s --path /api/v0/deployed/products/${TELEMETRY_TILE_GUID}/manifest | jq -r '.instance_groups[] | select(.name == "telemetry-centralizer").jobs[] | select(.name == "telemetry-collector").properties.opsmanager.auth.uaa_client_secret')
+    echo -e "UAA_CLIENT_SECRET:\t\t\t$UAA_CLIENT_SECRET"
+}
+
+# Function to get cf_guid
+fetch_cf_guid() {
+    CF_GUID=$(smith -e ${ENVIRONMENT_NAME} om -- curl -s --path /api/v0/deployed/products | jq -r '.[] | select(.type == "cf").guid')
+    if [ -n "$CF_GUID" ]; then
+        echo -e "CF_GUID:\t\t\t\t$CF_GUID"
+    else
+        echo -e "CF_GUID:"
+    fi
+}
+
+# Function to make an API call using the cf_guid and print the telemetry_usage_service_password
+fetch_telemetry_usage_service_password() {
+    TELEMETRY_USAGE_SERVICE_PASSWORD=""
+    if [ -n "$CF_GUID" ]; then
+        TELEMETRY_USAGE_SERVICE_PASSWORD=$(smith -e ${ENVIRONMENT_NAME} om -- curl -s --path /api/v0/deployed/products/${CF_GUID}/credentials/.uaa.usage_service_client_credentials | jq -r .credential.value.password)
+        echo -e "TELEMETRY_USAGE_SERVICE_PASSWORD:\t$TELEMETRY_USAGE_SERVICE_PASSWORD"
+    else
+        echo -e "TELEMETRY_USAGE_SERVICE_PASSWORD:"
+    fi
+}
+
+
+# Main script execution starts here
+fetch_ops_manager_pw
+fetch_p_bosh_id
+fetch_telemetry_tile_guid
+fetch_uaa_client_secret
+fetch_cf_guid
+fetch_telemetry_usage_service_password
+
+
+echo -e "\n\n********** CLI COMMANDS: USERNAME / PASSWORD **********"
+
+
+# CLI STRINGS
+echo -e "\n** CEIP ONLY **"
+mkdir -p ${PWD}/smith-data/$ENVIRONMENT_NAME/username-password/ceip
+echo "telemetry-collector collect \\
+    --url https://pcf.${ENVIRONMENT_NAME}.cf-app.com/ \\
+    --username pivotalcf \\
+    --password ${OPS_MANAGER_PASSWORD} \\
+    --env-type development \\
+    --output-dir ${PWD}/smith-data/${ENVIRONMENT_NAME}/username-password/ceip"
+
+
+if [ -n "$TELEMETRY_USAGE_SERVICE_PASSWORD" ]; then
+    echo -e "\n\n** OPERATIONAL DATA ONLY - WITH USAGE **"
+    mkdir -p ${PWD}/smith-data/$ENVIRONMENT_NAME/username-password/operational-data-only-with-usage
+    echo -e "telemetry-collector collect \\
+    --url https://pcf.${ENVIRONMENT_NAME}.cf-app.com/ \\
+    --username pivotalcf \\
+    --password ${OPS_MANAGER_PASSWORD} \\
+    --usage-service-url https://app-usage.sys.${ENVIRONMENT_NAME}.cf-app.com \\
+    --usage-service-client-id usage_service \\
+    --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
+    --cf-api-url https://api.sys.${ENVIRONMENT_NAME}.cf-app.com \
+    --env-type development \\
+    --output-dir ${PWD}/smith-data/${ENVIRONMENT_NAME}/username-password/operational-data-only-with-usage \\
+    --operational-data-only"
+fi
+
+
+echo -e "\n\n** OPERATIONAL DATA ONLY - NO USAGE **"
+mkdir -p ${PWD}/smith-data/$ENVIRONMENT_NAME/username-password/operational-data-only-no-usage
+echo "telemetry-collector collect \\
+    --url https://pcf.${ENVIRONMENT_NAME}.cf-app.com/ \\
+    --username pivotalcf \\
+    --password ${OPS_MANAGER_PASSWORD} \\
+    --env-type development \\
+    --output-dir ${PWD}/smith-data/${ENVIRONMENT_NAME}/username-password/operational-data-only-no-usage \\
+    --operational-data-only"
+
+
+if [ -n "$TELEMETRY_USAGE_SERVICE_PASSWORD" ]; then
+    echo -e "\n\n** ALL **"
+    mkdir -p ${PWD}/smith-data/$ENVIRONMENT_NAME/username-password/all
+    echo "telemetry-collector collect \\
+    --url https://pcf.${ENVIRONMENT_NAME}.cf-app.com/ \\
+    --username pivotalcf \\
+    --password ${OPS_MANAGER_PASSWORD} \\
+    --usage-service-url https://app-usage.sys.${ENVIRONMENT_NAME}.cf-app.com \\
+    --usage-service-client-id usage_service \\
+    --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
+    --cf-api-url https://api.sys.${ENVIRONMENT_NAME}.cf-app.com \\
+    --env-type development \\
+    --output-dir ${PWD}/smith-data/${ENVIRONMENT_NAME}/username-password/all"
+fi
+
+
+echo -e "\n\n********** CLI COMMANDS: CLIENT ID / CLIENT SECRET **********"
+
+
+# CLIENT ID / CLIENT SECRET
+echo -e "\n** CEIP ONLY **"
+mkdir -p ${PWD}/smith-data/$ENVIRONMENT_NAME/client-id-client-secret/ceip
+echo "telemetry-collector collect \\
+    --url https://pcf.${ENVIRONMENT_NAME}.cf-app.com/ \\
+    --client-id restricted_view_api_access \\
+    --client-secret ${UAA_CLIENT_SECRET} \\
+    --env-type development \\
+    --output-dir ${PWD}/smith-data/${ENVIRONMENT_NAME}/client-id-client-secret/ceip"
+
+
+if [ -n "$TELEMETRY_USAGE_SERVICE_PASSWORD" ]; then
+    echo -e "\n\n** OPERATIONAL DATA ONLY - WITH USAGE **"
+    mkdir -p ${PWD}/smith-data/$ENVIRONMENT_NAME/client-id-client-secret/operational-data-only-with-usage
+    echo -e "telemetry-collector collect \\
+    --url https://pcf.${ENVIRONMENT_NAME}.cf-app.com/ \\
+    --client-id restricted_view_api_access \\
+    --client-secret ${UAA_CLIENT_SECRET} \\
+    --usage-service-url https://app-usage.sys.${ENVIRONMENT_NAME}.cf-app.com \\
+    --usage-service-client-id usage_service \\
+    --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
+    --cf-api-url https://api.sys.${ENVIRONMENT_NAME}.cf-app.com \
+    --env-type development \\
+    --output-dir ${PWD}/smith-data/${ENVIRONMENT_NAME}/client-id-client-secret/operational-data-only-with-usage \\
+    --operational-data-only"
+fi
+
+
+echo -e "\n\n** OPERATIONAL DATA ONLY - NO USAGE **"
+mkdir -p ${PWD}/smith-data/$ENVIRONMENT_NAME/client-id-client-secret/operational-data-only-no-usage
+echo "telemetry-collector collect \\
+    --url https://pcf.${ENVIRONMENT_NAME}.cf-app.com/ \\
+    --username pivotalcf \\
+    --password ${OPS_MANAGER_PASSWORD} \\
+    --env-type development \\
+    --output-dir ${PWD}/smith-data/${ENVIRONMENT_NAME}/client-id-client-secret/operational-data-only-no-usage \\
+    --operational-data-only"
+
+
+if [ -n "$TELEMETRY_USAGE_SERVICE_PASSWORD" ]; then
+    echo -e "\n\n** ALL **"
+    mkdir -p ${PWD}/smith-data/$ENVIRONMENT_NAME/client-id-client-secret/all
+    echo -e "telemetry-collector collect \\
+    --url https://pcf.${ENVIRONMENT_NAME}.cf-app.com/ \\
+    --client-id restricted_view_api_access \\
+    --client-secret ${UAA_CLIENT_SECRET} \\
+    --usage-service-url https://app-usage.sys.${ENVIRONMENT_NAME}.cf-app.com \\
+    --usage-service-client-id usage_service \\
+    --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
+    --cf-api-url https://api.sys.${ENVIRONMENT_NAME}.cf-app.com \\
+    --env-type development \\
+    --output-dir ${PWD}/smith-data/${ENVIRONMENT_NAME}/all"
+fi
+
+
+echo -e "\n"
