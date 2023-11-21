@@ -3,7 +3,7 @@ module github.com/pivotal-cf/aqueduct-courier
 go 1.21
 
 require (
-	code.cloudfoundry.org/credhub-cli v0.0.0-20231113140620-f30160402bd4
+	code.cloudfoundry.org/credhub-cli v0.0.0-20231120141608-b960b71bb88c
 	github.com/elazarl/goproxy v0.0.0-20231117061959-7cc037d33fb5
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/magiconair/properties v1.8.7 // indirect

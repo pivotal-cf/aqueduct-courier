@@ -39,8 +39,8 @@ cloud.google.com/go/storage v1.14.0/go.mod h1:GrKmX003DSIwi9o29oFT7YDnHYwZoctc3f
 code.cloudfoundry.org/archiver v0.0.0-20200131002800-4ca7245c29b1/go.mod h1:EU/KcUvh4qBVN6ffu/b8t9x7SurDot+AO0HqEZ+9QOg=
 code.cloudfoundry.org/clock v1.0.0/go.mod h1:QD9Lzhd/ux6eNQVUDVRJX/RKTigpewimNYBi7ivZKY8=
 code.cloudfoundry.org/credhub-cli v0.0.0-20201102140135-1a6b82ad1f99/go.mod h1:Zr68D62cO26cps/R/4q8qtKwsNdH+cOwvNDcYimSXJM=
-code.cloudfoundry.org/credhub-cli v0.0.0-20231113140620-f30160402bd4 h1:L0KEMwjxKKIDUa8nHem100E7+/KTW/tauc5tQ3vlKy8=
-code.cloudfoundry.org/credhub-cli v0.0.0-20231113140620-f30160402bd4/go.mod h1:uV5St8+9cftIy5I6JMSggYWQbs3jsYOPb8ApeEfLfb4=
+code.cloudfoundry.org/credhub-cli v0.0.0-20231120141608-b960b71bb88c h1:1+gjftoegVmR1drtsz/iEC9DgQsM5ckOEWme3W0UViA=
+code.cloudfoundry.org/credhub-cli v0.0.0-20231120141608-b960b71bb88c/go.mod h1:EJUACw1wRux77ras3GXl/2tLXpGlGVLH/g4x21O6CSI=
 code.cloudfoundry.org/hydrator v0.0.0-20191120195058-919ca7133daa/go.mod h1:ZxzdUuTsl614pKwLbdmrpwj5jw6flyB7+s6WhkMPmB8=
 code.cloudfoundry.org/tlsconfig v0.0.0-20200131000646-bbe0f8da39b3/go.mod h1:eTbFJpyXRGuFVyg5+oaj9B2eIbIc+0/kZjH8ftbtdew=
 code.cloudfoundry.org/workpool v0.0.0-20200131000409-2ac56b354115/go.mod h1:O9HdfntfyDvYRH9nh03XdpnGMbjyZVi8nb2Kh+6hDho=
