@@ -1,0 +1,48 @@
+# http://docs.shepherd.run/content/home/installation.html
+
+
+
+sheepctl target set -u 'https://shepherd.run' -n tpi-telemetry-sdk-ci
+
+
+
+# Creates a Pool
+sheepctl pool create \
+--name tpi-shepherd \
+-f template.json \
+-u 'https://shepherd.run' \
+-n tpi-telemetry-sdk-ci
+
+
+# Lists Details of Created Pool
+sheepctl pool get tpi-shepherd \
+-u 'https://shepherd.run' \
+-n tpi-telemetry-sdk-ci
+
+
+# Creates a pooled environment
+sheepctl pool lock tpi-shepherd \
+--lifetime 168h \
+-u 'https://shepherd.run' \
+-n tpi-telemetry-sdk-ci
+
+
+# Lists the pooled environments
+sheepctl lock list \
+-u 'https://shepherd.run' \
+-n tpi-telemetry-sdk-ci
+
+
+# Gets 1 particular pooled environment
+sheepctl lock \
+get fc49baed-a759-487e-8e10-b66d4b76b7a4 \
+-u 'https://shepherd.run' \
+-n tpi-telemetry-sdk-ci
+
+
+# ssh onto environment
+sheepctl lock ssh fc49baed-a759-487e-8e10-b66d4b76b7a4 -u 'https://shepherd.run' -n tpi-telemetry-sdk-ci
+
+
+# ssh root@192.168.111.108
+# password --> ZRPWypnQyp+M5a5.

@@ -1,0 +1,22 @@
+{
+  "recipe": {
+    "fetcher": "git",
+    "launcher": "vane",
+    "source": "git@gitlab.eng.vmware.com:PKS/tooling/hack-nimbus.git",
+    "symbol": "master",
+    "data": {
+      "esx-build": "ob-20036589",
+      "vc-build": "ob-20150588",
+      "nsxt-build": "ob-21332672",
+      "use-cvds": "true",
+      "nsx-branch": "nsx4.0.1",
+      "path": "pks-dev-with-nsx-t",
+      "nsx-edge-clusters": "2",
+      "pks-tile": "true",
+      "opsman-url": "http://files.pks.eng.vmware.com/ci/artifacts/opsman/ops-manager-vsphere-3.0.19%2BLTS-T.ova",
+      "pks-tile-url": "https://storage.googleapis.com/tpi-shepherd/pivotal-container-service-1.17.2-build.15.pivotal",
+      "pks-stemcell-url": "https://storage.googleapis.com/tpi-shepherd/bosh-stemcell-1.301-vsphere-esxi-ubuntu-jammy-go_agent.tgz"
+    },
+    "lifetime": "7d"
+  }
+}
