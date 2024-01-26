@@ -360,8 +360,8 @@ github.com/pivotal-cf/om v0.0.0-20230906164640-f12a92d2f80b/go.mod h1:fTsnHcHsrJ
 github.com/pivotal-cf/paraphernalia v0.0.0-20180203224945-a64ae2051c20/go.mod h1:Y3IqE20LKprEpLkXb7gXinJf4vvDdQe/BS8E4kL/dgE=
 github.com/pivotal-cf/pivnet-cli/v2 v2.0.2/go.mod h1:uIR4ymPiy/UdCKmjuQFBD2HTQBI7CqKr3qF9RHig91s=
 github.com/pivotal-cf/replicator v0.0.0-20181127185712-7c58987ce14b/go.mod h1:IeOwGZZpRMYRgeY7Aghsg0nN7KopqUx6A0S/iNJkSRY=
-github.com/pivotal-cf/telemetry-utils v0.0.0-20240126192228-01f18a92d602 h1:mJtHA9YEIb4zWkrzKJ+nGnIReGZebx6qboU0Pxs0zRo=
-github.com/pivotal-cf/telemetry-utils v0.0.0-20240126192228-01f18a92d602/go.mod h1:Dnagrmo49MmT9rcCnyCUP2DsN6WHxl27mafjIpSYDB8=
+github.com/pivotal-cf/telemetry-utils v0.0.0-20240126210854-c67086e4b18a h1:PniLvAp/Ta9C51qUNnPksH8okJ2KGxLaFB537wXW4Es=
+github.com/pivotal-cf/telemetry-utils v0.0.0-20240126210854-c67086e4b18a/go.mod h1:Dnagrmo49MmT9rcCnyCUP2DsN6WHxl27mafjIpSYDB8=
 github.com/pivotal-cf/winfs-injector v0.0.0-20200827170301-91411420d92f/go.mod h1:erXKE+60j2kKsZcz7tU+4ymwK3DCDYBTUIesne5h25E=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=

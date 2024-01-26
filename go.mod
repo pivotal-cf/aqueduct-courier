@@ -10,7 +10,7 @@ require (
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.31.1
 	github.com/pivotal-cf/om v0.0.0-20230906164640-f12a92d2f80b
-	github.com/pivotal-cf/telemetry-utils v0.0.0-20240126192228-01f18a92d602
+	github.com/pivotal-cf/telemetry-utils v0.0.0-20240126210854-c67086e4b18a
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cobra v1.8.0
