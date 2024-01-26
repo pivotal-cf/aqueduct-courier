@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+# Ensure user is logged into shepherd
+if ! shepherd login user --json | jq -e '.login.User == "success"' &>/dev/null; then
+	echo "Failed to login to shepherd" >&2
+	exit 1
+fi
+
+env_types=(production staging acceptance)
+stemcells=(jammy xenial)
+
+function create() {
+	local env=${1}
+	local stemcell=${2}
+
+	if [[ ${stemcell} == "jammy" ]]; then
+		echo "Creating a TAS 5 env for ${env}-${stemcell}"
+		shepherd create lease --pool "tas-5_0" --duration 168h --description "${env}-${stemcell}" --pool-namespace official
+	fi
+
+	if [[ ${stemcell} == "xenial" ]]; then
+		echo "Creating a TAS 2.13 env for ${env}-${stemcell}"
+		shepherd create lease --pool "tas-2_13" --duration 168h --description "${env}-${stemcell}" --pool-namespace official
+	fi
+}
+
+OWNED_ENVS=$(shepherd list lease --json | jq .)
+
+# Iterate through envs / stemcells
+# Create any that don't exist
+for et in "${env_types[@]}"; do
+	for s in "${stemcells[@]}"; do
+		if [ "$(echo "$OWNED_ENVS" | jq -r "map(select(.description == \"${et}-${s}\")) | length == 0")" = "true" ]; then
+			echo "No existing ${et}-${s} environment found. Creating..."
+			create "$et" "$s"
+		else
+			printf "%-20s exists\n" "${et}-${s}:"
+		fi
+	done
+done
