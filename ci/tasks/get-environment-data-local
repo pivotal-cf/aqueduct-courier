@@ -48,6 +48,11 @@ eval "$(smith om --lockfile="$LOCKFILE")"
 smith cf-login --lockfile="$LOCKFILE"
 #smith open --lockfile="$LOCKFILE"
 
+# If this is acceptance-jammy, write the lockfile to a secret
+if [[ "$ENV_DESCRIPTION" == "acceptance-jammy" ]]; then
+	vault kv put runway_concourse/tanzu-portfolio-insights/toolsmiths/acceptance-lockfile @/Users/driddle/workspace/shepherd_envs/acceptance-jammy-metadata.json
+fi
+
 # Make directories for data output
 # mkdir -p ${PWD}/smith-data/$ENV_DESCRIPTION
 # mkdir -p ${PWD}/smith-data/$ENV_DESCRIPTION/username-password

@@ -22,11 +22,14 @@ run:
     set -eu
 
     export ACCEPTANCE_ENV_NAME="$ACCEPTANCE_ENV_NAME"
+    export ACCEPTANCE_LOCKFILE="$ACCEPTANCE_LOCKFILE"
     export OPS_MANAGER_PASSWORD="$OPS_MANAGER_PASSWORD"
     export OPS_MANAGER_URL="$OPS_MANAGER_URL"
     export OPS_MANAGER_USERNAME="$OPS_MANAGER_USERNAME"
     export TELEMETRY_TILE_GUID="$TELEMETRY_TILE_GUID"
     export TOOLSMITHS_API_TOKEN="$TOOLSMITHS_API_TOKEN"
+
+    echo $ACCEPTANCE_LOCKFILE > /tmp/lockfile.json
 
     om_cli="om/om-linux-amd64-$(cat om/version)"
     chmod 755 "$om_cli"
@@ -42,7 +45,7 @@ run:
     expect <<'EOF'
     set timeout -1
 
-    spawn smith -e $::env(ACCEPTANCE_ENV_NAME) bosh ssh -- -d $::env(TELEMETRY_TILE_GUID)
+    spawn smith bosh --lockfile=/tmp/lockfile.json ssh -- -d $::env(TELEMETRY_TILE_GUID)
 
     expect "\$ "
 
@@ -60,6 +63,7 @@ run:
 
 params:
   ACCEPTANCE_ENV_NAME:
+  ACCEPTANCE_LOCKFILE:
   OPS_MANAGER_PASSWORD:
   OPS_MANAGER_URL:
   OPS_MANAGER_USERNAME:

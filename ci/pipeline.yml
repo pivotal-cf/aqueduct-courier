@@ -205,6 +205,7 @@ jobs:
       binary: staging-linux-binary
     params:
       ACCEPTANCE_ENV_NAME: ((toolsmiths/((vault-acceptance-prefix)).env-name))
+      ACCEPTANCE_LOCKFILE: ((toolsmiths/acceptance-lockfile))
       OPS_MANAGER_PASSWORD: ((toolsmiths/((vault-acceptance-prefix)).opsman-password))
       OPS_MANAGER_URL: ((toolsmiths/((vault-acceptance-prefix)).ops-manager-url))
       OPS_MANAGER_USERNAME: ((toolsmiths/((vault-acceptance-prefix)).opsman-username))
