@@ -1,0 +1,48 @@
+{
+  "apps_domain": "apps.wilt-668060.cf-app.com",
+  "azs": [
+    "us-central1-b",
+    "us-central1-f",
+    "us-central1-c"
+  ],
+  "env_dns_zone_name_servers": [
+    "ns-cloud-e1.googledomains.com.",
+    "ns-cloud-e2.googledomains.com.",
+    "ns-cloud-e3.googledomains.com.",
+    "ns-cloud-e4.googledomains.com."
+  ],
+  "ert_cidr": "10.0.4.0/24",
+  "ert_gateway": "10.0.4.1",
+  "ert_subnet": "wilt-668060-pas-subnet",
+  "ert_version": "2.13",
+  "http_lb_backend_name": "wilt-668060-httpslb",
+  "iaas_type": "gcp",
+  "metadata_is_complete": true,
+  "name": "wilt-668060",
+  "ops_manager": {
+    "password": "hGcKo1CbRPrQ8oye",
+    "url": "https://pcf.wilt-668060.cf-app.com",
+    "username": "pivotalcf"
+  },
+  "ops_manager_cidr": "10.0.0.0/26",
+  "ops_manager_dns": "pcf.wilt-668060.cf-app.com",
+  "ops_manager_gateway": "10.0.0.1",
+  "ops_manager_private_key": "-----BEGIN RSA PRIVATE KEY-----\n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\n-----END RSA PRIVATE KEY-----\n",
+  "ops_manager_public_ip": "34.41.120.212",
+  "ops_manager_public_key": "ubuntu:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCyMbNpeyg6PHCmraRwi/Itzn5748aIQyIgbi/te9eYe7VgKlDsL/26Mu8XhJoe9E2emkidQXVzzSi16v1VgUsDHAXeXLKIRLmK5WTirbK4aAt7FblaXXSiLpxY5UXMn5lTdSQYd30alpMksn0+5YidLS7YP0eIEUiqXt9l0ntHoWSn9uvXLe6+UnEoSmUhcG0LjP+lyH5+Nh/F+etR8v//HpPgkUt3dMGXSuvlEVvXq3Dk58NympXSPNhXZECx2SQZwZ65/8FtTxry8fldRcCZnn/GAVGnF4PwZKMGLbGwBL6dDTtd5AXZzOK9XKbSuKUuKDFBcyHq4rGmF5Wk5GggydTvvIP5mrXN2QgzszR/7xptFCYtbYP21Xsm/UO/Z6gEpZBMz8eckYLdhcqx28EoCe1JQ8DfqxbU30ugoFgi6oNN/r92B+CiMPzWCttrZOHz+wDiuFkTLQPdBLe+WnjwLRw8mVMB0lwSc6hSxJAe98IVWD8VnYe3nuU+P1ylEKqq8BH8crZsz1/tCDjBwr6hqi1zzdFd9RlfIDNvY72vvo/q9QgKJajD7FgFNzMTbrNEgxBH1cq5HuavYOXe0R9X/OHHdcm5o76iXGND/pXwOvh5YKeeWxg5U8hu8uCFma7ixEhE4KCc97LE/atuIKapqLM+JC0kNMBCxobKrEsDhQ==\n",
+  "ops_manager_subnet": "wilt-668060-management-subnet",
+  "ops_manager_version": "2.10.60",
+  "project": "shepherd-v2-environment-3",
+  "region": "us-central1",
+  "service_network_name": "wilt-668060-pcf-network",
+  "service_subnet_name": "wilt-668060-services-subnet",
+  "services_cidr": "10.0.8.0/24",
+  "services_gateway": "10.0.8.1",
+  "ssh_router_pool": "wilt-668060-cf-ssh",
+  "sys_domain": "sys.wilt-668060.cf-app.com",
+  "tcp_domain": "tcp.wilt-668060.cf-app.com",
+  "tcp_router_pool": "wilt-668060-cf-tcp",
+  "version": "2.13",
+  "vm_tag": "wilt-668060-vms",
+  "ws_router_pool": "wilt-668060-cf-ws"
+}

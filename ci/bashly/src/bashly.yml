@@ -1,0 +1,77 @@
+name: tpi
+help: App for provisioning and interacting with long-lived Shepherd environments, and storing the credentials in Vault.
+version: 0.1.0
+dependencies:
+- shepherd
+- vault
+- jq
+- smith
+- om
+- bosh
+- curl
+
+commands:
+- name: list
+  help: List Shepherd environments owned my our team
+  examples:
+  - tpi list
+
+- name: create
+  help: Create a long-lived environment using Shepherd
+  args:
+  - name: foundation
+    required: true
+    help: foundation to create
+    allowed: [production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial]
+  examples:
+  - tpi create acceptance-jammy
+
+- name: install
+  help: Install the Telemetry Tile on the specified environment
+  args:
+  - name: foundation
+    required: true
+    help: foundation to install Telemetry Tile on
+    allowed: [production-jammy, acceptance-jammy, production-xenial, acceptance-xenial]
+  examples:
+  - tpi install acceptance-jammy
+
+- name: update
+  help: Upload secrets to Vault
+  args:
+  - name: foundation
+    required: true
+    help: foundation to update Vault Secrets for
+    allowed: [production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial]
+  examples:
+  - tpi update acceptance-jammy
+
+- name: print
+  help: Print telemetry_cli commands
+  args:
+  - name: foundation
+    required: true
+    help: foundation to print telemetry CLI commands of
+    allowed: [production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial]
+  examples:
+  - tpi print acceptance-jammy
+
+- name: get
+  help: Get lockfile for foundation, write to local filesystem, and source for cf cli
+  args:
+  - name: foundation
+    required: true
+    help: foundation to get details for
+    allowed: [production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial]
+  examples:
+  - tpi get acceptance-jammy
+
+- name: open
+  help: Open foundation
+  args:
+  - name: foundation
+    required: true
+    help: foundation to open
+    allowed: [production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial]
+  examples:
+  - tpi open acceptance-jammy

@@ -1,0 +1,48 @@
+{
+  "apps_domain": "apps.atom-667235.cf-app.com",
+  "azs": [
+    "us-central1-b",
+    "us-central1-f",
+    "us-central1-c"
+  ],
+  "env_dns_zone_name_servers": [
+    "ns-cloud-e1.googledomains.com.",
+    "ns-cloud-e2.googledomains.com.",
+    "ns-cloud-e3.googledomains.com.",
+    "ns-cloud-e4.googledomains.com."
+  ],
+  "ert_cidr": "10.0.4.0/24",
+  "ert_gateway": "10.0.4.1",
+  "ert_subnet": "atom-667235-pas-subnet",
+  "ert_version": "5.0.4",
+  "http_lb_backend_name": "atom-667235-httpslb",
+  "iaas_type": "gcp",
+  "metadata_is_complete": true,
+  "name": "atom-667235",
+  "ops_manager": {
+    "password": "HENssAQsEwhJJaYM",
+    "url": "https://pcf.atom-667235.cf-app.com",
+    "username": "pivotalcf"
+  },
+  "ops_manager_cidr": "10.0.0.0/26",
+  "ops_manager_dns": "pcf.atom-667235.cf-app.com",
+  "ops_manager_gateway": "10.0.0.1",
+  "ops_manager_private_key": "-----BEGIN RSA PRIVATE KEY-----\n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\n-----END RSA PRIVATE KEY-----\n",
+  "ops_manager_public_ip": "34.31.159.5",
+  "ops_manager_public_key": "ubuntu:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDC2DTRtO6+u/RW3xbAVPvmFHWCDFWGRvyUOVzIWWCV+7D3CbHZkrGw+W0OuCIM1g4CEHoebKRxz9P7vFMRyf/q4+iUUo1Px0HKKFbtCIWwam2czcOYOtr3qUUCZ1D0oQ6LbV5Yxdwpea4uuJeGJilWp4f64l1zha2goWEXyMW+WSyUYgk3Cmv7jTqDHEAM+i5gjB3IPrwakQwe2a5y8iYuv8lsGfvsXOKaCUwc0wHAstq5pTO80U83b+7tIfbxtOZR4v14YG+7uu9EFFaEE2m1WRl0FQbobwrBVlTMH19EpWqp64PmIsk3MWlQXacXAMonRhyTwD1/uD+6J6uRjOxeHv7GMDpoUSK+/XBHsMumBpazCX2pHEGpplJfYPbiwoKZFrGgxItALpKALCLbMGzDKChOzLu3sVeH1v8VPy7NMwAh5RoGuQzIJxsXi8N4gbRH7VF9B4LEslMHULHne7a9gJCKWrDZpSsF4cqlUPddAMojtJaEYT+7maAEWrvlPsl2VDDkvmTbPZ74aQbaMpR852cKQEVA9Wn/U3erOtNI27omwAKDspwE4s/OsUMscE/FYVWS6Q83g5I4RXOuRcd+0uxKDHCP8tib4LuDATKvIM//4I98AzGNbdUAvU3Ei6DdbpmPIB7v+Z6ZmvCdziLZYpbHTbCWPGgkSczHm56G0Q==\n",
+  "ops_manager_subnet": "atom-667235-management-subnet",
+  "ops_manager_version": "3.0.16+LTS-T",
+  "project": "cf-toolsmiths-pool-us-1",
+  "region": "us-central1",
+  "service_network_name": "atom-667235-pcf-network",
+  "service_subnet_name": "atom-667235-services-subnet",
+  "services_cidr": "10.0.8.0/24",
+  "services_gateway": "10.0.8.1",
+  "ssh_router_pool": "atom-667235-cf-ssh",
+  "sys_domain": "sys.atom-667235.cf-app.com",
+  "tcp_domain": "tcp.atom-667235.cf-app.com",
+  "tcp_router_pool": "atom-667235-cf-tcp",
+  "version": "5.0.4",
+  "vm_tag": "atom-667235-vms",
+  "ws_router_pool": "atom-667235-cf-ws"
+}

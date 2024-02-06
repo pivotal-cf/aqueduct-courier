@@ -1,0 +1,48 @@
+{
+  "apps_domain": "apps.kite-668492.cf-app.com",
+  "azs": [
+    "us-central1-b",
+    "us-central1-f",
+    "us-central1-c"
+  ],
+  "env_dns_zone_name_servers": [
+    "ns-cloud-d1.googledomains.com.",
+    "ns-cloud-d2.googledomains.com.",
+    "ns-cloud-d3.googledomains.com.",
+    "ns-cloud-d4.googledomains.com."
+  ],
+  "ert_cidr": "10.0.4.0/24",
+  "ert_gateway": "10.0.4.1",
+  "ert_subnet": "kite-668492-pas-subnet",
+  "ert_version": "5.0.4",
+  "http_lb_backend_name": "kite-668492-httpslb",
+  "iaas_type": "gcp",
+  "metadata_is_complete": true,
+  "name": "kite-668492",
+  "ops_manager": {
+    "password": "JBJiRJPFUj5Pbex1",
+    "url": "https://pcf.kite-668492.cf-app.com",
+    "username": "pivotalcf"
+  },
+  "ops_manager_cidr": "10.0.0.0/26",
+  "ops_manager_dns": "pcf.kite-668492.cf-app.com",
+  "ops_manager_gateway": "10.0.0.1",
+  "ops_manager_private_key": "-----BEGIN RSA PRIVATE KEY-----\n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\n-----END RSA PRIVATE KEY-----\n",
+  "ops_manager_public_ip": "34.71.252.135",
+  "ops_manager_public_key": "ubuntu:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDPeYub/GdMBsfUPpdzeD+R+ct9Vmt5Vk4jeK2uIRh+yITbnv2A1QAxCvJPARky0CjBQHkjb8aoc3GtEDkkDb1kwxgFSgnVt8EsXO2CVmHOoh5z8FTNAfyaZkk54RDBM2qOmD2kBf75YPS4B8Y8Gp4d8oH5Tk5rAT4J3pzLUgBeZDH8whC3UenIFKvSmv8xAlCazqOD3nQbKaquJHRc40EqCe2iK6501aWqTsiYaj8t5wKTEFd4Wrm5c5teCzxDm46zH5hNmt3bJi0gYup1rsA1dM90Bqc2Osd86o+MC6eVWE+P5ng9DSy0YlHuAQnO0EDQgJxllD7XW5F7fcbA6X1+iq5X6jh6JfXuUhfoAgeaZ9nDLVJaJzGOwEyluUK3Z7z4dWf23ifgXiWlvxcQRJnX8mt9tYYgPUjru2BgLTqCVKknv8u5kOFPO0SHqcNAo7twbKamYmJ19T3NfLQHthr9DpprgXyIPZ21f+miEs2ISPEWWSQgQDfB3z1O0YerE+dOxNPDMyNMCNQIH2sqHVOKUAiv+F3avYH8dOf/HVnpvvz0eW10reQD4knAiWKn/RQHRdudgFc+Ciqq+oFDscsQLYiBW+TbXtwVQK5UwTvcfRZtxixvSPpZ1blAKrPDqibMX2BwHcMeUPocWgQCgal0KMyPU7ezgqthIfcRpOF2cQ==\n",
+  "ops_manager_subnet": "kite-668492-management-subnet",
+  "ops_manager_version": "3.0.16+LTS-T",
+  "project": "cf-toolsmiths-pool-us-4",
+  "region": "us-central1",
+  "service_network_name": "kite-668492-pcf-network",
+  "service_subnet_name": "kite-668492-services-subnet",
+  "services_cidr": "10.0.8.0/24",
+  "services_gateway": "10.0.8.1",
+  "ssh_router_pool": "kite-668492-cf-ssh",
+  "sys_domain": "sys.kite-668492.cf-app.com",
+  "tcp_domain": "tcp.kite-668492.cf-app.com",
+  "tcp_router_pool": "kite-668492-cf-tcp",
+  "version": "5.0.4",
+  "vm_tag": "kite-668492-vms",
+  "ws_router_pool": "kite-668492-cf-ws"
+}

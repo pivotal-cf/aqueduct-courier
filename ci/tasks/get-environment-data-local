@@ -1,62 +1,212 @@
 #!/usr/bin/env bash
 
-# Check that a shepherd description is passed
-# Note: description matches are fuzzy
-if [ "$#" -ne 1 ]; then
-	echo "You must pass in a shepherd environment description"
+########
+# STEP 1
+########
+# Check that 2 arguments are passed in
+if [ "$#" -ne 2 ]; then
+	echo -e "This script takes 2 arguments: <command> <foundation>\n\n \
+		COMMANDS\n \
+		create_long_lived_env\n \
+		update_secret\n \
+		open\n \
+		print_telemetry_cli_commands\n \
+		write_lockfile\n\n \
+		FOUNDATIONS\n \
+		production-jammy\n \
+		acceptance-jammy\n \
+		staging-jammy\n \
+		production-xenal\n \
+		acceptance-xenial\n \
+		staging-xenial\n"
 	exit 1
 fi
 
-# Check the output of the shepherd login command directly
-if ! shepherd login user --json | jq -e '.login.User == "success"' &>/dev/null; then
-	echo "Failed to login to shepherd" >&2
+########
+# STEP 2
+########
+# Validate the second argument
+case "$2" in
+production-jammy | acceptance-jammy | staging-jammy | production-xenial | acceptance-xenial | staging-xenial)
+	# If valid, proceed
+	;;
+*)
+	echo "Invalid foundation name. Please pass a valid foundation name."
 	exit 1
-fi
+	;;
+esac
 
-ENV_DESCRIPTION_FUZZY=$1
-
-# Check that you own passed in environment
-ENV_MATCHES=$(shepherd list lease --desc-search "$ENV_DESCRIPTION_FUZZY" --json)
-
-# Check for no matches / multiple matches
-array_length=$(jq '. | length' <<<"$ENV_MATCHES")
-if [ "$array_length" -eq 0 ]; then
-	echo "No envs found."
+########
+# STEP 2
+########
+# Call the matching function with the provided foundation name
+case "$1" in
+create_long_lived_env) create_long_lived_env "$2" ;;
+update_secret_in_vault) update_secret_in_vault "$2" ;;
+open) open "$2" ;;
+print_telemetry_cli_commands) print_telemetry_cli_commands "$2" ;;
+write_lockfile_local) write_lockfile_local "$2" ;;
+*)
+	echo "Your first argument did not match a command."
 	exit 1
-elif [ "$array_length" -gt 1 ]; then
-	echo "Multiple envs found. Be more specific."
-	exit 1
-fi
+	;;
+esac
 
-ENV_IDENTIFIER=$(shepherd list lease --desc-search "$ENV_DESCRIPTION_FUZZY" --json | jq -r '.[0].identifier')
-ENV_DESCRIPTION=$(shepherd list lease --desc-search "$ENV_DESCRIPTION_FUZZY" --json | jq -r '.[0].description')
-LOCKFILE=/Users/driddle/workspace/shepherd_envs/$ENV_DESCRIPTION-metadata.json
-ENV_TYPE=$(echo "$ENV_DESCRIPTION" | cut -d '-' -f 1)
-ENV_STEMCELL=$(echo "$ENV_DESCRIPTION" | cut -d '-' -f 2)
 
-# Print env identifier
-echo -e "\n********** ENVIRONMENT VARIABLES **********"
-echo -e "\nIDENTIFIER:\t\t\t\t${ENV_IDENTIFIER}"
-echo -e "DESCRIPTION:\t\t\t\t${ENV_DESCRIPTION}"
 
-# Write environment json to file system
-shepherd get lease "$ENV_IDENTIFIER" --json | jq -r .output >"$LOCKFILE"
+# Main script execution starts here
+fetch_ops_manager_pw
+fetch_ops_manager_username
+fetch_ops_manager_url
+fetch_p_bosh_id
+fetch_telemetry_tile_guid
+fetch_uaa_client_secret
+fetch_cf_guid
+fetch_telemetry_usage_service_password
+fetch_gcp_project_id
+fetch_name
+update_vault
+print_cli_strings
 
-# Source envs
-eval "$(smith om --lockfile="$LOCKFILE")"
 
-smith cf-login --lockfile="$LOCKFILE"
-#smith open --lockfile="$LOCKFILE"
+create_long_lived_env() {
+	# if !exists?() then create()
+	# if exists() && staging?() then exit 0
+	# if exists() && !staging?() && telemetry_tile_exists?() then exit 0
+	# if exists() && !staging?() && !telemetry_tile_exists?() then install_telemetry_tile()
 
-# If this is acceptance-jammy, write the lockfile to a secret
-if [[ "$ENV_DESCRIPTION" == "acceptance-jammy" ]]; then
-	vault kv put runway_concourse/tanzu-portfolio-insights/toolsmiths/acceptance-lockfile @/Users/driddle/workspace/shepherd_envs/acceptance-jammy-metadata.json
-fi
+	# Ensure user is logged into shepherd
+	if ! shepherd login user --json | jq -e '.login.User == "success"' &>/dev/null; then
+		echo "Failed to login to shepherd" >&2
+		exit 1
+	fi
 
-# Make directories for data output
-# mkdir -p ${PWD}/smith-data/$ENV_DESCRIPTION
-# mkdir -p ${PWD}/smith-data/$ENV_DESCRIPTION/username-password
-# mkdir -p ${PWD}/smith-data/$ENV_DESCRIPTION/client-id-client-secret
+	ENV_DESCRIPTION_FUZZY=$2
+	ENV_MATCHES=$(shepherd list lease --desc-search "$ENV_DESCRIPTION_FUZZY" --json)
+	array_length=$(jq '. | length' <<<"$ENV_MATCHES")
+	if [ "$array_length" -eq 0 ]; then
+		echo -e "$ENV_DESCRIPTION_FUZZY not found\n"
+
+		# Create TAS 5 if we need a jammy env
+		if [[ $ENV_DESCRIPTION_FUZZY == "production-jammy" || $ENV_DESCRIPTION_FUZZY == "acceptance-jammy" || $ENV_DESCRIPTION_FUZZY == "staging-jammy" ]]; then
+			echo -e "Creating $ENV_DESCRIPTION_FUZZY"
+
+			if [[ $ENV_DESCRIPTION_FUZZY == "production-jammy" || $ENV_DESCRIPTION_FUZZY == "acceptance-jammy" ]]; then
+				TELEMETRY_TILE_INSTALL_REQUIRED=true
+			fi
+
+			shepherd create lease --pool "tas-5_0" --duration 168h --description "$ENV_DESCRIPTION_FUZZY" --pool-namespace official
+		fi
+
+		# Create TAS 2.13 if we need a xenial env
+		if [[ $ENV_DESCRIPTION_FUZZY == "production-xenial" || $ENV_DESCRIPTION_FUZZY == "acceptance-xenial" || $ENV_DESCRIPTION_FUZZY == "staging-xenial" ]]; then
+			echo -e "Creating $ENV_DESCRIPTION_FUZZY"
+
+			if [[ $ENV_DESCRIPTION_FUZZY == "production-xenial" || $ENV_DESCRIPTION_FUZZY == "acceptance-xenial" ]]; then
+				TELEMETRY_TILE_INSTALL_REQUIRED=true
+			fi
+
+			shepherd create lease --pool "tas-2_13" --duration 168h --description "$ENV_DESCRIPTION_FUZZY" --pool-namespace official
+		fi
+}
+
+
+#################
+#### PRIVATE ####
+#################
+
+env_exists?() {
+
+}
+
+
+update_secret_in_vault() {
+	echo -e "logic..."
+}
+
+
+open() {
+	echo -e "logic..."
+}
+
+
+print_telemetry_cli_commands() {
+	echo -e "logic..."
+}
+
+
+write_lockfile_local() {
+	echo -e "logic..."
+}
+
+
+foo() {
+
+
+	########
+	# STEP 3
+	########
+	# Create environment if necessary
+
+	TELEMETRY_TILE_INSTALL_REQUIRED=false
+
+	# Check that you own passed in environment
+
+
+	# Check for no matches / multiple matches
+	array_length=$(jq '. | length' <<<"$ENV_MATCHES")
+
+	elif [ "$array_length" -gt 1 ]; then
+		echo -e "Multiple envs found. Be more specific."
+		exit 1
+	fi
+
+	ENV_IDENTIFIER=$(shepherd list lease --desc-search "$ENV_DESCRIPTION_FUZZY" --json | jq -r '.[0].identifier')
+	ENV_DESCRIPTION=$(shepherd list lease --desc-search "$ENV_DESCRIPTION_FUZZY" --json | jq -r '.[0].description')
+
+	if [[ "$TELEMETRY_TILE_INSTALL_REQUIRED" ]]; then
+		echo -e "Install Telemetry Tile before updating Vault variables"
+		exit 0
+	fi
+
+	########
+	# STEP 4
+	########
+	# Write lockfile to file system
+	mkdir -p "${PWD}/shepherd_envs"
+
+	LOCKFILE=${PWD}/shepherd_envs/$ENV_DESCRIPTION-metadata.json
+	ENV_TYPE=$(echo "$ENV_DESCRIPTION" | cut -d '-' -f 1)
+	ENV_STEMCELL=$(echo "$ENV_DESCRIPTION" | cut -d '-' -f 2)
+
+	# Print env identifier
+	echo -e "\n********** ENVIRONMENT VARIABLES **********"
+	echo -e "\nIDENTIFIER:\t\t\t\t${ENV_IDENTIFIER}"
+	echo -e "DESCRIPTION:\t\t\t\t${ENV_DESCRIPTION}"
+
+	# Write environment json to file system
+	OUTPUT=$(shepherd get lease "$ENV_IDENTIFIER" --json | jq -r .output)
+
+	if [[ $OUTPUT == null ]]; then
+		echo -e "\n*** Env not yet ready; try again later. ***\n"
+		exit 0
+	else
+		echo -e "\n Writing lockfile...\n"
+		echo "$OUTPUT" >"$LOCKFILE"
+	fi
+
+	# Source envs
+	eval "$(smith om --lockfile="$LOCKFILE")"
+
+	smith cf-login --lockfile="$LOCKFILE"
+	smith open --lockfile="$LOCKFILE"
+
+	# Make directories for data output
+	mkdir -p "${PWD}/smith-data/$ENV_DESCRIPTION"
+	mkdir -p "${PWD}/smith-data/$ENV_DESCRIPTION/username-password"
+	mkdir -p "${PWD}/smith-data/$ENV_DESCRIPTION/client-id-client-secret"
+
+}
 
 # Function to get ops_manager password
 fetch_ops_manager_pw() {
@@ -134,8 +284,13 @@ fetch_name() {
 
 # Function to update values in Vault
 update_vault() {
-	# Login to Vault
-	#vault login -method=ldap
+	# Login to Vaul
+	vault login -method=ldap
+
+	# If this is acceptance-jammy, write the lockfile to a secret
+	if [[ $ENV_DESCRIPTION == "acceptance-jammy" ]]; then
+		vault kv put runway_concourse/tanzu-portfolio-insights/toolsmiths/acceptance-lockfile @"${PWD}/shepherd_envs/acceptance-jammy-metadata.json"
+	fi
 
 	# Set path
 	VAULT_PATH="${ENV_DESCRIPTION}"
@@ -173,126 +328,114 @@ update_vault() {
 	fi
 }
 
-# Main script execution starts here
-fetch_ops_manager_pw
-fetch_ops_manager_username
-fetch_ops_manager_url
-fetch_p_bosh_id
-fetch_telemetry_tile_guid
-fetch_uaa_client_secret
-fetch_cf_guid
-fetch_telemetry_usage_service_password
-fetch_gcp_project_id
-fetch_name
+print_cli_strings() {
 
-update_vault
+	echo -e "\n\n********** CLI COMMANDS: USERNAME / PASSWORD **********"
 
-exit 0
-
-echo -e "\n\n********** CLI COMMANDS: USERNAME / PASSWORD **********"
-
-# CLI STRINGS
-echo -e "\n** CEIP ONLY **"
-mkdir -p ${PWD}/smith-data/$ENV_DESCRIPTION/username-password/ceip
-echo "telemetry-collector collect \\
-    --url ${OPS_MANAGER_URL} \\
-    --username pivotalcf \\
-    --password ${OPS_MANAGER_PASSWORD} \\
-    --env-type development \\
-    --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/username-password/ceip"
-
-if [ -n "$TELEMETRY_USAGE_SERVICE_PASSWORD" ]; then
-	echo -e "\n\n** OPERATIONAL DATA ONLY - WITH USAGE **"
-	mkdir -p ${PWD}/smith-data/$ENV_DESCRIPTION/username-password/operational-data-only-with-usage
-	echo -e "telemetry-collector collect \\
-    --url ${OPS_MANAGER_URL} \\
-    --username pivotalcf \\
-    --password ${OPS_MANAGER_PASSWORD} \\
-    --usage-service-url https://app-usage.sys.${ENV_DESCRIPTION}.cf-app.com \\
-    --usage-service-client-id usage_service \\
-    --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
-    --cf-api-url https://api.sys.${ENV_DESCRIPTION}.cf-app.com \
-    --env-type development \\
-    --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/username-password/operational-data-only-with-usage \\
-    --operational-data-only"
-fi
-
-echo -e "\n\n** OPERATIONAL DATA ONLY - NO USAGE **"
-mkdir -p ${PWD}/smith-data/$ENV_DESCRIPTION/username-password/operational-data-only-no-usage
-echo "telemetry-collector collect \\
-    --url ${OPS_MANAGER_URL} \\
-    --username pivotalcf \\
-    --password ${OPS_MANAGER_PASSWORD} \\
-    --env-type development \\
-    --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/username-password/operational-data-only-no-usage \\
-    --operational-data-only"
-
-if [ -n "$TELEMETRY_USAGE_SERVICE_PASSWORD" ]; then
-	echo -e "\n\n** ALL **"
-	mkdir -p ${PWD}/smith-data/$ENV_DESCRIPTION/username-password/all
+	# CLI STRINGS
+	echo -e "\n** CEIP ONLY **"
+	mkdir -p "${PWD}/smith-data/$ENV_DESCRIPTION/username-password/ceip"
 	echo "telemetry-collector collect \\
-    --url ${OPS_MANAGER_URL} \\
-    --username pivotalcf \\
-    --password ${OPS_MANAGER_PASSWORD} \\
-    --usage-service-url https://app-usage.sys.${ENV_DESCRIPTION}.cf-app.com \\
-    --usage-service-client-id usage_service \\
-    --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
-    --cf-api-url https://api.sys.${ENV_DESCRIPTION}.cf-app.com \\
-    --env-type development \\
-    --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/username-password/all"
-fi
+	    --url ${OPS_MANAGER_URL} \\
+	    --username pivotalcf \\
+	    --password ${OPS_MANAGER_PASSWORD} \\
+	    --env-type development \\
+	    --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/username-password/ceip"
 
-echo -e "\n\n********** CLI COMMANDS: CLIENT ID / CLIENT SECRET **********"
+	if [ -n "$TELEMETRY_USAGE_SERVICE_PASSWORD" ]; then
+		echo -e "\n\n** OPERATIONAL DATA ONLY - WITH USAGE **"
+		mkdir -p "${PWD}/smith-data/$ENV_DESCRIPTION/username-password/operational-data-only-with-usage"
+		echo -e "telemetry-collector collect \\
+	    --url ${OPS_MANAGER_URL} \\
+	    --username pivotalcf \\
+	    --password ${OPS_MANAGER_PASSWORD} \\
+	    --usage-service-url https://app-usage.sys.${ENV_DESCRIPTION}.cf-app.com \\
+	    --usage-service-client-id usage_service \\
+	    --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
+	    --cf-api-url https://api.sys.${ENV_DESCRIPTION}.cf-app.com \
+	    --env-type development \\
+	    --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/username-password/operational-data-only-with-usage \\
+	    --operational-data-only"
+	fi
 
-# CLIENT ID / CLIENT SECRET
-echo -e "\n** CEIP ONLY **"
-mkdir -p ${PWD}/smith-data/$ENV_DESCRIPTION/client-id-client-secret/ceip
-echo "telemetry-collector collect \\
-    --url ${OPS_MANAGER_URL} \\
-    --client-id restricted_view_api_access \\
-    --client-secret ${UAA_CLIENT_SECRET} \\
-    --env-type development \\
-    --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/client-id-client-secret/ceip"
+	echo -e "\n\n** OPERATIONAL DATA ONLY - NO USAGE **"
+	mkdir -p "${PWD}/smith-data/$ENV_DESCRIPTION/username-password/operational-data-only-no-usage"
+	echo "telemetry-collector collect \\
+	    --url ${OPS_MANAGER_URL} \\
+	    --username pivotalcf \\
+	    --password ${OPS_MANAGER_PASSWORD} \\
+	    --env-type development \\
+	    --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/username-password/operational-data-only-no-usage \\
+	    --operational-data-only"
 
-if [ -n "$TELEMETRY_USAGE_SERVICE_PASSWORD" ]; then
-	echo -e "\n\n** OPERATIONAL DATA ONLY - WITH USAGE **"
-	mkdir -p ${PWD}/smith-data/$ENV_DESCRIPTION/client-id-client-secret/operational-data-only-with-usage
-	echo -e "telemetry-collector collect \\
-    --url ${OPS_MANAGER_URL} \\
-    --client-id restricted_view_api_access \\
-    --client-secret ${UAA_CLIENT_SECRET} \\
-    --usage-service-url https://app-usage.sys.${ENV_DESCRIPTION}.cf-app.com \\
-    --usage-service-client-id usage_service \\
-    --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
-    --cf-api-url https://api.sys.${ENV_DESCRIPTION}.cf-app.com \
-    --env-type development \\
-    --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/client-id-client-secret/operational-data-only-with-usage \\
-    --operational-data-only"
-fi
+	if [ -n "$TELEMETRY_USAGE_SERVICE_PASSWORD" ]; then
+		echo -e "\n\n** ALL **"
+		mkdir -p "${PWD}/smith-data/$ENV_DESCRIPTION/username-password/all"
+		echo "telemetry-collector collect \\
+	    --url ${OPS_MANAGER_URL} \\
+	    --username pivotalcf \\
+	    --password ${OPS_MANAGER_PASSWORD} \\
+	    --usage-service-url https://app-usage.sys.${ENV_DESCRIPTION}.cf-app.com \\
+	    --usage-service-client-id usage_service \\
+	    --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
+	    --cf-api-url https://api.sys.${ENV_DESCRIPTION}.cf-app.com \\
+	    --env-type development \\
+	    --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/username-password/all"
+	fi
 
-echo -e "\n\n** OPERATIONAL DATA ONLY - NO USAGE **"
-mkdir -p ${PWD}/smith-data/$ENV_DESCRIPTION/client-id-client-secret/operational-data-only-no-usage
-echo "telemetry-collector collect \\
-    --url ${OPS_MANAGER_URL} \\
-    --username pivotalcf \\
-    --password ${OPS_MANAGER_PASSWORD} \\
-    --env-type development \\
-    --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/client-id-client-secret/operational-data-only-no-usage \\
-    --operational-data-only"
+	echo -e "\n\n********** CLI COMMANDS: CLIENT ID / CLIENT SECRET **********"
 
-if [ -n "$TELEMETRY_USAGE_SERVICE_PASSWORD" ]; then
-	echo -e "\n\n** ALL **"
-	mkdir -p ${PWD}/smith-data/$ENV_DESCRIPTION/client-id-client-secret/all
-	echo -e "telemetry-collector collect \\
-    --url ${OPS_MANAGER_URL} \\
-    --client-id restricted_view_api_access \\
-    --client-secret ${UAA_CLIENT_SECRET} \\
-    --usage-service-url https://app-usage.sys.${ENV_DESCRIPTION}.cf-app.com \\
-    --usage-service-client-id usage_service \\
-    --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
-    --cf-api-url https://api.sys.${ENV_DESCRIPTION}.cf-app.com \\
-    --env-type development \\
-    --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/all"
-fi
+	# CLIENT ID / CLIENT SECRET
+	echo -e "\n** CEIP ONLY **"
+	mkdir -p "${PWD}/smith-data/$ENV_DESCRIPTION/client-id-client-secret/ceip"
+	echo "telemetry-collector collect \\
+	    --url ${OPS_MANAGER_URL} \\
+	    --client-id restricted_view_api_access \\
+	    --client-secret ${UAA_CLIENT_SECRET} \\
+	    --env-type development \\
+	    --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/client-id-client-secret/ceip"
+
+	if [ -n "$TELEMETRY_USAGE_SERVICE_PASSWORD" ]; then
+		echo -e "\n\n** OPERATIONAL DATA ONLY - WITH USAGE **"
+		mkdir -p "${PWD}/smith-data/$ENV_DESCRIPTION/client-id-client-secret/operational-data-only-with-usage"
+		echo -e "telemetry-collector collect \\
+	    --url ${OPS_MANAGER_URL} \\
+	    --client-id restricted_view_api_access \\
+	    --client-secret ${UAA_CLIENT_SECRET} \\
+	    --usage-service-url https://app-usage.sys.${ENV_DESCRIPTION}.cf-app.com \\
+	    --usage-service-client-id usage_service \\
+	    --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
+	    --cf-api-url https://api.sys.${ENV_DESCRIPTION}.cf-app.com \
+	    --env-type development \\
+	    --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/client-id-client-secret/operational-data-only-with-usage \\
+	    --operational-data-only"
+	fi
+
+	echo -e "\n\n** OPERATIONAL DATA ONLY - NO USAGE **"
+	mkdir -p "${PWD}/smith-data/$ENV_DESCRIPTION/client-id-client-secret/operational-data-only-no-usage"
+	echo "telemetry-collector collect \\
+	    --url ${OPS_MANAGER_URL} \\
+	    --username pivotalcf \\
+	    --password ${OPS_MANAGER_PASSWORD} \\
+	    --env-type development \\
+	    --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/client-id-client-secret/operational-data-only-no-usage \\
+	    --operational-data-only"
+
+	if [ -n "$TELEMETRY_USAGE_SERVICE_PASSWORD" ]; then
+		echo -e "\n\n** ALL **"
+		mkdir -p "${PWD}/smith-data/$ENV_DESCRIPTION/client-id-client-secret/all"
+		echo -e "telemetry-collector collect \\
+	    --url ${OPS_MANAGER_URL} \\
+	    --client-id restricted_view_api_access \\
+	    --client-secret ${UAA_CLIENT_SECRET} \\
+	    --usage-service-url https://app-usage.sys.${ENV_DESCRIPTION}.cf-app.com \\
+	    --usage-service-client-id usage_service \\
+	    --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
+	    --cf-api-url https://api.sys.${ENV_DESCRIPTION}.cf-app.com \\
+	    --env-type development \\
+	    --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/all"
+	fi
+
+}
 
 echo -e "\n"

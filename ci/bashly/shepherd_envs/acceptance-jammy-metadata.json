@@ -1,0 +1,48 @@
+{
+  "apps_domain": "apps.yolk-667530.cf-app.com",
+  "azs": [
+    "us-central1-b",
+    "us-central1-f",
+    "us-central1-c"
+  ],
+  "env_dns_zone_name_servers": [
+    "ns-cloud-e1.googledomains.com.",
+    "ns-cloud-e2.googledomains.com.",
+    "ns-cloud-e3.googledomains.com.",
+    "ns-cloud-e4.googledomains.com."
+  ],
+  "ert_cidr": "10.0.4.0/24",
+  "ert_gateway": "10.0.4.1",
+  "ert_subnet": "yolk-667530-pas-subnet",
+  "ert_version": "5.0.4",
+  "http_lb_backend_name": "yolk-667530-httpslb",
+  "iaas_type": "gcp",
+  "metadata_is_complete": true,
+  "name": "yolk-667530",
+  "ops_manager": {
+    "password": "dJ0h0yhsenEPMsyP",
+    "url": "https://pcf.yolk-667530.cf-app.com",
+    "username": "pivotalcf"
+  },
+  "ops_manager_cidr": "10.0.0.0/26",
+  "ops_manager_dns": "pcf.yolk-667530.cf-app.com",
+  "ops_manager_gateway": "10.0.0.1",
+  "ops_manager_private_key": "-----BEGIN RSA PRIVATE KEY-----\n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\n-----END RSA PRIVATE KEY-----\n",
+  "ops_manager_public_ip": "34.67.252.169",
+  "ops_manager_public_key": "ubuntu:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDbZZdTeyi2rABUJZs4uaATdM39ArOTcKH70CNlszXPuWP1xlujZTXbUFvFZwLncUgcW+JsNtIwGmbZ07J1VJ1wzrbzYAGVEfpUZwYYN+9lyPXe2OC0GhItSTn/zwq7Hpx3ejsOgxA2bCNxZGHHyLS13p241X1PRYfkdCBRwXcrtqUCaNoFm6DL646bbNIYSuoAFgJVQ9ogKkK/QViOgD7z3aYAqhJXXVaCYA3xnpe5qwolUikzuJZ8Dofwnm4MI8thtpUbjLIDPWF0zslu+fBMZtOM90Bwod9Tk9eeksfYs9M4dyxYWeBXxUPUaOI37gqExgUcIu/ht9oRWEur/2X7C1KygQPwDiXAxT8oQpchQiWYnETAlW1gUO6sMgMhnr0CfCSGOui/vPkiMgXhYeuE4dlQGWSUgh676wlyftlx9OQlmRtYhnNzyjiqxGMjfwTVsfQNbKy8sbTzrzNlLn4n+ffinIlCzLUIIw7eJseREiJglRNuhZ0/jfg7JNB2arStqAi3l7c7sFOQsiSKh9AvQpUTzOyQLSVi7x3yUfYg37tzQHgqzZfm3veOJMjkx2zYE7pZJdgbP7QJI2BrvtZg0okKGlJ5Tgz0zW3TD06iwrOCOcIpQVqIf90lxrbJkizSMn6IAOH93vZKKzpfper6ZjEgkpMrY+e7L6AfANp9cQ==\n",
+  "ops_manager_subnet": "yolk-667530-management-subnet",
+  "ops_manager_version": "3.0.16+LTS-T",
+  "project": "cf-toolsmiths-pool-us-5",
+  "region": "us-central1",
+  "service_network_name": "yolk-667530-pcf-network",
+  "service_subnet_name": "yolk-667530-services-subnet",
+  "services_cidr": "10.0.8.0/24",
+  "services_gateway": "10.0.8.1",
+  "ssh_router_pool": "yolk-667530-cf-ssh",
+  "sys_domain": "sys.yolk-667530.cf-app.com",
+  "tcp_domain": "tcp.yolk-667530.cf-app.com",
+  "tcp_router_pool": "yolk-667530-cf-tcp",
+  "version": "5.0.4",
+  "vm_tag": "yolk-667530-vms",
+  "ws_router_pool": "yolk-667530-cf-ws"
+}
