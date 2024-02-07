@@ -2,14 +2,15 @@ name: tpi
 help: App for provisioning and interacting with long-lived Shepherd environments, and storing the credentials in Vault.
 version: 0.1.0
 dependencies:
-- shepherd
-- vault
-- jq
-- smith
-- om
 - bosh
+- cf
 - curl
-
+- jq
+- om
+- pivnet
+- shepherd
+- smith
+- vault
 commands:
 - name: list
   help: List Shepherd environments owned my our team
@@ -75,3 +76,8 @@ commands:
     allowed: [production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial]
   examples:
   - tpi open acceptance-jammy
+
+- name: whoami
+  help: The foundation that is currently targeted
+  examples:
+  - tpi whoami
