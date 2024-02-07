@@ -19,12 +19,12 @@ resources:
 - name: platform-automation-image
   type: pivnet
   source:
-    api_token: ((pivnet.api-token))
+    api_token: ((pivnet.refresh-token))
     product_slug: platform-automation
 - name: pivotal-telemetry-collector
   type: pivnet
   source:
-    api_token: ((pivnet.api-token))
+    api_token: ((pivnet.refresh-token))
     product_slug: pivotal-telemetry-collector
     copy_metadata: true
 - name: telemetry-utils
