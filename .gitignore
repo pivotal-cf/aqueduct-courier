@@ -3,3 +3,6 @@
 *.DS_Store
 aqueduct-courier
 .go-version
+ci/bashly/src/binaries/*
+ci/bashly/smith-data/*
+ci/bashly/shepherd_envs/*
