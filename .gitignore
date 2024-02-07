@@ -5,3 +5,4 @@ aqueduct-courier
 .go-version
 smith-data/*
 shepherd_envs/*
+binaries/*
