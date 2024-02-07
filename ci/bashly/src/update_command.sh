@@ -22,7 +22,7 @@ update_vault() {
 		vault kv put runway_concourse/tanzu-portfolio-insights/toolsmiths/"${VAULT_PATH}" \
 			env-name="${NAME}" \
 			p-bosh-id-guid="${P_BOSH_ID}"
-		echo "\nUpdated 2 Vault variables for ${ENV_DESCRIPTION}"
+		echo -e "\nUpdated 2 Vault variables for ${ENV_DESCRIPTION}\n"
 	else
 		vault kv put runway_concourse/tanzu-portfolio-insights/toolsmiths/"${VAULT_PATH}" \
 			cf-api-url="https://api.sys.${NAME}.cf-app.com" \
@@ -43,7 +43,7 @@ update_vault() {
 			usage-service-client-id="usage_service" \
 			usage-service-url="https://app-usage.sys.${NAME}.cf-app.com"
 
-		echo "\nUpdated 17 Vault variables for ${ENV_DESCRIPTION}"
+		echo -e "\nUpdated 17 Vault variables for ${ENV_DESCRIPTION}\n"
 	fi
 }
 

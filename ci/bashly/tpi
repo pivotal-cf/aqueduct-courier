@@ -630,6 +630,9 @@ tpi_install_command() {
   # TILE_INFO_JSON=$(pivnet releases --format=json -p "$PRODUCT_NAME" -l 1)
   # TILE_VERSION=$(echo $TILE_INFO_JSON | jq -r '.[0].version')
 
+  # FIXME: this doesn't work for Xenial environments until
+  # they switch to bundling our 1.3.x line by default. For
+  # now, manually upload the 1.3.x tile and re-run this command.
   TILE_FULL_VERSION=$(om products --format=json | jq '.[] | select(.name == "pivotal-telemetry-om")' | jq -r .available | jq -r '.[0]')
 
   # Download latest Telemetry Tile
@@ -738,7 +741,7 @@ tpi_update_command() {
   		vault kv put runway_concourse/tanzu-portfolio-insights/toolsmiths/"${VAULT_PATH}" \
   			env-name="${NAME}" \
   			p-bosh-id-guid="${P_BOSH_ID}"
-  		echo "\nUpdated 2 Vault variables for ${ENV_DESCRIPTION}"
+  		echo -e "\nUpdated 2 Vault variables for ${ENV_DESCRIPTION}\n"
   	else
   		vault kv put runway_concourse/tanzu-portfolio-insights/toolsmiths/"${VAULT_PATH}" \
   			cf-api-url="https://api.sys.${NAME}.cf-app.com" \
@@ -759,7 +762,7 @@ tpi_update_command() {
   			usage-service-client-id="usage_service" \
   			usage-service-url="https://app-usage.sys.${NAME}.cf-app.com"
 
-  		echo "\nUpdated 17 Vault variables for ${ENV_DESCRIPTION}"
+  		echo -e "\nUpdated 17 Vault variables for ${ENV_DESCRIPTION}\n"
   	fi
   }
 
