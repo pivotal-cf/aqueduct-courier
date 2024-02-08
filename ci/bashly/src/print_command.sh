@@ -80,7 +80,7 @@ if [ -n "$TELEMETRY_USAGE_SERVICE_PASSWORD" ]; then
         --usage-service-url https://app-usage.sys.${ENV_DESCRIPTION}.cf-app.com \\
         --usage-service-client-id usage_service \\
         --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
-        --cf-api-url https://api.sys.${ENV_DESCRIPTION}.cf-app.com \
+        --cf-api-url https://api.sys.${ENV_DESCRIPTION}.cf-app.com \\
         --env-type development \\
         --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/client-id-client-secret/operational-data-only-with-usage \\
         --operational-data-only"
