@@ -21,13 +21,11 @@ run:
   - |
     set -eu
 
-    export ACCEPTANCE_ENV_NAME="$ACCEPTANCE_ENV_NAME"
     export ACCEPTANCE_LOCKFILE="$ACCEPTANCE_LOCKFILE"
     export OPS_MANAGER_PASSWORD="$OPS_MANAGER_PASSWORD"
     export OPS_MANAGER_URL="$OPS_MANAGER_URL"
     export OPS_MANAGER_USERNAME="$OPS_MANAGER_USERNAME"
     export TELEMETRY_TILE_GUID="$TELEMETRY_TILE_GUID"
-    export TOOLSMITHS_API_TOKEN="$TOOLSMITHS_API_TOKEN"
 
     echo $ACCEPTANCE_LOCKFILE > /tmp/lockfile.json
 
@@ -39,13 +37,18 @@ run:
     chmod 755 "$BOSH_CLI"
     cp "$BOSH_CLI" /usr/local/bin/bosh
 
-    tar -C /usr/local/bin -xf smith/*.tar.gz
+    SMITH_CLI=/usr/local/bin/smith
+    cp "$PWD"/smith/smith_linux_amd64 "$SMITH_CLI"
+    chmod 755 "$SMITH_CLI"
+
+    eval $("$SMITH_CLI" om -l /tmp/lockfile.json)
+    eval $("$SMITH_CLI" bosh -l /tmp/lockfile.json)
 
     # Switch to expect
     expect <<'EOF'
     set timeout -1
 
-    spawn smith bosh --lockfile=/tmp/lockfile.json ssh -- -d $::env(TELEMETRY_TILE_GUID)
+    spawn "$SMITH_CLI" bosh --lockfile=/tmp/lockfile.json ssh -- -d $::env(TELEMETRY_TILE_GUID)
 
     expect "\$ "
 
@@ -62,9 +65,7 @@ run:
     EOF
 
 params:
-  ACCEPTANCE_ENV_NAME:
   ACCEPTANCE_LOCKFILE:
   OPS_MANAGER_PASSWORD:
   OPS_MANAGER_URL:
   OPS_MANAGER_USERNAME:
-  TOOLSMITHS_API_TOKEN:
