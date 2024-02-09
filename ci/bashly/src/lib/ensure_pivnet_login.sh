@@ -7,10 +7,6 @@ ensure_pivnet_login() {
 
   if ! pivnet login --api-token=$PIVNET_REFRESH_TOKEN &>/dev/null; then
     echo "Failed to login to pivnet" >&2
-    echo "Attempting again..."
-    if ! pivnet login --api-token=$PIVNET_REFRESH_TOKEN &>/dev/null; then
-      echo "Failed to login to pivnet a 2nd time" >&2
-      exit 0
-    fi
+    exit 0
   fi
 }

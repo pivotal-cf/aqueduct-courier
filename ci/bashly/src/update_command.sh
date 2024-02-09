@@ -9,20 +9,14 @@ update_vault() {
 	# Write the lockfile to a secret
 	vault kv put runway_concourse/tanzu-portfolio-insights/toolsmiths/"${ENV_DESCRIPTION}"-lockfile @"${PWD}/shepherd_envs/$ENV_DESCRIPTION-metadata.json"
 
-	# Set path
-	VAULT_PATH="${ENV_DESCRIPTION}"
-	if [[ $ENV_STEMCELL == "jammy" ]]; then
-		VAULT_PATH="${ENV_TYPE}"
-	fi
-
 	# Do the updating
 	if [[ $ENV_TYPE == "staging" ]]; then
-		vault kv put runway_concourse/tanzu-portfolio-insights/toolsmiths/"${VAULT_PATH}" \
+		vault kv put runway_concourse/tanzu-portfolio-insights/toolsmiths/"${ENV_DESCRIPTION}" \
 			env-name="${NAME}" \
 			p-bosh-id-guid="${P_BOSH_ID}"
 		echo -e "\nUpdated 2 Vault variables for ${ENV_DESCRIPTION}\n"
 	else
-		vault kv put runway_concourse/tanzu-portfolio-insights/toolsmiths/"${VAULT_PATH}" \
+		vault kv put runway_concourse/tanzu-portfolio-insights/toolsmiths/"${ENV_DESCRIPTION}" \
 			cf-api-url="https://api.sys.${NAME}.cf-app.com" \
 			env-name="${NAME}" \
 			gcp-project-id="${GCP_PROJECT_ID}" \

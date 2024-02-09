@@ -6,5 +6,6 @@ ensure_vault_login() {
     if ! vault login -method=ldap 2> /dev/null; then
       echo "LDAP login failed. Please check your credentials or connection."
     fi
+    source ~/.zshrc
   fi
 }
