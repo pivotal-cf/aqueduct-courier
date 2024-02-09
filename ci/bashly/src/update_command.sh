@@ -6,10 +6,8 @@ tpi_get_command ${args[foundation]}
 update_vault() {
 	ENV_DESCRIPTION=${args[foundation]}
 
-	# If this is acceptance-jammy, write the lockfile to a secret
-	if [[ $ENV_DESCRIPTION == "acceptance-jammy" ]]; then
-		vault kv put runway_concourse/tanzu-portfolio-insights/toolsmiths/acceptance-lockfile @"${PWD}/shepherd_envs/acceptance-jammy-metadata.json"
-	fi
+	# Write the lockfile to a secret
+	vault kv put runway_concourse/tanzu-portfolio-insights/toolsmiths/"${ENV_DESCRIPTION}"-lockfile @"${PWD}/shepherd_envs/$ENV_DESCRIPTION-metadata.json"
 
 	# Set path
 	VAULT_PATH="${ENV_DESCRIPTION}"

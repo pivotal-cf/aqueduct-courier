@@ -120,8 +120,6 @@ fetch_telemetry_usage_service_password() {
 		else
 			echo -e "TELEMETRY_USAGE_SERVICE_PASSWORD:"
 		fi
-	else
-		echo -e "TELEMETRY_USAGE_SERVICE_PASSWORD:"
 	fi
 }
 
@@ -140,6 +138,8 @@ fetch_telemetry_tile_guid
 fetch_uaa_client_secret
 fetch_telemetry_usage_service_password
 
-if [[ -z "$TELEMETRY_TILE_GUID" ]]; then
-	echo -e "\n*** YOU MUST INSTALL THE TELEMETRY TILE ***\n"
+if [[ $ENV_TYPE != "staging" ]]; then
+	if [[ -z "$TELEMETRY_TILE_GUID" ]]; then
+		echo -e "\n*** YOU MUST INSTALL THE TELEMETRY TILE ***\n"
+	fi
 fi
