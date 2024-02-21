@@ -32,6 +32,9 @@ if [ "$array_length" -eq 0 ]; then
 	if [[ "$TELEMETRY_TILE_INSTALL_REQUIRED" == "true" ]]; then
 		echo -e "Install Telemetry Tile before updating Vault variables\n"
 	fi
+
+	# Remove old metadata file
+	rm -rf "${PWD}/shepherd_envs/$ENV_DESCRIPTION-metadata.json"
 else
 	echo -e "$ENV_DESCRIPTION already exists\n"
 fi

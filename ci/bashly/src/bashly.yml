@@ -14,6 +14,9 @@ dependencies:
 commands:
 - name: list
   help: List Shepherd environments owned my our team
+  flags:
+    - long: --json
+      help: Return environments as JSON
   examples:
   - tpi list
 
@@ -81,3 +84,9 @@ commands:
   help: The foundation that is currently targeted
   examples:
   - tpi whoami
+
+- name: maintain
+  help: Ensure that all CI environments exist. Create any needed. Install the Telemetry Tile if needed. Upload secretes to Vault.
+  examples:
+  - tpi maintain
+

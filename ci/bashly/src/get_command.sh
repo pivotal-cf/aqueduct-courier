@@ -19,6 +19,8 @@ smith cf-login --lockfile="$LOCKFILE_PATH"
 eval $(smith om -l "$LOCKFILE_PATH")
 eval $(smith bosh -l "$LOCKFILE_PATH")
 
+echo -e "\n*** BOSH_ENVIRONMENT ***\n$BOSH_ENVIRONMENT"
+
 ######################
 ### FETCH ENV VARS ###
 ######################

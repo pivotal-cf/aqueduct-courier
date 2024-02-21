@@ -1,3 +1,4 @@
+# FIXME: only works for environments with TAS, won't detect if environment has been reaped
 export SYS_DOMAIN=$(cf api | grep 'API endpoint' | awk '{print $3}' | cut -d'/' -f3 | sed 's/^api\.//') || ""
 
 if [[ -z $SYS_DOMAIN ]]; then
