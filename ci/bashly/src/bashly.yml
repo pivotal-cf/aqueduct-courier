@@ -14,6 +14,9 @@ dependencies:
 commands:
 - name: list
   help: List Shepherd environments owned my our team
+  flags:
+  - long: --json
+    help: Return environments as JSON
   examples:
   - tpi list
 
@@ -54,6 +57,9 @@ commands:
     required: true
     help: foundation to print telemetry CLI commands of
     allowed: [production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial]
+  flags:
+  - long: --collect
+    help: Return environments as JSON
   examples:
   - tpi print acceptance-jammy
 
@@ -63,7 +69,7 @@ commands:
   - name: foundation
     required: true
     help: foundation to get details for
-    allowed: [production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial]
+    allowed: [production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-audit-false-jammy, telemetry-release-audit-true-jammy, p-telemetry-audit-false-jammy, p-telemetry-audit-true-jammy, telemetry-release-audit-false-xenial, telemetry-release-audit-true-xenial, p-telemetry-audit-false-xenial, p-telemetry-audit-true-xenial]
   examples:
   - tpi get acceptance-jammy
 
@@ -73,7 +79,7 @@ commands:
   - name: foundation
     required: true
     help: foundation to open
-    allowed: [production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial]
+    allowed: [production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-audit-false-jammy, telemetry-release-audit-true-jammy, p-telemetry-audit-false-jammy, p-telemetry-audit-true-jammy, telemetry-release-audit-false-xenial, telemetry-release-audit-true-xenial, p-telemetry-audit-false-xenial, p-telemetry-audit-true-xenial]
   examples:
   - tpi open acceptance-jammy
 
@@ -81,3 +87,9 @@ commands:
   help: The foundation that is currently targeted
   examples:
   - tpi whoami
+
+- name: maintain
+  help: Ensure that all CI environments exist. Create any needed. Install the Telemetry Tile if needed. Upload secretes to Vault.
+  examples:
+  - tpi maintain
+
