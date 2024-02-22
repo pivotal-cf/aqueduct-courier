@@ -353,7 +353,7 @@ tpi_open_usage() {
     # :argument.usage
     printf "  %s\n" "FOUNDATION"
     printf "    foundation to open\n"
-    printf "    Allowed: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-jammy\n"
+    printf "    Allowed: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-audit-false-jammy, telemetry-release-audit-true-jammy, p-telemetry-audit-false-jammy, p-telemetry-audit-true-jammy, telemetry-release-audit-false-xenial, telemetry-release-audit-true-xenial, p-telemetry-audit-false-xenial, p-telemetry-audit-true-xenial\n"
     echo
 
     # :command.usage_examples
@@ -1974,8 +1974,8 @@ tpi_open_parse_requirements() {
   fi
 
   # :command.whitelist_filter
-  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy|staging-jammy|production-xenial|acceptance-xenial|staging-xenial|telemetry-release-jammy)$ ]]; then
-    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-jammy" >&2
+  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy|staging-jammy|production-xenial|acceptance-xenial|staging-xenial|telemetry-release-audit-false-jammy|telemetry-release-audit-true-jammy|p-telemetry-audit-false-jammy|p-telemetry-audit-true-jammy|telemetry-release-audit-false-xenial|telemetry-release-audit-true-xenial|p-telemetry-audit-false-xenial|p-telemetry-audit-true-xenial)$ ]]; then
+    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-audit-false-jammy, telemetry-release-audit-true-jammy, p-telemetry-audit-false-jammy, p-telemetry-audit-true-jammy, telemetry-release-audit-false-xenial, telemetry-release-audit-true-xenial, p-telemetry-audit-false-xenial, p-telemetry-audit-true-xenial" >&2
     exit 1
   fi
 
