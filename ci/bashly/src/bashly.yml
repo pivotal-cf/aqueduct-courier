@@ -69,7 +69,7 @@ commands:
   - name: foundation
     required: true
     help: foundation to get details for
-    allowed: [production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-jammy]
+    allowed: [production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-audit-false-jammy, telemetry-release-audit-true-jammy, p-telemetry-audit-false-jammy, p-telemetry-audit-true-jammy, telemetry-release-audit-false-xenial, telemetry-release-audit-true-xenial, p-telemetry-audit-false-xenial, p-telemetry-audit-true-xenial]
   examples:
   - tpi get acceptance-jammy
 
