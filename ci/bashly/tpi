@@ -242,13 +242,19 @@ tpi_print_usage() {
   fi
 
   printf "%s\n" "Usage:"
-  printf "  tpi print FOUNDATION\n"
+  printf "  tpi print FOUNDATION [OPTIONS]\n"
   printf "  tpi print --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
     printf "%s\n" "Options:"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "--collect"
+    printf "    Return environments as JSON\n"
+    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "--help, -h"
@@ -304,7 +310,7 @@ tpi_get_usage() {
     # :argument.usage
     printf "  %s\n" "FOUNDATION"
     printf "    foundation to get details for\n"
-    printf "    Allowed: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial\n"
+    printf "    Allowed: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-jammy\n"
     echo
 
     # :command.usage_examples
@@ -347,7 +353,7 @@ tpi_open_usage() {
     # :argument.usage
     printf "  %s\n" "FOUNDATION"
     printf "    foundation to open\n"
-    printf "    Allowed: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial\n"
+    printf "    Allowed: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-jammy\n"
     echo
 
     # :command.usage_examples
@@ -493,97 +499,104 @@ inspect_args() {
 # :command.user_lib
 # src/lib/ensure_pivnet_login.sh
 ensure_pivnet_login() {
-  # Get Pivnet token
-  export PIVNET_REFRESH_TOKEN=$(vault kv get -format=json /runway_concourse/tanzu-portfolio-insights/pivnet | jq -r '.data' | jq -r '.["refresh-token"]')
+	# Get Pivnet token
+	export PIVNET_REFRESH_TOKEN=$(vault kv get -format=json /runway_concourse/tanzu-portfolio-insights/pivnet | jq -r '.data' | jq -r '.["refresh-token"]')
 
-  # export PIVNET_ACCESS_TOKEN=$(curl -X POST https://network.tanzu.vmware.com/api/v2/authentication/access_tokens -d '{"refresh_token":$PIVNET_REFRESH_TOKEN}' | jq -r .access_token)
-  # curl -X GET https://network.tanzu.vmware.com/api/v2/authentication -H "Authorization: Bearer $PIVNET_ACCESS_TOKEN"
+	# export PIVNET_ACCESS_TOKEN=$(curl -X POST https://network.tanzu.vmware.com/api/v2/authentication/access_tokens -d '{"refresh_token":$PIVNET_REFRESH_TOKEN}' | jq -r .access_token)
+	# curl -X GET https://network.tanzu.vmware.com/api/v2/authentication -H "Authorization: Bearer $PIVNET_ACCESS_TOKEN"
 
-  if ! pivnet login --api-token=$PIVNET_REFRESH_TOKEN &>/dev/null; then
-    echo "Failed to login to pivnet" >&2
-    exit 0
-  fi
+	if ! pivnet login --api-token=$PIVNET_REFRESH_TOKEN &>/dev/null; then
+		echo "Failed to login to pivnet" >&2
+		exit 0
+	fi
 }
 
 # src/lib/ensure_shepherd_login.sh
 ensure_shepherd_login() {
-  #export SHEPHERD_TOKEN=$(vault kv get -format=json /runway_concourse/tanzu-portfolio-insights/shepherd/tpi-telemetry | jq -r .data.secret)
+	#export SHEPHERD_TOKEN=$(vault kv get -format=json /runway_concourse/tanzu-portfolio-insights/shepherd/tpi-telemetry | jq -r .data.secret)
 
-  if ! shepherd login user --json | jq -e '.login.User == "success"' &>/dev/null; then
-    echo "Failed to login to shepherd" >&2
-  fi
+	if ! shepherd login user --json | jq -e '.login.User == "success"' &>/dev/null; then
+		echo "Failed to login to shepherd" >&2
+	fi
 }
 
 # src/lib/ensure_vault_login.sh
 ensure_vault_login() {
-  export VAULT_TOKEN=$(vault print token)
+	export VAULT_TOKEN=$(vault print token)
 
-  if ! vault login "$VAULT_TOKEN" > /dev/null 2>&1; then
-    echo "Enter your LDAP password:"
-    if ! vault login -method=ldap 2> /dev/null; then
-      echo "LDAP login failed. Please check your credentials or connection."
-    fi
-    source ~/.zshrc
-  fi
+	if ! vault login "$VAULT_TOKEN" >/dev/null 2>&1; then
+		echo "Enter your LDAP password:"
+		if ! vault login -method=ldap 2>/dev/null; then
+			echo "LDAP login failed. Please check your credentials or connection."
+		fi
+	fi
 }
 
 # src/lib/extract_env_details.sh
 extract_env_details() {
-  # SET ENV VARIABLES
-  export ENV_TYPE=$(echo "$1" | cut -d '-' -f 1)
-  export ENV_STEMCELL=$(echo "$1" | cut -d '-' -f 2)
+	# SET ENV VARIABLES
+	export ENV_TYPE=$(echo "$1" | cut -d '-' -f 1)
+	export ENV_STEMCELL=$(echo "$1" | cut -d '-' -f 2)
 
-  # GET ARRAY OF MATCHES ENVIRONMENTS
-  echo -e "\nChecking environment exists..."
-  env_array=$($SHEPHERD_BINARY_PATH list lease --namespace tpi-telemetry --desc-search $1 --json)
+	# GET ARRAY OF MATCHES ENVIRONMENTS
+	echo -e "\nChecking environment exists..."
+	env_array=$($SHEPHERD_BINARY_PATH list lease --namespace tpi-telemetry --desc-search "$1" --json)
 
-  if [[ $(echo "$env_array" | jq '. | length') == 0 ]]; then
-    echo -e "\nFoundation $1 does not exist\n"
-    exit 1
-  else
-    # EXTRACT IDENTIFIER
-    export ENV_IDENTIFIER=$(echo "$env_array" | jq -r '.[0].identifier')
+	if [[ $(echo "$env_array" | jq '. | length') == 0 ]]; then
+		echo -e "\nFoundation $1 does not exist\n"
+		exit 1
+	else
+		# EXTRACT IDENTIFIER
+		export ENV_IDENTIFIER=$(echo "$env_array" | jq -r '.[0].identifier')
 
-    # GET LEASE
-    echo -e "Getting environment lease..."
-    export ENV_LEASE=$($SHEPHERD_BINARY_PATH get lease "$ENV_IDENTIFIER" --namespace tpi-telemetry --json)
+		# GET LEASE
+		echo -e "Getting environment lease..."
+		export ENV_LEASE=$($SHEPHERD_BINARY_PATH get lease "$ENV_IDENTIFIER" --namespace tpi-telemetry --json)
 
-    # CHECK STATUS
-    if [[ $(echo "$ENV_LEASE" | jq -r '.status') == "CREATING" ]]; then
-        echo -e "\n*** Env still being created; try again later. ***\n"
-        exit 1
-    fi
+		# CHECK STATUS
+		if [[ $(echo "$ENV_LEASE" | jq -r '.status') == "CREATING" ]]; then
+			echo -e "\n*** Env still being created; try again later. ***\n"
+			exit 1
+		fi
 
-    export LOCKFILE_DATA=$(echo "$ENV_LEASE" | jq -r .output)
-  fi
+		export LOCKFILE_DATA=$(echo "$ENV_LEASE" | jq -r .output)
+	fi
 }
 
 # src/lib/set_shepherd_binary_path.sh
 set_shepherd_binary_path() {
-  local os=$(uname)
-  local arch=$(uname -m)
-  local binary_name=""
+	local os=$(uname)
+	local arch=$(uname -m)
+	local binary_name=""
 
-  case $os in
-    Darwin)
-      case $arch in
-        x86_64) binary_name="shepherd-darwin-amd64" ;;
-        arm64) binary_name="shepherd-darwin-arm64" ;;
-        *) echo "Unsupported architecture: $arch"; exit 1 ;;
-      esac
-      ;;
-    Linux)
-      case $arch in
-        x86_64) binary_name="shepherd-linux-amd64" ;;
-        aarch64) binary_name="shepherd-linux-arm64" ;;
-        *) echo "Unsupported architecture: $arch"; exit 1 ;;
-      esac
-      ;;
-    *)
-      echo "Unsupported operating system: $os"; exit 1 ;;
-  esac
+	case $os in
+	Darwin)
+		case $arch in
+		x86_64) binary_name="shepherd-darwin-amd64" ;;
+		arm64) binary_name="shepherd-darwin-arm64" ;;
+		*)
+			echo "Unsupported architecture: $arch"
+			exit 1
+			;;
+		esac
+		;;
+	Linux)
+		case $arch in
+		x86_64) binary_name="shepherd-linux-amd64" ;;
+		aarch64) binary_name="shepherd-linux-arm64" ;;
+		*)
+			echo "Unsupported architecture: $arch"
+			exit 1
+			;;
+		esac
+		;;
+	*)
+		echo "Unsupported operating system: $os"
+		exit 1
+		;;
+	esac
 
-  export SHEPHERD_BINARY_PATH="$PWD/src/binaries/$binary_name"
+	export SHEPHERD_BINARY_PATH="$PWD/src/binaries/$binary_name"
 }
 
 # :command.command_functions
@@ -602,7 +615,12 @@ tpi_list_command() {
 tpi_create_command() {
   # src/create_command.sh
   # Create correct environmnt if it doesn't already exist
-  ENV_DESCRIPTION=${args[foundation]}
+  if [[ ${args[foundation]} == "" ]]; then
+  	export ENV_DESCRIPTION=$1
+  else
+  	export ENV_DESCRIPTION=${args[foundation]}
+  fi
+
   ENV_MATCHES=$(shepherd list lease --desc-search "$ENV_DESCRIPTION" --namespace tpi-telemetry --json)
   array_length=$(jq '. | length' <<<"$ENV_MATCHES")
   TELEMETRY_TILE_INSTALL_REQUIRED=false
@@ -632,12 +650,15 @@ tpi_create_command() {
   		shepherd create lease --pool "tas-2_13" --duration 168h --namespace tpi-telemetry --description "$ENV_DESCRIPTION" --pool-namespace official
   	fi
 
-  	if [[ "$TELEMETRY_TILE_INSTALL_REQUIRED" == "true" ]]; then
+  	if [[ $TELEMETRY_TILE_INSTALL_REQUIRED == "true" ]]; then
   		echo -e "Install Telemetry Tile before updating Vault variables\n"
   	fi
 
   	# Remove old metadata file
   	rm -rf "${PWD}/shepherd_envs/$ENV_DESCRIPTION-metadata.json"
+
+  	# Remove old smith-data
+  	rm -rf "${PWD}/smith-data/$ENV_DESCRIPTION"
   else
   	echo -e "$ENV_DESCRIPTION already exists\n"
   fi
@@ -647,13 +668,21 @@ tpi_create_command() {
 # :command.function
 tpi_install_command() {
   # src/install_command.sh
-  tpi_get_command ${args[foundation]}
+  ensure_pivnet_login
 
-  LOCKFILE_PATH="${PWD}/shepherd_envs/${args[foundation]}-metadata.json"
+  if [[ ${args[foundation]} == "" ]]; then
+  	export TMP_FOUNDATION_NAME=$1
+  else
+  	export TMP_FOUNDATION_NAME=${args[foundation]}
+  fi
+
+  tpi_get_command $TMP_FOUNDATION_NAME
+
+  LOCKFILE_PATH="${PWD}/shepherd_envs/$TMP_FOUNDATION_NAME-metadata.json"
 
   # Check that this foundation doesn't already have the Telemetry Tile installed
-  export TELEMETRY_TILE_GUID=$(smith om --lockfile="${PWD}/shepherd_envs/${args[foundation]}-metadata.json" -- curl -s --path /api/v0/deployed/products | jq -r '.[] | select(.type == "pivotal-telemetry-om").guid') || ""
-  if [[ -n "$TELEMETRY_TILE_GUID" ]]; then
+  export TELEMETRY_TILE_GUID=$(smith om --lockfile="${PWD}/shepherd_envs/$TMP_FOUNDATION_NAME-metadata.json" -- curl -s --path /api/v0/deployed/products | jq -r '.[] | select(.type == "pivotal-telemetry-om").guid') || ""
+  if [[ -n $TELEMETRY_TILE_GUID ]]; then
   	echo -e "\nThe Telemetry Tile is already installed\n"
   	exit 0
   fi
@@ -689,26 +718,26 @@ tpi_install_command() {
   az="us-central1-f"
 
   function retry {
-    local retries=$1
-    local count=0
-    shift
+  	local retries=$1
+  	local count=0
+  	shift
 
-    until "$@"; do
-      exit=$?
-      count=$(($count + 1))
-      if [ $count -lt $retries ]; then
-        echo "Attempt $count/$retries ended with exit $exit"
-        # Need a short pause between smith CLI executions or it fails unexpectedly.
-        sleep 30
-      else
-        echo "Attempted $count/$retries times and failed."
-        return $exit
-      fi
-    done
-    return 0
+  	until "$@"; do
+  		exit=$?
+  		count=$((count + 1))
+  		if [ $count -lt $retries ]; then
+  			echo "Attempt $count/$retries ended with exit $exit"
+  			# Need a short pause between smith CLI executions or it fails unexpectedly.
+  			sleep 30
+  		else
+  			echo "Attempted $count/$retries times and failed."
+  			return $exit
+  		fi
+  	done
+  	return 0
   }
 
-  LOADER_API_KEY=$(vault kv get -format=json /runway_concourse/tanzu-portfolio-insights/aqueduct-loader | jq -r '.data' | jq -r '.["production-loader-api-keys"]' | jq -r '.["Telemetry and Insights"]' | jq -r '.[0]')
+  export LOADER_API_KEY=$(vault kv get -format=json /runway_concourse/tanzu-portfolio-insights/aqueduct-loader | jq -r '.data' | jq -r '.["production-loader-api-keys"]' | jq -r '.["Telemetry and Insights"]' | jq -r '.[0]')
   echo -e "Loader API Key:\t$LOADER_API_KEY"
 
   # echo "Uploading tile..."
@@ -716,8 +745,8 @@ tpi_install_command() {
 
   echo "Staging tile..."
   retry 5 om stage-product \
-     --product-name "pivotal-telemetry-om" \
-     --product-version "$TILE_FULL_VERSION"
+  	--product-name "pivotal-telemetry-om" \
+  	--product-version "$TILE_FULL_VERSION"
 
   FOUNDATION_NICKNAME=$(cat $LOCKFILE_PATH | jq .name)
   TILE_ENV_TYPE=$ENV_TYPE
@@ -728,18 +757,18 @@ tpi_install_command() {
 
   echo "Configuring tile..."
   retry 5 om configure-product \
-     --config "$HOME/workspace/tile/p-telemetry/ci/tasks/product-config.yml" \
-     --var audit-mode="false" \
-     --var env-type="$TILE_ENV_TYPE" \
-     --var foundation-nickname="$FOUNDATION_NICKNAME" \
-     --var loader-endpoint="https://telemetry.pivotal.io" \
-     --var telemetry-api-key="$LOADER_API_KEY" \
-     --var flush-interval=10 \
-     --var collector-cron-schedule="0 8 * * *" \
-     --var network="$network" \
-     --var az="$az" \
-     --var ops-manager-timeout=30 \
-     --var ops-manager-request-timeout=15
+  	--config "$HOME/workspace/tile/p-telemetry/ci/tasks/product-config.yml" \
+  	--var audit-mode="false" \
+  	--var env-type="$TILE_ENV_TYPE" \
+  	--var foundation-nickname="$FOUNDATION_NICKNAME" \
+  	--var loader-endpoint="https://telemetry.pivotal.io" \
+  	--var telemetry-api-key="$LOADER_API_KEY" \
+  	--var flush-interval=10 \
+  	--var collector-cron-schedule="0 8 * * *" \
+  	--var network="$network" \
+  	--var az="$az" \
+  	--var ops-manager-timeout=30 \
+  	--var ops-manager-request-timeout=15
 
   # echo "Uploading stemcell..."
   # retry 5 smith om -- upload-stemcell --stemcell stemcell/*.tgz
@@ -753,9 +782,9 @@ tpi_install_command() {
   echo "Applying changes..."
   rm -rf /tmp/bashly/logs
   mkdir -p /tmp/bashly/logs
-  LOG_FILE=/tmp/bashly/logs/${args[foundation]}.log
+  LOG_FILE=/tmp/bashly/logs/$TMP_FOUNDATION_NAME.log
   touch $LOG_FILE
-  nohup om apply-changes --reattach > $LOG_FILE 2>&1 &
+  nohup om apply-changes --reattach >$LOG_FILE 2>&1 &
 
   echo -e "Run the following command to watch the install:\n"
   echo -e "tail -f ${LOG_FILE}"
@@ -765,10 +794,16 @@ tpi_install_command() {
 # :command.function
 tpi_update_command() {
   # src/update_command.sh
-  tpi_get_command ${args[foundation]}
+  if [[ ${args[foundation]} == "" ]]; then
+  	export TMP_FOUNDATION_NAME=$1
+  else
+  	export TMP_FOUNDATION_NAME=${args[foundation]}
+  fi
+
+  tpi_get_command $TMP_FOUNDATION_NAME
 
   update_vault() {
-  	ENV_DESCRIPTION=${args[foundation]}
+  	ENV_DESCRIPTION=$TMP_FOUNDATION_NAME
 
   	# Write the lockfile to a secret
   	vault kv put runway_concourse/tanzu-portfolio-insights/toolsmiths/"${ENV_DESCRIPTION}"-lockfile @"${PWD}/shepherd_envs/$ENV_DESCRIPTION-metadata.json"
@@ -810,8 +845,14 @@ tpi_update_command() {
 # :command.function
 tpi_print_command() {
   # src/print_command.sh
-  tpi_get_command ${args[foundation]}
-  ENV_DESCRIPTION=${args[foundation]}
+  if [[ ${args[foundation]} == "" ]]; then
+  	export TMP_FOUNDATION_NAME=$1
+  else
+  	export TMP_FOUNDATION_NAME=${args[foundation]}
+  fi
+
+  tpi_get_command $TMP_FOUNDATION_NAME
+  ENV_DESCRIPTION=$TMP_FOUNDATION_NAME
 
   echo -e "\n\n********** CLI COMMANDS: USERNAME / PASSWORD **********"
 
@@ -825,20 +866,43 @@ tpi_print_command() {
       --env-type development \\
       --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/username-password/ceip"
 
+  if [[ ${args[--collect]} ]]; then
+  	eval "telemetry-collector collect \\
+          --url ${OPS_MANAGER_URL} \\
+          --username pivotalcf \\
+          --password ${OPS_MANAGER_PASSWORD} \\
+          --env-type development \\
+          --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/username-password/ceip"
+  fi
+
   if [ -n "$TELEMETRY_USAGE_SERVICE_PASSWORD" ]; then
   	echo -e "\n\n** OPERATIONAL DATA ONLY - WITH USAGE **"
   	mkdir -p "${PWD}/smith-data/$ENV_DESCRIPTION/username-password/operational-data-only-with-usage"
   	echo -e "telemetry-collector collect \\
-      --url ${OPS_MANAGER_URL} \\
-      --username pivotalcf \\
-      --password ${OPS_MANAGER_PASSWORD} \\
-      --usage-service-url https://app-usage.sys.${ENV_DESCRIPTION}.cf-app.com \\
-      --usage-service-client-id usage_service \\
-      --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
-      --cf-api-url https://api.sys.${ENV_DESCRIPTION}.cf-app.com \
-      --env-type development \\
-      --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/username-password/operational-data-only-with-usage \\
-      --operational-data-only"
+          --url ${OPS_MANAGER_URL} \\
+          --username pivotalcf \\
+          --password ${OPS_MANAGER_PASSWORD} \\
+          --usage-service-url https://app-usage.${SYS_DOMAIN} \\
+          --usage-service-client-id usage_service \\
+          --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
+          --cf-api-url https://api.${SYS_DOMAIN} \\
+          --env-type development \\
+          --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/username-password/operational-data-only-with-usage \\
+          --operational-data-only"
+
+  	if [[ ${args[--collect]} ]]; then
+  		eval "telemetry-collector collect \\
+              --url ${OPS_MANAGER_URL} \\
+              --username pivotalcf \\
+              --password ${OPS_MANAGER_PASSWORD} \\
+              --usage-service-url https://app-usage.${SYS_DOMAIN} \\
+              --usage-service-client-id usage_service \\
+              --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
+              --cf-api-url https://api.${SYS_DOMAIN} \\
+              --env-type development \\
+              --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/username-password/operational-data-only-with-usage \\
+              --operational-data-only"
+  	fi
   fi
 
   echo -e "\n\n** OPERATIONAL DATA ONLY - NO USAGE **"
@@ -851,53 +915,99 @@ tpi_print_command() {
       --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/username-password/operational-data-only-no-usage \\
       --operational-data-only"
 
+  if [[ ${args[--collect]} ]]; then
+  	eval "telemetry-collector collect \\
+          --url ${OPS_MANAGER_URL} \\
+          --username pivotalcf \\
+          --password ${OPS_MANAGER_PASSWORD} \\
+          --env-type development \\
+          --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/username-password/operational-data-only-no-usage \\
+          --operational-data-only"
+  fi
+
   if [ -n "$TELEMETRY_USAGE_SERVICE_PASSWORD" ]; then
   	echo -e "\n\n** ALL **"
   	mkdir -p "${PWD}/smith-data/$ENV_DESCRIPTION/username-password/all"
   	echo "telemetry-collector collect \\
-      --url ${OPS_MANAGER_URL} \\
-      --username pivotalcf \\
-      --password ${OPS_MANAGER_PASSWORD} \\
-      --usage-service-url https://app-usage.sys.${ENV_DESCRIPTION}.cf-app.com \\
-      --usage-service-client-id usage_service \\
-      --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
-      --cf-api-url https://api.sys.${ENV_DESCRIPTION}.cf-app.com \\
-      --env-type development \\
-      --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/username-password/all"
+          --url ${OPS_MANAGER_URL} \\
+          --username pivotalcf \\
+          --password ${OPS_MANAGER_PASSWORD} \\
+          --usage-service-url https://app-usage.${SYS_DOMAIN} \\
+          --usage-service-client-id usage_service \\
+          --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
+          --cf-api-url https://api.${SYS_DOMAIN} \\
+          --env-type development \\
+          --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/username-password/all"
+
+  	if [[ ${args[--collect]} ]]; then
+  		eval "telemetry-collector collect \\
+              --url ${OPS_MANAGER_URL} \\
+              --username pivotalcf \\
+              --password ${OPS_MANAGER_PASSWORD} \\
+              --usage-service-url https://app-usage.${SYS_DOMAIN} \\
+              --usage-service-client-id usage_service \\
+              --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
+              --cf-api-url https://api.${SYS_DOMAIN} \\
+              --env-type development \\
+              --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/username-password/all"
+  	fi
   fi
 
   if [ -n "$TELEMETRY_USAGE_SERVICE_PASSWORD" ]; then
-      echo -e "\n\n********** CLI COMMANDS: CLIENT ID / CLIENT SECRET **********"
-      # CLIENT ID / CLIENT SECRET
+  	echo -e "\n\n********** CLI COMMANDS: CLIENT ID / CLIENT SECRET **********"
+  	# CLIENT ID / CLIENT SECRET
 
-      echo -e "\n** CEIP ONLY **"
-      mkdir -p "${PWD}/smith-data/$ENV_DESCRIPTION/client-id-client-secret/ceip"
-      echo "telemetry-collector collect \\
+  	echo -e "\n** CEIP ONLY **"
+  	mkdir -p "${PWD}/smith-data/$ENV_DESCRIPTION/client-id-client-secret/ceip"
+  	echo "telemetry-collector collect \\
           --url ${OPS_MANAGER_URL} \\
           --client-id restricted_view_api_access \\
           --client-secret ${UAA_CLIENT_SECRET} \\
           --env-type development \\
           --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/client-id-client-secret/ceip"
 
-      if [ -n "$TELEMETRY_USAGE_SERVICE_PASSWORD" ]; then
-      	echo -e "\n\n** OPERATIONAL DATA ONLY - WITH USAGE **"
-      	mkdir -p "${PWD}/smith-data/$ENV_DESCRIPTION/client-id-client-secret/operational-data-only-with-usage"
-      	echo -e "telemetry-collector collect \\
-          --url ${OPS_MANAGER_URL} \\
-          --client-id restricted_view_api_access \\
-          --client-secret ${UAA_CLIENT_SECRET} \\
-          --usage-service-url https://app-usage.sys.${ENV_DESCRIPTION}.cf-app.com \\
-          --usage-service-client-id usage_service \\
-          --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
-          --cf-api-url https://api.sys.${ENV_DESCRIPTION}.cf-app.com \\
-          --env-type development \\
-          --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/client-id-client-secret/operational-data-only-with-usage \\
-          --operational-data-only"
-      fi
+  	if [[ ${args[--collect]} ]]; then
+  		eval "telemetry-collector collect \\
+              --url ${OPS_MANAGER_URL} \\
+              --client-id restricted_view_api_access \\
+              --client-secret ${UAA_CLIENT_SECRET} \\
+              --env-type development \\
+              --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/client-id-client-secret/ceip"
+  	fi
 
-      echo -e "\n\n** OPERATIONAL DATA ONLY - NO USAGE **"
-      mkdir -p "${PWD}/smith-data/$ENV_DESCRIPTION/client-id-client-secret/operational-data-only-no-usage"
-      echo "telemetry-collector collect \\
+  	if [ -n "$TELEMETRY_USAGE_SERVICE_PASSWORD" ]; then
+  		echo -e "\n\n** OPERATIONAL DATA ONLY - WITH USAGE **"
+  		mkdir -p "${PWD}/smith-data/$ENV_DESCRIPTION/client-id-client-secret/operational-data-only-with-usage"
+  		echo -e "telemetry-collector collect \\
+              --url ${OPS_MANAGER_URL} \\
+              --client-id restricted_view_api_access \\
+              --client-secret ${UAA_CLIENT_SECRET} \\
+              --usage-service-url https://app-usage.${SYS_DOMAIN} \\
+              --usage-service-client-id usage_service \\
+              --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
+              --cf-api-url https://api.${SYS_DOMAIN} \\
+              --env-type development \\
+              --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/client-id-client-secret/operational-data-only-with-usage \\
+              --operational-data-only"
+
+  		if [[ ${args[--collect]} ]]; then
+  			eval "telemetry-collector collect \\
+                  --url ${OPS_MANAGER_URL} \\
+                  --client-id restricted_view_api_access \\
+                  --client-secret ${UAA_CLIENT_SECRET} \\
+                  --usage-service-url https://app-usage.${SYS_DOMAIN} \\
+                  --usage-service-client-id usage_service \\
+                  --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
+                  --cf-api-url https://api.${SYS_DOMAIN} \\
+                  --env-type development \\
+                  --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/client-id-client-secret/operational-data-only-with-usage \\
+                  --operational-data-only"
+  		fi
+  	fi
+
+  	echo -e "\n\n** OPERATIONAL DATA ONLY - NO USAGE **"
+  	mkdir -p "${PWD}/smith-data/$ENV_DESCRIPTION/client-id-client-secret/operational-data-only-no-usage"
+  	echo "telemetry-collector collect \\
           --url ${OPS_MANAGER_URL} \\
           --client-id restricted_view_api_access \\
           --client-secret ${UAA_CLIENT_SECRET} \\
@@ -905,20 +1015,43 @@ tpi_print_command() {
           --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/client-id-client-secret/operational-data-only-no-usage \\
           --operational-data-only"
 
-      if [ -n "$TELEMETRY_USAGE_SERVICE_PASSWORD" ]; then
-      	echo -e "\n\n** ALL **"
-      	mkdir -p "${PWD}/smith-data/$ENV_DESCRIPTION/client-id-client-secret/all"
-      	echo -e "telemetry-collector collect \\
-          --url ${OPS_MANAGER_URL} \\
-          --client-id restricted_view_api_access \\
-          --client-secret ${UAA_CLIENT_SECRET} \\
-          --usage-service-url https://app-usage.sys.${ENV_DESCRIPTION}.cf-app.com \\
-          --usage-service-client-id usage_service \\
-          --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
-          --cf-api-url https://api.sys.${ENV_DESCRIPTION}.cf-app.com \\
-          --env-type development \\
-          --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/all"
-      fi
+  	if [[ ${args[--collect]} ]]; then
+  		eval "telemetry-collector collect \\
+              --url ${OPS_MANAGER_URL} \\
+              --client-id restricted_view_api_access \\
+              --client-secret ${UAA_CLIENT_SECRET} \\
+              --env-type development \\
+              --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/client-id-client-secret/operational-data-only-no-usage \\
+              --operational-data-only"
+  	fi
+
+  	if [ -n "$TELEMETRY_USAGE_SERVICE_PASSWORD" ]; then
+  		echo -e "\n\n** ALL **"
+  		mkdir -p "${PWD}/smith-data/$ENV_DESCRIPTION/client-id-client-secret/all"
+  		echo -e "telemetry-collector collect \\
+              --url ${OPS_MANAGER_URL} \\
+              --client-id restricted_view_api_access \\
+              --client-secret ${UAA_CLIENT_SECRET} \\
+              --usage-service-url https://app-usage.${SYS_DOMAIN} \\
+              --usage-service-client-id usage_service \\
+              --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
+              --cf-api-url https://api.${SYS_DOMAIN} \\
+              --env-type development \\
+              --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/client-id-client-secret/all"
+
+  		if [[ ${args[--collect]} ]]; then
+  			eval "telemetry-collector collect \\
+                  --url ${OPS_MANAGER_URL} \\
+                  --client-id restricted_view_api_access \\
+                  --client-secret ${UAA_CLIENT_SECRET} \\
+                  --usage-service-url https://app-usage.${SYS_DOMAIN} \\
+                  --usage-service-client-id usage_service \\
+                  --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
+                  --cf-api-url https://api.${SYS_DOMAIN} \\
+                  --env-type development \\
+                  --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/client-id-client-secret/all"
+  		fi
+  	fi
   fi
 
 }
@@ -926,25 +1059,30 @@ tpi_print_command() {
 # :command.function
 tpi_get_command() {
   # src/get_command.sh
-  extract_env_details ${args[foundation]}
+  if [[ ${args[foundation]} == "" ]]; then
+  	export TMP_FOUNDATION_NAME=$1
+  else
+  	export TMP_FOUNDATION_NAME=${args[foundation]}
+  fi
+
+  extract_env_details $TMP_FOUNDATION_NAME
 
   mkdir -p "${PWD}/shepherd_envs"
-  LOCKFILE_PATH=${PWD}/shepherd_envs/${args[foundation]}-metadata.json
+  export LOCKFILE_PATH=${PWD}/shepherd_envs/$TMP_FOUNDATION_NAME-metadata.json
   if [[ $LOCKFILE_DATA == null ]]; then
   	echo -e "\n*** Env not yet ready; try again later. ***\n"
   	exit 0
   else
-  	echo -e "Writing lockfile..."
   	echo "$LOCKFILE_DATA" >"$LOCKFILE_PATH"
   fi
 
   # Source envs for smith, cf, bosh CLIs
-  echo -e "Targeting ${args[foundation]}..."
+  echo -e "Targeting $TMP_FOUNDATION_NAME..."
   smith cf-login --lockfile="$LOCKFILE_PATH"
   eval $(smith om -l "$LOCKFILE_PATH")
   eval $(smith bosh -l "$LOCKFILE_PATH")
 
-  echo -e "\n*** BOSH_ENVIRONMENT ***\n$BOSH_ENVIRONMENT"
+  export SYS_DOMAIN=$(cf api | grep 'API endpoint' | awk '{print $3}' | cut -d'/' -f3 | sed 's/^api\.//') || ""
 
   echo -e "\nGetting env variables...\n"
 
@@ -995,7 +1133,7 @@ tpi_get_command() {
   	echo -e "NAME:\t\t\t\t\t$NAME"
   }
 
-  export FOUNDATION=${args[foundation]}
+  export FOUNDATION=$TMP_FOUNDATION_NAME
 
 
   # Function to get Telemetry Tile guid
@@ -1010,7 +1148,7 @@ tpi_get_command() {
   fetch_uaa_client_secret() {
   	if [[ $ENV_TYPE != "staging" ]]; then
 
-  		if [[ -z "$TELEMETRY_TILE_GUID" ]]; then
+  		if [[ -z $TELEMETRY_TILE_GUID ]]; then
   			echo -e "UAA_CLIENT_SECRET:"
   		else
   			export UAA_CLIENT_SECRET=$(smith om --lockfile="$LOCKFILE_PATH" -- curl -s --path /api/v0/deployed/products/"${TELEMETRY_TILE_GUID}"/manifest | jq -r '.instance_groups[] | select(.name == "telemetry-centralizer").jobs[] | select(.name == "telemetry-collector").properties.opsmanager.auth.uaa_client_secret')
@@ -1046,7 +1184,7 @@ tpi_get_command() {
   fetch_telemetry_usage_service_password
 
   if [[ $ENV_TYPE != "staging" ]]; then
-  	if [[ -z "$TELEMETRY_TILE_GUID" ]]; then
+  	if [[ -z $TELEMETRY_TILE_GUID ]]; then
   		echo -e "\n*** YOU MUST INSTALL THE TELEMETRY TILE ***\n"
   	fi
   fi
@@ -1056,7 +1194,14 @@ tpi_get_command() {
 # :command.function
 tpi_open_command() {
   # src/open_command.sh
-  smith open --lockfile="${PWD}/shepherd_envs/${args[foundation]}-metadata.json"
+  if [[ ${args[foundation]} == "" ]]; then
+  	export TMP_FOUNDATION_NAME=$1
+  else
+  	export TMP_FOUNDATION_NAME=${args[foundation]}
+  fi
+
+  # FIXME: won't work if lockfile doesn't exist
+  smith open --lockfile="${PWD}/shepherd_envs/$TMP_FOUNDATION_NAME-metadata.json"
 
 }
 
@@ -1117,11 +1262,13 @@ tpi_maintain_command() {
   # where the value of the "description" key is set to the value of
   # the string we're processing from CI_ENVS
   env_exists() {
-  	if echo "$ENVS_JSON" | jq -r --arg env "$1" '.[] | select(.description == "$env")' &> /dev/null; then
+  	if shepherd list lease --json --wide --namespace=tpi-telemetry | jq -r --arg env "$1" 'any(.[]; .description == $env)' | grep -q true; then
   		return 0
   	else
+  		printf "%s\n" "$1"
   		return 1
   	fi
+
   }
 
   # Function that takes in a string and returns a boolean.
@@ -1138,7 +1285,7 @@ tpi_maintain_command() {
   # Function to get Telemetry Tile guid
   telemetry_installed() {
   	export TELEMETRY_TILE_GUID=$(smith om --lockfile="$LOCKFILE_PATH" -- curl -s --path /api/v0/deployed/products | jq -r '.[] | select(.type == "pivotal-telemetry-om").guid') || ""
-  	if [[ -z "$TELEMETRY_TILE_GUID" ]]; then
+  	if [[ -z $TELEMETRY_TILE_GUID ]]; then
   		return 1
   	else
   		return 0
@@ -1147,27 +1294,27 @@ tpi_maintain_command() {
 
   check_all_envs_exist() {
   	echo -e "Checking that all enivronments exist..."
-  	for my_env in "$CI_ENVS[@]"; do
+  	for my_env in "${CI_ENVS[@]}"; do
   		extract_env_details "$my_env"
   		export LOCKFILE_PATH=${PWD}/shepherd_envs/$my_env-metadata.json
-  	  	export ENV_TYPE=$(echo "$my_env" | cut -d '-' -f 1)
+  		export ENV_TYPE=$(echo "$my_env" | cut -d '-' -f 1)
 
   		if ! env_exists "$my_env"; then
   			printf "No match for %s: creating new env...\n" "$my_env"
   			tpi_create_command "$my_env"
   			exit 0
-  	  	fi
-  	 done
+  		fi
+  	done
 
-  	 echo "*** All environments exist. ***"
+  	echo "*** All environments exist. ***"
   }
 
   check_all_envs_ready() {
   	echo -e "Checking that all enivronments are ready..."
-  	for my_env in "$CI_ENVS[@]"; do
-  		extract_env_details "$my_env"
+  	for my_env in "${CI_ENVS[@]}"; do
+  		tpi_get_command "$my_env"
   		export LOCKFILE_PATH=${PWD}/shepherd_envs/$my_env-metadata.json
-  	  	export ENV_TYPE=$(echo "$my_env" | cut -d '-' -f 1)
+  		export ENV_TYPE=$(echo "$my_env" | cut -d '-' -f 1)
   		if ! env_ready; then
   			printf "%s not ready. Please wait.\n" "$my_env"
   			exit 0
@@ -1179,33 +1326,36 @@ tpi_maintain_command() {
 
   check_telemetry_tile_installed() {
   	echo -e "Checking that Telemetry Tile is installed..."
-  	for my_env in "$CI_ENVS[@]"; do
+  	for my_env in "${CI_ENVS[@]}"; do
   		extract_env_details "$my_env"
   		export LOCKFILE_PATH=${PWD}/shepherd_envs/$my_env-metadata.json
-  	  	export ENV_TYPE=$(echo "$my_env" | cut -d '-' -f 1)
+  		export ENV_TYPE=$(echo "$my_env" | cut -d '-' -f 1)
   		if [[ $ENV_TYPE != "staging" ]]; then
-  			if [[ ! telemetry_installed ]]; then
-  				printf "Installing the Telemetry Tile"
+  			printf "\nNOT a staging env..."
+  			if ! telemetry_installed; then
+  				printf "\nInstalling the Telemetry Tile"
   				tpi_install_command "$my_env"
   				exit 0
   			fi
+  		else
+  			printf "\nJust a staging env...\n"
   		fi
   	done
 
-  	echo "*** Telemetry Tile installed. ***"
+  	echo -e "*** All (necessary) Telemetry Tiles installed. ***"
   }
 
   upload_secrets_to_vault() {
   	echo -e "Uploading secrets to Vault..."
-  	for my_env in "$CI_ENVS[@]"; do
+  	for my_env in "${CI_ENVS[@]}"; do
   		extract_env_details "$my_env"
   		export LOCKFILE_PATH=${PWD}/shepherd_envs/$my_env-metadata.json
-  	  	export ENV_TYPE=$(echo "$my_env" | cut -d '-' -f 1)
+  		export ENV_TYPE=$(echo "$my_env" | cut -d '-' -f 1)
 
-  	  	tpi_update_command "$my_env"
-  	 done
+  		tpi_update_command "$my_env"
+  	done
 
-  	 echo "*** Secrets uploaded to Vault. ***"
+  	echo "*** Secrets uploaded to Vault. ***"
   }
 
   check_all_envs_exist
@@ -1666,6 +1816,13 @@ tpi_print_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --collect)
+
+        # :flag.case_no_arg
+        args['--collect']=1
+        shift
+        ;;
 
       -?*)
         printf "invalid option: %s\n" "$key" >&2
@@ -1690,7 +1847,7 @@ tpi_print_parse_requirements() {
 
   # :command.required_args_filter
   if [[ -z ${args['foundation']+x} ]]; then
-    printf "missing required argument: FOUNDATION\nusage: tpi print FOUNDATION\n" >&2
+    printf "missing required argument: FOUNDATION\nusage: tpi print FOUNDATION [OPTIONS]\n" >&2
     exit 1
   fi
 
@@ -1756,8 +1913,8 @@ tpi_get_parse_requirements() {
   fi
 
   # :command.whitelist_filter
-  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy|staging-jammy|production-xenial|acceptance-xenial|staging-xenial)$ ]]; then
-    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial" >&2
+  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy|staging-jammy|production-xenial|acceptance-xenial|staging-xenial|telemetry-release-jammy)$ ]]; then
+    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-jammy" >&2
     exit 1
   fi
 
@@ -1817,8 +1974,8 @@ tpi_open_parse_requirements() {
   fi
 
   # :command.whitelist_filter
-  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy|staging-jammy|production-xenial|acceptance-xenial|staging-xenial)$ ]]; then
-    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial" >&2
+  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy|staging-jammy|production-xenial|acceptance-xenial|staging-xenial|telemetry-release-jammy)$ ]]; then
+    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-jammy" >&2
     exit 1
   fi
 
@@ -1918,7 +2075,6 @@ before_hook() {
   set_shepherd_binary_path
   ensure_vault_login
   ensure_shepherd_login
-  ensure_pivnet_login
 
 }
 

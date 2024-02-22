@@ -1,10 +1,13 @@
-tpi_get_command ${args[foundation]}
+if [[ ${args[foundation]} == "" ]]; then
+	export TMP_FOUNDATION_NAME=$1
+else
+	export TMP_FOUNDATION_NAME=${args[foundation]}
+fi
 
-
-
+tpi_get_command $TMP_FOUNDATION_NAME
 
 update_vault() {
-	ENV_DESCRIPTION=${args[foundation]}
+	ENV_DESCRIPTION=$TMP_FOUNDATION_NAME
 
 	# Write the lockfile to a secret
 	vault kv put runway_concourse/tanzu-portfolio-insights/toolsmiths/"${ENV_DESCRIPTION}"-lockfile @"${PWD}/shepherd_envs/$ENV_DESCRIPTION-metadata.json"
@@ -38,8 +41,5 @@ update_vault() {
 		echo -e "\nUpdated 17 Vault variables for ${ENV_DESCRIPTION}\n"
 	fi
 }
-
-
-
 
 update_vault
