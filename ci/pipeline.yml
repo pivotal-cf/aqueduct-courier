@@ -119,6 +119,13 @@ resources:
     owner: cloudfoundry
     repository: bosh-cli
     access_token: ((github.pivotal-cf-access-token))
+- name: bbl-cli-github-release
+  type: github-release
+  source:
+    owner: cloudfoundry
+    repository: bosh-bootloader
+    release: true
+    access_token: ((github.pivotal-cf-access-token))
 
 jobs:
 - name: update-telemetry-utils
@@ -197,6 +204,10 @@ jobs:
       resource: bosh-cli-github-release
       params:
         globs: ["*linux*"]
+    - get: bbl-cli-github-release
+      params:
+        globs:
+        - bbl-*_linux_amd64
   - task: collect-credhub-info
     file: ci/ci/tasks/collect-with-credhub-info.yml
     input_mapping:

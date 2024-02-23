@@ -20,7 +20,9 @@ if [ "$array_length" -eq 0 ]; then
 			TELEMETRY_TILE_INSTALL_REQUIRED=true
 		fi
 
-		shepherd create lease --pool "tas-5_0" --duration 168h --namespace tpi-telemetry --description "$ENV_DESCRIPTION" --pool-namespace official
+		#shepherd create lease --pool "tas-5_0" --duration 168h --namespace tpi-telemetry --description "$ENV_DESCRIPTION" --pool-namespace official
+		# Use Custom Env for up to date Ops Man (supporting Core Consumption API)
+		shepherd create lease --template-namespace official --template-name gcp-tas-template --template-revision 2.1 --template-argument '{"configuration_folder": "3.0", "opsman_version": "3.0.24+LTS-T", "product_type": "srt*",  "tas_version": "5.0.7"}' --namespace tpi-telemetry --duration 168h --json --description "$ENV_DESCRIPTION"
 	fi
 
 	# Create TAS 2.13 if we need a xenial env
@@ -31,7 +33,9 @@ if [ "$array_length" -eq 0 ]; then
 			TELEMETRY_TILE_INSTALL_REQUIRED=true
 		fi
 
-		shepherd create lease --pool "tas-2_13" --duration 168h --namespace tpi-telemetry --description "$ENV_DESCRIPTION" --pool-namespace official
+		#shepherd create lease --pool "tas-2_13" --duration 168h --namespace tpi-telemetry --description "$ENV_DESCRIPTION" --pool-namespace official
+		# Use Custom Env for up to date Ops Man (supporting Core Consumption API)
+		shepherd create lease --template-namespace official --template-name gcp-tas-template --template-revision 2.1 --template-argument '{"configuration_folder": "2.7", "opsman_version": "2.10.70", "product_type": "srt*",  "tas_version": "2.13.35"}' --namespace tpi-telemetry --duration 168h --json --description "$ENV_DESCRIPTION"
 	fi
 
 	if [[ $TELEMETRY_TILE_INSTALL_REQUIRED == "true" ]]; then

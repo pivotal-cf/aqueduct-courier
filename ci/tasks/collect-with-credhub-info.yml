@@ -13,6 +13,7 @@ inputs:
 - name: smith
 - name: om
 - name: bosh
+- name: bbl-cli-github-release
 
 run:
   path: bash
@@ -28,6 +29,10 @@ run:
     export TELEMETRY_TILE_GUID="$TELEMETRY_TILE_GUID"
 
     echo $ACCEPTANCE_LOCKFILE > /tmp/lockfile.json
+
+    BBL_CLI=/usr/local/bin/bbl
+    cp "$PWD"/bbl-cli-github-release/bbl-*_linux_amd64 "$BBL_CLI"
+    chmod 755 "$BBL_CLI"
 
     om_cli="om/om-linux-amd64-$(cat om/version)"
     chmod 755 "$om_cli"
