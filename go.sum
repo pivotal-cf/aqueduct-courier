@@ -129,8 +129,8 @@ github.com/pierrec/lz4/v4 v4.1.21 h1:yOVMLb6qSIDP67pl/5F7RepeKYu/VmTyEXvuMI5d9mQ
 github.com/pierrec/lz4/v4 v4.1.21/go.mod h1:gZWDp/Ze/IJXGXf23ltt2EXimqmTUXEy0GFuRQyBid4=
 github.com/pivotal-cf/om v0.0.0-20240208201136-b5cc183ecd67 h1:cKUkCU4szbeM6zJT+sn+xrWZvziiPSt7okRVvPlipb8=
 github.com/pivotal-cf/om v0.0.0-20240208201136-b5cc183ecd67/go.mod h1:GJldpAG9yB25v8XJ503WpZEDwqtv10t6XjxLyCqpnRw=
-github.com/pivotal-cf/telemetry-utils v0.0.0-20240222075629-4621bd2369d9 h1:tDyMRw02W84RkVDDBcVWGN9H35hpOxjcKCnCJ6sQJPE=
-github.com/pivotal-cf/telemetry-utils v0.0.0-20240222075629-4621bd2369d9/go.mod h1:sVzMdUZUjFtXu/B/n1gNt/vLUvHwewEPAlbVQJ+zLjw=
+github.com/pivotal-cf/telemetry-utils v0.0.0-20240226170404-98608cc8e9f6 h1:UrvP+6CMG3FWgLAR40pYr1WyNuWM9ESrtWCThVCxq14=
+github.com/pivotal-cf/telemetry-utils v0.0.0-20240226170404-98608cc8e9f6/go.mod h1:bkGi4/Bfq7dvETOpP354qhaBLzqRI11iV4LqPCoXbHY=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
