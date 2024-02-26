@@ -218,7 +218,7 @@ tpi_update_usage() {
     # :argument.usage
     printf "  %s\n" "FOUNDATION"
     printf "    foundation to update Vault Secrets for\n"
-    printf "    Allowed: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial\n"
+    printf "    Allowed: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-audit-false-jammy, telemetry-release-audit-true-jammy, p-telemetry-audit-false-jammy, p-telemetry-audit-true-jammy, telemetry-release-audit-false-xenial, telemetry-release-audit-true-xenial, p-telemetry-audit-false-xenial, p-telemetry-audit-true-xenial\n"
     echo
 
     # :command.usage_examples
@@ -267,7 +267,7 @@ tpi_print_usage() {
     # :argument.usage
     printf "  %s\n" "FOUNDATION"
     printf "    foundation to print telemetry CLI commands of\n"
-    printf "    Allowed: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial\n"
+    printf "    Allowed: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-audit-false-jammy, telemetry-release-audit-true-jammy, p-telemetry-audit-false-jammy, p-telemetry-audit-true-jammy, telemetry-release-audit-false-xenial, telemetry-release-audit-true-xenial, p-telemetry-audit-false-xenial, p-telemetry-audit-true-xenial\n"
     echo
 
     # :command.usage_examples
@@ -813,7 +813,7 @@ tpi_update_command() {
   	vault kv put runway_concourse/tanzu-portfolio-insights/toolsmiths/"${ENV_DESCRIPTION}"-lockfile @"${PWD}/shepherd_envs/$ENV_DESCRIPTION-metadata.json"
 
   	# Do the updating
-  	if [[ $ENV_TYPE == "staging" ]]; then
+  	if [[ $ENV_TYPE == "staging" || $(echo $ENV_TYPE | grep 'p-telemetry') || $(echo $ENV_TYPE | grep 'telemetry-release') ]]; then
   		vault kv put runway_concourse/tanzu-portfolio-insights/toolsmiths/"${ENV_DESCRIPTION}" \
   			env-name="${NAME}" \
   			p-bosh-id-guid="${P_BOSH_ID}"
@@ -864,6 +864,7 @@ tpi_print_command() {
   echo -e "\n** CEIP ONLY **"
   mkdir -p "${PWD}/smith-data/$ENV_DESCRIPTION/username-password/ceip"
   echo "telemetry-collector collect \\
+      --insecure-skip-tls-verify \\
       --url ${OPS_MANAGER_URL} \\
       --username pivotalcf \\
       --password ${OPS_MANAGER_PASSWORD} \\
@@ -872,6 +873,7 @@ tpi_print_command() {
 
   if [[ ${args[--collect]} ]]; then
   	eval "telemetry-collector collect \\
+          --insecure-skip-tls-verify \\
           --url ${OPS_MANAGER_URL} \\
           --username pivotalcf \\
           --password ${OPS_MANAGER_PASSWORD} \\
@@ -883,6 +885,7 @@ tpi_print_command() {
   	echo -e "\n\n** OPERATIONAL DATA ONLY - WITH USAGE **"
   	mkdir -p "${PWD}/smith-data/$ENV_DESCRIPTION/username-password/operational-data-only-with-usage"
   	echo -e "telemetry-collector collect \\
+          --insecure-skip-tls-verify \\
           --url ${OPS_MANAGER_URL} \\
           --username pivotalcf \\
           --password ${OPS_MANAGER_PASSWORD} \\
@@ -890,12 +893,14 @@ tpi_print_command() {
           --usage-service-client-id usage_service \\
           --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
           --cf-api-url https://api.${SYS_DOMAIN} \\
+          --usage-service-insecure-skip-tls-verify \\
           --env-type development \\
           --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/username-password/operational-data-only-with-usage \\
           --operational-data-only"
 
   	if [[ ${args[--collect]} ]]; then
   		eval "telemetry-collector collect \\
+              --insecure-skip-tls-verify \\
               --url ${OPS_MANAGER_URL} \\
               --username pivotalcf \\
               --password ${OPS_MANAGER_PASSWORD} \\
@@ -903,6 +908,7 @@ tpi_print_command() {
               --usage-service-client-id usage_service \\
               --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
               --cf-api-url https://api.${SYS_DOMAIN} \\
+              --usage-service-insecure-skip-tls-verify \\
               --env-type development \\
               --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/username-password/operational-data-only-with-usage \\
               --operational-data-only"
@@ -913,6 +919,7 @@ tpi_print_command() {
   mkdir -p "${PWD}/smith-data/$ENV_DESCRIPTION/username-password/operational-data-only-no-usage"
   echo "telemetry-collector collect \\
       --url ${OPS_MANAGER_URL} \\
+      --insecure-skip-tls-verify \\
       --username pivotalcf \\
       --password ${OPS_MANAGER_PASSWORD} \\
       --env-type development \\
@@ -922,6 +929,7 @@ tpi_print_command() {
   if [[ ${args[--collect]} ]]; then
   	eval "telemetry-collector collect \\
           --url ${OPS_MANAGER_URL} \\
+          --insecure-skip-tls-verify \\
           --username pivotalcf \\
           --password ${OPS_MANAGER_PASSWORD} \\
           --env-type development \\
@@ -933,6 +941,7 @@ tpi_print_command() {
   	echo -e "\n\n** ALL **"
   	mkdir -p "${PWD}/smith-data/$ENV_DESCRIPTION/username-password/all"
   	echo "telemetry-collector collect \\
+          --insecure-skip-tls-verify \\
           --url ${OPS_MANAGER_URL} \\
           --username pivotalcf \\
           --password ${OPS_MANAGER_PASSWORD} \\
@@ -940,11 +949,13 @@ tpi_print_command() {
           --usage-service-client-id usage_service \\
           --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
           --cf-api-url https://api.${SYS_DOMAIN} \\
+          --usage-service-insecure-skip-tls-verify \\
           --env-type development \\
           --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/username-password/all"
 
   	if [[ ${args[--collect]} ]]; then
   		eval "telemetry-collector collect \\
+              --insecure-skip-tls-verify \\
               --url ${OPS_MANAGER_URL} \\
               --username pivotalcf \\
               --password ${OPS_MANAGER_PASSWORD} \\
@@ -952,6 +963,7 @@ tpi_print_command() {
               --usage-service-client-id usage_service \\
               --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
               --cf-api-url https://api.${SYS_DOMAIN} \\
+              --usage-service-insecure-skip-tls-verify \\
               --env-type development \\
               --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/username-password/all"
   	fi
@@ -964,6 +976,7 @@ tpi_print_command() {
   	echo -e "\n** CEIP ONLY **"
   	mkdir -p "${PWD}/smith-data/$ENV_DESCRIPTION/client-id-client-secret/ceip"
   	echo "telemetry-collector collect \\
+          --insecure-skip-tls-verify \\
           --url ${OPS_MANAGER_URL} \\
           --client-id restricted_view_api_access \\
           --client-secret ${UAA_CLIENT_SECRET} \\
@@ -972,6 +985,7 @@ tpi_print_command() {
 
   	if [[ ${args[--collect]} ]]; then
   		eval "telemetry-collector collect \\
+              --insecure-skip-tls-verify \\
               --url ${OPS_MANAGER_URL} \\
               --client-id restricted_view_api_access \\
               --client-secret ${UAA_CLIENT_SECRET} \\
@@ -983,6 +997,7 @@ tpi_print_command() {
   		echo -e "\n\n** OPERATIONAL DATA ONLY - WITH USAGE **"
   		mkdir -p "${PWD}/smith-data/$ENV_DESCRIPTION/client-id-client-secret/operational-data-only-with-usage"
   		echo -e "telemetry-collector collect \\
+              --insecure-skip-tls-verify \\
               --url ${OPS_MANAGER_URL} \\
               --client-id restricted_view_api_access \\
               --client-secret ${UAA_CLIENT_SECRET} \\
@@ -990,12 +1005,14 @@ tpi_print_command() {
               --usage-service-client-id usage_service \\
               --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
               --cf-api-url https://api.${SYS_DOMAIN} \\
+              --usage-service-insecure-skip-tls-verify \\
               --env-type development \\
               --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/client-id-client-secret/operational-data-only-with-usage \\
               --operational-data-only"
 
   		if [[ ${args[--collect]} ]]; then
   			eval "telemetry-collector collect \\
+                  --insecure-skip-tls-verify \\
                   --url ${OPS_MANAGER_URL} \\
                   --client-id restricted_view_api_access \\
                   --client-secret ${UAA_CLIENT_SECRET} \\
@@ -1003,6 +1020,7 @@ tpi_print_command() {
                   --usage-service-client-id usage_service \\
                   --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
                   --cf-api-url https://api.${SYS_DOMAIN} \\
+                  --usage-service-insecure-skip-tls-verify \\
                   --env-type development \\
                   --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/client-id-client-secret/operational-data-only-with-usage \\
                   --operational-data-only"
@@ -1012,6 +1030,7 @@ tpi_print_command() {
   	echo -e "\n\n** OPERATIONAL DATA ONLY - NO USAGE **"
   	mkdir -p "${PWD}/smith-data/$ENV_DESCRIPTION/client-id-client-secret/operational-data-only-no-usage"
   	echo "telemetry-collector collect \\
+          --insecure-skip-tls-verify \\
           --url ${OPS_MANAGER_URL} \\
           --client-id restricted_view_api_access \\
           --client-secret ${UAA_CLIENT_SECRET} \\
@@ -1021,6 +1040,7 @@ tpi_print_command() {
 
   	if [[ ${args[--collect]} ]]; then
   		eval "telemetry-collector collect \\
+              --insecure-skip-tls-verify \\
               --url ${OPS_MANAGER_URL} \\
               --client-id restricted_view_api_access \\
               --client-secret ${UAA_CLIENT_SECRET} \\
@@ -1033,6 +1053,7 @@ tpi_print_command() {
   		echo -e "\n\n** ALL **"
   		mkdir -p "${PWD}/smith-data/$ENV_DESCRIPTION/client-id-client-secret/all"
   		echo -e "telemetry-collector collect \\
+              --insecure-skip-tls-verify \\
               --url ${OPS_MANAGER_URL} \\
               --client-id restricted_view_api_access \\
               --client-secret ${UAA_CLIENT_SECRET} \\
@@ -1040,11 +1061,13 @@ tpi_print_command() {
               --usage-service-client-id usage_service \\
               --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
               --cf-api-url https://api.${SYS_DOMAIN} \\
+              --usage-service-insecure-skip-tls-verify \\
               --env-type development \\
               --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/client-id-client-secret/all"
 
   		if [[ ${args[--collect]} ]]; then
   			eval "telemetry-collector collect \\
+                  --insecure-skip-tls-verify \\
                   --url ${OPS_MANAGER_URL} \\
                   --client-id restricted_view_api_access \\
                   --client-secret ${UAA_CLIENT_SECRET} \\
@@ -1052,6 +1075,7 @@ tpi_print_command() {
                   --usage-service-client-id usage_service \\
                   --usage-service-client-secret ${TELEMETRY_USAGE_SERVICE_PASSWORD} \\
                   --cf-api-url https://api.${SYS_DOMAIN} \\
+                  --usage-service-insecure-skip-tls-verify \\
                   --env-type development \\
                   --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/client-id-client-secret/all"
   		fi
@@ -1788,8 +1812,8 @@ tpi_update_parse_requirements() {
   fi
 
   # :command.whitelist_filter
-  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy|staging-jammy|production-xenial|acceptance-xenial|staging-xenial)$ ]]; then
-    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial" >&2
+  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy|staging-jammy|production-xenial|acceptance-xenial|staging-xenial|telemetry-release-audit-false-jammy|telemetry-release-audit-true-jammy|p-telemetry-audit-false-jammy|p-telemetry-audit-true-jammy|telemetry-release-audit-false-xenial|telemetry-release-audit-true-xenial|p-telemetry-audit-false-xenial|p-telemetry-audit-true-xenial)$ ]]; then
+    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-audit-false-jammy, telemetry-release-audit-true-jammy, p-telemetry-audit-false-jammy, p-telemetry-audit-true-jammy, telemetry-release-audit-false-xenial, telemetry-release-audit-true-xenial, p-telemetry-audit-false-xenial, p-telemetry-audit-true-xenial" >&2
     exit 1
   fi
 
@@ -1856,8 +1880,8 @@ tpi_print_parse_requirements() {
   fi
 
   # :command.whitelist_filter
-  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy|staging-jammy|production-xenial|acceptance-xenial|staging-xenial)$ ]]; then
-    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial" >&2
+  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy|staging-jammy|production-xenial|acceptance-xenial|staging-xenial|telemetry-release-audit-false-jammy|telemetry-release-audit-true-jammy|p-telemetry-audit-false-jammy|p-telemetry-audit-true-jammy|telemetry-release-audit-false-xenial|telemetry-release-audit-true-xenial|p-telemetry-audit-false-xenial|p-telemetry-audit-true-xenial)$ ]]; then
+    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-audit-false-jammy, telemetry-release-audit-true-jammy, p-telemetry-audit-false-jammy, p-telemetry-audit-true-jammy, telemetry-release-audit-false-xenial, telemetry-release-audit-true-xenial, p-telemetry-audit-false-xenial, p-telemetry-audit-true-xenial" >&2
     exit 1
   fi
 
