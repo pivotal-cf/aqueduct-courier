@@ -183,8 +183,8 @@ github.com/pierrec/lz4/v4/internal/xxh32
 ## explicit; go 1.22.0
 github.com/pivotal-cf/om/api
 github.com/pivotal-cf/om/network
-# github.com/pivotal-cf/telemetry-utils v0.0.0-20240226170404-98608cc8e9f6
-## explicit; go 1.22
+# github.com/pivotal-cf/telemetry-utils v0.0.0-20240227184028-498a9ed8387a
+## explicit; go 1.21
 github.com/pivotal-cf/telemetry-utils/collector_tar
 github.com/pivotal-cf/telemetry-utils/tar
 # github.com/pkg/errors v0.9.1
@@ -246,7 +246,7 @@ github.com/xi2/xz
 # go.uber.org/multierr v1.11.0
 ## explicit; go 1.19
 go.uber.org/multierr
-# golang.org/x/crypto v0.19.0
+# golang.org/x/crypto v0.20.0
 ## explicit; go 1.18
 golang.org/x/crypto/blowfish
 golang.org/x/crypto/chacha20
