@@ -813,7 +813,7 @@ tpi_update_command() {
   	vault kv put runway_concourse/tanzu-portfolio-insights/toolsmiths/"${ENV_DESCRIPTION}"-lockfile @"${PWD}/shepherd_envs/$ENV_DESCRIPTION-metadata.json"
 
   	# Do the updating
-  	if [[ $ENV_TYPE == "staging" || $(echo $ENV_TYPE | grep 'p-telemetry') || $(echo $ENV_TYPE | grep 'telemetry-release') ]]; then
+  	if [[ $ENV_TYPE == "staging" || $(echo $ENV_TYPE | grep -q 'p-telemetry') || $(echo $ENV_TYPE | grep -q 'telemetry-release') ]]; then
   		vault kv put runway_concourse/tanzu-portfolio-insights/toolsmiths/"${ENV_DESCRIPTION}" \
   			env-name="${NAME}" \
   			p-bosh-id-guid="${P_BOSH_ID}"
