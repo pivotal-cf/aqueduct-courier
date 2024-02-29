@@ -1,6 +1,6 @@
 module github.com/pivotal-cf/aqueduct-courier
 
-go 1.22.0
+go 1.21.6
 
 require (
 	code.cloudfoundry.org/credhub-cli v0.0.0-20240219140155-ce3a46ae0b03
@@ -9,7 +9,6 @@ require (
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.31.1
-	github.com/pivotal-cf/om v0.0.0-20240208201136-b5cc183ecd67
 	github.com/pivotal-cf/telemetry-utils v0.0.0-20240227184028-498a9ed8387a
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/afero v1.11.0 // indirect
@@ -19,7 +18,10 @@ require (
 	golang.org/x/oauth2 v0.17.0
 )
 
-require github.com/mholt/archiver/v3 v3.5.1
+require (
+	github.com/mholt/archiver/v3 v3.5.1
+	github.com/pivotal-cf/om v0.0.0-20240201200423-3c01d4c9e9a1
+)
 
 require (
 	github.com/VividCortex/ewma v1.2.0 // indirect

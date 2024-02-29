@@ -179,8 +179,8 @@ github.com/pierrec/lz4/v4/internal/lz4block
 github.com/pierrec/lz4/v4/internal/lz4errors
 github.com/pierrec/lz4/v4/internal/lz4stream
 github.com/pierrec/lz4/v4/internal/xxh32
-# github.com/pivotal-cf/om v0.0.0-20240208201136-b5cc183ecd67
-## explicit; go 1.22.0
+# github.com/pivotal-cf/om v0.0.0-20240201200423-3c01d4c9e9a1
+## explicit; go 1.16
 github.com/pivotal-cf/om/api
 github.com/pivotal-cf/om/network
 # github.com/pivotal-cf/telemetry-utils v0.0.0-20240227184028-498a9ed8387a
