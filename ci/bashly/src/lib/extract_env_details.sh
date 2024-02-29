@@ -1,6 +1,6 @@
 extract_env_details() {
 	# SET ENV VARIABLES
-	export ENV_TYPE=$(echo "$1" | cut -d '-' -f 1)
+	export TPI_ENV_TYPE=$(echo "$1" | cut -d '-' -f 1)
 	export ENV_STEMCELL=$(echo "$1" | cut -d '-' -f 2)
 
 	# GET ARRAY OF MATCHES ENVIRONMENTS

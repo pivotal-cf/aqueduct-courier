@@ -83,7 +83,7 @@ export FOUNDATION=$TMP_FOUNDATION_NAME
 
 # Function to get Telemetry Tile guid
 fetch_telemetry_tile_guid() {
-	if [[ $ENV_TYPE != "staging" ]]; then
+	if [[ $TPI_ENV_TYPE != "staging" ]]; then
 		export TELEMETRY_TILE_GUID=$(smith om --lockfile="$LOCKFILE_PATH" -- curl -s --path /api/v0/deployed/products | jq -r '.[] | select(.type == "pivotal-telemetry-om").guid') || ""
 		echo -e "TELEMETRY_TILE_GUID:\t\t\t$TELEMETRY_TILE_GUID"
 	fi
@@ -91,7 +91,7 @@ fetch_telemetry_tile_guid() {
 
 # Function to get uaa_client_secret
 fetch_uaa_client_secret() {
-	if [[ $ENV_TYPE != "staging" ]]; then
+	if [[ $TPI_ENV_TYPE != "staging" ]]; then
 
 		if [[ -z $TELEMETRY_TILE_GUID ]]; then
 			echo -e "UAA_CLIENT_SECRET:"
@@ -106,7 +106,7 @@ fetch_uaa_client_secret() {
 fetch_telemetry_usage_service_password() {
 	export TELEMETRY_USAGE_SERVICE_PASSWORD=""
 
-	if [[ $ENV_TYPE != "staging" ]]; then
+	if [[ $TPI_ENV_TYPE != "staging" ]]; then
 		if [ -n "$CF_GUID" ]; then
 			TELEMETRY_USAGE_SERVICE_PASSWORD=$(smith om --lockfile="$LOCKFILE_PATH" -- curl -s --path /api/v0/deployed/products/"${CF_GUID}"/credentials/.uaa.usage_service_client_credentials | jq -r .credential.value.password)
 			echo -e "TELEMETRY_USAGE_SERVICE_PASSWORD:\t$TELEMETRY_USAGE_SERVICE_PASSWORD"
@@ -128,7 +128,7 @@ fetch_telemetry_tile_guid
 fetch_uaa_client_secret
 fetch_telemetry_usage_service_password
 
-if [[ $ENV_TYPE != "staging" ]]; then
+if [[ $TPI_ENV_TYPE != "staging" ]]; then
 	if [[ -z $TELEMETRY_TILE_GUID ]]; then
 		echo -e "\n*** YOU MUST INSTALL THE TELEMETRY TILE ***\n"
 	fi

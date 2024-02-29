@@ -2,10 +2,20 @@ export ENVS_JSON=$(tpi_list_command --json)
 export CI_ENVS=(production-jammy acceptance-jammy staging-jammy production-xenial acceptance-xenial staging-xenial)
 mkdir -p "${PWD}/shepherd_envs"
 
+##############
+# The idea of this command is that it can be run continuously
+# and it will maintain the necessary long-lived environments
+# as well as installing the Telemetry Tile and uploading the
+# secrets to Vault.
+
+# TODO: have script run every 6 hours
+##############
+
 # Function that takes in a string and returns a boolean.
 # Checks to see if if there is a JSON object within ENVS_JSON
 # where the value of the "description" key is set to the value of
 # the string we're processing from CI_ENVS
+# FIXME: function is currently un-used
 env_exists() {
 	if shepherd list lease --json --wide --namespace=tpi-telemetry | jq -r --arg env "$1" 'any(.[]; .description == $env)' | grep -q true; then
 		return 0
@@ -40,26 +50,22 @@ telemetry_installed() {
 check_all_envs_exist() {
 	echo -e "Checking that all enivronments exist..."
 	for my_env in "${CI_ENVS[@]}"; do
-		extract_env_details "$my_env"
-		export LOCKFILE_PATH=${PWD}/shepherd_envs/$my_env-metadata.json
-		export ENV_TYPE=$(echo "$my_env" | cut -d '-' -f 1)
-
-		if ! env_exists "$my_env"; then
-			printf "No match for %s: creating new env...\n" "$my_env"
-			tpi_create_command "$my_env"
-			exit 0
-		fi
+		# If env already exists, this is a no-op
+		tpi_create_command "$my_env"
 	done
 
 	echo "*** All environments exist. ***"
 }
 
+# Will exit as soon as it finds an
+# enviroment that isn't ready
+# FIXME: function currently un-used
 check_all_envs_ready() {
 	echo -e "Checking that all enivronments are ready..."
 	for my_env in "${CI_ENVS[@]}"; do
 		tpi_get_command "$my_env"
 		export LOCKFILE_PATH=${PWD}/shepherd_envs/$my_env-metadata.json
-		export ENV_TYPE=$(echo "$my_env" | cut -d '-' -f 1)
+		export TPI_ENV_TYPE=$(echo "$my_env" | cut -d '-' -f 1)
 		if ! env_ready; then
 			printf "%s not ready. Please wait.\n" "$my_env"
 			exit 0
@@ -69,13 +75,17 @@ check_all_envs_ready() {
 	echo "*** All environments ready. ***"
 }
 
+# Will exit as soon as it finds an
+# environment that needs the Telemety
+# Tile but doesn't have it installed.
+# Will kick off installation of Tile.
 check_telemetry_tile_installed() {
 	echo -e "Checking that Telemetry Tile is installed..."
 	for my_env in "${CI_ENVS[@]}"; do
 		extract_env_details "$my_env"
 		export LOCKFILE_PATH=${PWD}/shepherd_envs/$my_env-metadata.json
-		export ENV_TYPE=$(echo "$my_env" | cut -d '-' -f 1)
-		if [[ $ENV_TYPE != "staging" ]]; then
+		export TPI_ENV_TYPE=$(echo "$my_env" | cut -d '-' -f 1)
+		if [[ $TPI_ENV_TYPE != "staging" ]]; then
 			printf "\nNOT a staging env..."
 			if ! telemetry_installed; then
 				printf "\nInstalling the Telemetry Tile"
@@ -90,12 +100,13 @@ check_telemetry_tile_installed() {
 	echo -e "*** All (necessary) Telemetry Tiles installed. ***"
 }
 
+# Note: will continue to upload secrets even if they already exist
 upload_secrets_to_vault() {
 	echo -e "Uploading secrets to Vault..."
 	for my_env in "${CI_ENVS[@]}"; do
 		extract_env_details "$my_env"
 		export LOCKFILE_PATH=${PWD}/shepherd_envs/$my_env-metadata.json
-		export ENV_TYPE=$(echo "$my_env" | cut -d '-' -f 1)
+		export TPI_ENV_TYPE=$(echo "$my_env" | cut -d '-' -f 1)
 
 		tpi_update_command "$my_env"
 	done
@@ -104,6 +115,5 @@ upload_secrets_to_vault() {
 }
 
 check_all_envs_exist
-check_all_envs_ready
 check_telemetry_tile_installed
 upload_secrets_to_vault

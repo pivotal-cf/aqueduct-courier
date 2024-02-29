@@ -535,7 +535,7 @@ ensure_vault_login() {
 # src/lib/extract_env_details.sh
 extract_env_details() {
 	# SET ENV VARIABLES
-	export ENV_TYPE=$(echo "$1" | cut -d '-' -f 1)
+	export TPI_ENV_TYPE=$(echo "$1" | cut -d '-' -f 1)
 	export ENV_STEMCELL=$(echo "$1" | cut -d '-' -f 2)
 
 	# GET ARRAY OF MATCHES ENVIRONMENTS
@@ -638,6 +638,8 @@ tpi_create_command() {
 
   		#shepherd create lease --pool "tas-5_0" --duration 168h --namespace tpi-telemetry --description "$ENV_DESCRIPTION" --pool-namespace official
   		# Use Custom Env for up to date Ops Man (supporting Core Consumption API)
+
+  		# FIXME: dynamically populate with latest Ops Man & TAS
   		shepherd create lease --template-namespace official --template-name gcp-tas-template --template-revision 2.1 --template-argument '{"configuration_folder": "3.0", "opsman_version": "3.0.24+LTS-T", "product_type": "srt*",  "tas_version": "5.0.7"}' --namespace tpi-telemetry --duration 168h --json --description "$ENV_DESCRIPTION"
   	fi
 
@@ -651,6 +653,8 @@ tpi_create_command() {
 
   		#shepherd create lease --pool "tas-2_13" --duration 168h --namespace tpi-telemetry --description "$ENV_DESCRIPTION" --pool-namespace official
   		# Use Custom Env for up to date Ops Man (supporting Core Consumption API)
+
+  		# FIXME: dynamically populate with latest Ops Man & TAS
   		shepherd create lease --template-namespace official --template-name gcp-tas-template --template-revision 2.1 --template-argument '{"configuration_folder": "2.7", "opsman_version": "2.10.70", "product_type": "srt*",  "tas_version": "2.13.35"}' --namespace tpi-telemetry --duration 168h --json --description "$ENV_DESCRIPTION"
   	fi
 
@@ -753,8 +757,8 @@ tpi_install_command() {
   	--product-version "$TILE_FULL_VERSION"
 
   FOUNDATION_NICKNAME=$(cat $LOCKFILE_PATH | jq .name)
-  TILE_ENV_TYPE=$ENV_TYPE
-  if [[ $ENV_TYPE == "acceptance" ]]; then
+  TILE_ENV_TYPE=$TPI_ENV_TYPE
+  if [[ $TPI_ENV_TYPE == "acceptance" ]]; then
   	TILE_ENV_TYPE="qa"
   	FOUNDATION_NICKNAME="best-acceptance-env"
   fi
@@ -813,7 +817,7 @@ tpi_update_command() {
   	vault kv put runway_concourse/tanzu-portfolio-insights/toolsmiths/"${ENV_DESCRIPTION}"-lockfile @"${PWD}/shepherd_envs/$ENV_DESCRIPTION-metadata.json"
 
   	# Do the updating
-  	if [[ $ENV_TYPE == "staging" || $(echo $ENV_TYPE | grep -q 'p-telemetry') || $(echo $ENV_TYPE | grep -q 'telemetry-release') ]]; then
+  	if [[ $TPI_ENV_TYPE == "staging" || $(echo $TPI_ENV_TYPE | grep -q 'p-telemetry') || $(echo $TPI_ENV_TYPE | grep -q 'telemetry-release') ]]; then
   		vault kv put runway_concourse/tanzu-portfolio-insights/toolsmiths/"${ENV_DESCRIPTION}" \
   			env-name="${NAME}" \
   			p-bosh-id-guid="${P_BOSH_ID}"
@@ -1166,7 +1170,7 @@ tpi_get_command() {
 
   # Function to get Telemetry Tile guid
   fetch_telemetry_tile_guid() {
-  	if [[ $ENV_TYPE != "staging" ]]; then
+  	if [[ $TPI_ENV_TYPE != "staging" ]]; then
   		export TELEMETRY_TILE_GUID=$(smith om --lockfile="$LOCKFILE_PATH" -- curl -s --path /api/v0/deployed/products | jq -r '.[] | select(.type == "pivotal-telemetry-om").guid') || ""
   		echo -e "TELEMETRY_TILE_GUID:\t\t\t$TELEMETRY_TILE_GUID"
   	fi
@@ -1174,7 +1178,7 @@ tpi_get_command() {
 
   # Function to get uaa_client_secret
   fetch_uaa_client_secret() {
-  	if [[ $ENV_TYPE != "staging" ]]; then
+  	if [[ $TPI_ENV_TYPE != "staging" ]]; then
 
   		if [[ -z $TELEMETRY_TILE_GUID ]]; then
   			echo -e "UAA_CLIENT_SECRET:"
@@ -1189,7 +1193,7 @@ tpi_get_command() {
   fetch_telemetry_usage_service_password() {
   	export TELEMETRY_USAGE_SERVICE_PASSWORD=""
 
-  	if [[ $ENV_TYPE != "staging" ]]; then
+  	if [[ $TPI_ENV_TYPE != "staging" ]]; then
   		if [ -n "$CF_GUID" ]; then
   			TELEMETRY_USAGE_SERVICE_PASSWORD=$(smith om --lockfile="$LOCKFILE_PATH" -- curl -s --path /api/v0/deployed/products/"${CF_GUID}"/credentials/.uaa.usage_service_client_credentials | jq -r .credential.value.password)
   			echo -e "TELEMETRY_USAGE_SERVICE_PASSWORD:\t$TELEMETRY_USAGE_SERVICE_PASSWORD"
@@ -1211,7 +1215,7 @@ tpi_get_command() {
   fetch_uaa_client_secret
   fetch_telemetry_usage_service_password
 
-  if [[ $ENV_TYPE != "staging" ]]; then
+  if [[ $TPI_ENV_TYPE != "staging" ]]; then
   	if [[ -z $TELEMETRY_TILE_GUID ]]; then
   		echo -e "\n*** YOU MUST INSTALL THE TELEMETRY TILE ***\n"
   	fi
@@ -1285,10 +1289,18 @@ tpi_maintain_command() {
   export CI_ENVS=(production-jammy acceptance-jammy staging-jammy production-xenial acceptance-xenial staging-xenial)
   mkdir -p "${PWD}/shepherd_envs"
 
+  # The idea of this command is that it can be run continuously
+  # and it will maintain the necessary long-lived environments
+  # as well as installing the Telemetry Tile and uploading the
+  # secrets to Vault.
+
+  # TODO: have script run every 6 hours
+
   # Function that takes in a string and returns a boolean.
   # Checks to see if if there is a JSON object within ENVS_JSON
   # where the value of the "description" key is set to the value of
   # the string we're processing from CI_ENVS
+  # FIXME: function is currently un-used
   env_exists() {
   	if shepherd list lease --json --wide --namespace=tpi-telemetry | jq -r --arg env "$1" 'any(.[]; .description == $env)' | grep -q true; then
   		return 0
@@ -1323,26 +1335,22 @@ tpi_maintain_command() {
   check_all_envs_exist() {
   	echo -e "Checking that all enivronments exist..."
   	for my_env in "${CI_ENVS[@]}"; do
-  		extract_env_details "$my_env"
-  		export LOCKFILE_PATH=${PWD}/shepherd_envs/$my_env-metadata.json
-  		export ENV_TYPE=$(echo "$my_env" | cut -d '-' -f 1)
-
-  		if ! env_exists "$my_env"; then
-  			printf "No match for %s: creating new env...\n" "$my_env"
-  			tpi_create_command "$my_env"
-  			exit 0
-  		fi
+  		# If env already exists, this is a no-op
+  		tpi_create_command "$my_env"
   	done
 
   	echo "*** All environments exist. ***"
   }
 
+  # Will exit as soon as it finds an
+  # enviroment that isn't ready
+  # FIXME: function currently un-used
   check_all_envs_ready() {
   	echo -e "Checking that all enivronments are ready..."
   	for my_env in "${CI_ENVS[@]}"; do
   		tpi_get_command "$my_env"
   		export LOCKFILE_PATH=${PWD}/shepherd_envs/$my_env-metadata.json
-  		export ENV_TYPE=$(echo "$my_env" | cut -d '-' -f 1)
+  		export TPI_ENV_TYPE=$(echo "$my_env" | cut -d '-' -f 1)
   		if ! env_ready; then
   			printf "%s not ready. Please wait.\n" "$my_env"
   			exit 0
@@ -1352,13 +1360,17 @@ tpi_maintain_command() {
   	echo "*** All environments ready. ***"
   }
 
+  # Will exit as soon as it finds an
+  # environment that needs the Telemety
+  # Tile but doesn't have it installed.
+  # Will kick off installation of Tile.
   check_telemetry_tile_installed() {
   	echo -e "Checking that Telemetry Tile is installed..."
   	for my_env in "${CI_ENVS[@]}"; do
   		extract_env_details "$my_env"
   		export LOCKFILE_PATH=${PWD}/shepherd_envs/$my_env-metadata.json
-  		export ENV_TYPE=$(echo "$my_env" | cut -d '-' -f 1)
-  		if [[ $ENV_TYPE != "staging" ]]; then
+  		export TPI_ENV_TYPE=$(echo "$my_env" | cut -d '-' -f 1)
+  		if [[ $TPI_ENV_TYPE != "staging" ]]; then
   			printf "\nNOT a staging env..."
   			if ! telemetry_installed; then
   				printf "\nInstalling the Telemetry Tile"
@@ -1373,12 +1385,13 @@ tpi_maintain_command() {
   	echo -e "*** All (necessary) Telemetry Tiles installed. ***"
   }
 
+  # Note: will continue to upload secrets even if they already exist
   upload_secrets_to_vault() {
   	echo -e "Uploading secrets to Vault..."
   	for my_env in "${CI_ENVS[@]}"; do
   		extract_env_details "$my_env"
   		export LOCKFILE_PATH=${PWD}/shepherd_envs/$my_env-metadata.json
-  		export ENV_TYPE=$(echo "$my_env" | cut -d '-' -f 1)
+  		export TPI_ENV_TYPE=$(echo "$my_env" | cut -d '-' -f 1)
 
   		tpi_update_command "$my_env"
   	done
@@ -1387,7 +1400,6 @@ tpi_maintain_command() {
   }
 
   check_all_envs_exist
-  check_all_envs_ready
   check_telemetry_tile_installed
   upload_secrets_to_vault
 

@@ -79,8 +79,8 @@ retry 5 om stage-product \
 	--product-version "$TILE_FULL_VERSION"
 
 FOUNDATION_NICKNAME=$(cat $LOCKFILE_PATH | jq .name)
-TILE_ENV_TYPE=$ENV_TYPE
-if [[ $ENV_TYPE == "acceptance" ]]; then
+TILE_ENV_TYPE=$TPI_ENV_TYPE
+if [[ $TPI_ENV_TYPE == "acceptance" ]]; then
 	TILE_ENV_TYPE="qa"
 	FOUNDATION_NICKNAME="best-acceptance-env"
 fi
