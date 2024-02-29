@@ -24,6 +24,7 @@ if [ "$array_length" -eq 0 ]; then
 		# Use Custom Env for up to date Ops Man (supporting Core Consumption API)
 
 		# FIXME: dynamically populate with latest Ops Man & TAS
+		# FIXME: specify up to date stemcell
 		shepherd create lease --template-namespace official --template-name gcp-tas-template --template-revision 2.1 --template-argument '{"configuration_folder": "3.0", "opsman_version": "3.0.24+LTS-T", "product_type": "srt*",  "tas_version": "5.0.7"}' --namespace tpi-telemetry --duration 168h --json --description "$ENV_DESCRIPTION"
 	fi
 
@@ -39,6 +40,7 @@ if [ "$array_length" -eq 0 ]; then
 		# Use Custom Env for up to date Ops Man (supporting Core Consumption API)
 
 		# FIXME: dynamically populate with latest Ops Man & TAS
+		# FIXME: specify up to date stemcell
 		shepherd create lease --template-namespace official --template-name gcp-tas-template --template-revision 2.1 --template-argument '{"configuration_folder": "2.7", "opsman_version": "2.10.70", "product_type": "srt*",  "tas_version": "2.13.35"}' --namespace tpi-telemetry --duration 168h --json --description "$ENV_DESCRIPTION"
 	fi
 
@@ -52,5 +54,5 @@ if [ "$array_length" -eq 0 ]; then
 	# Remove old smith-data
 	rm -rf "${PWD}/smith-data/$ENV_DESCRIPTION"
 else
-	echo -e "$ENV_DESCRIPTION already exists\n"
+	echo -e "$ENV_DESCRIPTION already exists"
 fi

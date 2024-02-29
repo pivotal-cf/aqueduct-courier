@@ -4,7 +4,6 @@ extract_env_details() {
 	export ENV_STEMCELL=$(echo "$1" | cut -d '-' -f 2)
 
 	# GET ARRAY OF MATCHES ENVIRONMENTS
-	echo -e "\nChecking environment exists..."
 	env_array=$($SHEPHERD_BINARY_PATH list lease --namespace tpi-telemetry --desc-search "$1" --json)
 
 	if [[ $(echo "$env_array" | jq '. | length') == 0 ]]; then
@@ -15,7 +14,7 @@ extract_env_details() {
 		export ENV_IDENTIFIER=$(echo "$env_array" | jq -r '.[0].identifier')
 
 		# GET LEASE
-		echo -e "Getting environment lease..."
+		echo -e "\nGetting $1 lease..."
 		export ENV_LEASE=$($SHEPHERD_BINARY_PATH get lease "$ENV_IDENTIFIER" --namespace tpi-telemetry --json)
 
 		# CHECK STATUS

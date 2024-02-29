@@ -353,7 +353,7 @@ tpi_open_usage() {
     # :argument.usage
     printf "  %s\n" "FOUNDATION"
     printf "    foundation to open\n"
-    printf "    Allowed: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-audit-false-jammy, telemetry-release-audit-true-jammy, p-telemetry-audit-false-jammy, p-telemetry-audit-true-jammy, telemetry-release-audit-false-xenial, telemetry-release-audit-true-xenial, p-telemetry-audit-false-xenial, p-telemetry-audit-true-xenial\n"
+    printf "    Allowed: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-audit-false-jammy, telemetry-release-audit-true-jammy, p-telemetry-audit-false-jammy, p-telemetry-audit-true-jammy, telemetry-release-audit-false-xenial, telemetry-release-audit-true-xenial, p-telemetry-audit-false-xenial, p-telemetry-audit-true-xenial, all\n"
     echo
 
     # :command.usage_examples
@@ -539,7 +539,6 @@ extract_env_details() {
 	export ENV_STEMCELL=$(echo "$1" | cut -d '-' -f 2)
 
 	# GET ARRAY OF MATCHES ENVIRONMENTS
-	echo -e "\nChecking environment exists..."
 	env_array=$($SHEPHERD_BINARY_PATH list lease --namespace tpi-telemetry --desc-search "$1" --json)
 
 	if [[ $(echo "$env_array" | jq '. | length') == 0 ]]; then
@@ -550,7 +549,7 @@ extract_env_details() {
 		export ENV_IDENTIFIER=$(echo "$env_array" | jq -r '.[0].identifier')
 
 		# GET LEASE
-		echo -e "Getting environment lease..."
+		echo -e "\nGetting $1 lease..."
 		export ENV_LEASE=$($SHEPHERD_BINARY_PATH get lease "$ENV_IDENTIFIER" --namespace tpi-telemetry --json)
 
 		# CHECK STATUS
@@ -640,6 +639,7 @@ tpi_create_command() {
   		# Use Custom Env for up to date Ops Man (supporting Core Consumption API)
 
   		# FIXME: dynamically populate with latest Ops Man & TAS
+  		# FIXME: specify up to date stemcell
   		shepherd create lease --template-namespace official --template-name gcp-tas-template --template-revision 2.1 --template-argument '{"configuration_folder": "3.0", "opsman_version": "3.0.24+LTS-T", "product_type": "srt*",  "tas_version": "5.0.7"}' --namespace tpi-telemetry --duration 168h --json --description "$ENV_DESCRIPTION"
   	fi
 
@@ -655,6 +655,7 @@ tpi_create_command() {
   		# Use Custom Env for up to date Ops Man (supporting Core Consumption API)
 
   		# FIXME: dynamically populate with latest Ops Man & TAS
+  		# FIXME: specify up to date stemcell
   		shepherd create lease --template-namespace official --template-name gcp-tas-template --template-revision 2.1 --template-argument '{"configuration_folder": "2.7", "opsman_version": "2.10.70", "product_type": "srt*",  "tas_version": "2.13.35"}' --namespace tpi-telemetry --duration 168h --json --description "$ENV_DESCRIPTION"
   	fi
 
@@ -668,7 +669,7 @@ tpi_create_command() {
   	# Remove old smith-data
   	rm -rf "${PWD}/smith-data/$ENV_DESCRIPTION"
   else
-  	echo -e "$ENV_DESCRIPTION already exists\n"
+  	echo -e "$ENV_DESCRIPTION already exists"
   fi
 
 }
@@ -824,12 +825,12 @@ tpi_update_command() {
   		echo -e "\nUpdated 2 Vault variables for ${ENV_DESCRIPTION}\n"
   	else
   		vault kv put runway_concourse/tanzu-portfolio-insights/toolsmiths/"${ENV_DESCRIPTION}" \
-  			cf-api-url="https://api.sys.${NAME}.cf-app.com" \
+  			cf-api-url="https://api.${SYS_DOMAIN}" \
   			env-name="${NAME}" \
   			gcp-project-id="${GCP_PROJECT_ID}" \
   			gcp-zone="us-central1-f" \
   			iaas_type="google" \
-  			ops-manager-hostname="pcf.${NAME}.cf-app.com" \
+  			ops-manager-hostname="${OPS_MANAGER_DNS}" \
   			ops-manager-url="${OPS_MANAGER_URL}" \
   			opsman-client-id="restricted_view_api_access" \
   			opsman-instance-name="${NAME}-ops-manager" \
@@ -840,7 +841,7 @@ tpi_update_command() {
   			telemetry-tile-guid="${TELEMETRY_TILE_GUID}" \
   			telemetry-usage-service-password="${TELEMETRY_USAGE_SERVICE_PASSWORD}" \
   			usage-service-client-id="usage_service" \
-  			usage-service-url="https://app-usage.sys.${NAME}.cf-app.com"
+  			usage-service-url="https://app-usage.${SYS_DOMAIN}"
 
   		echo -e "\nUpdated 17 Vault variables for ${ENV_DESCRIPTION}\n"
   	fi
@@ -1136,6 +1137,12 @@ tpi_get_command() {
   	echo -e "OPS_MANAGER_URL:\t\t\t$OPS_MANAGER_URL"
   }
 
+  # Function to get ops_manager dns
+  fetch_ops_manager_dns() {
+  	export OPS_MANAGER_DNS=$(smith read --lockfile="$LOCKFILE_PATH" | jq -r .ops_manager_dns)
+  	echo -e "OPS_MANAGER_DNS:\t\t\t$OPS_MANAGER_DNS"
+  }
+
   # Function to get p_bosh_id
   fetch_p_bosh_id() {
   	export P_BOSH_ID=$(smith om --lockfile="$LOCKFILE_PATH" -- curl -s --path=/api/v0/deployed/products | jq -r ".[].guid" | grep bosh)
@@ -1183,7 +1190,13 @@ tpi_get_command() {
   		if [[ -z $TELEMETRY_TILE_GUID ]]; then
   			echo -e "UAA_CLIENT_SECRET:"
   		else
-  			export UAA_CLIENT_SECRET=$(smith om --lockfile="$LOCKFILE_PATH" -- curl -s --path /api/v0/deployed/products/"${TELEMETRY_TILE_GUID}"/manifest | jq -r '.instance_groups[] | select(.name == "telemetry-centralizer").jobs[] | select(.name == "telemetry-collector").properties.opsmanager.auth.uaa_client_secret')
+  			export UAA_CLIENT_SECRET=$(smith om --lockfile="$LOCKFILE_PATH" -- curl -s --path /api/v0/deployed/products/"${TELEMETRY_TILE_GUID}"/manifest | jq -r '.instance_groups[] | select(.name == "telemetry-centralizer").jobs[] | select(.name == "telemetry-collector").properties.opsmanager.auth.uaa_client_secret') || ""
+
+  			if [[ -z $UAA_CLIENT_SECRET ]]; then
+  				export ALL_ENVS_READY=false
+  				NOT_READY_ENVS+=($TMP_FOUNDATION_NAME)
+  			fi
+
   			echo -e "UAA_CLIENT_SECRET:\t\t\t$UAA_CLIENT_SECRET"
   		fi
   	fi
@@ -1206,6 +1219,7 @@ tpi_get_command() {
   fetch_ops_manager_pw
   fetch_ops_manager_username
   fetch_ops_manager_url
+  fetch_ops_manager_dns
   fetch_p_bosh_id
   fetch_gcp_project_id
   fetch_name
@@ -1226,14 +1240,31 @@ tpi_get_command() {
 # :command.function
 tpi_open_command() {
   # src/open_command.sh
+  # Set foundation based on command line arg or passed in name
   if [[ ${args[foundation]} == "" ]]; then
   	export TMP_FOUNDATION_NAME=$1
   else
   	export TMP_FOUNDATION_NAME=${args[foundation]}
   fi
 
-  # FIXME: won't work if lockfile doesn't exist
-  smith open --lockfile="${PWD}/shepherd_envs/$TMP_FOUNDATION_NAME-metadata.json"
+  # Set lockfile path
+  LOCKFILE_PATH="${PWD}/shepherd_envs/$TMP_FOUNDATION_NAME-metadata.json"
+
+  # Open 1 or all (long-lived) foundations
+  if [[ $TMP_FOUNDATION_NAME == "all" ]]; then
+  	echo -e "FIXME"
+  	# CI_ENVS=(production-jammy acceptance-jammy staging-jammy production-xenial acceptance-xenial staging-xenial)
+
+  	# for my_env in "${CI_ENVS[@]}"; do
+  	# 	smith open --lockfile="${PWD}/shepherd_envs/$my_env-metadata.json"
+  	# done
+  else
+  	if [ -f "$LOCKFILE_PATH" ]; then
+  		smith open --lockfile="${PWD}/shepherd_envs/$TMP_FOUNDATION_NAME-metadata.json"
+  	else
+  		echo -e "No lockfile found for $TMP_FOUNDATION_NAME"
+  	fi
+  fi
 
 }
 
@@ -1285,6 +1316,8 @@ tpi_whoami_command() {
 # :command.function
 tpi_maintain_command() {
   # src/maintain_command.sh
+  export ALL_ENVS_READY=true
+  export NOT_READY_ENVS=()
   export ENVS_JSON=$(tpi_list_command --json)
   export CI_ENVS=(production-jammy acceptance-jammy staging-jammy production-xenial acceptance-xenial staging-xenial)
   mkdir -p "${PWD}/shepherd_envs"
@@ -1324,11 +1357,16 @@ tpi_maintain_command() {
 
   # Function to get Telemetry Tile guid
   telemetry_installed() {
-  	export TELEMETRY_TILE_GUID=$(smith om --lockfile="$LOCKFILE_PATH" -- curl -s --path /api/v0/deployed/products | jq -r '.[] | select(.type == "pivotal-telemetry-om").guid') || ""
-  	if [[ -z $TELEMETRY_TILE_GUID ]]; then
-  		return 1
+  	export TELEMETRY_TILE_GUID=""
+  	if [ -f "$LOCKFILE_PATH" ]; then
+  		export TELEMETRY_TILE_GUID=$(smith om --lockfile="$LOCKFILE_PATH" -- curl -s --path /api/v0/deployed/products | jq -r '.[] | select(.type == "pivotal-telemetry-om").guid') || ""
+  		if [[ -z $TELEMETRY_TILE_GUID ]]; then
+  			return 1
+  		else
+  			return 0
+  		fi
   	else
-  		return 0
+  		return 1
   	fi
   }
 
@@ -1365,20 +1403,21 @@ tpi_maintain_command() {
   # Tile but doesn't have it installed.
   # Will kick off installation of Tile.
   check_telemetry_tile_installed() {
-  	echo -e "Checking that Telemetry Tile is installed..."
   	for my_env in "${CI_ENVS[@]}"; do
   		extract_env_details "$my_env"
   		export LOCKFILE_PATH=${PWD}/shepherd_envs/$my_env-metadata.json
   		export TPI_ENV_TYPE=$(echo "$my_env" | cut -d '-' -f 1)
   		if [[ $TPI_ENV_TYPE != "staging" ]]; then
-  			printf "\nNOT a staging env..."
   			if ! telemetry_installed; then
   				printf "\nInstalling the Telemetry Tile"
   				tpi_install_command "$my_env"
-  				exit 0
+  				# TODO: can this be removed (will we have the Vault secrets??)
+  				# exit 0
+  			else
+  				printf "\nTelemetry Tile is installed on $my_env"
   			fi
   		else
-  			printf "\nJust a staging env...\n"
+  			printf "\nStaging Env: Telemetry Tile not necessary...\n"
   		fi
   	done
 
@@ -1401,7 +1440,15 @@ tpi_maintain_command() {
 
   check_all_envs_exist
   check_telemetry_tile_installed
-  upload_secrets_to_vault
+
+  if [[ $ALL_ENVS_READY == true ]]; then
+  	upload_secrets_to_vault
+  else
+  	echo -e "The following environments are not ready:"
+  	for not_ready_env in "${NOT_READY_ENVS[@]}"; do
+  		echo -e "$not_ready_env"
+  	done
+  fi
 
 }
 
@@ -2014,8 +2061,8 @@ tpi_open_parse_requirements() {
   fi
 
   # :command.whitelist_filter
-  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy|staging-jammy|production-xenial|acceptance-xenial|staging-xenial|telemetry-release-audit-false-jammy|telemetry-release-audit-true-jammy|p-telemetry-audit-false-jammy|p-telemetry-audit-true-jammy|telemetry-release-audit-false-xenial|telemetry-release-audit-true-xenial|p-telemetry-audit-false-xenial|p-telemetry-audit-true-xenial)$ ]]; then
-    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-audit-false-jammy, telemetry-release-audit-true-jammy, p-telemetry-audit-false-jammy, p-telemetry-audit-true-jammy, telemetry-release-audit-false-xenial, telemetry-release-audit-true-xenial, p-telemetry-audit-false-xenial, p-telemetry-audit-true-xenial" >&2
+  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy|staging-jammy|production-xenial|acceptance-xenial|staging-xenial|telemetry-release-audit-false-jammy|telemetry-release-audit-true-jammy|p-telemetry-audit-false-jammy|p-telemetry-audit-true-jammy|telemetry-release-audit-false-xenial|telemetry-release-audit-true-xenial|p-telemetry-audit-false-xenial|p-telemetry-audit-true-xenial|all)$ ]]; then
+    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-audit-false-jammy, telemetry-release-audit-true-jammy, p-telemetry-audit-false-jammy, p-telemetry-audit-true-jammy, telemetry-release-audit-false-xenial, telemetry-release-audit-true-xenial, p-telemetry-audit-false-xenial, p-telemetry-audit-true-xenial, all" >&2
     exit 1
   fi
 

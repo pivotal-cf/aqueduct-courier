@@ -1,3 +1,5 @@
+export ALL_ENVS_READY=true
+export NOT_READY_ENVS=()
 export ENVS_JSON=$(tpi_list_command --json)
 export CI_ENVS=(production-jammy acceptance-jammy staging-jammy production-xenial acceptance-xenial staging-xenial)
 mkdir -p "${PWD}/shepherd_envs"
@@ -39,11 +41,16 @@ env_ready() {
 
 # Function to get Telemetry Tile guid
 telemetry_installed() {
-	export TELEMETRY_TILE_GUID=$(smith om --lockfile="$LOCKFILE_PATH" -- curl -s --path /api/v0/deployed/products | jq -r '.[] | select(.type == "pivotal-telemetry-om").guid') || ""
-	if [[ -z $TELEMETRY_TILE_GUID ]]; then
-		return 1
+	export TELEMETRY_TILE_GUID=""
+	if [ -f "$LOCKFILE_PATH" ]; then
+		export TELEMETRY_TILE_GUID=$(smith om --lockfile="$LOCKFILE_PATH" -- curl -s --path /api/v0/deployed/products | jq -r '.[] | select(.type == "pivotal-telemetry-om").guid') || ""
+		if [[ -z $TELEMETRY_TILE_GUID ]]; then
+			return 1
+		else
+			return 0
+		fi
 	else
-		return 0
+		return 1
 	fi
 }
 
@@ -80,20 +87,21 @@ check_all_envs_ready() {
 # Tile but doesn't have it installed.
 # Will kick off installation of Tile.
 check_telemetry_tile_installed() {
-	echo -e "Checking that Telemetry Tile is installed..."
 	for my_env in "${CI_ENVS[@]}"; do
 		extract_env_details "$my_env"
 		export LOCKFILE_PATH=${PWD}/shepherd_envs/$my_env-metadata.json
 		export TPI_ENV_TYPE=$(echo "$my_env" | cut -d '-' -f 1)
 		if [[ $TPI_ENV_TYPE != "staging" ]]; then
-			printf "\nNOT a staging env..."
 			if ! telemetry_installed; then
 				printf "\nInstalling the Telemetry Tile"
 				tpi_install_command "$my_env"
-				exit 0
+				# TODO: can this be removed (will we have the Vault secrets??)
+				# exit 0
+			else
+				printf "\nTelemetry Tile is installed on $my_env"
 			fi
 		else
-			printf "\nJust a staging env...\n"
+			printf "\nStaging Env: Telemetry Tile not necessary...\n"
 		fi
 	done
 
@@ -116,4 +124,12 @@ upload_secrets_to_vault() {
 
 check_all_envs_exist
 check_telemetry_tile_installed
-upload_secrets_to_vault
+
+if [[ $ALL_ENVS_READY == true ]]; then
+	upload_secrets_to_vault
+else
+	echo -e "The following environments are not ready:"
+	for not_ready_env in "${NOT_READY_ENVS[@]}"; do
+		echo -e "$not_ready_env"
+	done
+fi

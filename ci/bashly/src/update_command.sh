@@ -20,12 +20,12 @@ update_vault() {
 		echo -e "\nUpdated 2 Vault variables for ${ENV_DESCRIPTION}\n"
 	else
 		vault kv put runway_concourse/tanzu-portfolio-insights/toolsmiths/"${ENV_DESCRIPTION}" \
-			cf-api-url="https://api.sys.${NAME}.cf-app.com" \
+			cf-api-url="https://api.${SYS_DOMAIN}" \
 			env-name="${NAME}" \
 			gcp-project-id="${GCP_PROJECT_ID}" \
 			gcp-zone="us-central1-f" \
 			iaas_type="google" \
-			ops-manager-hostname="pcf.${NAME}.cf-app.com" \
+			ops-manager-hostname="${OPS_MANAGER_DNS}" \
 			ops-manager-url="${OPS_MANAGER_URL}" \
 			opsman-client-id="restricted_view_api_access" \
 			opsman-instance-name="${NAME}-ops-manager" \
@@ -36,7 +36,7 @@ update_vault() {
 			telemetry-tile-guid="${TELEMETRY_TILE_GUID}" \
 			telemetry-usage-service-password="${TELEMETRY_USAGE_SERVICE_PASSWORD}" \
 			usage-service-client-id="usage_service" \
-			usage-service-url="https://app-usage.sys.${NAME}.cf-app.com"
+			usage-service-url="https://app-usage.${SYS_DOMAIN}"
 
 		echo -e "\nUpdated 17 Vault variables for ${ENV_DESCRIPTION}\n"
 	fi

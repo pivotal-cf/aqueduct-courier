@@ -46,6 +46,12 @@ fetch_ops_manager_url() {
 	echo -e "OPS_MANAGER_URL:\t\t\t$OPS_MANAGER_URL"
 }
 
+# Function to get ops_manager dns
+fetch_ops_manager_dns() {
+	export OPS_MANAGER_DNS=$(smith read --lockfile="$LOCKFILE_PATH" | jq -r .ops_manager_dns)
+	echo -e "OPS_MANAGER_DNS:\t\t\t$OPS_MANAGER_DNS"
+}
+
 # Function to get p_bosh_id
 fetch_p_bosh_id() {
 	export P_BOSH_ID=$(smith om --lockfile="$LOCKFILE_PATH" -- curl -s --path=/api/v0/deployed/products | jq -r ".[].guid" | grep bosh)
@@ -96,7 +102,13 @@ fetch_uaa_client_secret() {
 		if [[ -z $TELEMETRY_TILE_GUID ]]; then
 			echo -e "UAA_CLIENT_SECRET:"
 		else
-			export UAA_CLIENT_SECRET=$(smith om --lockfile="$LOCKFILE_PATH" -- curl -s --path /api/v0/deployed/products/"${TELEMETRY_TILE_GUID}"/manifest | jq -r '.instance_groups[] | select(.name == "telemetry-centralizer").jobs[] | select(.name == "telemetry-collector").properties.opsmanager.auth.uaa_client_secret')
+			export UAA_CLIENT_SECRET=$(smith om --lockfile="$LOCKFILE_PATH" -- curl -s --path /api/v0/deployed/products/"${TELEMETRY_TILE_GUID}"/manifest | jq -r '.instance_groups[] | select(.name == "telemetry-centralizer").jobs[] | select(.name == "telemetry-collector").properties.opsmanager.auth.uaa_client_secret') || ""
+
+			if [[ -z $UAA_CLIENT_SECRET ]]; then
+				export ALL_ENVS_READY=false
+				NOT_READY_ENVS+=($TMP_FOUNDATION_NAME)
+			fi
+
 			echo -e "UAA_CLIENT_SECRET:\t\t\t$UAA_CLIENT_SECRET"
 		fi
 	fi
@@ -119,6 +131,7 @@ fetch_telemetry_usage_service_password() {
 fetch_ops_manager_pw
 fetch_ops_manager_username
 fetch_ops_manager_url
+fetch_ops_manager_dns
 fetch_p_bosh_id
 fetch_gcp_project_id
 fetch_name
