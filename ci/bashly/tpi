@@ -43,6 +43,7 @@ tpi_usage() {
   printf "  %s   Open foundation\n" "open    "
   printf "  %s   The foundation that is currently targeted\n" "whoami  "
   printf "  %s   Ensure that all CI environments exist. Create any needed. Install the Telemetry Tile if needed. Upload secretes to Vault.\n" "maintain"
+  printf "  %s   Open Ops Manager for a provided Shepherd lease\n" "lease   "
   echo
 
   # :command.long_usage
@@ -432,6 +433,48 @@ tpi_maintain_usage() {
   fi
 }
 
+# :command.usage
+tpi_lease_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "tpi lease - Open Ops Manager for a provided Shepherd lease\n"
+    echo
+
+  else
+    printf "tpi lease - Open Ops Manager for a provided Shepherd lease\n"
+    echo
+
+  fi
+
+  printf "%s\n" "Usage:"
+  printf "  tpi lease ID\n"
+  printf "  tpi lease --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "Options:"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "--help, -h"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "Arguments:"
+
+    # :argument.usage
+    printf "  %s\n" "ID"
+    printf "    lease ID for a Shepherd environment\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "Examples:"
+    printf "  tpi lease 2910386c-37e0-40fa-9e76-b0927fc8364a\n"
+    echo
+
+  fi
+}
+
 # :command.normalize_input
 normalize_input() {
   local arg flags
@@ -515,7 +558,7 @@ ensure_pivnet_login() {
 ensure_shepherd_login() {
 	#export SHEPHERD_TOKEN=$(vault kv get -format=json /runway_concourse/tanzu-portfolio-insights/shepherd/tpi-telemetry | jq -r .data.secret)
 
-	if ! shepherd login user --json | jq -e '.login.User == "success"' &>/dev/null; then
+	if ! $SHEPHERD_BINARY_PATH login user --json | jq -e '.login.User == "success"' &>/dev/null; then
 		echo "Failed to login to shepherd" >&2
 	fi
 }
@@ -595,7 +638,12 @@ set_shepherd_binary_path() {
 		;;
 	esac
 
-	export SHEPHERD_BINARY_PATH="$PWD/src/binaries/$binary_name"
+	if [ -f "$PWD/src/binaries/$binary_name" ]; then
+		chmod +x "$PWD/src/binaries/$binary_name"
+		export SHEPHERD_BINARY_PATH="$PWD/src/binaries/$binary_name"
+	else
+		export SHEPHERD_BINARY_PATH=$(which shepherd)
+	fi
 }
 
 # :command.command_functions
@@ -1452,6 +1500,23 @@ tpi_maintain_command() {
 
 }
 
+# :command.function
+tpi_lease_command() {
+  # src/lease_command.sh
+  ENV_IDENTIFIER=${args[id]}
+
+  export ENV_LEASE=$($SHEPHERD_BINARY_PATH get lease "$ENV_IDENTIFIER" --namespace tpi-telemetry --json)
+  export LOCKFILE_DATA=$(echo "$ENV_LEASE" | jq -r .output)
+
+  echo "$LOCKFILE_DATA" >/tmp/lease.json
+
+  smith cf-login --lockfile="/tmp/lease.json"
+  eval $(smith om -l "/tmp/lease.json")
+  eval $(smith bosh -l "/tmp/lease.json")
+  smith open --lockfile="/tmp/lease.json"
+
+}
+
 # :command.parse_requirements
 parse_requirements() {
   # :command.fixed_flags_filter
@@ -1605,6 +1670,13 @@ parse_requirements() {
       action="maintain"
       shift
       tpi_maintain_parse_requirements "$@"
+      shift $#
+      ;;
+
+    lease)
+      action="lease"
+      shift
+      tpi_lease_parse_requirements "$@"
       shift $#
       ;;
 
@@ -2156,6 +2228,61 @@ tpi_maintain_parse_requirements() {
 
 }
 
+# :command.parse_requirements
+tpi_lease_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        tpi_lease_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="lease"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        if [[ -z ${args['id']+x} ]]; then
+          args['id']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['id']+x} ]]; then
+    printf "missing required argument: ID\nusage: tpi lease ID\n" >&2
+    exit 1
+  fi
+
+}
+
 # :command.user_hooks
 before_hook() {
   # src/before.sh
@@ -2194,6 +2321,7 @@ run() {
     "open") tpi_open_command ;;
     "whoami") tpi_whoami_command ;;
     "maintain") tpi_maintain_command ;;
+    "lease") tpi_lease_command ;;
   esac
 }
 

@@ -30,5 +30,10 @@ set_shepherd_binary_path() {
 		;;
 	esac
 
-	export SHEPHERD_BINARY_PATH="$PWD/src/binaries/$binary_name"
+	if [ -f "$PWD/src/binaries/$binary_name" ]; then
+		chmod +x "$PWD/src/binaries/$binary_name"
+		export SHEPHERD_BINARY_PATH="$PWD/src/binaries/$binary_name"
+	else
+		export SHEPHERD_BINARY_PATH=$(which shepherd)
+	fi
 }

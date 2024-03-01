@@ -93,3 +93,11 @@ commands:
   examples:
   - tpi maintain
 
+- name: lease
+  help: Open Ops Manager for a provided Shepherd lease
+  args:
+  - name: id
+    required: true
+    help: lease ID for a Shepherd environment
+  examples:
+  - tpi lease 2910386c-37e0-40fa-9e76-b0927fc8364a
