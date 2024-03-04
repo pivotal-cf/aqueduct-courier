@@ -26,6 +26,12 @@ if [ "$array_length" -eq 0 ]; then
 		# FIXME: dynamically populate with latest Ops Man & TAS
 		# FIXME: specify up to date stemcell
 		shepherd create lease --template-namespace official --template-name gcp-tas-template --template-revision 2.1 --template-argument '{"configuration_folder": "3.0", "opsman_version": "3.0.24+LTS-T", "product_type": "srt*",  "tas_version": "5.0.7"}' --namespace tpi-telemetry --duration 168h --json --description "$ENV_DESCRIPTION"
+
+		# Remove old metadata file
+		rm -rf "${PWD}/shepherd_envs/$ENV_DESCRIPTION-metadata.json"
+
+		# Remove old smith-data
+		rm -rf "${PWD}/smith-data/$ENV_DESCRIPTION"
 	fi
 
 	# Create TAS 2.13 if we need a xenial env
@@ -42,17 +48,17 @@ if [ "$array_length" -eq 0 ]; then
 		# FIXME: dynamically populate with latest Ops Man & TAS
 		# FIXME: specify up to date stemcell
 		shepherd create lease --template-namespace official --template-name gcp-tas-template --template-revision 2.1 --template-argument '{"configuration_folder": "2.7", "opsman_version": "2.10.70", "product_type": "srt*",  "tas_version": "2.13.35"}' --namespace tpi-telemetry --duration 168h --json --description "$ENV_DESCRIPTION"
+
+		# Remove old metadata file
+		rm -rf "${PWD}/shepherd_envs/$ENV_DESCRIPTION-metadata.json"
+
+		# Remove old smith-data
+		rm -rf "${PWD}/smith-data/$ENV_DESCRIPTION"
 	fi
 
 	if [[ $TELEMETRY_TILE_INSTALL_REQUIRED == "true" ]]; then
 		echo -e "Install Telemetry Tile before updating Vault variables\n"
 	fi
-
-	# Remove old metadata file
-	rm -rf "${PWD}/shepherd_envs/$ENV_DESCRIPTION-metadata.json"
-
-	# Remove old smith-data
-	rm -rf "${PWD}/smith-data/$ENV_DESCRIPTION"
 else
 	echo -e "$ENV_DESCRIPTION already exists"
 fi

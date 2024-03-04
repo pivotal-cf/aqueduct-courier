@@ -93,7 +93,6 @@ check_telemetry_tile_installed() {
 		export TPI_ENV_TYPE=$(echo "$my_env" | cut -d '-' -f 1)
 		if [[ $TPI_ENV_TYPE != "staging" ]]; then
 			if ! telemetry_installed; then
-				printf "\nInstalling the Telemetry Tile"
 				tpi_install_command "$my_env"
 				# TODO: can this be removed (will we have the Vault secrets??)
 				# exit 0

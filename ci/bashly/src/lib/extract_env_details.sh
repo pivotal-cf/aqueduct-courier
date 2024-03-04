@@ -3,6 +3,11 @@ extract_env_details() {
 	export TPI_ENV_TYPE=$(echo "$1" | cut -d '-' -f 1)
 	export ENV_STEMCELL=$(echo "$1" | cut -d '-' -f 2)
 
+	if [[ $(echo "$1" | cut -d '-' -f 3) == "test" ]]; then
+		TPI_ENV_TYPE="development"
+		ENV_STEMCELL="jammy"
+	fi
+
 	# GET ARRAY OF MATCHES ENVIRONMENTS
 	env_array=$($SHEPHERD_BINARY_PATH list lease --namespace tpi-telemetry --desc-search "$1" --json)
 

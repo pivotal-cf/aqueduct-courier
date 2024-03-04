@@ -14,7 +14,7 @@ LOCKFILE_PATH="${PWD}/shepherd_envs/$TMP_FOUNDATION_NAME-metadata.json"
 export TELEMETRY_TILE_GUID=$(smith om --lockfile="${PWD}/shepherd_envs/$TMP_FOUNDATION_NAME-metadata.json" -- curl -s --path /api/v0/deployed/products | jq -r '.[] | select(.type == "pivotal-telemetry-om").guid') || ""
 if [[ -n $TELEMETRY_TILE_GUID ]]; then
 	echo -e "\nThe Telemetry Tile is already installed\n"
-	exit 0
+	return 0
 fi
 
 smith cf-login --lockfile="$LOCKFILE_PATH"

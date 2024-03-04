@@ -219,7 +219,7 @@ tpi_update_usage() {
     # :argument.usage
     printf "  %s\n" "FOUNDATION"
     printf "    foundation to update Vault Secrets for\n"
-    printf "    Allowed: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-audit-false-jammy, telemetry-release-audit-true-jammy, p-telemetry-audit-false-jammy, p-telemetry-audit-true-jammy, telemetry-release-audit-false-xenial, telemetry-release-audit-true-xenial, p-telemetry-audit-false-xenial, p-telemetry-audit-true-xenial\n"
+    printf "    Allowed: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial\n"
     echo
 
     # :command.usage_examples
@@ -268,7 +268,7 @@ tpi_print_usage() {
     # :argument.usage
     printf "  %s\n" "FOUNDATION"
     printf "    foundation to print telemetry CLI commands of\n"
-    printf "    Allowed: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-audit-false-jammy, telemetry-release-audit-true-jammy, p-telemetry-audit-false-jammy, p-telemetry-audit-true-jammy, telemetry-release-audit-false-xenial, telemetry-release-audit-true-xenial, p-telemetry-audit-false-xenial, p-telemetry-audit-true-xenial\n"
+    printf "    Allowed: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, tas-2-test-env, tas-5-test-env, tas-6-test-env\n"
     echo
 
     # :command.usage_examples
@@ -311,7 +311,7 @@ tpi_get_usage() {
     # :argument.usage
     printf "  %s\n" "FOUNDATION"
     printf "    foundation to get details for\n"
-    printf "    Allowed: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-audit-false-jammy, telemetry-release-audit-true-jammy, p-telemetry-audit-false-jammy, p-telemetry-audit-true-jammy, telemetry-release-audit-false-xenial, telemetry-release-audit-true-xenial, p-telemetry-audit-false-xenial, p-telemetry-audit-true-xenial\n"
+    printf "    Allowed: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, tas-2-test-env, tas-5-test-env, tas-6-test-env, tas-5-test-env-pooled\n"
     echo
 
     # :command.usage_examples
@@ -354,7 +354,7 @@ tpi_open_usage() {
     # :argument.usage
     printf "  %s\n" "FOUNDATION"
     printf "    foundation to open\n"
-    printf "    Allowed: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-audit-false-jammy, telemetry-release-audit-true-jammy, p-telemetry-audit-false-jammy, p-telemetry-audit-true-jammy, telemetry-release-audit-false-xenial, telemetry-release-audit-true-xenial, p-telemetry-audit-false-xenial, p-telemetry-audit-true-xenial, all\n"
+    printf "    Allowed: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, tas-2-test-env, tas-5-test-env, tas-6-test-env\n"
     echo
 
     # :command.usage_examples
@@ -581,6 +581,11 @@ extract_env_details() {
 	export TPI_ENV_TYPE=$(echo "$1" | cut -d '-' -f 1)
 	export ENV_STEMCELL=$(echo "$1" | cut -d '-' -f 2)
 
+	if [[ $(echo "$1" | cut -d '-' -f 3) == "test" ]]; then
+		TPI_ENV_TYPE="development"
+		ENV_STEMCELL="jammy"
+	fi
+
 	# GET ARRAY OF MATCHES ENVIRONMENTS
 	env_array=$($SHEPHERD_BINARY_PATH list lease --namespace tpi-telemetry --desc-search "$1" --json)
 
@@ -689,6 +694,12 @@ tpi_create_command() {
   		# FIXME: dynamically populate with latest Ops Man & TAS
   		# FIXME: specify up to date stemcell
   		shepherd create lease --template-namespace official --template-name gcp-tas-template --template-revision 2.1 --template-argument '{"configuration_folder": "3.0", "opsman_version": "3.0.24+LTS-T", "product_type": "srt*",  "tas_version": "5.0.7"}' --namespace tpi-telemetry --duration 168h --json --description "$ENV_DESCRIPTION"
+
+  		# Remove old metadata file
+  		rm -rf "${PWD}/shepherd_envs/$ENV_DESCRIPTION-metadata.json"
+
+  		# Remove old smith-data
+  		rm -rf "${PWD}/smith-data/$ENV_DESCRIPTION"
   	fi
 
   	# Create TAS 2.13 if we need a xenial env
@@ -705,17 +716,17 @@ tpi_create_command() {
   		# FIXME: dynamically populate with latest Ops Man & TAS
   		# FIXME: specify up to date stemcell
   		shepherd create lease --template-namespace official --template-name gcp-tas-template --template-revision 2.1 --template-argument '{"configuration_folder": "2.7", "opsman_version": "2.10.70", "product_type": "srt*",  "tas_version": "2.13.35"}' --namespace tpi-telemetry --duration 168h --json --description "$ENV_DESCRIPTION"
+
+  		# Remove old metadata file
+  		rm -rf "${PWD}/shepherd_envs/$ENV_DESCRIPTION-metadata.json"
+
+  		# Remove old smith-data
+  		rm -rf "${PWD}/smith-data/$ENV_DESCRIPTION"
   	fi
 
   	if [[ $TELEMETRY_TILE_INSTALL_REQUIRED == "true" ]]; then
   		echo -e "Install Telemetry Tile before updating Vault variables\n"
   	fi
-
-  	# Remove old metadata file
-  	rm -rf "${PWD}/shepherd_envs/$ENV_DESCRIPTION-metadata.json"
-
-  	# Remove old smith-data
-  	rm -rf "${PWD}/smith-data/$ENV_DESCRIPTION"
   else
   	echo -e "$ENV_DESCRIPTION already exists"
   fi
@@ -741,7 +752,7 @@ tpi_install_command() {
   export TELEMETRY_TILE_GUID=$(smith om --lockfile="${PWD}/shepherd_envs/$TMP_FOUNDATION_NAME-metadata.json" -- curl -s --path /api/v0/deployed/products | jq -r '.[] | select(.type == "pivotal-telemetry-om").guid') || ""
   if [[ -n $TELEMETRY_TILE_GUID ]]; then
   	echo -e "\nThe Telemetry Tile is already installed\n"
-  	exit 0
+  	return 0
   fi
 
   smith cf-login --lockfile="$LOCKFILE_PATH"
@@ -1298,20 +1309,10 @@ tpi_open_command() {
   # Set lockfile path
   LOCKFILE_PATH="${PWD}/shepherd_envs/$TMP_FOUNDATION_NAME-metadata.json"
 
-  # Open 1 or all (long-lived) foundations
-  if [[ $TMP_FOUNDATION_NAME == "all" ]]; then
-  	echo -e "FIXME"
-  	# CI_ENVS=(production-jammy acceptance-jammy staging-jammy production-xenial acceptance-xenial staging-xenial)
-
-  	# for my_env in "${CI_ENVS[@]}"; do
-  	# 	smith open --lockfile="${PWD}/shepherd_envs/$my_env-metadata.json"
-  	# done
+  if [ -f "$LOCKFILE_PATH" ]; then
+  	smith open --lockfile="${PWD}/shepherd_envs/$TMP_FOUNDATION_NAME-metadata.json"
   else
-  	if [ -f "$LOCKFILE_PATH" ]; then
-  		smith open --lockfile="${PWD}/shepherd_envs/$TMP_FOUNDATION_NAME-metadata.json"
-  	else
-  		echo -e "No lockfile found for $TMP_FOUNDATION_NAME"
-  	fi
+  	echo -e "No lockfile found for $TMP_FOUNDATION_NAME"
   fi
 
 }
@@ -1457,7 +1458,6 @@ tpi_maintain_command() {
   		export TPI_ENV_TYPE=$(echo "$my_env" | cut -d '-' -f 1)
   		if [[ $TPI_ENV_TYPE != "staging" ]]; then
   			if ! telemetry_installed; then
-  				printf "\nInstalling the Telemetry Tile"
   				tpi_install_command "$my_env"
   				# TODO: can this be removed (will we have the Vault secrets??)
   				# exit 0
@@ -1943,8 +1943,8 @@ tpi_update_parse_requirements() {
   fi
 
   # :command.whitelist_filter
-  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy|staging-jammy|production-xenial|acceptance-xenial|staging-xenial|telemetry-release-audit-false-jammy|telemetry-release-audit-true-jammy|p-telemetry-audit-false-jammy|p-telemetry-audit-true-jammy|telemetry-release-audit-false-xenial|telemetry-release-audit-true-xenial|p-telemetry-audit-false-xenial|p-telemetry-audit-true-xenial)$ ]]; then
-    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-audit-false-jammy, telemetry-release-audit-true-jammy, p-telemetry-audit-false-jammy, p-telemetry-audit-true-jammy, telemetry-release-audit-false-xenial, telemetry-release-audit-true-xenial, p-telemetry-audit-false-xenial, p-telemetry-audit-true-xenial" >&2
+  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy|staging-jammy|production-xenial|acceptance-xenial|staging-xenial)$ ]]; then
+    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial" >&2
     exit 1
   fi
 
@@ -2011,8 +2011,8 @@ tpi_print_parse_requirements() {
   fi
 
   # :command.whitelist_filter
-  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy|staging-jammy|production-xenial|acceptance-xenial|staging-xenial|telemetry-release-audit-false-jammy|telemetry-release-audit-true-jammy|p-telemetry-audit-false-jammy|p-telemetry-audit-true-jammy|telemetry-release-audit-false-xenial|telemetry-release-audit-true-xenial|p-telemetry-audit-false-xenial|p-telemetry-audit-true-xenial)$ ]]; then
-    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-audit-false-jammy, telemetry-release-audit-true-jammy, p-telemetry-audit-false-jammy, p-telemetry-audit-true-jammy, telemetry-release-audit-false-xenial, telemetry-release-audit-true-xenial, p-telemetry-audit-false-xenial, p-telemetry-audit-true-xenial" >&2
+  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy|staging-jammy|production-xenial|acceptance-xenial|staging-xenial|tas-2-test-env|tas-5-test-env|tas-6-test-env)$ ]]; then
+    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, tas-2-test-env, tas-5-test-env, tas-6-test-env" >&2
     exit 1
   fi
 
@@ -2072,8 +2072,8 @@ tpi_get_parse_requirements() {
   fi
 
   # :command.whitelist_filter
-  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy|staging-jammy|production-xenial|acceptance-xenial|staging-xenial|telemetry-release-audit-false-jammy|telemetry-release-audit-true-jammy|p-telemetry-audit-false-jammy|p-telemetry-audit-true-jammy|telemetry-release-audit-false-xenial|telemetry-release-audit-true-xenial|p-telemetry-audit-false-xenial|p-telemetry-audit-true-xenial)$ ]]; then
-    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-audit-false-jammy, telemetry-release-audit-true-jammy, p-telemetry-audit-false-jammy, p-telemetry-audit-true-jammy, telemetry-release-audit-false-xenial, telemetry-release-audit-true-xenial, p-telemetry-audit-false-xenial, p-telemetry-audit-true-xenial" >&2
+  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy|staging-jammy|production-xenial|acceptance-xenial|staging-xenial|tas-2-test-env|tas-5-test-env|tas-6-test-env|tas-5-test-env-pooled)$ ]]; then
+    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, tas-2-test-env, tas-5-test-env, tas-6-test-env, tas-5-test-env-pooled" >&2
     exit 1
   fi
 
@@ -2133,8 +2133,8 @@ tpi_open_parse_requirements() {
   fi
 
   # :command.whitelist_filter
-  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy|staging-jammy|production-xenial|acceptance-xenial|staging-xenial|telemetry-release-audit-false-jammy|telemetry-release-audit-true-jammy|p-telemetry-audit-false-jammy|p-telemetry-audit-true-jammy|telemetry-release-audit-false-xenial|telemetry-release-audit-true-xenial|p-telemetry-audit-false-xenial|p-telemetry-audit-true-xenial|all)$ ]]; then
-    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-audit-false-jammy, telemetry-release-audit-true-jammy, p-telemetry-audit-false-jammy, p-telemetry-audit-true-jammy, telemetry-release-audit-false-xenial, telemetry-release-audit-true-xenial, p-telemetry-audit-false-xenial, p-telemetry-audit-true-xenial, all" >&2
+  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy|staging-jammy|production-xenial|acceptance-xenial|staging-xenial|tas-2-test-env|tas-5-test-env|tas-6-test-env)$ ]]; then
+    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, tas-2-test-env, tas-5-test-env, tas-6-test-env" >&2
     exit 1
   fi
 

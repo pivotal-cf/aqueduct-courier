@@ -46,7 +46,7 @@ commands:
   - name: foundation
     required: true
     help: foundation to update Vault Secrets for
-    allowed: [production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-audit-false-jammy, telemetry-release-audit-true-jammy, p-telemetry-audit-false-jammy, p-telemetry-audit-true-jammy, telemetry-release-audit-false-xenial, telemetry-release-audit-true-xenial, p-telemetry-audit-false-xenial, p-telemetry-audit-true-xenial]
+    allowed: [production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial]
   examples:
   - tpi update acceptance-jammy
 
@@ -56,7 +56,7 @@ commands:
   - name: foundation
     required: true
     help: foundation to print telemetry CLI commands of
-    allowed: [production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-audit-false-jammy, telemetry-release-audit-true-jammy, p-telemetry-audit-false-jammy, p-telemetry-audit-true-jammy, telemetry-release-audit-false-xenial, telemetry-release-audit-true-xenial, p-telemetry-audit-false-xenial, p-telemetry-audit-true-xenial]
+    allowed: [production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, tas-2-test-env, tas-5-test-env, tas-6-test-env]
   flags:
   - long: --collect
     help: Return environments as JSON
@@ -69,7 +69,7 @@ commands:
   - name: foundation
     required: true
     help: foundation to get details for
-    allowed: [production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-audit-false-jammy, telemetry-release-audit-true-jammy, p-telemetry-audit-false-jammy, p-telemetry-audit-true-jammy, telemetry-release-audit-false-xenial, telemetry-release-audit-true-xenial, p-telemetry-audit-false-xenial, p-telemetry-audit-true-xenial]
+    allowed: [production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, tas-2-test-env, tas-5-test-env, tas-6-test-env, tas-5-test-env-pooled]
   examples:
   - tpi get acceptance-jammy
 
@@ -79,7 +79,7 @@ commands:
   - name: foundation
     required: true
     help: foundation to open
-    allowed: [production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, telemetry-release-audit-false-jammy, telemetry-release-audit-true-jammy, p-telemetry-audit-false-jammy, p-telemetry-audit-true-jammy, telemetry-release-audit-false-xenial, telemetry-release-audit-true-xenial, p-telemetry-audit-false-xenial, p-telemetry-audit-true-xenial, all]
+    allowed: [production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, tas-2-test-env, tas-5-test-env, tas-6-test-env]
   examples:
   - tpi open acceptance-jammy
 
