@@ -1,4 +1,4 @@
-if [[ ${args[foundation]} == "" ]]; then
+if [[ ${args[foundation]:-} == "" ]]; then
 	export TMP_FOUNDATION_NAME=$1
 else
 	export TMP_FOUNDATION_NAME=${args[foundation]}
@@ -18,8 +18,12 @@ fi
 # Source envs for smith, cf, bosh CLIs
 echo -e "Targeting $TMP_FOUNDATION_NAME..."
 smith cf-login --lockfile="$LOCKFILE_PATH"
-eval $(smith om -l "$LOCKFILE_PATH")
-eval $(smith bosh -l "$LOCKFILE_PATH")
+
+smith om -l "$LOCKFILE_PATH" >/tmp/bashly_om_env.sh
+source /tmp/bashly_om_env.sh
+
+smith bosh -l "$LOCKFILE_PATH" >/tmp/bashly_bosh_env.sh
+source /tmp/bashly_bosh_env.sh
 
 export SYS_DOMAIN=$(cf api | grep 'API endpoint' | awk '{print $3}' | cut -d'/' -f3 | sed 's/^api\.//') || ""
 

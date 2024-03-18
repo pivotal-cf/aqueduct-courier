@@ -44,6 +44,7 @@ tpi_usage() {
   printf "  %s   The foundation that is currently targeted\n" "whoami  "
   printf "  %s   Ensure that all CI environments exist. Create any needed. Install the Telemetry Tile if needed. Upload secretes to Vault.\n" "maintain"
   printf "  %s   Open Ops Manager for a provided Shepherd lease\n" "lease   "
+  printf "  %s   Given an Ops Manager version, get the corresponding Telemetry Tile version\n" "version "
   echo
 
   # :command.long_usage
@@ -311,7 +312,6 @@ tpi_get_usage() {
     # :argument.usage
     printf "  %s\n" "FOUNDATION"
     printf "    foundation to get details for\n"
-    printf "    Allowed: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, tas-2-test-env, tas-5-test-env, tas-6-test-env, tas-5-test-env-pooled\n"
     echo
 
     # :command.usage_examples
@@ -354,7 +354,6 @@ tpi_open_usage() {
     # :argument.usage
     printf "  %s\n" "FOUNDATION"
     printf "    foundation to open\n"
-    printf "    Allowed: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, tas-2-test-env, tas-5-test-env, tas-6-test-env\n"
     echo
 
     # :command.usage_examples
@@ -470,6 +469,48 @@ tpi_lease_usage() {
     # :command.usage_examples
     printf "%s\n" "Examples:"
     printf "  tpi lease 2910386c-37e0-40fa-9e76-b0927fc8364a\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+tpi_version_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "tpi version - Given an Ops Manager version, get the corresponding Telemetry Tile version\n"
+    echo
+
+  else
+    printf "tpi version - Given an Ops Manager version, get the corresponding Telemetry Tile version\n"
+    echo
+
+  fi
+
+  printf "%s\n" "Usage:"
+  printf "  tpi version TAG\n"
+  printf "  tpi version --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "Options:"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "--help, -h"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "Arguments:"
+
+    # :argument.usage
+    printf "  %s\n" "TAG"
+    printf "    Version of Ops Manager you would like to look up\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "Examples:"
+    printf "  tpi version v2.10.65\n"
     echo
 
   fi
@@ -655,7 +696,7 @@ set_shepherd_binary_path() {
 # :command.function
 tpi_list_command() {
   # src/list_command.sh
-  if [[ ${args[--json]} == "1" ]]; then
+  if [[ ${args[--json]:-0} == "1" ]]; then
   	$SHEPHERD_BINARY_PATH list lease --json --wide --namespace=tpi-telemetry
   else
   	$SHEPHERD_BINARY_PATH list lease --wide --namespace=tpi-telemetry
@@ -667,13 +708,13 @@ tpi_list_command() {
 tpi_create_command() {
   # src/create_command.sh
   # Create correct environmnt if it doesn't already exist
-  if [[ ${args[foundation]} == "" ]]; then
+  if [[ ${args[foundation]:-} == "" ]]; then
   	export ENV_DESCRIPTION=$1
   else
   	export ENV_DESCRIPTION=${args[foundation]}
   fi
 
-  ENV_MATCHES=$(shepherd list lease --desc-search "$ENV_DESCRIPTION" --namespace tpi-telemetry --json)
+  ENV_MATCHES=$($SHEPHERD_BINARY_PATH list lease --desc-search "$ENV_DESCRIPTION" --namespace tpi-telemetry --json)
   array_length=$(jq '. | length' <<<"$ENV_MATCHES")
   TELEMETRY_TILE_INSTALL_REQUIRED=false
 
@@ -688,12 +729,12 @@ tpi_create_command() {
   			TELEMETRY_TILE_INSTALL_REQUIRED=true
   		fi
 
-  		#shepherd create lease --pool "tas-5_0" --duration 168h --namespace tpi-telemetry --description "$ENV_DESCRIPTION" --pool-namespace official
+  		#$SHEPHERD_BINARY_PATH create lease --pool "tas-5_0" --duration 168h --namespace tpi-telemetry --description "$ENV_DESCRIPTION" --pool-namespace official
   		# Use Custom Env for up to date Ops Man (supporting Core Consumption API)
 
   		# FIXME: dynamically populate with latest Ops Man & TAS
   		# FIXME: specify up to date stemcell
-  		shepherd create lease --template-namespace official --template-name gcp-tas-template --template-revision 2.1 --template-argument '{"configuration_folder": "3.0", "opsman_version": "3.0.24+LTS-T", "product_type": "srt*",  "tas_version": "5.0.7"}' --namespace tpi-telemetry --duration 168h --json --description "$ENV_DESCRIPTION"
+  		$SHEPHERD_BINARY_PATH create lease --template-namespace official --template-name gcp-tas-template --template-revision 2.1 --template-argument '{"configuration_folder": "3.0", "opsman_version": "3.0.24+LTS-T", "product_type": "srt*",  "tas_version": "5.0.7"}' --namespace tpi-telemetry --duration 168h --json --description "$ENV_DESCRIPTION"
 
   		# Remove old metadata file
   		rm -rf "${PWD}/shepherd_envs/$ENV_DESCRIPTION-metadata.json"
@@ -710,12 +751,12 @@ tpi_create_command() {
   			TELEMETRY_TILE_INSTALL_REQUIRED=true
   		fi
 
-  		#shepherd create lease --pool "tas-2_13" --duration 168h --namespace tpi-telemetry --description "$ENV_DESCRIPTION" --pool-namespace official
+  		#$SHEPHERD_BINARY_PATH create lease --pool "tas-2_13" --duration 168h --namespace tpi-telemetry --description "$ENV_DESCRIPTION" --pool-namespace official
   		# Use Custom Env for up to date Ops Man (supporting Core Consumption API)
 
   		# FIXME: dynamically populate with latest Ops Man & TAS
   		# FIXME: specify up to date stemcell
-  		shepherd create lease --template-namespace official --template-name gcp-tas-template --template-revision 2.1 --template-argument '{"configuration_folder": "2.7", "opsman_version": "2.10.70", "product_type": "srt*",  "tas_version": "2.13.35"}' --namespace tpi-telemetry --duration 168h --json --description "$ENV_DESCRIPTION"
+  		$SHEPHERD_BINARY_PATH create lease --template-namespace official --template-name gcp-tas-template --template-revision 2.1 --template-argument '{"configuration_folder": "2.7", "opsman_version": "2.10.70", "product_type": "srt*",  "tas_version": "2.13.35"}' --namespace tpi-telemetry --duration 168h --json --description "$ENV_DESCRIPTION"
 
   		# Remove old metadata file
   		rm -rf "${PWD}/shepherd_envs/$ENV_DESCRIPTION-metadata.json"
@@ -738,7 +779,7 @@ tpi_install_command() {
   # src/install_command.sh
   ensure_pivnet_login
 
-  if [[ ${args[foundation]} == "" ]]; then
+  if [[ ${args[foundation]:-} == "" ]]; then
   	export TMP_FOUNDATION_NAME=$1
   else
   	export TMP_FOUNDATION_NAME=${args[foundation]}
@@ -755,7 +796,14 @@ tpi_install_command() {
   	return 0
   fi
 
+  # FIXME: target system org / space (create if necessary)
   smith cf-login --lockfile="$LOCKFILE_PATH"
+
+  # FIXME: these don't work sometimes
+  # do we need to eval the bosh vars twice??
+  # do source instead
+  # make sure the empty export= env var isn't set
+  # set output of om bosh-env ??
   eval $(smith om -l "$LOCKFILE_PATH")
   eval $(smith bosh -l "$LOCKFILE_PATH")
 
@@ -862,7 +910,7 @@ tpi_install_command() {
 # :command.function
 tpi_update_command() {
   # src/update_command.sh
-  if [[ ${args[foundation]} == "" ]]; then
+  if [[ ${args[foundation]:-} == "" ]]; then
   	export TMP_FOUNDATION_NAME=$1
   else
   	export TMP_FOUNDATION_NAME=${args[foundation]}
@@ -1151,7 +1199,7 @@ tpi_print_command() {
 # :command.function
 tpi_get_command() {
   # src/get_command.sh
-  if [[ ${args[foundation]} == "" ]]; then
+  if [[ ${args[foundation]:-} == "" ]]; then
   	export TMP_FOUNDATION_NAME=$1
   else
   	export TMP_FOUNDATION_NAME=${args[foundation]}
@@ -1171,8 +1219,12 @@ tpi_get_command() {
   # Source envs for smith, cf, bosh CLIs
   echo -e "Targeting $TMP_FOUNDATION_NAME..."
   smith cf-login --lockfile="$LOCKFILE_PATH"
-  eval $(smith om -l "$LOCKFILE_PATH")
-  eval $(smith bosh -l "$LOCKFILE_PATH")
+
+  smith om -l "$LOCKFILE_PATH" >/tmp/bashly_om_env.sh
+  source /tmp/bashly_om_env.sh
+
+  smith bosh -l "$LOCKFILE_PATH" >/tmp/bashly_bosh_env.sh
+  source /tmp/bashly_bosh_env.sh
 
   export SYS_DOMAIN=$(cf api | grep 'API endpoint' | awk '{print $3}' | cut -d'/' -f3 | sed 's/^api\.//') || ""
 
@@ -1384,7 +1436,7 @@ tpi_maintain_command() {
   # the string we're processing from CI_ENVS
   # FIXME: function is currently un-used
   env_exists() {
-  	if shepherd list lease --json --wide --namespace=tpi-telemetry | jq -r --arg env "$1" 'any(.[]; .description == $env)' | grep -q true; then
+  	if $SHEPHERD_BINARY_PATH list lease --json --wide --namespace=tpi-telemetry | jq -r --arg env "$1" 'any(.[]; .description == $env)' | grep -q true; then
   		return 0
   	else
   		printf "%s\n" "$1"
@@ -1509,11 +1561,45 @@ tpi_lease_command() {
   export LOCKFILE_DATA=$(echo "$ENV_LEASE" | jq -r .output)
 
   echo "$LOCKFILE_DATA" >/tmp/lease.json
+  export LOCKFILE_PATH=/tmp/lease.json
 
-  smith cf-login --lockfile="/tmp/lease.json"
-  eval $(smith om -l "/tmp/lease.json")
-  eval $(smith bosh -l "/tmp/lease.json")
-  smith open --lockfile="/tmp/lease.json"
+  smith cf-login --lockfile=$LOCKFILE_PATH
+  cf create-space system
+  cf target -o "system" -s "system"
+
+  smith om -l "$LOCKFILE_PATH" >/tmp/bashly_om_env.sh
+  chmod +x /tmp/bashly_om_env.sh
+  source /tmp/bashly_om_env.sh
+
+  eval $(smith om -l "$LOCKFILE_PATH")
+  eval $(smith om -l "$LOCKFILE_PATH")
+
+  smith bosh -l "$LOCKFILE_PATH" >/tmp/bashly_bosh_env.sh
+  chmod +x /tmp/bashly_bosh_env.sh
+  source /tmp/bashly_bosh_env.sh
+
+  eval $(smith bosh -l "$LOCKFILE_PATH")
+  eval $(smith bosh -l "$LOCKFILE_PATH")
+
+  smith open --lockfile=$LOCKFILE_PATH
+
+}
+
+# :command.function
+tpi_version_command() {
+  # src/version_command.sh
+  OM_VERSION=${args[tag]}
+
+  cd ~/workspace/ops-manager
+  git pull ~/workspace/ops-manager &>/dev/null
+  git checkout $OM_VERSION &>/dev/null
+  echo -e "\n**************************"
+  tile_version=$(cat web/config/auto-versions.yml | yq .telemetry_tile.version)
+  echo -e "Ops Manager:\t$OM_VERSION"
+  echo -e "Telemetry:\tv$tile_version"
+  echo -e "**************************\n"
+  git switch - &>/dev/null
+  cd ~/workspace/tile/aqueduct-courier/ci/bashly
 
 }
 
@@ -1677,6 +1763,13 @@ parse_requirements() {
       action="lease"
       shift
       tpi_lease_parse_requirements "$@"
+      shift $#
+      ;;
+
+    version)
+      action="version"
+      shift
+      tpi_version_parse_requirements "$@"
       shift $#
       ;;
 
@@ -2071,12 +2164,6 @@ tpi_get_parse_requirements() {
     exit 1
   fi
 
-  # :command.whitelist_filter
-  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy|staging-jammy|production-xenial|acceptance-xenial|staging-xenial|tas-2-test-env|tas-5-test-env|tas-6-test-env|tas-5-test-env-pooled)$ ]]; then
-    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, tas-2-test-env, tas-5-test-env, tas-6-test-env, tas-5-test-env-pooled" >&2
-    exit 1
-  fi
-
 }
 
 # :command.parse_requirements
@@ -2129,12 +2216,6 @@ tpi_open_parse_requirements() {
   # :command.required_args_filter
   if [[ -z ${args['foundation']+x} ]]; then
     printf "missing required argument: FOUNDATION\nusage: tpi open FOUNDATION\n" >&2
-    exit 1
-  fi
-
-  # :command.whitelist_filter
-  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy|staging-jammy|production-xenial|acceptance-xenial|staging-xenial|tas-2-test-env|tas-5-test-env|tas-6-test-env)$ ]]; then
-    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, tas-2-test-env, tas-5-test-env, tas-6-test-env" >&2
     exit 1
   fi
 
@@ -2283,9 +2364,66 @@ tpi_lease_parse_requirements() {
 
 }
 
+# :command.parse_requirements
+tpi_version_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        tpi_version_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="version"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        if [[ -z ${args['tag']+x} ]]; then
+          args['tag']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['tag']+x} ]]; then
+    printf "missing required argument: TAG\nusage: tpi version TAG\n" >&2
+    exit 1
+  fi
+
+}
+
 # :command.user_hooks
 before_hook() {
   # src/before.sh
+  PS4='+ ${BASH_SOURCE:-}:${FUNCNAME[0]:-}:L${LINENO:-}:   '
+
   set_shepherd_binary_path
   ensure_vault_login
   ensure_shepherd_login
@@ -2296,7 +2434,7 @@ before_hook() {
 initialize() {
   version="0.1.0"
   long_usage=''
-  set -e
+  set -euo pipefail
 
 }
 
@@ -2322,6 +2460,7 @@ run() {
     "whoami") tpi_whoami_command ;;
     "maintain") tpi_maintain_command ;;
     "lease") tpi_lease_command ;;
+    "version") tpi_version_command ;;
   esac
 }
 

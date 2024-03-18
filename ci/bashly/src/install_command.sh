@@ -1,6 +1,6 @@
 ensure_pivnet_login
 
-if [[ ${args[foundation]} == "" ]]; then
+if [[ ${args[foundation]:-} == "" ]]; then
 	export TMP_FOUNDATION_NAME=$1
 else
 	export TMP_FOUNDATION_NAME=${args[foundation]}
@@ -17,7 +17,14 @@ if [[ -n $TELEMETRY_TILE_GUID ]]; then
 	return 0
 fi
 
+# FIXME: target system org / space (create if necessary)
 smith cf-login --lockfile="$LOCKFILE_PATH"
+
+# FIXME: these don't work sometimes
+# do we need to eval the bosh vars twice??
+# do source instead
+# make sure the empty export= env var isn't set
+# set output of om bosh-env ??
 eval $(smith om -l "$LOCKFILE_PATH")
 eval $(smith bosh -l "$LOCKFILE_PATH")
 

@@ -19,7 +19,7 @@ mkdir -p "${PWD}/shepherd_envs"
 # the string we're processing from CI_ENVS
 # FIXME: function is currently un-used
 env_exists() {
-	if shepherd list lease --json --wide --namespace=tpi-telemetry | jq -r --arg env "$1" 'any(.[]; .description == $env)' | grep -q true; then
+	if $SHEPHERD_BINARY_PATH list lease --json --wide --namespace=tpi-telemetry | jq -r --arg env "$1" 'any(.[]; .description == $env)' | grep -q true; then
 		return 0
 	else
 		printf "%s\n" "$1"

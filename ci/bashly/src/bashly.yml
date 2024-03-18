@@ -69,7 +69,7 @@ commands:
   - name: foundation
     required: true
     help: foundation to get details for
-    allowed: [production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, tas-2-test-env, tas-5-test-env, tas-6-test-env, tas-5-test-env-pooled]
+    #allowed: [production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, tas-2-test-env, tas-5-test-env, tas-6-test-env, tas-5-test-env-pooled]
   examples:
   - tpi get acceptance-jammy
 
@@ -79,7 +79,7 @@ commands:
   - name: foundation
     required: true
     help: foundation to open
-    allowed: [production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, tas-2-test-env, tas-5-test-env, tas-6-test-env]
+    #allowed: [production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, tas-2-test-env, tas-5-test-env, tas-6-test-env]
   examples:
   - tpi open acceptance-jammy
 
@@ -101,3 +101,13 @@ commands:
     help: lease ID for a Shepherd environment
   examples:
   - tpi lease 2910386c-37e0-40fa-9e76-b0927fc8364a
+
+- name: version
+  help: Given an Ops Manager version, get the corresponding Telemetry Tile version
+  args:
+  - name: tag
+    required: true
+    help: Version of Ops Manager you would like to look up
+  examples:
+  - tpi version v2.10.65
+
