@@ -9,7 +9,7 @@ require (
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.31.1
-	github.com/pivotal-cf/telemetry-utils v0.0.0-20240227184028-498a9ed8387a
+	github.com/pivotal-cf/telemetry-utils v0.0.0-20240318190803-13accdd1fb75
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cobra v1.8.0
@@ -65,7 +65,7 @@ require (
 	golang.org/x/sys v0.17.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/protobuf v1.32.0 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
