@@ -25,7 +25,7 @@ if [ "$array_length" -eq 0 ]; then
 
 		# FIXME: dynamically populate with latest Ops Man & TAS
 		# FIXME: specify up to date stemcell
-		$SHEPHERD_BINARY_PATH create lease --template-namespace official --template-name gcp-tas-template --template-revision 2.1 --template-argument '{"configuration_folder": "3.0", "opsman_version": "3.0.24+LTS-T", "product_type": "srt*",  "tas_version": "5.0.7"}' --namespace tpi-telemetry --duration 168h --json --description "$ENV_DESCRIPTION"
+		$SHEPHERD_BINARY_PATH create lease --template-namespace official --template-name gcp-tas-template --template-revision 2.1 --template-argument '{"configuration_folder": "3.0", "opsman_version": "3.0.27+LTS-T", "product_type": "srt*",  "tas_version": "6.0.3+LTS-T"}' --namespace tpi-telemetry --duration 168h --json --description "$ENV_DESCRIPTION"
 
 		# Remove old metadata file
 		rm -rf "${PWD}/shepherd_envs/$ENV_DESCRIPTION-metadata.json"
@@ -34,7 +34,7 @@ if [ "$array_length" -eq 0 ]; then
 		rm -rf "${PWD}/smith-data/$ENV_DESCRIPTION"
 	fi
 
-	# Create TAS 2.13 if we need a xenial env
+	# Create TAS 2.11 if we need a xenial env
 	if [[ $ENV_DESCRIPTION == "production-xenial" || $ENV_DESCRIPTION == "acceptance-xenial" || $ENV_DESCRIPTION == "staging-xenial" ]]; then
 		echo -e "Creating $ENV_DESCRIPTION"
 
@@ -42,12 +42,12 @@ if [ "$array_length" -eq 0 ]; then
 			TELEMETRY_TILE_INSTALL_REQUIRED=true
 		fi
 
-		#$SHEPHERD_BINARY_PATH create lease --pool "tas-2_13" --duration 168h --namespace tpi-telemetry --description "$ENV_DESCRIPTION" --pool-namespace official
+		#$SHEPHERD_BINARY_PATH create lease --pool "tas-2_11" --duration 168h --namespace tpi-telemetry --description "$ENV_DESCRIPTION" --pool-namespace official
 		# Use Custom Env for up to date Ops Man (supporting Core Consumption API)
 
 		# FIXME: dynamically populate with latest Ops Man & TAS
 		# FIXME: specify up to date stemcell
-		$SHEPHERD_BINARY_PATH create lease --template-namespace official --template-name gcp-tas-template --template-revision 2.1 --template-argument '{"configuration_folder": "2.7", "opsman_version": "2.10.70", "product_type": "srt*",  "tas_version": "2.13.35"}' --namespace tpi-telemetry --duration 168h --json --description "$ENV_DESCRIPTION"
+		$SHEPHERD_BINARY_PATH create lease --template-namespace official --template-name gcp-tas-template --template-revision 2.1 --template-argument '{"configuration_folder": "2.7", "opsman_version": "2.10.73", "product_type": "srt*",  "tas_version": "2.11.57"}' --namespace tpi-telemetry --duration 168h --json --description "$ENV_DESCRIPTION"
 
 		# Remove old metadata file
 		rm -rf "${PWD}/shepherd_envs/$ENV_DESCRIPTION-metadata.json"

@@ -42,4 +42,12 @@ update_vault() {
 	fi
 }
 
-update_vault
+echo -e "ALL_ENVS_READY: $ALL_ENVS_READY"
+if [ "$ALL_ENVS_READY" = true ]; then
+	update_vault
+else
+	echo -e "The following environments are not ready:"
+	for not_ready_env in "${NOT_READY_ENVS[@]}"; do
+		echo -e "$not_ready_env"
+	done
+fi

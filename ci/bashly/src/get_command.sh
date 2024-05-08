@@ -8,11 +8,17 @@ extract_env_details $TMP_FOUNDATION_NAME
 
 mkdir -p "${PWD}/shepherd_envs"
 export LOCKFILE_PATH=${PWD}/shepherd_envs/$TMP_FOUNDATION_NAME-metadata.json
+
 if [[ $LOCKFILE_DATA == null ]]; then
 	echo -e "\n*** Env not yet ready; try again later. ***\n"
 	exit 0
 else
 	echo "$LOCKFILE_DATA" >"$LOCKFILE_PATH"
+fi
+
+if [ ! -f $LOCKFILE_PATH ]; then
+	echo -e "$TMP_FOUNDATION_NAME:\tCannot find lockfile"
+	exit 0
 fi
 
 # Source envs for smith, cf, bosh CLIs
@@ -104,11 +110,13 @@ fetch_uaa_client_secret() {
 	if [[ $TPI_ENV_TYPE != "staging" ]]; then
 
 		if [[ -z $TELEMETRY_TILE_GUID ]]; then
+			echo -e "*** No TELEMETRY_TILE_GUID ***"
 			echo -e "UAA_CLIENT_SECRET:"
 		else
-			export UAA_CLIENT_SECRET=$(smith om --lockfile="$LOCKFILE_PATH" -- curl -s --path /api/v0/deployed/products/"${TELEMETRY_TILE_GUID}"/manifest | jq -r '.instance_groups[] | select(.name == "telemetry-centralizer").jobs[] | select(.name == "telemetry-collector").properties.opsmanager.auth.uaa_client_secret') || ""
+			export UAA_CLIENT_SECRET=$(smith om --lockfile="$LOCKFILE_PATH" -- curl -s --path /api/v0/deployed/products/"${TELEMETRY_TILE_GUID}"/manifest | jq -r '.instance_groups[] | select(.name == "telemetry-centralizer").jobs[] | select(.name == "telemetry-collector").properties.opsmanager.auth.uaa_client_secret') 2>/dev/null || ""
 
-			if [[ -z $UAA_CLIENT_SECRET ]]; then
+			if [ -z "${UAA_CLIENT_SECRET}" ]; then
+				echo -e "*** ENVIRONMENT NOT READY ***"
 				export ALL_ENVS_READY=false
 				NOT_READY_ENVS+=($TMP_FOUNDATION_NAME)
 			fi

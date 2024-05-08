@@ -734,7 +734,7 @@ tpi_create_command() {
 
   		# FIXME: dynamically populate with latest Ops Man & TAS
   		# FIXME: specify up to date stemcell
-  		$SHEPHERD_BINARY_PATH create lease --template-namespace official --template-name gcp-tas-template --template-revision 2.1 --template-argument '{"configuration_folder": "3.0", "opsman_version": "3.0.24+LTS-T", "product_type": "srt*",  "tas_version": "5.0.7"}' --namespace tpi-telemetry --duration 168h --json --description "$ENV_DESCRIPTION"
+  		$SHEPHERD_BINARY_PATH create lease --template-namespace official --template-name gcp-tas-template --template-revision 2.1 --template-argument '{"configuration_folder": "3.0", "opsman_version": "3.0.27+LTS-T", "product_type": "srt*",  "tas_version": "6.0.3+LTS-T"}' --namespace tpi-telemetry --duration 168h --json --description "$ENV_DESCRIPTION"
 
   		# Remove old metadata file
   		rm -rf "${PWD}/shepherd_envs/$ENV_DESCRIPTION-metadata.json"
@@ -743,7 +743,7 @@ tpi_create_command() {
   		rm -rf "${PWD}/smith-data/$ENV_DESCRIPTION"
   	fi
 
-  	# Create TAS 2.13 if we need a xenial env
+  	# Create TAS 2.11 if we need a xenial env
   	if [[ $ENV_DESCRIPTION == "production-xenial" || $ENV_DESCRIPTION == "acceptance-xenial" || $ENV_DESCRIPTION == "staging-xenial" ]]; then
   		echo -e "Creating $ENV_DESCRIPTION"
 
@@ -751,12 +751,12 @@ tpi_create_command() {
   			TELEMETRY_TILE_INSTALL_REQUIRED=true
   		fi
 
-  		#$SHEPHERD_BINARY_PATH create lease --pool "tas-2_13" --duration 168h --namespace tpi-telemetry --description "$ENV_DESCRIPTION" --pool-namespace official
+  		#$SHEPHERD_BINARY_PATH create lease --pool "tas-2_11" --duration 168h --namespace tpi-telemetry --description "$ENV_DESCRIPTION" --pool-namespace official
   		# Use Custom Env for up to date Ops Man (supporting Core Consumption API)
 
   		# FIXME: dynamically populate with latest Ops Man & TAS
   		# FIXME: specify up to date stemcell
-  		$SHEPHERD_BINARY_PATH create lease --template-namespace official --template-name gcp-tas-template --template-revision 2.1 --template-argument '{"configuration_folder": "2.7", "opsman_version": "2.10.70", "product_type": "srt*",  "tas_version": "2.13.35"}' --namespace tpi-telemetry --duration 168h --json --description "$ENV_DESCRIPTION"
+  		$SHEPHERD_BINARY_PATH create lease --template-namespace official --template-name gcp-tas-template --template-revision 2.1 --template-argument '{"configuration_folder": "2.7", "opsman_version": "2.10.73", "product_type": "srt*",  "tas_version": "2.11.57"}' --namespace tpi-telemetry --duration 168h --json --description "$ENV_DESCRIPTION"
 
   		# Remove old metadata file
   		rm -rf "${PWD}/shepherd_envs/$ENV_DESCRIPTION-metadata.json"
@@ -954,7 +954,15 @@ tpi_update_command() {
   	fi
   }
 
-  update_vault
+  echo -e "ALL_ENVS_READY: $ALL_ENVS_READY"
+  if [ "$ALL_ENVS_READY" = true ]; then
+  	update_vault
+  else
+  	echo -e "The following environments are not ready:"
+  	for not_ready_env in "${NOT_READY_ENVS[@]}"; do
+  		echo -e "$not_ready_env"
+  	done
+  fi
 
 }
 
@@ -983,7 +991,7 @@ tpi_print_command() {
       --env-type development \\
       --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/username-password/ceip"
 
-  if [[ ${args[--collect]} ]]; then
+  if [[ ${args[--collect]:-} ]]; then
   	eval "telemetry-collector collect \\
           --insecure-skip-tls-verify \\
           --url ${OPS_MANAGER_URL} \\
@@ -1010,7 +1018,7 @@ tpi_print_command() {
           --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/username-password/operational-data-only-with-usage \\
           --operational-data-only"
 
-  	if [[ ${args[--collect]} ]]; then
+  	if [[ ${args[--collect]:-} ]]; then
   		eval "telemetry-collector collect \\
               --insecure-skip-tls-verify \\
               --url ${OPS_MANAGER_URL} \\
@@ -1038,7 +1046,7 @@ tpi_print_command() {
       --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/username-password/operational-data-only-no-usage \\
       --operational-data-only"
 
-  if [[ ${args[--collect]} ]]; then
+  if [[ ${args[--collect]:-} ]]; then
   	eval "telemetry-collector collect \\
           --url ${OPS_MANAGER_URL} \\
           --insecure-skip-tls-verify \\
@@ -1065,7 +1073,7 @@ tpi_print_command() {
           --env-type development \\
           --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/username-password/all"
 
-  	if [[ ${args[--collect]} ]]; then
+  	if [[ ${args[--collect]:-} ]]; then
   		eval "telemetry-collector collect \\
               --insecure-skip-tls-verify \\
               --url ${OPS_MANAGER_URL} \\
@@ -1095,7 +1103,7 @@ tpi_print_command() {
           --env-type development \\
           --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/client-id-client-secret/ceip"
 
-  	if [[ ${args[--collect]} ]]; then
+  	if [[ ${args[--collect]:-} ]]; then
   		eval "telemetry-collector collect \\
               --insecure-skip-tls-verify \\
               --url ${OPS_MANAGER_URL} \\
@@ -1122,7 +1130,7 @@ tpi_print_command() {
               --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/client-id-client-secret/operational-data-only-with-usage \\
               --operational-data-only"
 
-  		if [[ ${args[--collect]} ]]; then
+  		if [[ ${args[--collect]:-} ]]; then
   			eval "telemetry-collector collect \\
                   --insecure-skip-tls-verify \\
                   --url ${OPS_MANAGER_URL} \\
@@ -1150,7 +1158,7 @@ tpi_print_command() {
           --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/client-id-client-secret/operational-data-only-no-usage \\
           --operational-data-only"
 
-  	if [[ ${args[--collect]} ]]; then
+  	if [[ ${args[--collect]:-} ]]; then
   		eval "telemetry-collector collect \\
               --insecure-skip-tls-verify \\
               --url ${OPS_MANAGER_URL} \\
@@ -1177,7 +1185,7 @@ tpi_print_command() {
               --env-type development \\
               --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/client-id-client-secret/all"
 
-  		if [[ ${args[--collect]} ]]; then
+  		if [[ ${args[--collect]:-} ]]; then
   			eval "telemetry-collector collect \\
                   --insecure-skip-tls-verify \\
                   --url ${OPS_MANAGER_URL} \\
@@ -1209,11 +1217,17 @@ tpi_get_command() {
 
   mkdir -p "${PWD}/shepherd_envs"
   export LOCKFILE_PATH=${PWD}/shepherd_envs/$TMP_FOUNDATION_NAME-metadata.json
+
   if [[ $LOCKFILE_DATA == null ]]; then
   	echo -e "\n*** Env not yet ready; try again later. ***\n"
   	exit 0
   else
   	echo "$LOCKFILE_DATA" >"$LOCKFILE_PATH"
+  fi
+
+  if [ ! -f $LOCKFILE_PATH ]; then
+  	echo -e "$TMP_FOUNDATION_NAME:\tCannot find lockfile"
+  	exit 0
   fi
 
   # Source envs for smith, cf, bosh CLIs
@@ -1299,11 +1313,13 @@ tpi_get_command() {
   	if [[ $TPI_ENV_TYPE != "staging" ]]; then
 
   		if [[ -z $TELEMETRY_TILE_GUID ]]; then
+  			echo -e "*** No TELEMETRY_TILE_GUID ***"
   			echo -e "UAA_CLIENT_SECRET:"
   		else
-  			export UAA_CLIENT_SECRET=$(smith om --lockfile="$LOCKFILE_PATH" -- curl -s --path /api/v0/deployed/products/"${TELEMETRY_TILE_GUID}"/manifest | jq -r '.instance_groups[] | select(.name == "telemetry-centralizer").jobs[] | select(.name == "telemetry-collector").properties.opsmanager.auth.uaa_client_secret') || ""
+  			export UAA_CLIENT_SECRET=$(smith om --lockfile="$LOCKFILE_PATH" -- curl -s --path /api/v0/deployed/products/"${TELEMETRY_TILE_GUID}"/manifest | jq -r '.instance_groups[] | select(.name == "telemetry-centralizer").jobs[] | select(.name == "telemetry-collector").properties.opsmanager.auth.uaa_client_secret') 2>/dev/null || ""
 
-  			if [[ -z $UAA_CLIENT_SECRET ]]; then
+  			if [ -z "${UAA_CLIENT_SECRET}" ]; then
+  				echo -e "*** ENVIRONMENT NOT READY ***"
   				export ALL_ENVS_READY=false
   				NOT_READY_ENVS+=($TMP_FOUNDATION_NAME)
   			fi
@@ -1541,7 +1557,9 @@ tpi_maintain_command() {
   check_all_envs_exist
   check_telemetry_tile_installed
 
-  if [[ $ALL_ENVS_READY == true ]]; then
+  echo -e "ALL_ENVS_READY: $ALL_ENVS_READY"
+  if [ "$ALL_ENVS_READY" = true ]; then
+  	echo -e "*** ALL ENVS READY ***"
   	upload_secrets_to_vault
   else
   	echo -e "The following environments are not ready:"

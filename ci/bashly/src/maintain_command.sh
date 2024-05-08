@@ -124,7 +124,9 @@ upload_secrets_to_vault() {
 check_all_envs_exist
 check_telemetry_tile_installed
 
-if [[ $ALL_ENVS_READY == true ]]; then
+echo -e "ALL_ENVS_READY: $ALL_ENVS_READY"
+if [ "$ALL_ENVS_READY" = true ]; then
+	echo -e "*** ALL ENVS READY ***"
 	upload_secrets_to_vault
 else
 	echo -e "The following environments are not ready:"

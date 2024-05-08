@@ -20,7 +20,7 @@ echo "telemetry-collector collect \\
     --env-type development \\
     --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/username-password/ceip"
 
-if [[ ${args[--collect]} ]]; then
+if [[ ${args[--collect]:-} ]]; then
 	eval "telemetry-collector collect \\
         --insecure-skip-tls-verify \\
         --url ${OPS_MANAGER_URL} \\
@@ -47,7 +47,7 @@ if [ -n "$TELEMETRY_USAGE_SERVICE_PASSWORD" ]; then
         --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/username-password/operational-data-only-with-usage \\
         --operational-data-only"
 
-	if [[ ${args[--collect]} ]]; then
+	if [[ ${args[--collect]:-} ]]; then
 		eval "telemetry-collector collect \\
             --insecure-skip-tls-verify \\
             --url ${OPS_MANAGER_URL} \\
@@ -75,7 +75,7 @@ echo "telemetry-collector collect \\
     --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/username-password/operational-data-only-no-usage \\
     --operational-data-only"
 
-if [[ ${args[--collect]} ]]; then
+if [[ ${args[--collect]:-} ]]; then
 	eval "telemetry-collector collect \\
         --url ${OPS_MANAGER_URL} \\
         --insecure-skip-tls-verify \\
@@ -102,7 +102,7 @@ if [ -n "$TELEMETRY_USAGE_SERVICE_PASSWORD" ]; then
         --env-type development \\
         --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/username-password/all"
 
-	if [[ ${args[--collect]} ]]; then
+	if [[ ${args[--collect]:-} ]]; then
 		eval "telemetry-collector collect \\
             --insecure-skip-tls-verify \\
             --url ${OPS_MANAGER_URL} \\
@@ -132,7 +132,7 @@ if [ -n "$TELEMETRY_USAGE_SERVICE_PASSWORD" ]; then
         --env-type development \\
         --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/client-id-client-secret/ceip"
 
-	if [[ ${args[--collect]} ]]; then
+	if [[ ${args[--collect]:-} ]]; then
 		eval "telemetry-collector collect \\
             --insecure-skip-tls-verify \\
             --url ${OPS_MANAGER_URL} \\
@@ -159,7 +159,7 @@ if [ -n "$TELEMETRY_USAGE_SERVICE_PASSWORD" ]; then
             --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/client-id-client-secret/operational-data-only-with-usage \\
             --operational-data-only"
 
-		if [[ ${args[--collect]} ]]; then
+		if [[ ${args[--collect]:-} ]]; then
 			eval "telemetry-collector collect \\
                 --insecure-skip-tls-verify \\
                 --url ${OPS_MANAGER_URL} \\
@@ -187,7 +187,7 @@ if [ -n "$TELEMETRY_USAGE_SERVICE_PASSWORD" ]; then
         --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/client-id-client-secret/operational-data-only-no-usage \\
         --operational-data-only"
 
-	if [[ ${args[--collect]} ]]; then
+	if [[ ${args[--collect]:-} ]]; then
 		eval "telemetry-collector collect \\
             --insecure-skip-tls-verify \\
             --url ${OPS_MANAGER_URL} \\
@@ -214,7 +214,7 @@ if [ -n "$TELEMETRY_USAGE_SERVICE_PASSWORD" ]; then
             --env-type development \\
             --output-dir ${PWD}/smith-data/${ENV_DESCRIPTION}/client-id-client-secret/all"
 
-		if [[ ${args[--collect]} ]]; then
+		if [[ ${args[--collect]:-} ]]; then
 			eval "telemetry-collector collect \\
                 --insecure-skip-tls-verify \\
                 --url ${OPS_MANAGER_URL} \\
