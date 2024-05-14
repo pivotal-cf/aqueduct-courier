@@ -111,3 +111,9 @@ commands:
   examples:
   - tpi version v2.10.65
 
+- name: tkgi
+  help: Create TKGi test env
+  examples:
+  - tpi tkgi
+
+

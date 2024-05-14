@@ -124,6 +124,12 @@ upload_secrets_to_vault() {
 check_all_envs_exist
 check_telemetry_tile_installed
 
+# Let the Telemetry Tile install
+sleep 5
+echo -e "Waiting for background jobs to finish..."
+wait $(jobs -p)
+echo -e "Background jobs complete."
+
 echo -e "ALL_ENVS_READY: $ALL_ENVS_READY"
 if [ "$ALL_ENVS_READY" = true ]; then
 	echo -e "*** ALL ENVS READY ***"
