@@ -2,6 +2,8 @@ module github.com/pivotal-cf/aqueduct-courier
 
 go 1.21.6
 
+toolchain go1.21.10
+
 require (
 	code.cloudfoundry.org/credhub-cli v0.0.0-20240219140155-ce3a46ae0b03
 	github.com/elazarl/goproxy v0.0.0-20231117061959-7cc037d33fb5
@@ -19,7 +21,7 @@ require (
 )
 
 require (
-	github.com/mholt/archiver/v3 v3.5.1
+	github.com/joyvuu-dave/archiver/v3 v3.5.3
 	github.com/pivotal-cf/om v0.0.0-20240201200423-3c01d4c9e9a1
 )
 
@@ -40,7 +42,7 @@ require (
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/klauspost/compress v1.17.7 // indirect
+	github.com/klauspost/compress v1.17.8 // indirect
 	github.com/klauspost/pgzip v1.2.6 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
@@ -56,7 +58,7 @@ require (
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/cast v1.6.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
-	github.com/ulikunitz/xz v0.5.11 // indirect
+	github.com/ulikunitz/xz v0.5.12 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.22.0 // indirect
