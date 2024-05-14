@@ -352,6 +352,20 @@ func makeConsumptionCollector() (consumptionDataCollector, error) {
 }
 
 func makeCoreConsumptionCollector(operationalDataOnly bool, apiService api.Api) (coreConsumptionDataCollector, error) {
+	// FIXME
+	// This doesn't accurately support the case where only TKGi
+	// is installed (not TAS) and the user has opted into both
+	// data programs.
+	// In order to support that scenario, we would need to add
+	// an additional flag. Something like `--core-counts`. But
+	// after talking this through with the team, it was decided
+	// that adding a flag like this would create too much confusion.
+	// Instead, we've agreed to re-think our approach to data
+	// collection down the road where we might give users of
+	// of the tile the ability to specify exactly which APIs to
+	// collect from. That is, instead of the current 2 checkboxes:
+	// CEIP and Operational Data -- there would be 3: CEIP,
+	// Core Counts, and Usage Service
 	if anyUsageServiceConfigsProvided() || operationalDataOnly {
 		// collect data from api/v0/download_core_consumption
 		ccOmService := &coreconsumption.Service{
