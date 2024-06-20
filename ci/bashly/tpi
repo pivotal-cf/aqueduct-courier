@@ -46,6 +46,7 @@ tpi_usage() {
   printf "  %s   Open Ops Manager for a provided Shepherd lease\n" "lease   "
   printf "  %s   Given an Ops Manager version, get the corresponding Telemetry Tile version\n" "version "
   printf "  %s   Create TKGi test env\n" "tkgi    "
+  printf "  %s   Renew the long-lived TAS environments\n" "renew   "
   echo
 
   # :command.long_usage
@@ -135,7 +136,7 @@ tpi_create_usage() {
     # :argument.usage
     printf "  %s\n" "FOUNDATION"
     printf "    foundation to create\n"
-    printf "    Allowed: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial\n"
+    printf "    Allowed: production-jammy, acceptance-jammy, staging-jammy\n"
     echo
 
     # :command.usage_examples
@@ -178,7 +179,7 @@ tpi_install_usage() {
     # :argument.usage
     printf "  %s\n" "FOUNDATION"
     printf "    foundation to install Telemetry Tile on\n"
-    printf "    Allowed: production-jammy, acceptance-jammy, production-xenial, acceptance-xenial\n"
+    printf "    Allowed: production-jammy, acceptance-jammy\n"
     echo
 
     # :command.usage_examples
@@ -221,7 +222,7 @@ tpi_update_usage() {
     # :argument.usage
     printf "  %s\n" "FOUNDATION"
     printf "    foundation to update Vault Secrets for\n"
-    printf "    Allowed: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial\n"
+    printf "    Allowed: production-jammy, acceptance-jammy, staging-jammy\n"
     echo
 
     # :command.usage_examples
@@ -270,7 +271,7 @@ tpi_print_usage() {
     # :argument.usage
     printf "  %s\n" "FOUNDATION"
     printf "    foundation to print telemetry CLI commands of\n"
-    printf "    Allowed: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, tas-2-test-env, tas-5-test-env, tas-6-test-env\n"
+    printf "    Allowed: production-jammy, acceptance-jammy, staging-jammy, tas-6-test-env-1\n"
     echo
 
     # :command.usage_examples
@@ -551,6 +552,49 @@ tpi_tkgi_usage() {
   fi
 }
 
+# :command.usage
+tpi_renew_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "tpi renew - Renew the long-lived TAS environments\n"
+    echo
+
+  else
+    printf "tpi renew - Renew the long-lived TAS environments\n"
+    echo
+
+  fi
+
+  printf "%s\n" "Usage:"
+  printf "  tpi renew FOUNDATION\n"
+  printf "  tpi renew --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "Options:"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "--help, -h"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "Arguments:"
+
+    # :argument.usage
+    printf "  %s\n" "FOUNDATION"
+    printf "    foundation to renew\n"
+    printf "    Allowed: production-jammy, acceptance-jammy, staging-jammy\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "Examples:"
+    printf "  tpi renew acceptance-jammy\n"
+    echo
+
+  fi
+}
+
 # :command.normalize_input
 # :command.normalize_input_function
 normalize_input() {
@@ -777,7 +821,7 @@ tpi_create_command() {
 
   		# FIXME: dynamically populate with latest Ops Man & TAS
   		# FIXME: specify up to date stemcell
-  		$SHEPHERD_BINARY_PATH create lease --template-namespace official --template-name gcp-tas-template --template-revision 2.1 --template-argument '{"configuration_folder": "3.0", "opsman_version": "3.0.27+LTS-T", "product_type": "srt*",  "tas_version": "6.0.3+LTS-T"}' --namespace tpi-telemetry --duration 168h --json --description "$ENV_DESCRIPTION"
+  		$SHEPHERD_BINARY_PATH create lease --template-namespace official --template-name gcp-tas-template --template-revision 2.1 --template-argument '{"configuration_folder": "3.0", "opsman_version": "3.0.29+LTS-T", "product_type": "srt*",  "tas_version": "6.0.4+LTS-T"}' --namespace tpi-telemetry --duration 168h --json --description "$ENV_DESCRIPTION"
 
   		# Remove old metadata file
   		rm -rf "${PWD}/shepherd_envs/$ENV_DESCRIPTION-metadata.json"
@@ -786,27 +830,27 @@ tpi_create_command() {
   		rm -rf "${PWD}/smith-data/$ENV_DESCRIPTION"
   	fi
 
-  	# Create TAS 2.11 if we need a xenial env
-  	if [[ $ENV_DESCRIPTION == "production-xenial" || $ENV_DESCRIPTION == "acceptance-xenial" || $ENV_DESCRIPTION == "staging-xenial" ]]; then
-  		echo -e "Creating $ENV_DESCRIPTION"
+  	# # Create TAS 2.11 if we need a xenial env
+  	# if [[ $ENV_DESCRIPTION == "production-xenial" || $ENV_DESCRIPTION == "acceptance-xenial" || $ENV_DESCRIPTION == "staging-xenial" ]]; then
+  	# 	echo -e "Creating $ENV_DESCRIPTION"
 
-  		if [[ $ENV_DESCRIPTION == "production-xenial" || $ENV_DESCRIPTION == "acceptance-xenial" ]]; then
-  			TELEMETRY_TILE_INSTALL_REQUIRED=true
-  		fi
+  	# 	if [[ $ENV_DESCRIPTION == "production-xenial" || $ENV_DESCRIPTION == "acceptance-xenial" ]]; then
+  	# 		TELEMETRY_TILE_INSTALL_REQUIRED=true
+  	# 	fi
 
-  		#$SHEPHERD_BINARY_PATH create lease --pool "tas-2_11" --duration 168h --namespace tpi-telemetry --description "$ENV_DESCRIPTION" --pool-namespace official
-  		# Use Custom Env for up to date Ops Man (supporting Core Consumption API)
+  	# 	#$SHEPHERD_BINARY_PATH create lease --pool "tas-2_11" --duration 168h --namespace tpi-telemetry --description "$ENV_DESCRIPTION" --pool-namespace official
+  	# 	# Use Custom Env for up to date Ops Man (supporting Core Consumption API)
 
-  		# FIXME: dynamically populate with latest Ops Man & TAS
-  		# FIXME: specify up to date stemcell
-  		$SHEPHERD_BINARY_PATH create lease --template-namespace official --template-name gcp-tas-template --template-revision 2.1 --template-argument '{"configuration_folder": "2.7", "opsman_version": "2.10.73", "product_type": "srt*",  "tas_version": "2.11.57"}' --namespace tpi-telemetry --duration 168h --json --description "$ENV_DESCRIPTION"
+  	# 	# FIXME: dynamically populate with latest Ops Man & TAS
+  	# 	# FIXME: specify up to date stemcell
+  	# 	$SHEPHERD_BINARY_PATH create lease --template-namespace official --template-name gcp-tas-template --template-revision 2.1 --template-argument '{"configuration_folder": "2.7", "opsman_version": "2.10.73", "product_type": "srt*",  "tas_version": "2.11.57"}' --namespace tpi-telemetry --duration 168h --json --description "$ENV_DESCRIPTION"
 
-  		# Remove old metadata file
-  		rm -rf "${PWD}/shepherd_envs/$ENV_DESCRIPTION-metadata.json"
+  	# 	# Remove old metadata file
+  	# 	rm -rf "${PWD}/shepherd_envs/$ENV_DESCRIPTION-metadata.json"
 
-  		# Remove old smith-data
-  		rm -rf "${PWD}/smith-data/$ENV_DESCRIPTION"
-  	fi
+  	# 	# Remove old smith-data
+  	# 	rm -rf "${PWD}/smith-data/$ENV_DESCRIPTION"
+  	# fi
 
   	if [[ $TELEMETRY_TILE_INSTALL_REQUIRED == "true" ]]; then
   		echo -e "Install Telemetry Tile before updating Vault variables\n"
@@ -1444,28 +1488,13 @@ tpi_whoami_command() {
   	exit 0
   fi
 
-  if [ $(cat shepherd_envs/acceptance-xenial-metadata.json | jq -r .sys_domain) = $SYS_DOMAIN ]; then
-  	echo -e "acceptance-xenail"
-  	exit 0
-  fi
-
   if [ $(cat shepherd_envs/production-jammy-metadata.json | jq -r .sys_domain) = $SYS_DOMAIN ]; then
   	echo -e "production-jammy"
   	exit 0
   fi
 
-  if [ $(cat shepherd_envs/production-xenial-metadata.json | jq -r .sys_domain) = $SYS_DOMAIN ]; then
-  	echo -e "production-xenial"
-  	exit 0
-  fi
-
   if [ $(cat shepherd_envs/staging-jammy-metadata.json | jq -r .sys_domain) = $SYS_DOMAIN ]; then
   	echo -e "staging-jammy"
-  	exit 0
-  fi
-
-  if [ $(cat shepherd_envs/staging-xenial-metadata.json | jq -r .sys_domain) = $SYS_DOMAIN ]; then
-  	echo -e "staging-xenial"
   	exit 0
   fi
 
@@ -1479,7 +1508,7 @@ tpi_maintain_command() {
   export ALL_ENVS_READY=true
   export NOT_READY_ENVS=()
   export ENVS_JSON=$(tpi_list_command --json)
-  export CI_ENVS=(production-jammy acceptance-jammy staging-jammy production-xenial acceptance-xenial staging-xenial)
+  export CI_ENVS=(production-jammy acceptance-jammy staging-jammy)
   mkdir -p "${PWD}/shepherd_envs"
 
   # The idea of this command is that it can be run continuously
@@ -1617,6 +1646,22 @@ tpi_maintain_command() {
   	done
   fi
 
+  # TODO: Set environment expiration to coincide with opsman_tls_certificate expiration
+  renew_long_lived_envs() {
+  	echo -e "Renewing long-lived envs..."
+  	for my_env in "${CI_ENVS[@]}"; do
+  		extract_env_details "$my_env"
+  		export LOCKFILE_PATH=${PWD}/shepherd_envs/$my_env-metadata.json
+  		export TPI_ENV_TYPE=$(echo "$my_env" | cut -d '-' -f 1)
+
+  		tpi_renew_command "$my_env"
+  	done
+
+  	echo "*** Long-lived envs renewed. ***"
+  }
+
+  renew_long_lived_envs
+
 }
 
 # :command.function
@@ -1673,7 +1718,28 @@ tpi_version_command() {
 # :command.function
 tpi_tkgi_command() {
   # src/tkgi_command.sh
-  $SHEPHERD_BINARY_PATH lock create --file "$PWD/config/tkgi-recipe.json" --lifetime 7d --description "tkgi-test-env-1-tpi"
+  sheepctl lock create --file "$PWD/config/tkgi-recipe.json" --lifetime 7d --description "tkgi-test-env-1-tpi"
+
+}
+
+# :command.function
+tpi_renew_command() {
+  # src/renew_command.sh
+  if [[ ${args[foundation]:-} == "" ]]; then
+  	export TMP_FOUNDATION_NAME=$1
+  else
+  	export TMP_FOUNDATION_NAME=${args[foundation]}
+  fi
+
+  tpi_get_command $TMP_FOUNDATION_NAME
+
+  renew_foundation() {
+  	$SHEPHERD_BINARY_PATH update lease "$ENV_IDENTIFIER" --namespace tpi-telemetry --expire-in 168h
+
+  	echo -e "$TMP_FOUNDATION_NAME lease extended for 2 weeks"
+  }
+
+  renew_foundation
 
 }
 
@@ -1854,6 +1920,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    renew)
+      action="renew"
+      shift
+      tpi_renew_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       tpi_usage >&2
@@ -1996,8 +2069,8 @@ tpi_create_parse_requirements() {
   fi
 
   # :command.whitelist_filter
-  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy|staging-jammy|production-xenial|acceptance-xenial|staging-xenial)$ ]]; then
-    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial" >&2
+  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy|staging-jammy)$ ]]; then
+    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy, staging-jammy" >&2
     exit 1
   fi
 
@@ -2058,8 +2131,8 @@ tpi_install_parse_requirements() {
   fi
 
   # :command.whitelist_filter
-  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy|production-xenial|acceptance-xenial)$ ]]; then
-    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy, production-xenial, acceptance-xenial" >&2
+  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy)$ ]]; then
+    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy" >&2
     exit 1
   fi
 
@@ -2120,8 +2193,8 @@ tpi_update_parse_requirements() {
   fi
 
   # :command.whitelist_filter
-  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy|staging-jammy|production-xenial|acceptance-xenial|staging-xenial)$ ]]; then
-    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial" >&2
+  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy|staging-jammy)$ ]]; then
+    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy, staging-jammy" >&2
     exit 1
   fi
 
@@ -2189,8 +2262,8 @@ tpi_print_parse_requirements() {
   fi
 
   # :command.whitelist_filter
-  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy|staging-jammy|production-xenial|acceptance-xenial|staging-xenial|tas-2-test-env|tas-5-test-env|tas-6-test-env)$ ]]; then
-    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, tas-2-test-env, tas-5-test-env, tas-6-test-env" >&2
+  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy|staging-jammy|tas-6-test-env-1)$ ]]; then
+    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy, staging-jammy, tas-6-test-env-1" >&2
     exit 1
   fi
 
@@ -2552,6 +2625,68 @@ tpi_tkgi_parse_requirements() {
 
 }
 
+# :command.parse_requirements
+tpi_renew_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        tpi_renew_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="renew"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        # :argument.case
+        if [[ -z ${args['foundation']+x} ]]; then
+          args['foundation']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['foundation']+x} ]]; then
+    printf "missing required argument: FOUNDATION\nusage: tpi renew FOUNDATION\n" >&2
+    exit 1
+  fi
+
+  # :command.whitelist_filter
+  if [[ -n ${args['foundation']:-} ]] && [[ ! ${args['foundation']:-} =~ ^(production-jammy|acceptance-jammy|staging-jammy)$ ]]; then
+    printf "%s\n" "foundation must be one of: production-jammy, acceptance-jammy, staging-jammy" >&2
+    exit 1
+  fi
+
+}
+
 # :command.user_hooks
 before_hook() {
   # src/before.sh
@@ -2595,6 +2730,7 @@ run() {
     "lease") tpi_lease_command ;;
     "version") tpi_version_command ;;
     "tkgi") tpi_tkgi_command ;;
+    "renew") tpi_renew_command ;;
   esac
 }
 

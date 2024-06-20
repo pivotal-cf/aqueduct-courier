@@ -91,7 +91,7 @@ resources:
 - name: prod-collection-timer
   type: time
   source:
-    interval: 10m
+    interval: 20m
 - name: prod-slack-notification
   type: slack-notification
   source:

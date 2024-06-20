@@ -26,7 +26,7 @@ commands:
   - name: foundation
     required: true
     help: foundation to create
-    allowed: [production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial]
+    allowed: [production-jammy, acceptance-jammy, staging-jammy]
   examples:
   - tpi create acceptance-jammy
 
@@ -36,7 +36,7 @@ commands:
   - name: foundation
     required: true
     help: foundation to install Telemetry Tile on
-    allowed: [production-jammy, acceptance-jammy, production-xenial, acceptance-xenial]
+    allowed: [production-jammy, acceptance-jammy]
   examples:
   - tpi install acceptance-jammy
 
@@ -46,7 +46,7 @@ commands:
   - name: foundation
     required: true
     help: foundation to update Vault Secrets for
-    allowed: [production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial]
+    allowed: [production-jammy, acceptance-jammy, staging-jammy]
   examples:
   - tpi update acceptance-jammy
 
@@ -56,7 +56,7 @@ commands:
   - name: foundation
     required: true
     help: foundation to print telemetry CLI commands of
-    allowed: [production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, tas-2-test-env, tas-5-test-env, tas-6-test-env]
+    allowed: [production-jammy, acceptance-jammy, staging-jammy, tas-6-test-env-1]
   flags:
   - long: --collect
     help: Return environments as JSON
@@ -69,7 +69,7 @@ commands:
   - name: foundation
     required: true
     help: foundation to get details for
-    #allowed: [production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, tas-2-test-env, tas-5-test-env, tas-6-test-env, tas-5-test-env-pooled]
+    #allowed: [production-jammy, acceptance-jammy, staging-jammy, tas-6-test-env-1]
   examples:
   - tpi get acceptance-jammy
 
@@ -79,7 +79,7 @@ commands:
   - name: foundation
     required: true
     help: foundation to open
-    #allowed: [production-jammy, acceptance-jammy, staging-jammy, production-xenial, acceptance-xenial, staging-xenial, tas-2-test-env, tas-5-test-env, tas-6-test-env]
+    #allowed: [production-jammy, acceptance-jammy, staging-jammy, tas-6-test-env-1]
   examples:
   - tpi open acceptance-jammy
 
@@ -116,4 +116,12 @@ commands:
   examples:
   - tpi tkgi
 
-
+- name: renew
+  help: Renew the long-lived TAS environments
+  args:
+  - name: foundation
+    required: true
+    help: foundation to renew
+    allowed: [production-jammy, acceptance-jammy, staging-jammy]
+  examples:
+  - tpi renew acceptance-jammy

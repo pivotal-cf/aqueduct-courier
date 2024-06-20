@@ -11,28 +11,13 @@ if [ $(cat shepherd_envs/acceptance-jammy-metadata.json | jq -r .sys_domain) = $
 	exit 0
 fi
 
-if [ $(cat shepherd_envs/acceptance-xenial-metadata.json | jq -r .sys_domain) = $SYS_DOMAIN ]; then
-	echo -e "acceptance-xenail"
-	exit 0
-fi
-
 if [ $(cat shepherd_envs/production-jammy-metadata.json | jq -r .sys_domain) = $SYS_DOMAIN ]; then
 	echo -e "production-jammy"
 	exit 0
 fi
 
-if [ $(cat shepherd_envs/production-xenial-metadata.json | jq -r .sys_domain) = $SYS_DOMAIN ]; then
-	echo -e "production-xenial"
-	exit 0
-fi
-
 if [ $(cat shepherd_envs/staging-jammy-metadata.json | jq -r .sys_domain) = $SYS_DOMAIN ]; then
 	echo -e "staging-jammy"
-	exit 0
-fi
-
-if [ $(cat shepherd_envs/staging-xenial-metadata.json | jq -r .sys_domain) = $SYS_DOMAIN ]; then
-	echo -e "staging-xenial"
 	exit 0
 fi
 

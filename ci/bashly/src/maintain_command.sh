@@ -1,7 +1,7 @@
 export ALL_ENVS_READY=true
 export NOT_READY_ENVS=()
 export ENVS_JSON=$(tpi_list_command --json)
-export CI_ENVS=(production-jammy acceptance-jammy staging-jammy production-xenial acceptance-xenial staging-xenial)
+export CI_ENVS=(production-jammy acceptance-jammy staging-jammy)
 mkdir -p "${PWD}/shepherd_envs"
 
 ##############
@@ -140,3 +140,19 @@ else
 		echo -e "$not_ready_env"
 	done
 fi
+
+# TODO: Set environment expiration to coincide with opsman_tls_certificate expiration
+renew_long_lived_envs() {
+	echo -e "Renewing long-lived envs..."
+	for my_env in "${CI_ENVS[@]}"; do
+		extract_env_details "$my_env"
+		export LOCKFILE_PATH=${PWD}/shepherd_envs/$my_env-metadata.json
+		export TPI_ENV_TYPE=$(echo "$my_env" | cut -d '-' -f 1)
+
+		tpi_renew_command "$my_env"
+	done
+
+	echo "*** Long-lived envs renewed. ***"
+}
+
+renew_long_lived_envs
