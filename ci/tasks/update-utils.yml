@@ -4,8 +4,10 @@ platform: linux
 image_resource:
   type: registry-image
   source:
-    repository: harbor-repo.vmware.com/dockerhub-proxy-cache/library/golang
+    repository: tpi-docker-virtual.usw1.packages.broadcom.com/library/golang
     tag: 1.21.10
+    username: ((jfrog-artifactory.jfrog-username))
+    password: ((jfrog-artifactory.jfrog-password))
 
 inputs:
 - name: ci

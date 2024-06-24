@@ -4,9 +4,9 @@ platform: linux
 image_resource:
   type: registry-image
   source:
-    repository: dev.registry.pivotal.io/tanzu-portfolio-insights/telemetry-for-vms/base-ci-image
-    username: ((pivotal-image-registry.registry-username))
-    password: ((pivotal-image-registry.registry-password))
+    repository: tpi-docker-virtual.usw1.packages.broadcom.com/tanzu-portfolio-insights/telemetry-for-vms/base-ci-image
+    username: ((jfrog-artifactory.jfrog-username))
+    password: ((jfrog-artifactory.jfrog-password))
     tag: latest
 
 inputs:

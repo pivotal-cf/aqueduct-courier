@@ -2,18 +2,24 @@ resource_types:
 - name: gcs-resource
   type: registry-image
   source:
-    repository: harbor-repo.vmware.com/dockerhub-proxy-cache/frodenas/gcs-resource
+    repository: tpi-docker-virtual.usw1.packages.broadcom.com/frodenas/gcs-resource
     tag: 'v0.6.0'
+    username: ((jfrog-artifactory.jfrog-username))
+    password: ((jfrog-artifactory.jfrog-password))
 - name: pivnet
   type: registry-image
   source:
-    repository: harbor-repo.vmware.com/dockerhub-proxy-cache/pivotalcf/pivnet-resource
+    repository: tpi-docker-virtual.usw1.packages.broadcom.com/pivotalcf/pivnet-resource
     tag: latest-final
+    username: ((jfrog-artifactory.jfrog-username))
+    password: ((jfrog-artifactory.jfrog-password))
 - name: slack-notification
   type: registry-image
   source:
-    repository: harbor-repo.vmware.com/dockerhub-proxy-cache/cfcommunity/slack-notification-resource
+    repository: tpi-docker-virtual.usw1.packages.broadcom.com/cfcommunity/slack-notification-resource
     tag: latest
+    username: ((jfrog-artifactory.jfrog-username))
+    password: ((jfrog-artifactory.jfrog-password))
 
 resources:
 - name: platform-automation-image
