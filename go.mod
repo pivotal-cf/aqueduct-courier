@@ -11,7 +11,7 @@ require (
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.31.1
-	github.com/pivotal-cf/telemetry-utils v0.0.0-20240510124241-52d87e76306d
+	github.com/pivotal-cf/telemetry-utils v0.0.0-20240624164512-312859a67139
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cobra v1.8.0
