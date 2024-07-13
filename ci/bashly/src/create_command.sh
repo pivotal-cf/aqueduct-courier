@@ -25,7 +25,8 @@ if [ "$array_length" -eq 0 ]; then
 
 		# FIXME: dynamically populate with latest Ops Man & TAS
 		# FIXME: specify up to date stemcell
-		$SHEPHERD_BINARY_PATH create lease --template-namespace official --template-name gcp-tas-template --template-revision 2.1 --template-argument '{"configuration_folder": "3.0", "opsman_version": "3.0.29+LTS-T", "product_type": "srt*",  "tas_version": "6.0.4+LTS-T"}' --namespace tpi-telemetry --duration 168h --json --description "$ENV_DESCRIPTION"
+		# $SHEPHERD_BINARY_PATH create lease --template-namespace official --template-name gcp-tas-template --template-revision 2.1 --template-argument '{"configuration_folder": "3.0", "opsman_version": "3.0.30+LTS-T", "product_type": "srt*",  "tas_version": "6.0.4+LTS-T"}' --namespace tpi-telemetry --duration 168h --json --description "$ENV_DESCRIPTION"
+		$SHEPHERD_BINARY_PATH create lease --pool "tas-6_0" --duration 168h --namespace tpi-telemetry --description "$ENV_DESCRIPTION" --pool-namespace official
 
 		# Remove old metadata file
 		rm -rf "${PWD}/shepherd_envs/$ENV_DESCRIPTION-metadata.json"

@@ -1,4 +1,4 @@
-ensure_pivnet_login
+#ensure_pivnet_login
 
 if [[ ${args[foundation]:-} == "" ]]; then
 	export TMP_FOUNDATION_NAME=$1

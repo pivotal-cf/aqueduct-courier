@@ -5,6 +5,7 @@
     "source": "git@gitlab.eng.vmware.com:PKS/tooling/hack-nimbus.git",
     "symbol": "master",
     "data": {
+      "pks-tile": "true",
       "pks-stemcell-url": "http://build-squid.eng.vmware.com/build/storage61/release/bora-23604053/publish/ova/bin/bosh-stemcell-1.406-vsphere-esxi-ubuntu-jammy-go_agent.tgz",
       "pks-tile-url": "http://build-squid.eng.vmware.com/build/storage61/release/bora-23604053/publish/ova/bin/pivotal-container-service-1.19.0-build.56.pivotal",
       "nsx-branch": "nsx4.0",
