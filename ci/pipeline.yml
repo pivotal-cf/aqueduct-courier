@@ -21,12 +21,6 @@ resources:
     repository: tpi-docker-virtual.usw1.packages.broadcom.com/tanzu-portfolio-insights/telemetry-for-vms/base-ci-image
     username: ((jfrog-artifactory.jfrog-username))
     password: ((jfrog-artifactory.jfrog-password))
-- name: pivotal-telemetry-collector
-  type: github-release
-  source:
-    owner: pivotal-cf
-    repository: aqueduct-courier
-    access_token: ((github.github-access-token))
 - name: telemetry-utils
   type: git
   source:
@@ -381,11 +375,6 @@ jobs:
   plan:
   - in_parallel:
     - get: production-linux-binary
-    - get: tasks
-      resource: pivotal-telemetry-collector
-      params:
-        unpack: true
-        globs: ["*.tgz"]
     - get: prod-collection-timer
       trigger: true
     - get: aqueduct-courier
