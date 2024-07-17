@@ -6,13 +6,6 @@ resource_types:
     tag: 'v0.6.0'
     username: ((jfrog-artifactory.jfrog-username))
     password: ((jfrog-artifactory.jfrog-password))
-- name: pivnet
-  type: registry-image
-  source:
-    repository: tpi-docker-virtual.usw1.packages.broadcom.com/pivotalcf/pivnet-resource
-    tag: latest-final
-    username: ((jfrog-artifactory.jfrog-username))
-    password: ((jfrog-artifactory.jfrog-password))
 - name: slack-notification
   type: registry-image
   source:
@@ -22,17 +15,18 @@ resource_types:
     password: ((jfrog-artifactory.jfrog-password))
 
 resources:
-- name: platform-automation-image
-  type: pivnet
+- name: telemetry-for-vms-image
+  type: registry-image
   source:
-    api_token: ((pivnet.refresh-token))
-    product_slug: platform-automation
+    repository: tpi-docker-virtual.usw1.packages.broadcom.com/tanzu-portfolio-insights/telemetry-for-vms/base-ci-image
+    username: ((jfrog-artifactory.jfrog-username))
+    password: ((jfrog-artifactory.jfrog-password))
 - name: pivotal-telemetry-collector
-  type: pivnet
+  type: github-release
   source:
-    api_token: ((pivnet.refresh-token))
-    product_slug: pivotal-telemetry-collector
-    copy_metadata: true
+    owner: pivotal-cf
+    repository: aqueduct-courier
+    access_token: ((github.github-access-token))
 - name: telemetry-utils
   type: git
   source:
@@ -237,14 +231,11 @@ jobs:
       trigger: true
     - get: staging-linux-binary
       passed: [build-staging-binaries]
-    - get: platform-automation-image
-      params:
-        unpack: true
-        globs: ["*.tgz"]
+    - get: telemetry-for-vms-image
     - get: ci
   - task: collect-with-opsmanager-user-creds
     file: ci/ci/tasks/collect.yml
-    image: platform-automation-image
+    image: telemetry-for-vms-image
     input_mapping:
       binary: staging-linux-binary
     params:
@@ -261,7 +252,7 @@ jobs:
       USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
   - task: collect-with-opsmanager-client-creds
     file: ci/ci/tasks/collect.yml
-    image: platform-automation-image
+    image: telemetry-for-vms-image
     input_mapping:
       binary: staging-linux-binary
     output_mapping:
@@ -280,7 +271,7 @@ jobs:
       USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
   - task: send
     file: ci/ci/tasks/send.yml
-    image: platform-automation-image
+    image: telemetry-for-vms-image
     input_mapping:
       binary: staging-linux-binary
     params:
@@ -335,13 +326,10 @@ jobs:
       passed: [build-production-binaries]
     - get: production-linux-binary
       passed: [build-production-binaries]
-    - get: platform-automation-image
-      params:
-        unpack: true
-        globs: ["*.tgz"]
+    - get: telemetry-for-vms-image
     - get: ci
   - task: collect-with-opsmanager-user-creds
-    image: platform-automation-image
+    image: telemetry-for-vms-image
     input_mapping:
       binary: production-linux-binary
     file: ci/ci/tasks/collect.yml
@@ -358,34 +346,12 @@ jobs:
       USAGE_SERVICE_CLIENT_SECRET: ((toolsmiths/production-jammy.telemetry-usage-service-password))
       USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
   - task: send
-    image: platform-automation-image
+    image: telemetry-for-vms-image
     input_mapping:
       binary: production-linux-binary
     file: ci/ci/tasks/send.yml
     params:
       API_KEY: ((aqueduct-courier-repo.production-loader-api-key))
-
-- name: release-to-pivnet
-  plan:
-  - in_parallel:
-    - get: aqueduct-courier
-      passed: [test-collect-and-send-production]
-      trigger: true
-    - get: production-binaries
-      passed: [test-collect-and-send-production]
-    - get: version
-      passed: [build-production-binaries]
-    - get: ci
-  - task: prepare-release-files
-    file: ci/ci/tasks/prep-release-files.yml
-    input_mapping:
-      binaries-tar: production-binaries
-  - task: write-metadata
-    file: ci/ci/tasks/write-metadata.yml
-  - put: pivotal-telemetry-collector
-    params:
-      file_glob: release-files/telemetry-collector-*.tgz
-      metadata_file: metadata/metadata
 
 - name: major
   serial_groups: [version]
@@ -414,11 +380,7 @@ jobs:
 - name: ensure-production-sends
   plan:
   - in_parallel:
-    - get: binary
-      resource: pivotal-telemetry-collector
-      params:
-        unpack: true
-        globs: ["*.tgz"]
+    - get: production-linux-binary
     - get: tasks
       resource: pivotal-telemetry-collector
       params:
@@ -427,13 +389,12 @@ jobs:
     - get: prod-collection-timer
       trigger: true
     - get: aqueduct-courier
-    - get: platform-automation-image
-      params:
-        unpack: true
-        globs: ["*.tgz"]
+    - get: telemetry-for-vms-image
     - get: ci
   - task: collect
-    image: platform-automation-image
+    image: telemetry-for-vms-image
+    input_mapping:
+      binary: production-linux-binary
     file: ci/ci/tasks/collect.yml
     params:
       CF_API_URL: ((toolsmiths/production-jammy.cf-api-url))
@@ -448,8 +409,10 @@ jobs:
       USAGE_SERVICE_INSECURE_SKIP_TLS_VERIFY: true
       USAGE_SERVICE_URL: ((toolsmiths/production-jammy.usage-service-url))
   - task: send
-    image: platform-automation-image
-    file: tasks/send.yml
+    image: telemetry-for-vms-image
+    input_mapping:
+      binary: production-linux-binary
+    file: ci/ci/tasks/send.yml
     params:
       API_KEY: ((aqueduct-courier-repo.production-loader-api-key))
     on_failure:
