@@ -2,7 +2,7 @@ module github.com/pivotal-cf/aqueduct-courier
 
 go 1.21.6
 
-toolchain go1.21.10
+toolchain go1.21.12
 
 require (
 	code.cloudfoundry.org/credhub-cli v0.0.0-20240219140155-ce3a46ae0b03
