@@ -5,7 +5,7 @@ image_resource:
   type: registry-image
   source:
     repository: tpi-docker-virtual.usw1.packages.broadcom.com/library/golang
-    tag: 1.21.10
+    tag: 1.21.12
     username: ((jfrog-artifactory.jfrog-username))
     password: ((jfrog-artifactory.jfrog-password))
 
