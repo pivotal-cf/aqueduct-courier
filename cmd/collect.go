@@ -411,6 +411,7 @@ func makeCredhubCollector(omService *opsmanager.Service, credhubCollectionEnable
 
 func makeCollector(tarWriter *tar.TarWriter, operationalDataOnly bool) (*operations.CollectExecutor, error) {
 	authedClient, _ := omNetwork.NewOAuthClient(
+		"",
 		viper.GetString(OpsManagerURLFlag),
 		viper.GetString(OpsManagerUsernameFlag),
 		viper.GetString(OpsManagerPasswordFlag),

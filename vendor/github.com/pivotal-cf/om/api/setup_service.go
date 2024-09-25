@@ -3,7 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -17,6 +17,7 @@ type LDAPSettings struct {
 	LDAPRBACAdminGroup string `json:"ldap_rbac_admin_group_name,omitempty"`
 	LDAPReferral       string `json:"ldap_referrals,omitempty"`
 	LDAPUsername       string `json:"ldap_username,omitempty"`
+	LDAPMaxSearchDepth uint   `json:"ldap_max_search_depth,omitempty"`
 	ServerSSLCert      string `json:"server_ssl_cert,omitempty"`
 	ServerURL          string `json:"server_url,omitempty"`
 	UserSearchBase     string `json:"user_search_base,omitempty"`
@@ -110,7 +111,7 @@ func (a Api) EnsureAvailability(input EnsureAvailabilityInput) (EnsureAvailabili
 		}
 
 	case http.StatusOK:
-		respBody, err := ioutil.ReadAll(response.Body)
+		respBody, err := io.ReadAll(response.Body)
 		if err != nil {
 			return EnsureAvailabilityOutput{}, err
 		}
